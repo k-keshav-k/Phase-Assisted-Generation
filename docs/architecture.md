@@ -51,5 +51,4 @@ sequenceDiagram
 
 - The contracts package defines the only shared data shapes that all teams must honor.
 - Module internals remain intentionally unconstrained.
-- The registry allows swapping implementations without rewriting the pipeline.
-
+- Each stage entrypoint accepts an optional implementation callable, so teams can swap internals without changing orchestration.

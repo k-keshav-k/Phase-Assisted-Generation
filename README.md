@@ -1,12 +1,12 @@
 # Phase-Adaptive Generation (PAG)
 
-This repository is a modular skeleton for studying phase-adaptive decoding in diffusion language models. The scaffold is intentionally light on internal constraints: each teammate can implement their component however they want, as long as the shared contracts, public stage entrypoints, and tests continue to pass.
+PAG is a research codebase for studying phase-adaptive decoding in diffusion language models. The project is organized around a simple pipeline: baseline fixed decoding, trace and signal analysis, phase prediction, adaptive scheduling, and evaluation.
 
 ## Design goals
 
 - Keep module boundaries explicit and small.
 - Share data through typed artifacts rather than inheritance-heavy services.
-- Allow each team to replace the stub implementation inside their own package without touching orchestration.
+- Allow each team to evolve its own package without touching orchestration or breaking stage handoffs.
 - Make test subsets runnable per teammate.
 
 ## Public stage entrypoints
@@ -16,7 +16,37 @@ This repository is a modular skeleton for studying phase-adaptive decoding in di
 - `pag.scheduler.run_adaptive_decoding(...)`
 - `pag.evaluation.evaluate_runs(...)`
 
-These are the only hard code-level boundaries the scaffold enforces. Teams are free to use functions, classes, registries, or other internal structure behind them.
+These are the only hard code-level boundaries the project enforces. Teams are free to use functions, classes, or other internal structure behind them.
+
+## Workflow
+
+```mermaid
+flowchart LR
+    A[RunConfig + Dataset Samples] --> B[Baseline Stage]
+    B --> C[Generation Traces]
+    B --> D[Token Signals]
+    B --> E[Baseline Completions]
+    C --> F[Phase Analysis]
+    D --> F
+    F --> G[Phase Annotations]
+    F --> H[Predictor Dataset]
+    F --> I[Phase Predictions]
+    E --> J[Scheduler]
+    I --> J
+    J --> K[Schedule Plans + Decisions]
+    K --> L[Adaptive Decode]
+    L --> M[Adaptive Completions]
+    E --> N[Evaluation]
+    M --> N
+    N --> O[Comparison Records + Run Summaries]
+```
+
+The workflow is stage-based:
+
+- The baseline stage runs fixed decoding and produces traces, token-level signals, and baseline completions.
+- The phase stage consumes those traces and signals to build annotations, predictor-ready items, and phase predictions.
+- The scheduler stage combines baseline outputs with phase predictions to decide chunk sizes and refinement intensity for adaptive decoding.
+- The evaluation stage compares baseline and adaptive outputs and writes comparison-ready records and summaries.
 
 ## Quick start
 
@@ -32,11 +62,11 @@ dependency group automatically.
 ## Repo layout
 
 - `src/pag/contracts`: shared dataclasses, typing protocols, serialization helpers
-- `src/pag/baselines`: baseline stage entrypoint and stub implementation
-- `src/pag/phases`: phase analysis stage entrypoint and stub implementation
-- `src/pag/scheduler`: adaptive scheduling stage entrypoint and stub implementation
-- `src/pag/evaluation`: comparison/evaluation entrypoint and stub implementation
-- `src/pag/orchestration`: registry, pipeline wiring, CLI
+- `src/pag/baselines`: baseline stage entrypoint and implementation
+- `src/pag/phases`: phase analysis stage entrypoint and implementation
+- `src/pag/scheduler`: adaptive scheduling stage entrypoint and implementation
+- `src/pag/evaluation`: comparison and evaluation entrypoint and implementation
+- `src/pag/orchestration`: pipeline wiring and CLI
 - `src/pag/config`: YAML config loading and artifact path helpers
 - `src/pag/utils`: artifact persistence helpers and run/request ids
 - `configs`: example YAML configs for runs, model, decoding, predictor, scheduler, evaluation, dataset

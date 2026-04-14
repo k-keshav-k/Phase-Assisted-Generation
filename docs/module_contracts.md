@@ -5,7 +5,7 @@
 - Purpose: Produce fixed-decoding baseline outputs and token-level traces/signals.
 - Owner teammate: Baselines / model adapters / inference / eval.
 - Required inputs: `RunConfig`, `list[SampleRecord]`.
-- Optional inputs: custom implementation callable via registry or direct argument.
+- Optional inputs: custom implementation callable passed directly to the public entrypoint.
 - Returned outputs: `BaselineRunArtifacts`.
 - Downstream consumers: `pag.phases`, `pag.scheduler`, `pag.evaluation`.
 - Unit tests required: contract-compliant outputs, aligned sample ids, serializable artifacts.
@@ -54,4 +54,3 @@
 - Downstream consumers: scripts, CI, teammate workflows.
 - Unit tests required: mock end-to-end pipeline wiring.
 - TODO extension points: experiment grids, caching, distributed execution.
-
