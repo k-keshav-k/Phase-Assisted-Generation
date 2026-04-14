@@ -1,0 +1,6 @@
+name: mock-diffusion-lm
+revision: stub-v1
+parameters:
+  family: diffusion-lm
+  denoise_steps: 4
+

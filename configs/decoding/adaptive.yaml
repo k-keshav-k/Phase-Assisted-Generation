@@ -1,0 +1,8 @@
+strategy: adaptive
+max_tokens: 6
+chunk_size: 3
+refinement_steps: 2
+temperature: 0.0
+parameters:
+  allow_scheduler_override: true
+

@@ -1,0 +1,22 @@
+run_id: adaptive-mock
+output_root: artifacts
+dataset_path: ../datasets/mock_samples.yaml
+seed: 11
+enabled_stages:
+  - baseline
+  - phases
+  - scheduler
+  - evaluation
+model:
+  from_file: ../model/mock_model.yaml
+decoding:
+  from_file: ../decoding/adaptive.yaml
+predictor:
+  from_file: ../predictor/heuristic.yaml
+scheduler:
+  from_file: ../scheduler/phase_adaptive.yaml
+evaluation:
+  from_file: ../evaluation/default.yaml
+notes:
+  scenario: adaptive-skeleton
+

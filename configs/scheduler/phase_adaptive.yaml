@@ -1,0 +1,9 @@
+name: phase-adaptive-scheduler
+default_chunk_size: 3
+default_refinement_steps: 2
+parameters:
+  easy_chunk_size: 4
+  hard_chunk_size: 1
+  easy_refinement_steps: 1
+  hard_refinement_steps: 3
+

@@ -1,0 +1,12 @@
+samples:
+  - sample_id: sample-001
+    prompt: Explain why adaptive diffusion decoding can help.
+    reference: It can allocate more effort to hard generation regions.
+    metadata:
+      domain: research
+  - sample_id: sample-002
+    prompt: Summarize the tradeoff between quality and throughput.
+    reference: Better quality often costs more iterative refinement.
+    metadata:
+      domain: evaluation
+

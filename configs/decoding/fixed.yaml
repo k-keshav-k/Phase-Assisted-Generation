@@ -1,0 +1,8 @@
+strategy: fixed
+max_tokens: 6
+chunk_size: 2
+refinement_steps: 1
+temperature: 0.0
+parameters:
+  mode: baseline
+

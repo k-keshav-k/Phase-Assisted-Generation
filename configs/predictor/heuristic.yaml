@@ -1,0 +1,8 @@
+name: heuristic-phase-predictor
+label_space:
+  - easy
+  - hard
+parameters:
+  confidence_threshold: 0.55
+  hard_phase_entropy_floor: 0.6
+

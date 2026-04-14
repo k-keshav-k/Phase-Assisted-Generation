@@ -1,0 +1,7 @@
+name: default-eval
+metrics:
+  - throughput_proxy
+  - quality_proxy
+parameters:
+  compare_against: baseline
+
