@@ -11,7 +11,7 @@ class DreamGenerationConfig:
     model_name: str
     max_new_tokens: int = 256
     steps: int = 256
-    temperature: float = 0.2
+    temperature: float | None = 0.2
     top_p: float | None = 0.95
     top_k: int | None = None
     alg: str = "entropy"
@@ -72,10 +72,11 @@ class DreamTraceCollector:
             "output_history": False,
             "return_dict_in_generate": True,
             "steps": self._config.steps,
-            "temperature": self._config.temperature,
             "alg": self._config.alg,
             "generation_tokens_hook_func": generation_tokens_hook_func,
         }
+        if self._config.temperature is not None and self._config.temperature > 0:
+            generation_kwargs["temperature"] = self._config.temperature
         if self._config.top_p is not None:
             generation_kwargs["top_p"] = self._config.top_p
         if self._config.top_k is not None:
@@ -115,7 +116,11 @@ class _StepRecorder:
         self._max_new_tokens = max_new_tokens
         self._snapshots: list[_StepSnapshot] = []
 
-    def capture(self, step: int, x, logits) -> None:
+    def capture(self, step: int | None, x, logits) -> None:
+        step_index = _normalize_hook_step(step)
+        if step_index is None:
+            return
+
         generated_ids = x[0, self._prompt_length : self._prompt_length + self._max_new_tokens]
         generated_ids = generated_ids.detach().to("cpu", dtype=self._torch.long)
 
@@ -152,7 +157,7 @@ class _StepRecorder:
 
         self._snapshots.append(
             _StepSnapshot(
-                step_index=int(step),
+                step_index=step_index,
                 token_ids=generated_ids.tolist(),
                 selected_logits=selected_logits,
                 selected_probs=selected_probs,
@@ -261,6 +266,12 @@ def _maybe_round(value: float | None) -> float | None:
     if value is None:
         return None
     return round(float(value), 8)
+
+
+def _normalize_hook_step(step: object) -> int | None:
+    if step is None:
+        return None
+    return int(step)
 
 
 def _resolve_torch_dtype(torch_module, dtype_name: str, device: str):
