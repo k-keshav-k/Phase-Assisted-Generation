@@ -48,7 +48,11 @@ def main() -> None:
         return
 
     backends = sorted({entry.backend for entry in entries})
-    selected_backend = st.sidebar.selectbox("Backend filter", ["All", *backends])
+    selected_backend = st.sidebar.selectbox(
+        "Backend filter",
+        ["All", *backends],
+        help="Restrict the trace catalog to a specific model backend before selecting a trace.",
+    )
 
     backend_filtered = filter_catalog_entries(
         entries,
@@ -56,7 +60,11 @@ def main() -> None:
     )
 
     model_options = sorted({entry.model_name for entry in backend_filtered})
-    selected_model = st.sidebar.selectbox("Model filter", ["All", *model_options])
+    selected_model = st.sidebar.selectbox(
+        "Model filter",
+        ["All", *model_options],
+        help="Restrict the catalog to a specific model name within the selected backend.",
+    )
 
     model_filtered = filter_catalog_entries(
         backend_filtered,
@@ -64,10 +72,18 @@ def main() -> None:
     )
 
     tag_options = sorted({tag for entry in model_filtered for tag in entry.tags})
-    selected_tags = st.sidebar.multiselect("Tag filter", tag_options)
+    selected_tags = st.sidebar.multiselect(
+        "Tag filter",
+        tag_options,
+        help="Keep only traces that include all selected tags, such as `math` or `code`.",
+    )
 
     run_options = sorted({entry.run_id for entry in model_filtered if entry.run_id})
-    selected_run = st.sidebar.selectbox("Run filter", ["All", *run_options])
+    selected_run = st.sidebar.selectbox(
+        "Run filter",
+        ["All", *run_options],
+        help="Filter traces to a specific collection run id from the stored decoding metadata.",
+    )
 
     filtered_entries = filter_catalog_entries(
         model_filtered,
@@ -80,7 +96,11 @@ def main() -> None:
         return
 
     trace_labels = {entry.label: entry.trace_id for entry in filtered_entries}
-    selected_label = st.sidebar.selectbox("Trace", list(trace_labels))
+    selected_label = st.sidebar.selectbox(
+        "Trace",
+        list(trace_labels),
+        help="Choose the exact stored trace to analyze after applying the catalog filters.",
+    )
     trace = _trace(trace_labels[selected_label])
 
     available_features = [
@@ -106,6 +126,10 @@ def main() -> None:
         "Feature",
         available_features,
         index=available_features.index(default_feature_name),
+        help=(
+            "Select which token-level scalar signal to segment. Entropy is usually the best "
+            "starting point when probabilities saturate."
+        ),
     )
     detector_name = st.sidebar.selectbox(
         "Detector",
@@ -117,16 +141,41 @@ def main() -> None:
     )
     kernel = "rbf"
     if detector_name == "pelt":
-        cost = st.sidebar.selectbox("PELT cost", ["l2", "normal"])
+        cost = st.sidebar.selectbox(
+            "PELT cost",
+            ["l2", "normal"],
+            help=(
+                "Choose the PELT segment cost model. `l2` is the default; "
+                "`normal` can react differently to variance shifts."
+            ),
+        )
     else:
         cost = "l2"
-        kernel = st.sidebar.selectbox("Kernel", ["rbf", "linear", "cosine"])
-    penalty = st.sidebar.number_input("Penalty", min_value=0.0, value=0.1, step=0.05, format="%.3f")
+        kernel = st.sidebar.selectbox(
+            "Kernel",
+            ["rbf", "linear", "cosine"],
+            help=(
+                "Kernel CPD compares segments in transformed feature space. "
+                "`rbf` is the safest default."
+            ),
+        )
+    penalty = st.sidebar.number_input(
+        "Penalty",
+        min_value=0.0,
+        value=0.1,
+        step=0.05,
+        format="%.3f",
+        help=(
+            "Higher penalty yields fewer boundaries; lower penalty makes the "
+            "detector more willing to split."
+        ),
+    )
     min_segment_length = st.sidebar.number_input(
         "Min segment length",
         min_value=1,
         value=2,
         step=1,
+        help="Reject boundaries that would create segments shorter than this many tokens.",
     )
     smoothing_window = st.sidebar.slider(
         "Smoothing window",
