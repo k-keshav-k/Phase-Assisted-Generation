@@ -6,7 +6,7 @@
 
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
-- extracts a token-level feature series
+- extracts the stabilizing-probability feature series
 - runs PELT change-point detection with tunable settings
 - visualizes segmented text, feature trajectories, and segment summary statistics
 
@@ -48,13 +48,12 @@ If that directory is missing or empty, the app raises an error instead of fallin
 
 ## Current feature and detector support
 
-- Features: `top1_prob_mean`, `top1_prob`
+- Feature: `stabilizing_prob`
 - Detector: PELT via `ruptures`
 - Costs: `l2`, `normal`
 - Controls: penalty, min segment length, smoothing window
 
-`top1_prob_mean` averages the selected-token probability across refinement steps and is the recommended default for segmentation.
-`top1_prob` uses the selected token probability from the final available refinement step and can become too flat on real Dream traces.
+`stabilizing_prob` uses the selected-token probability at the first refinement step after which a token's identity no longer changes. This avoids the saturation problem you observed with final-step probabilities and keeps the CPD signal tied to when a token actually settles.
 
 ## Real backend status
 

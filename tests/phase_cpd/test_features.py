@@ -1,31 +1,19 @@
 from __future__ import annotations
 
 from phase_cpd.catalog import default_trace_dir, load_trace_by_id
-from phase_cpd.features import (
-    MeanTop1ProbExtractor,
-    StabilizingTop1ProbExtractor,
-    Top1ProbExtractor,
-)
+from phase_cpd.features import StabilizingTop1ProbExtractor
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceToken
 
 
-def test_top1_prob_uses_final_refinement_step() -> None:
+def test_stabilizing_prob_is_available_on_real_trace() -> None:
     trace = load_trace_by_id("prompt-001", default_trace_dir())
-    feature_series = Top1ProbExtractor().extract(trace)
+    extractor = StabilizingTop1ProbExtractor()
 
-    assert feature_series.feature_name == "top1_prob"
+    assert extractor.is_available(trace)
+    feature_series = extractor.extract(trace)
+    assert feature_series.feature_name == "stabilizing_prob"
     assert len(feature_series.values) == len(trace.tokens)
     assert all(0.0 <= value <= 1.0 for value in feature_series.values)
-
-
-def test_top1_prob_mean_uses_all_refinement_steps() -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
-    feature_series = MeanTop1ProbExtractor().extract(trace)
-
-    assert feature_series.feature_name == "top1_prob_mean"
-    assert feature_series.metadata["reduction"] == "mean_over_steps"
-    assert len(feature_series.values) == len(trace.tokens)
-    assert feature_series.values[0] < Top1ProbExtractor().extract(trace).values[0]
 
 
 def test_stabilizing_top1_prob_uses_first_stable_observation() -> None:
@@ -64,6 +52,6 @@ def test_stabilizing_top1_prob_uses_first_stable_observation() -> None:
 
     feature_series = StabilizingTop1ProbExtractor().extract(trace)
 
-    assert feature_series.feature_name == "top1_prob_stabilize"
+    assert feature_series.feature_name == "stabilizing_prob"
     assert feature_series.values == [0.42, 0.65]
     assert feature_series.metadata["reduction"] == "first_stable_step"

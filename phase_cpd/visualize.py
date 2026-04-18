@@ -80,13 +80,21 @@ def render_segmented_text_html(segment_summaries: Sequence[SegmentSummary]) -> s
         label = f"Segment {index} [{summary.start_token}, {summary.end_token})"
         text = html.escape(summary.text)
         segments.append(
-            f"<span style='background:{style['bg']}; border:1px solid {style['border']};"
-            " padding:0.45rem 0.55rem; margin:0.22rem; border-radius:0.55rem; display:inline-block;"
+            f"<div style='background:{style['bg']}; border:1px solid {style['border']};"
+            " padding:0.7rem 0.8rem; border-radius:0.75rem; display:block;"
             " box-shadow:0 1px 2px rgba(15,23,42,0.06);'>"
             f"<strong style='font-size:0.8rem; color:{style['label']};'>"
-            f"{label}</strong><br>{text}</span>"
+            f"{label}</strong><br>"
+            f"<span style='color:#0f172a; font-weight:500; white-space:pre-wrap;"
+            " line-height:1.55;'>"
+            f"{text}</span>"
+            "</div>"
         )
-    return "".join(segments)
+    return (
+        "<div style='display:flex; flex-direction:column; gap:0.55rem;'>"
+        f"{''.join(segments)}"
+        "</div>"
+    )
 
 
 def render_token_boundary_view_html(trace: TraceRecord, breakpoints: Sequence[int]) -> str:

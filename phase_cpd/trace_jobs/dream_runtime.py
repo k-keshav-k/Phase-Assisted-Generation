@@ -131,7 +131,10 @@ class _StepRecorder:
             return
 
         token_canvas = _normalize_token_canvas(x)
-        generated_ids = token_canvas[:, self._prompt_length : self._prompt_length + self._max_new_tokens]
+        generated_ids = token_canvas[
+            :,
+            self._prompt_length : self._prompt_length + self._max_new_tokens,
+        ]
         if int(generated_ids.shape[0]) != 1:
             msg = (
                 "Dream trace collection currently expects a single prompt per hook call. "
@@ -160,8 +163,13 @@ class _StepRecorder:
                     f"Got batch size {int(step_logits.shape[0])}."
                 )
                 raise ValueError(msg)
-            step_logits_row = step_logits[0]
-            token_ids_on_device = generated_ids_row.to(step_logits_row.device).unsqueeze(-1)
+            # Softmax/logsumexp in float32 avoids many exact 1.0 probabilities from low-precision
+            # Dream logits, especially when the model itself is running in bf16 on GPU.
+            step_logits_row = step_logits[0].to(dtype=self._torch.float32)
+            token_ids_on_device = generated_ids_row.to(
+                device=step_logits_row.device,
+                dtype=self._torch.long,
+            ).unsqueeze(-1)
             gathered_logits = step_logits_row.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
             log_partition = step_logits_row.logsumexp(dim=-1)
             probs = (gathered_logits - log_partition).exp()

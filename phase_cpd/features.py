@@ -18,63 +18,8 @@ class FeatureExtractor(Protocol):
         ...
 
 
-class Top1ProbExtractor:
-    name = "top1_prob"
-
-    def is_available(self, trace: TraceRecord) -> bool:
-        return all(_final_observation_has_top1(token.observations) for token in trace.tokens)
-
-    def extract(self, trace: TraceRecord) -> FeatureSeries:
-        token_indices: list[int] = []
-        values: list[float] = []
-        for token in trace.tokens:
-            if not token.observations:
-                msg = f"Token {token.token_index} has no observations"
-                raise ValueError(msg)
-            observation = max(token.observations, key=lambda item: item.step_index)
-            if observation.top1_prob is None:
-                msg = f"Token {token.token_index} is missing top1_prob at the final refinement step"
-                raise ValueError(msg)
-            token_indices.append(token.token_index)
-            values.append(observation.top1_prob)
-        return FeatureSeries(
-            feature_name=self.name,
-            token_indices=token_indices,
-            values=values,
-            metadata={"reduction": "final_step"},
-        )
-
-
-class MeanTop1ProbExtractor:
-    name = "top1_prob_mean"
-
-    def is_available(self, trace: TraceRecord) -> bool:
-        return all(_has_any_top1(token.observations) for token in trace.tokens)
-
-    def extract(self, trace: TraceRecord) -> FeatureSeries:
-        token_indices: list[int] = []
-        values: list[float] = []
-        for token in trace.tokens:
-            top1_values = [
-                observation.top1_prob
-                for observation in token.observations
-                if observation.top1_prob is not None
-            ]
-            if not top1_values:
-                msg = f"Token {token.token_index} has no top1_prob observations"
-                raise ValueError(msg)
-            token_indices.append(token.token_index)
-            values.append(sum(top1_values) / len(top1_values))
-        return FeatureSeries(
-            feature_name=self.name,
-            token_indices=token_indices,
-            values=values,
-            metadata={"reduction": "mean_over_steps"},
-        )
-
-
 class StabilizingTop1ProbExtractor:
-    name = "top1_prob_stabilize"
+    name = "stabilizing_prob"
 
     def is_available(self, trace: TraceRecord) -> bool:
         try:
@@ -103,33 +48,6 @@ class StabilizingTop1ProbExtractor:
             values=values,
             metadata={"reduction": "first_stable_step"},
         )
-
-
-FEATURE_EXTRACTORS: dict[str, FeatureExtractor] = {
-    StabilizingTop1ProbExtractor.name: StabilizingTop1ProbExtractor(),
-    MeanTop1ProbExtractor.name: MeanTop1ProbExtractor(),
-    Top1ProbExtractor.name: Top1ProbExtractor(),
-}
-
-
-def get_feature_extractor(name: str) -> FeatureExtractor:
-    try:
-        return FEATURE_EXTRACTORS[name]
-    except KeyError as error:
-        available = ", ".join(sorted(FEATURE_EXTRACTORS))
-        msg = f"Unknown feature extractor '{name}'. Available: {available}"
-        raise KeyError(msg) from error
-
-
-def _final_observation_has_top1(observations: list) -> bool:
-    if not observations:
-        return False
-    return max(observations, key=lambda item: item.step_index).top1_prob is not None
-
-
-def _has_any_top1(observations: list) -> bool:
-    return any(observation.top1_prob is not None for observation in observations)
-
 
 def _stabilizing_observation(token) -> object:
     if not token.observations:

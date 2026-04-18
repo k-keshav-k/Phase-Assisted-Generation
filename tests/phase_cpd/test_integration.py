@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from phase_cpd.catalog import default_trace_dir, load_trace_by_id
 from phase_cpd.cpd import CPDParameters, PeltDetector
-from phase_cpd.features import MeanTop1ProbExtractor
+from phase_cpd.features import StabilizingTop1ProbExtractor
 from phase_cpd.segments import build_segment_summaries
 
 
 def test_real_trace_pipeline_smoke() -> None:
     trace = load_trace_by_id("prompt-010", default_trace_dir())
-    feature_series = MeanTop1ProbExtractor().extract(trace)
+    feature_series = StabilizingTop1ProbExtractor().extract(trace)
     breakpoints = PeltDetector().detect(
         feature_series.values,
         CPDParameters(cost="l2", penalty=0.1, min_segment_length=2, smoothing_window=3),
