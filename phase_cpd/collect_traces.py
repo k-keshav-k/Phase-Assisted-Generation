@@ -3,8 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from phase_cpd.importers.dream import import_dream_trace
-from phase_cpd.importers.llada import import_llada_trace
+from phase_cpd.importers.common import load_step_dump_as_trace
 from phase_cpd.importers.mock import build_mock_trace_examples
 from phase_cpd.io import save_trace
 from phase_cpd.schema import TraceRecord
@@ -21,8 +20,8 @@ def main() -> int:
         traces = build_mock_trace_examples()
     else:
         if not args.source:
-            parser.error("--source is required for dream and llada backends")
-        traces = _load_real_backend_traces(args.backend, Path(args.source), args.glob)
+            parser.error("--source is required for the dream backend")
+        traces = _load_dream_traces(Path(args.source), args.glob)
 
     saved_paths = []
     for trace in traces:
@@ -40,7 +39,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--backend",
-        choices=["dream", "llada", "mock"],
+        choices=["dream", "mock"],
         required=True,
         help="Backend trace format to convert.",
     )
@@ -61,7 +60,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_real_backend_traces(backend: str, source: Path, pattern: str) -> list[TraceRecord]:
+def _load_dream_traces(source: Path, pattern: str) -> list[TraceRecord]:
     if source.is_dir():
         paths = sorted(source.glob(pattern))
     else:
@@ -71,8 +70,14 @@ def _load_real_backend_traces(backend: str, source: Path, pattern: str) -> list[
         msg = f"No raw trace files matched in {source}"
         raise FileNotFoundError(msg)
 
-    importer = import_dream_trace if backend == "dream" else import_llada_trace
-    return [importer(path) for path in paths]
+    return [
+        load_step_dump_as_trace(
+            path,
+            backend="dream",
+            default_model_name="dream-7b",
+        )
+        for path in paths
+    ]
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from phase_cpd.collect_traces import main as collect_traces_main
-from phase_cpd.importers.dream import import_dream_trace
+from phase_cpd.importers.common import load_step_dump_as_trace
 
 
 def test_dream_importer_converts_step_dump_into_trace(tmp_path: Path) -> None:
@@ -58,7 +58,11 @@ def test_dream_importer_converts_step_dump_into_trace(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    trace = import_dream_trace(raw_path)
+    trace = load_step_dump_as_trace(
+        raw_path,
+        backend="dream",
+        default_model_name="dream-7b",
+    )
 
     assert trace.trace_id == "dream-sample-001"
     assert trace.final_text == "Adaptive decoding"
@@ -111,3 +115,41 @@ def test_collect_traces_writes_converted_real_backend_files(
 
     assert exit_code == 0
     assert (output_dir / "dream-sample-002.json").exists()
+
+
+def test_dream_importer_uses_latest_token_text_for_final_trace(tmp_path: Path) -> None:
+    raw_path = tmp_path / "dream_latest_step.json"
+    raw_path.write_text(
+        json.dumps(
+            {
+                "trace_id": "dream-sample-003",
+                "prompt": "Explain the answer.",
+                "steps": [
+                    {
+                        "step_index": 0,
+                        "tokens": [
+                            {"token_index": 0, "token_text": "<mask>", "top1_prob": 0.1},
+                            {"token_index": 1, "token_text": " guess", "top1_prob": 0.2},
+                        ],
+                    },
+                    {
+                        "step_index": 1,
+                        "tokens": [
+                            {"token_index": 0, "token_text": "Final", "top1_prob": 0.8},
+                            {"token_index": 1, "token_text": " answer", "top1_prob": 0.7},
+                        ],
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    trace = load_step_dump_as_trace(
+        raw_path,
+        backend="dream",
+        default_model_name="dream-7b",
+    )
+
+    assert trace.final_text == "Final answer"
+    assert [token.token_text for token in trace.tokens] == ["Final", " answer"]

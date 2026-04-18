@@ -41,7 +41,9 @@ def load_step_dump_as_trace(
         step_index = int(step["step_index"])
         for inferred_index, token in enumerate(step.get("tokens", [])):
             token_index = int(token.get("token_index", inferred_index))
-            token_rows.setdefault(token_index, dict(token))
+            # Real denoising traces can change the token content across steps. Keep the latest
+            # token row so the final converted trace reflects the converged text, not step 0.
+            token_rows[token_index] = dict(token)
             observations_by_token[token_index].append(
                 TokenStepObservation(
                     step_index=step_index,
@@ -113,4 +115,3 @@ def _maybe_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
-

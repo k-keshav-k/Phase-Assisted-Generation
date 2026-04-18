@@ -23,22 +23,31 @@ export PROJECT_DIR=\${PROJECT_DIR:-/scratch/kk6081/nyu-llm-reasoners-a3}
 export PROMPTS_FILE=\${PROMPTS_FILE:-\$PROJECT_DIR/phase_cpd/data/prompts/research_prompts.jsonl}
 export RAW_TRACE_ROOT=\${RAW_TRACE_ROOT:-\$PROJECT_DIR/outputs/phase_cpd_raw}
 export TRACE_OUTPUT_DIR=\${TRACE_OUTPUT_DIR:-\$PROJECT_DIR/phase_cpd/data/traces_real}
-export BACKENDS=\${BACKENDS:-dream llada}
-export DREAM_MODEL_NAME=\${DREAM_MODEL_NAME:-dream-7b}
-export LLADA_MODEL_NAME=\${LLADA_MODEL_NAME:-llada}
+export DREAM_MODEL_NAME=\${DREAM_MODEL_NAME:-Dream-org/Dream-v0-Instruct-7B}
+export DREAM_MAX_NEW_TOKENS=\${DREAM_MAX_NEW_TOKENS:-256}
+export DREAM_STEPS=\${DREAM_STEPS:-256}
+export DREAM_TEMPERATURE=\${DREAM_TEMPERATURE:-0.2}
+export DREAM_TOP_P=\${DREAM_TOP_P:-0.95}
+export DREAM_ALG=\${DREAM_ALG:-entropy}
+export DREAM_ALG_TEMP=\${DREAM_ALG_TEMP:-0.0}
+export DREAM_TORCH_DTYPE=\${DREAM_TORCH_DTYPE:-bfloat16}
+export HF_HOME=\${HF_HOME:-/scratch/kk6081/.cache/huggingface}
+export DREAM_TRACE_CMD=\${DREAM_TRACE_CMD:-python -m phase_cpd.trace_jobs.run_dream_trace_dump --prompts \"\$PROMPTS_FILE\" --output-dir \"\$RAW_TRACE_ROOT/dream\" --model-name \"\$DREAM_MODEL_NAME\" --max-new-tokens \"\$DREAM_MAX_NEW_TOKENS\" --steps \"\$DREAM_STEPS\" --temperature \"\$DREAM_TEMPERATURE\" --top-p \"\$DREAM_TOP_P\" --alg \"\$DREAM_ALG\" --alg-temp \"\$DREAM_ALG_TEMP\" --torch-dtype \"\$DREAM_TORCH_DTYPE\"}
 export PYTORCH_CUDA_ALLOC_CONF=\${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
 cd \$PROJECT_DIR
-mkdir -p ./logs \$RAW_TRACE_ROOT/dream \$RAW_TRACE_ROOT/llada \$TRACE_OUTPUT_DIR
+mkdir -p ./logs \$RAW_TRACE_ROOT/dream \$TRACE_OUTPUT_DIR \$HF_HOME
 
 echo \"PROMPTS_FILE=\$PROMPTS_FILE\"
 echo \"RAW_TRACE_ROOT=\$RAW_TRACE_ROOT\"
 echo \"TRACE_OUTPUT_DIR=\$TRACE_OUTPUT_DIR\"
-echo \"BACKENDS=\$BACKENDS\"
+echo \"DREAM_MODEL_NAME=\$DREAM_MODEL_NAME\"
+echo \"DREAM_STEPS=\$DREAM_STEPS\"
+echo \"DREAM_MAX_NEW_TOKENS=\$DREAM_MAX_NEW_TOKENS\"
+echo \"HF_HOME=\$HF_HOME\"
 
-# DREAM_TRACE_CMD and LLADA_TRACE_CMD should each write one raw JSON file per prompt into:
+# DREAM_TRACE_CMD should write one raw JSON file per prompt into:
 #   \$RAW_TRACE_ROOT/dream
-#   \$RAW_TRACE_ROOT/llada
 #
 # Expected raw JSON shape per file:
 # {
@@ -58,23 +67,10 @@ echo \"BACKENDS=\$BACKENDS\"
 #   ]
 # }
 
-if [[ \" \$BACKENDS \" == *\" dream \"* ]]; then
-  : \"\${DREAM_TRACE_CMD:?Set DREAM_TRACE_CMD to an instrumented Dream command that writes raw JSON traces into \$RAW_TRACE_ROOT/dream}\"
-  echo \"Running Dream trace generation\"
-  eval \"\$DREAM_TRACE_CMD\"
-  python phase_cpd/collect_traces.py \
-      --backend dream \
-      --source \$RAW_TRACE_ROOT/dream \
-      --output-dir \$TRACE_OUTPUT_DIR
-fi
-
-if [[ \" \$BACKENDS \" == *\" llada \"* ]]; then
-  : \"\${LLADA_TRACE_CMD:?Set LLADA_TRACE_CMD to an instrumented LLaDA command that writes raw JSON traces into \$RAW_TRACE_ROOT/llada}\"
-  echo \"Running LLaDA trace generation\"
-  eval \"\$LLADA_TRACE_CMD\"
-  python phase_cpd/collect_traces.py \
-      --backend llada \
-      --source \$RAW_TRACE_ROOT/llada \
-      --output-dir \$TRACE_OUTPUT_DIR
-fi
+echo \"Running Dream trace generation\"
+eval \"\$DREAM_TRACE_CMD\"
+python phase_cpd/collect_traces.py \
+    --backend dream \
+    --source \$RAW_TRACE_ROOT/dream \
+    --output-dir \$TRACE_OUTPUT_DIR
 "

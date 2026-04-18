@@ -51,10 +51,17 @@ Two mock traces are included so the app runs immediately.
 ## Real backend status
 
 - `mock`: ready now through checked-in example traces
-- `Dream`: importer contract added in `phase_cpd/importers/dream.py`
-- `LLaDA`: importer contract added in `phase_cpd/importers/llada.py`
+- `Dream`: local trace-dump entrypoint added in `phase_cpd/trace_jobs/`
 
-The Dream and LLaDA importers are explicit extension points for converting locally produced trace artifacts into the unified `TraceRecord` schema.
+Dream raw step dumps are converted into the unified `TraceRecord` schema through `phase_cpd/collect_traces.py` and `phase_cpd/importers/common.py`.
+
+For Dream, the repo now includes a real Hugging Face runtime path built around the official Dream inference API:
+
+- `AutoModel.from_pretrained(..., trust_remote_code=True)`
+- `model.diffusion_generate(...)`
+- `generation_tokens_hook_func(step, x, logits)` to record per-step token probabilities/logits
+
+The runtime assumption matches the official Dream README and demo scripts.
 
 ## Trace format
 
@@ -66,9 +73,9 @@ Each trace JSON stores:
 - per-step observations such as `top1_prob`, `selected_logit`, `top2_prob`
 - decoding metadata such as chunk size, refinement steps, and run id
 
-## Raw step-dump format for real backends
+## Raw step-dump format for Dream
 
-For Dream and LLaDA, the easiest path is:
+For Dream, the easiest path is:
 
 1. instrument your generation loop to write one raw JSON dump per prompt
 2. run `phase_cpd/collect_traces.py` to convert those dumps into unified trace JSON files
@@ -105,7 +112,7 @@ Each raw dump can use this stepwise format:
 
 The converter will group token rows by `token_index` and build the per-token observation history used by the UI and PELT analysis.
 
-## Converting raw Dream/LLaDA dumps
+## Converting raw Dream dumps
 
 Dream:
 
@@ -113,15 +120,6 @@ Dream:
 python phase_cpd/collect_traces.py \
   --backend dream \
   --source /path/to/raw/dream_dumps \
-  --output-dir phase_cpd/data/traces_real
-```
-
-LLaDA:
-
-```bash
-python phase_cpd/collect_traces.py \
-  --backend llada \
-  --source /path/to/raw/llada_dumps \
   --output-dir phase_cpd/data/traces_real
 ```
 
@@ -135,8 +133,8 @@ phase_cpd/slurm/collect_phase_traces_nyu.sbatch
 
 It assumes:
 
-- you already have a working Dream and/or LLaDA environment inside your Singularity container
-- your instrumented backend command writes raw step-dump JSON files
+- you already have a working Dream environment inside your Singularity container
+- the node can load the Dream weights from Hugging Face or a local cache
 - those raw dumps are converted in-place by `phase_cpd/collect_traces.py`
 
 The main env vars you need to set before `sbatch` are:
@@ -145,16 +143,39 @@ The main env vars you need to set before `sbatch` are:
 - `PROMPTS_FILE`
 - `RAW_TRACE_ROOT`
 - `TRACE_OUTPUT_DIR`
-- `DREAM_TRACE_CMD`
-- `LLADA_TRACE_CMD`
+- optionally `DREAM_TRACE_CMD` if you do not want to use the default local runner
 
 Example:
 
 ```bash
-export DREAM_TRACE_CMD='python student/trace_jobs/run_dream_trace_dump.py --prompts "$PROMPTS_FILE" --output-dir "$RAW_TRACE_ROOT/dream"'
-export LLADA_TRACE_CMD='python student/trace_jobs/run_llada_trace_dump.py --prompts "$PROMPTS_FILE" --output-dir "$RAW_TRACE_ROOT/llada"'
 sbatch phase_cpd/slurm/collect_phase_traces_nyu.sbatch
 ```
+
+By default the job now runs:
+
+```bash
+python -m phase_cpd.trace_jobs.run_dream_trace_dump \
+  --prompts "$PROMPTS_FILE" \
+  --output-dir "$RAW_TRACE_ROOT/dream" \
+  --model-name "$DREAM_MODEL_NAME" \
+  --max-new-tokens "$DREAM_MAX_NEW_TOKENS" \
+  --steps "$DREAM_STEPS" \
+  --temperature "$DREAM_TEMPERATURE" \
+  --top-p "$DREAM_TOP_P" \
+  --alg "$DREAM_ALG" \
+  --alg-temp "$DREAM_ALG_TEMP" \
+  --torch-dtype "$DREAM_TORCH_DTYPE"
+```
+
+Recommended Dream environment versions from the official repo:
+
+```text
+Python 3.11+
+torch==2.5.1
+transformers==4.46.2
+```
+
+Once the raw files are written, the Slurm job automatically converts them into unified `TraceRecord` JSON under `TRACE_OUTPUT_DIR`.
 
 ## Adding new traces
 
