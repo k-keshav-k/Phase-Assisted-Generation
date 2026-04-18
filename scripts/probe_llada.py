@@ -57,7 +57,7 @@ def main() -> None:
     model = AutoModel.from_pretrained(
         MODEL_ID,
         trust_remote_code=True,
-        dtype=torch.float16,
+        torch_dtype=torch.float16,
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
