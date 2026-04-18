@@ -20,7 +20,13 @@ import json
 import math
 
 import torch
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, PreTrainedModel
+
+# LLaDA's custom model class is missing all_tied_weights_keys which newer
+# transformers expects. Patch it to return an empty dict — safe because
+# LLaDA has no tied weights.
+if not hasattr(PreTrainedModel, "all_tied_weights_keys"):
+    PreTrainedModel.all_tied_weights_keys = property(lambda _: {})
 
 MODEL_ID = "GSAI-ML/LLaDA-8B-Base"
 
