@@ -1,0 +1,12 @@
+{"sample_id":"prompt-001","prompt":"Explain why adaptive diffusion decoding can improve semantic coherence in hard regions.","tags":["english","coherence","adaptive"]}
+{"sample_id":"prompt-002","prompt":"Summarize the quality versus throughput tradeoff in iterative denoising language models.","tags":["english","throughput","quality"]}
+{"sample_id":"prompt-003","prompt":"Describe when a decoder should increase refinement intensity during generation.","tags":["english","refinement","policy"]}
+{"sample_id":"prompt-004","prompt":"Give a concise explanation of why token-level uncertainty can indicate phase changes.","tags":["english","uncertainty","phase"]}
+{"sample_id":"prompt-005","prompt":"Solve the equation 3(x - 4) + 5 = 2x + 17 and explain each algebraic step clearly.","tags":["math","algebra","step_by_step"]}
+{"sample_id":"prompt-006","prompt":"Evaluate the integral of x^2 * e^x with respect to x and briefly justify the integration method used.","tags":["math","calculus","symbolic"]}
+{"sample_id":"prompt-007","prompt":"A class has 18 students. Two thirds study math, and one quarter of the math students also study physics. How many students study both math and physics? Show the reasoning.","tags":["math","word_problem","reasoning"]}
+{"sample_id":"prompt-008","prompt":"Prove that the sum of the first n odd numbers equals n squared, using a concise argument.","tags":["math","proof","structured_reasoning"]}
+{"sample_id":"prompt-009","prompt":"Write a Python function that merges overlapping intervals and include a short explanation of the algorithm.","tags":["code","python","algorithm"]}
+{"sample_id":"prompt-010","prompt":"Debug this issue conceptually: a Python training loop shows decreasing loss but validation accuracy stays flat. List likely causes and how you would test them.","tags":["code","debugging","analysis"]}
+{"sample_id":"prompt-011","prompt":"Implement binary search in Python and explain the loop invariants that make it correct.","tags":["code","python","correctness"]}
+{"sample_id":"prompt-012","prompt":"Given a slow SQL query that joins three large tables, explain how you would investigate the bottleneck and suggest concrete optimizations.","tags":["code","systems","diagnostics"]}

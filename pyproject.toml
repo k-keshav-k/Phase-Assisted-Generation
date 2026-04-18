@@ -17,6 +17,13 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.6.0",
 ]
+phase_cpd = [
+  "altair>=5.0",
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "ruptures>=1.1.9",
+  "streamlit>=1.42",
+]
 
 [project.scripts]
 pag = "pag.orchestration.cli:main"
