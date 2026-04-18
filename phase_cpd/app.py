@@ -16,7 +16,7 @@ from phase_cpd.catalog import (  # noqa: E402
     load_trace_by_id,
 )
 from phase_cpd.cpd import CPDParameters, PeltDetector  # noqa: E402
-from phase_cpd.features import StabilizingTop1ProbExtractor  # noqa: E402
+from phase_cpd.features import FEATURE_EXTRACTORS, get_feature_extractor  # noqa: E402
 from phase_cpd.segments import build_segment_summaries  # noqa: E402
 from phase_cpd.visualize import (  # noqa: E402
     build_feature_chart,
@@ -35,9 +35,6 @@ def _catalog() -> list:
 @st.cache_data
 def _trace(trace_id: str):
     return load_trace_by_id(trace_id)
-
-
-EXTRACTOR = StabilizingTop1ProbExtractor()
 
 
 def main() -> None:
@@ -87,13 +84,30 @@ def main() -> None:
     selected_label = st.sidebar.selectbox("Trace", list(trace_labels))
     trace = _trace(trace_labels[selected_label])
 
-    if not EXTRACTOR.is_available(trace):
-        st.info(
-            "Stabilizing probability is unavailable for this trace. "
-            "Use traces converted from raw Dream step dumps with per-step token identities, "
-            "or keep the raw source_path accessible."
+    available_features = [
+        name
+        for name, extractor in FEATURE_EXTRACTORS.items()
+        if extractor.is_available(trace)
+    ]
+    if not available_features:
+        st.error(
+            "No supported scalar features are available for this trace. "
+            "Use traces converted from raw Dream step dumps with per-step token identities."
         )
         return
+    preferred_feature_order = [
+        "stabilizing_entropy",
+        "stabilizing_margin",
+        "stabilizing_prob",
+    ]
+    default_feature_name = next(
+        name for name in preferred_feature_order if name in available_features
+    )
+    feature_name = st.sidebar.selectbox(
+        "Feature",
+        available_features,
+        index=available_features.index(default_feature_name),
+    )
     cost = st.sidebar.selectbox("PELT cost", ["l2", "normal"])
     penalty = st.sidebar.number_input("Penalty", min_value=0.0, value=0.1, step=0.05, format="%.3f")
     min_segment_length = st.sidebar.number_input(
@@ -104,7 +118,7 @@ def main() -> None:
     )
     smoothing_window = st.sidebar.slider("Smoothing window", min_value=1, max_value=7, value=1)
 
-    feature_series = EXTRACTOR.extract(trace)
+    feature_series = get_feature_extractor(feature_name).extract(trace)
     detector = PeltDetector()
     breakpoints = detector.detect(
         feature_series.values,
@@ -133,13 +147,14 @@ def main() -> None:
         st.metric("Breakpoints", len(breakpoints))
         st.metric("Segments", len(segment_summaries))
         st.metric("Feature Std", f"{feature_std:.4f}")
+        st.metric("Feature", feature_series.feature_name)
         st.json(trace.decoding_metadata)
 
     if not breakpoints:
         st.warning(
             "No internal boundaries were detected. On Dream traces this often means the "
-            "stabilizing-probability signal is too smooth at the current penalty. Lowering the "
-            "penalty or smoothing window can help."
+            f"{feature_series.feature_name} signal is too smooth at the current penalty. "
+            "Lowering the penalty or smoothing window can help."
         )
 
     st.subheader("Boundary overlay")

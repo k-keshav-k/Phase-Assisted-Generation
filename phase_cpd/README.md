@@ -6,7 +6,7 @@
 
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
-- extracts the stabilizing-probability feature series
+- extracts scalar token-level feature series from the stabilization step
 - runs PELT change-point detection with tunable settings
 - visualizes segmented text, feature trajectories, and segment summary statistics
 
@@ -48,12 +48,17 @@ If that directory is missing or empty, the app raises an error instead of fallin
 
 ## Current feature and detector support
 
-- Feature: `stabilizing_prob`
+- Features:
+  - `stabilizing_entropy`
+  - `stabilizing_margin`
+  - `stabilizing_prob`
 - Detector: PELT via `ruptures`
 - Costs: `l2`, `normal`
 - Controls: penalty, min segment length, smoothing window
 
-`stabilizing_prob` uses the selected-token probability at the first refinement step after which a token's identity no longer changes. This avoids the saturation problem you observed with final-step probabilities and keeps the CPD signal tied to when a token actually settles.
+`stabilizing_prob` uses the selected-token probability at the first refinement step after which a token's identity no longer changes.
+`stabilizing_margin` uses `top1_prob - top2_prob` at that same stabilization step.
+`stabilizing_entropy` uses the full-vocabulary entropy at the stabilization step and is usually the better scalar when top-1 probabilities saturate.
 
 ## Real backend status
 
@@ -76,7 +81,7 @@ Each trace JSON stores:
 - trace metadata: `trace_id`, `backend`, `model_name`, `prompt`, `tags`
 - final output text: `final_text`
 - token list with `token_text`, `char_start`, `char_end`
-- per-step observations such as `top1_prob`, `selected_logit`, `top2_prob`
+- per-step observations such as `top1_prob`, `selected_logit`, `top2_prob`, and scalar extras like `entropy`
 - decoding metadata such as chunk size, refinement steps, and run id
 
 ## Raw step-dump format for Dream

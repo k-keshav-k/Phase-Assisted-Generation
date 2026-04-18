@@ -49,6 +49,84 @@ class StabilizingTop1ProbExtractor:
             metadata={"reduction": "first_stable_step"},
         )
 
+
+class StabilizingEntropyExtractor:
+    name = "stabilizing_entropy"
+
+    def is_available(self, trace: TraceRecord) -> bool:
+        try:
+            identity_trace = _trace_with_identity_history(trace)
+        except (FileNotFoundError, ValueError):
+            return False
+        return all(
+            _stabilizing_extra(token, "entropy") is not None
+            for token in identity_trace.tokens
+        )
+
+    def extract(self, trace: TraceRecord) -> FeatureSeries:
+        identity_trace = _trace_with_identity_history(trace)
+        token_indices: list[int] = []
+        values: list[float] = []
+        for token in identity_trace.tokens:
+            value = _stabilizing_extra(token, "entropy")
+            if value is None:
+                msg = f"Token {token.token_index} is missing entropy at its stabilization step"
+                raise ValueError(msg)
+            token_indices.append(token.token_index)
+            values.append(value)
+        return FeatureSeries(
+            feature_name=self.name,
+            token_indices=token_indices,
+            values=values,
+            metadata={"reduction": "first_stable_step"},
+        )
+
+
+class StabilizingMarginExtractor:
+    name = "stabilizing_margin"
+
+    def is_available(self, trace: TraceRecord) -> bool:
+        try:
+            identity_trace = _trace_with_identity_history(trace)
+        except (FileNotFoundError, ValueError):
+            return False
+        return all(_stabilizing_margin(token) is not None for token in identity_trace.tokens)
+
+    def extract(self, trace: TraceRecord) -> FeatureSeries:
+        identity_trace = _trace_with_identity_history(trace)
+        token_indices: list[int] = []
+        values: list[float] = []
+        for token in identity_trace.tokens:
+            value = _stabilizing_margin(token)
+            if value is None:
+                msg = f"Token {token.token_index} is missing top1/top2 probability at stabilization"
+                raise ValueError(msg)
+            token_indices.append(token.token_index)
+            values.append(value)
+        return FeatureSeries(
+            feature_name=self.name,
+            token_indices=token_indices,
+            values=values,
+            metadata={"reduction": "first_stable_step"},
+        )
+
+
+FEATURE_EXTRACTORS: dict[str, FeatureExtractor] = {
+    StabilizingEntropyExtractor.name: StabilizingEntropyExtractor(),
+    StabilizingMarginExtractor.name: StabilizingMarginExtractor(),
+    StabilizingTop1ProbExtractor.name: StabilizingTop1ProbExtractor(),
+}
+
+
+def get_feature_extractor(name: str) -> FeatureExtractor:
+    try:
+        return FEATURE_EXTRACTORS[name]
+    except KeyError as error:
+        available = ", ".join(sorted(FEATURE_EXTRACTORS))
+        msg = f"Unknown feature extractor '{name}'. Available: {available}"
+        raise KeyError(msg) from error
+
+
 def _stabilizing_observation(token) -> object:
     if not token.observations:
         msg = f"Token {token.token_index} has no observations"
@@ -75,6 +153,21 @@ def _stabilizing_observation(token) -> object:
 
     msg = f"Could not determine a stabilization step for token {token.token_index}"
     raise ValueError(msg)
+
+
+def _stabilizing_extra(token, key: str) -> float | None:
+    observation = _stabilizing_observation(token)
+    value = observation.extras.get(key)
+    if value is None:
+        return None
+    return float(value)
+
+
+def _stabilizing_margin(token) -> float | None:
+    observation = _stabilizing_observation(token)
+    if observation.top1_prob is None or observation.top2_prob is None:
+        return None
+    return float(observation.top1_prob - observation.top2_prob)
 
 
 def _observation_identity(observation, final_token_text: str) -> tuple[str, object] | None:

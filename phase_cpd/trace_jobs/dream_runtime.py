@@ -146,11 +146,13 @@ class _StepRecorder:
         selected_logits: list[float | None]
         selected_probs: list[float | None]
         top2_probs: list[float | None]
+        entropies: list[float | None]
 
         if logits is None:
             selected_logits = [None] * int(generated_ids_row.shape[0])
             selected_probs = [None] * int(generated_ids_row.shape[0])
             top2_probs = [None] * int(generated_ids_row.shape[0])
+            entropies = [None] * int(generated_ids_row.shape[0])
         else:
             step_logits = _slice_generation_logits(
                 logits=logits,
@@ -170,21 +172,16 @@ class _StepRecorder:
                 device=step_logits_row.device,
                 dtype=self._torch.long,
             ).unsqueeze(-1)
-            gathered_logits = step_logits_row.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
-            log_partition = step_logits_row.logsumexp(dim=-1)
-            probs = (gathered_logits - log_partition).exp()
-            topk = min(2, int(step_logits_row.shape[-1]))
-            top_logits = step_logits_row.topk(k=topk, dim=-1).values
-            runner_up = (
-                (top_logits[..., 1] - log_partition).exp()
-                if topk == 2
-                else self._torch.full_like(probs, float("nan"))
+            (
+                selected_logits,
+                selected_probs,
+                top2_probs,
+                entropies,
+            ) = _selected_token_stats(
+                self._torch,
+                step_logits_row,
+                token_ids_on_device,
             )
-
-            selected_logits = gathered_logits.detach().to("cpu", dtype=self._torch.float32).tolist()
-            selected_probs = probs.detach().to("cpu", dtype=self._torch.float32).tolist()
-            top2_cpu = runner_up.detach().to("cpu", dtype=self._torch.float32).tolist()
-            top2_probs = [None if value != value else value for value in top2_cpu]
 
         self._snapshots.append(
             _StepSnapshot(
@@ -193,6 +190,7 @@ class _StepRecorder:
                 selected_logits=selected_logits,
                 selected_probs=selected_probs,
                 top2_probs=top2_probs,
+                entropies=entropies,
             )
         )
 
@@ -218,6 +216,9 @@ class _StepRecorder:
                         "top1_prob": _maybe_round(snapshot.selected_probs[token_index]),
                         "selected_logit": _maybe_round(snapshot.selected_logits[token_index]),
                         "top2_prob": _maybe_round(snapshot.top2_probs[token_index]),
+                        "extras": {
+                            "entropy": _maybe_round(snapshot.entropies[token_index]),
+                        },
                     }
                 )
             steps.append({"step_index": snapshot.step_index, "tokens": tokens})
@@ -258,6 +259,7 @@ class _StepSnapshot:
     selected_logits: list[float | None]
     selected_probs: list[float | None]
     top2_probs: list[float | None]
+    entropies: list[float | None]
 
 
 def _build_inputs(tokenizer, prompt: str) -> dict[str, Any]:
@@ -303,6 +305,31 @@ def _normalize_hook_step(step: object) -> int | None:
     if step is None:
         return None
     return int(step)
+
+
+def _selected_token_stats(torch_module, step_logits_row, token_ids_on_device):
+    gathered_logits = step_logits_row.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
+    log_probs = step_logits_row.log_softmax(dim=-1)
+    selected_log_probs = log_probs.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
+    selected_probs = selected_log_probs.exp()
+    probs = log_probs.exp()
+    entropies = -(probs * log_probs).sum(dim=-1)
+
+    topk = min(2, int(step_logits_row.shape[-1]))
+    top_log_probs = log_probs.topk(k=topk, dim=-1).values
+    runner_up = (
+        top_log_probs[..., 1].exp()
+        if topk == 2
+        else torch_module.full_like(selected_probs, float("nan"))
+    )
+
+    selected_logits_cpu = gathered_logits.detach().to("cpu", dtype=torch_module.float32).tolist()
+    selected_probs_cpu = selected_probs.detach().to("cpu", dtype=torch_module.float32).tolist()
+    top2_cpu = runner_up.detach().to("cpu", dtype=torch_module.float32).tolist()
+    entropy_cpu = entropies.detach().to("cpu", dtype=torch_module.float32).tolist()
+    top2_probs = [None if value != value else value for value in top2_cpu]
+    entropies_list = [None if value != value else value for value in entropy_cpu]
+    return selected_logits_cpu, selected_probs_cpu, top2_probs, entropies_list
 
 
 def _normalize_token_canvas(x):

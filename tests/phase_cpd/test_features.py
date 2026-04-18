@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from phase_cpd.catalog import default_trace_dir, load_trace_by_id
-from phase_cpd.features import StabilizingTop1ProbExtractor
+from phase_cpd.features import (
+    StabilizingEntropyExtractor,
+    StabilizingMarginExtractor,
+    StabilizingTop1ProbExtractor,
+)
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceToken
 
 
@@ -14,6 +18,95 @@ def test_stabilizing_prob_is_available_on_real_trace() -> None:
     assert feature_series.feature_name == "stabilizing_prob"
     assert len(feature_series.values) == len(trace.tokens)
     assert all(0.0 <= value <= 1.0 for value in feature_series.values)
+
+
+def test_stabilizing_margin_uses_top1_minus_top2() -> None:
+    trace = TraceRecord(
+        trace_id="margin-test",
+        backend="dream",
+        model_name="dream-test",
+        prompt="Prompt",
+        final_text="A",
+        tokens=[
+            TraceToken(
+                token_index=0,
+                token_text="A",
+                char_start=0,
+                char_end=1,
+                observations=[
+                    TokenStepObservation(
+                        step_index=0,
+                        token_id=10,
+                        token_text="X",
+                        top1_prob=0.11,
+                        top2_prob=0.08,
+                    ),
+                    TokenStepObservation(
+                        step_index=1,
+                        token_id=20,
+                        token_text="A",
+                        top1_prob=0.82,
+                        top2_prob=0.12,
+                    ),
+                    TokenStepObservation(
+                        step_index=2,
+                        token_id=20,
+                        token_text="A",
+                        top1_prob=0.96,
+                        top2_prob=0.02,
+                    ),
+                ],
+            )
+        ],
+    )
+
+    feature_series = StabilizingMarginExtractor().extract(trace)
+
+    assert feature_series.feature_name == "stabilizing_margin"
+    assert feature_series.values == [0.7]
+
+
+def test_stabilizing_entropy_uses_entropy_extra() -> None:
+    trace = TraceRecord(
+        trace_id="entropy-test",
+        backend="dream",
+        model_name="dream-test",
+        prompt="Prompt",
+        final_text="A",
+        tokens=[
+            TraceToken(
+                token_index=0,
+                token_text="A",
+                char_start=0,
+                char_end=1,
+                observations=[
+                    TokenStepObservation(
+                        step_index=0,
+                        token_id=10,
+                        token_text="X",
+                        extras={"entropy": 2.1},
+                    ),
+                    TokenStepObservation(
+                        step_index=1,
+                        token_id=20,
+                        token_text="A",
+                        extras={"entropy": 0.9},
+                    ),
+                    TokenStepObservation(
+                        step_index=2,
+                        token_id=20,
+                        token_text="A",
+                        extras={"entropy": 0.4},
+                    ),
+                ],
+            )
+        ],
+    )
+
+    feature_series = StabilizingEntropyExtractor().extract(trace)
+
+    assert feature_series.feature_name == "stabilizing_entropy"
+    assert feature_series.values == [0.9]
 
 
 def test_stabilizing_top1_prob_uses_first_stable_observation() -> None:
