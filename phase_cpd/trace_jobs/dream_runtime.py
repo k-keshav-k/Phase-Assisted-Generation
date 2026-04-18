@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -84,7 +85,15 @@ class DreamTraceCollector:
         if self._config.alg_temp is not None:
             generation_kwargs["alg_temp"] = self._config.alg_temp
 
-        with self._torch.inference_mode():
+        with self._torch.inference_mode(), warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    r"`do_sample` is set to `False`\. However, `temperature` is set to `0\.0`"
+                ),
+                category=UserWarning,
+                module=r"transformers\.generation\.configuration_utils",
+            )
             output = self._model.diffusion_generate(input_ids, **generation_kwargs)
 
         final_sequence = output.sequences[0].detach().to("cpu")
@@ -121,29 +130,43 @@ class _StepRecorder:
         if step_index is None:
             return
 
-        generated_ids = x[0, self._prompt_length : self._prompt_length + self._max_new_tokens]
-        generated_ids = generated_ids.detach().to("cpu", dtype=self._torch.long)
+        token_canvas = _normalize_token_canvas(x)
+        generated_ids = token_canvas[:, self._prompt_length : self._prompt_length + self._max_new_tokens]
+        if int(generated_ids.shape[0]) != 1:
+            msg = (
+                "Dream trace collection currently expects a single prompt per hook call. "
+                f"Got batch size {int(generated_ids.shape[0])}."
+            )
+            raise ValueError(msg)
+        generated_ids_row = generated_ids[0].detach().to("cpu", dtype=self._torch.long)
 
         selected_logits: list[float | None]
         selected_probs: list[float | None]
         top2_probs: list[float | None]
 
         if logits is None:
-            selected_logits = [None] * int(generated_ids.shape[0])
-            selected_probs = [None] * int(generated_ids.shape[0])
-            top2_probs = [None] * int(generated_ids.shape[0])
+            selected_logits = [None] * int(generated_ids_row.shape[0])
+            selected_probs = [None] * int(generated_ids_row.shape[0])
+            top2_probs = [None] * int(generated_ids_row.shape[0])
         else:
             step_logits = _slice_generation_logits(
                 logits=logits,
                 prompt_length=self._prompt_length,
-                generated_length=int(generated_ids.shape[0]),
+                generated_length=int(generated_ids_row.shape[0]),
             )
-            token_ids_on_device = generated_ids.to(step_logits.device).unsqueeze(-1)
-            gathered_logits = step_logits.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
-            log_partition = step_logits.logsumexp(dim=-1)
+            if int(step_logits.shape[0]) != 1:
+                msg = (
+                    "Dream trace collection currently expects logits for a single prompt. "
+                    f"Got batch size {int(step_logits.shape[0])}."
+                )
+                raise ValueError(msg)
+            step_logits_row = step_logits[0]
+            token_ids_on_device = generated_ids_row.to(step_logits_row.device).unsqueeze(-1)
+            gathered_logits = step_logits_row.gather(dim=-1, index=token_ids_on_device).squeeze(-1)
+            log_partition = step_logits_row.logsumexp(dim=-1)
             probs = (gathered_logits - log_partition).exp()
-            topk = min(2, int(step_logits.shape[-1]))
-            top_logits = step_logits.topk(k=topk, dim=-1).values
+            topk = min(2, int(step_logits_row.shape[-1]))
+            top_logits = step_logits_row.topk(k=topk, dim=-1).values
             runner_up = (
                 (top_logits[..., 1] - log_partition).exp()
                 if topk == 2
@@ -158,7 +181,7 @@ class _StepRecorder:
         self._snapshots.append(
             _StepSnapshot(
                 step_index=step_index,
-                token_ids=generated_ids.tolist(),
+                token_ids=generated_ids_row.tolist(),
                 selected_logits=selected_logits,
                 selected_probs=selected_probs,
                 top2_probs=top2_probs,
@@ -274,6 +297,15 @@ def _normalize_hook_step(step: object) -> int | None:
     return int(step)
 
 
+def _normalize_token_canvas(x):
+    if x.ndim == 1:
+        return x.unsqueeze(0)
+    if x.ndim != 2:
+        msg = f"Unexpected Dream token canvas rank: expected 1 or 2 dims, got {x.ndim}."
+        raise ValueError(msg)
+    return x
+
+
 def _resolve_torch_dtype(torch_module, dtype_name: str, device: str):
     if dtype_name == "auto":
         if device == "cuda":
@@ -298,6 +330,11 @@ def _select_device(torch_module) -> str:
 
 
 def _slice_generation_logits(*, logits, prompt_length: int, generated_length: int):
+    if logits.ndim == 2:
+        logits = logits.unsqueeze(0)
+    if logits.ndim != 3:
+        msg = f"Unexpected Dream logits rank: expected 2 or 3 dims, got {logits.ndim}."
+        raise ValueError(msg)
     if logits.shape[1] == prompt_length + generated_length:
         return logits[:, prompt_length:, :]
     if logits.shape[1] == generated_length:
