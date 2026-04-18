@@ -161,8 +161,8 @@ def main() -> None:
     st.caption(f"Detected boundary indices: {format_breakpoints(breakpoints)}")
     st.markdown(render_token_boundary_view_html(trace, breakpoints), unsafe_allow_html=True)
 
-    st.subheader("Segmented text")
-    st.markdown(render_segmented_text_html(segment_summaries), unsafe_allow_html=True)
+    # st.subheader("Segmented text")
+    # st.markdown(render_segmented_text_html(segment_summaries), unsafe_allow_html=True)
 
     st.subheader("Feature vs token index")
     st.altair_chart(build_feature_chart(feature_series, breakpoints), use_container_width=True)

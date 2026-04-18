@@ -11,6 +11,5 @@ dist/
 artifacts/
 logs/
 outputs/
-phase_cpd/data/traces_real/
 skills/
 AGENTS.md
