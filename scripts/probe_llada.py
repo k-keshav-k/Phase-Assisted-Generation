@@ -66,7 +66,16 @@ def main() -> None:
 
     # Build input: [prompt tokens] [MASK ... MASK]
     prompt_ids = tokenizer.encode(args.prompt, return_tensors="pt").to(device)
+
+    # LLaDA doesn't set mask_token_id via the standard property.
+    # Try standard → token string lookup → known LLaDA fallback (126336).
     mask_token_id = tokenizer.mask_token_id
+    if mask_token_id is None:
+        mask_token_id = tokenizer.convert_tokens_to_ids("[MASK]")
+    if mask_token_id is None or mask_token_id == tokenizer.unk_token_id:
+        mask_token_id = 126336  # known LLaDA-8B mask token id
+    print(f"Mask token id : {mask_token_id}")
+
     mask_ids = torch.full((1, args.target_len), mask_token_id, device=device)
     input_ids = torch.cat([prompt_ids, mask_ids], dim=1)
 
