@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=phase_cpd_collect
 #SBATCH --account=csci_ga_3033_131-2026sp
-#SBATCH --partition=c24m170-a100-2
+#SBATCH --partition=c12m85-a100-1
 #SBATCH --output=./logs/%j_%x.out
 #SBATCH --error=./logs/%j_%x.err
-#SBATCH --time=24:00:00
+#SBATCH --time=2:00:00
 #SBATCH --gres=gpu:a100:1
 #SBATCH --requeue
 
