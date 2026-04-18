@@ -52,10 +52,10 @@ def main() -> None:
         MODEL_ID,
         trust_remote_code=True,
         dtype=torch.float16,
-        device_map="auto",
     )
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     model.eval()
-    device = next(model.parameters()).device
     print(f"Model loaded on {device}\n")
 
     # Build input: [prompt tokens] [MASK ... MASK]
