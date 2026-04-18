@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from phase_cpd.cpd import CPDParameters, PeltDetector
+from phase_cpd.cpd import CPDParameters, KernelCPDDetector, PeltDetector
 from phase_cpd.segments import normalize_breakpoints
 
 
@@ -32,6 +32,35 @@ def test_pelt_detector_returns_interior_sorted_breakpoints() -> None:
         0.82,
         0.81,
         0.8,
+    ]
+    breakpoints = detector.detect(
+        values,
+        CPDParameters(cost="l2", penalty=0.01, min_segment_length=2, smoothing_window=1),
+    )
+
+    assert breakpoints
+    assert breakpoints == sorted(set(breakpoints))
+    assert all(1 <= breakpoint < len(values) for breakpoint in breakpoints)
+
+
+def test_kernel_cpd_detector_returns_interior_sorted_breakpoints() -> None:
+    detector = KernelCPDDetector(kernel="rbf")
+    values = [
+        0.1,
+        0.12,
+        0.11,
+        0.09,
+        0.08,
+        0.7,
+        0.74,
+        0.72,
+        0.71,
+        0.73,
+        0.2,
+        0.19,
+        0.18,
+        0.22,
+        0.21,
     ]
     breakpoints = detector.detect(
         values,

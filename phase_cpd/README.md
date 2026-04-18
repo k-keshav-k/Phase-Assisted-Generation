@@ -7,7 +7,7 @@
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
 - loads curated trace JSON files from `phase_cpd/data/traces_real/`
 - extracts scalar token-level feature series from the stabilization step
-- runs PELT change-point detection with tunable settings
+- runs change-point detection with tunable settings
 - visualizes segmented text, feature trajectories, and segment summary statistics
 
 The app does not call a model, host an API, or generate traces live. It is intended for fast qualitative analysis over traces you already produced elsewhere.
@@ -52,13 +52,20 @@ If that directory is missing or empty, the app raises an error instead of fallin
   - `stabilizing_entropy`
   - `stabilizing_margin`
   - `stabilizing_prob`
-- Detector: PELT via `ruptures`
-- Costs: `l2`, `normal`
+- Detectors:
+  - `pelt`
+  - `kernel_cpd`
+- PELT costs: `l2`, `normal`
+- Kernel CPD kernels: `rbf`, `linear`, `cosine`
 - Controls: penalty, min segment length, smoothing window
 
 `stabilizing_prob` uses the selected-token probability at the first refinement step after which a token's identity no longer changes.
 `stabilizing_margin` uses `top1_prob - top2_prob` at that same stabilization step.
 `stabilizing_entropy` uses the full-vocabulary entropy at the stabilization step and is usually the better scalar when top-1 probabilities saturate.
+
+The smoothing window is a centered moving average applied to the chosen feature before CPD.
+`1` means no smoothing. Larger values suppress local noise, but they also blur sharp short-lived
+transitions and can move weak boundaries.
 
 ## Real backend status
 

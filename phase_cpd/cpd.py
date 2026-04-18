@@ -63,6 +63,53 @@ class PeltDetector:
         )
 
 
+class KernelCPDDetector:
+    name = "kernel_cpd"
+
+    def __init__(self, *, kernel: str = "rbf") -> None:
+        if kernel not in {"linear", "rbf", "cosine"}:
+            msg = "KernelCPDDetector.kernel must be one of: linear, rbf, cosine"
+            raise ValueError(msg)
+        self.kernel = kernel
+
+    def detect(self, values: Sequence[float], params: CPDParameters) -> list[int]:
+        signal = np.asarray(values, dtype=float)
+        token_count = int(signal.shape[0])
+        if token_count < max(2, params.min_segment_length * 2):
+            return []
+
+        smoothed = _moving_average(signal, params.smoothing_window)
+        standardized = _standardize(smoothed)
+        if np.allclose(standardized, 0.0):
+            return []
+
+        raw_breakpoints = rpt.KernelCPD(
+            kernel=self.kernel,
+            min_size=params.min_segment_length,
+        ).fit(standardized.reshape(-1, 1)).predict(pen=params.penalty)
+        return normalize_breakpoints(
+            raw_breakpoints,
+            token_count,
+            min_segment_length=params.min_segment_length,
+        )
+
+
+DETECTORS: dict[str, ChangePointDetector] = {
+    PeltDetector.name: PeltDetector(),
+}
+
+
+def get_detector(name: str, *, kernel: str = "rbf") -> ChangePointDetector:
+    if name == KernelCPDDetector.name:
+        return KernelCPDDetector(kernel=kernel)
+    try:
+        return DETECTORS[name]
+    except KeyError as error:
+        available = ", ".join(sorted([*DETECTORS, KernelCPDDetector.name]))
+        msg = f"Unknown detector '{name}'. Available: {available}"
+        raise KeyError(msg) from error
+
+
 def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
     if window <= 1 or values.size == 0:
         return values

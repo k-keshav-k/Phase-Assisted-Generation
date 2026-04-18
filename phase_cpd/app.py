@@ -15,14 +15,13 @@ from phase_cpd.catalog import (  # noqa: E402
     list_catalog_entries,
     load_trace_by_id,
 )
-from phase_cpd.cpd import CPDParameters, PeltDetector  # noqa: E402
+from phase_cpd.cpd import CPDParameters, get_detector  # noqa: E402
 from phase_cpd.features import FEATURE_EXTRACTORS, get_feature_extractor  # noqa: E402
 from phase_cpd.segments import build_segment_summaries  # noqa: E402
 from phase_cpd.visualize import (  # noqa: E402
     build_feature_chart,
     build_segment_table,
     format_breakpoints,
-    render_segmented_text_html,
     render_token_boundary_view_html,
 )
 
@@ -108,7 +107,20 @@ def main() -> None:
         available_features,
         index=available_features.index(default_feature_name),
     )
-    cost = st.sidebar.selectbox("PELT cost", ["l2", "normal"])
+    detector_name = st.sidebar.selectbox(
+        "Detector",
+        ["pelt", "kernel_cpd"],
+        help=(
+            "PELT is the default exact search method. Kernel CPD can be better when "
+            "shifts are nonlinear."
+        ),
+    )
+    kernel = "rbf"
+    if detector_name == "pelt":
+        cost = st.sidebar.selectbox("PELT cost", ["l2", "normal"])
+    else:
+        cost = "l2"
+        kernel = st.sidebar.selectbox("Kernel", ["rbf", "linear", "cosine"])
     penalty = st.sidebar.number_input("Penalty", min_value=0.0, value=0.1, step=0.05, format="%.3f")
     min_segment_length = st.sidebar.number_input(
         "Min segment length",
@@ -116,10 +128,19 @@ def main() -> None:
         value=2,
         step=1,
     )
-    smoothing_window = st.sidebar.slider("Smoothing window", min_value=1, max_value=7, value=1)
+    smoothing_window = st.sidebar.slider(
+        "Smoothing window",
+        min_value=1,
+        max_value=7,
+        value=1,
+        help=(
+            "Applies a centered moving-average to the selected feature before change-point "
+            "detection. `1` means no smoothing."
+        ),
+    )
 
     feature_series = get_feature_extractor(feature_name).extract(trace)
-    detector = PeltDetector()
+    detector = get_detector(detector_name, kernel=kernel)
     breakpoints = detector.detect(
         feature_series.values,
         CPDParameters(
@@ -148,6 +169,7 @@ def main() -> None:
         st.metric("Segments", len(segment_summaries))
         st.metric("Feature Std", f"{feature_std:.4f}")
         st.metric("Feature", feature_series.feature_name)
+        st.metric("Detector", detector_name)
         st.json(trace.decoding_metadata)
 
     if not breakpoints:
