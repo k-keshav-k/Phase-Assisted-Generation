@@ -13,7 +13,7 @@ from phase_cpd.segments import normalize_breakpoints
 @dataclass(slots=True)
 class CPDParameters:
     cost: str = "l2"
-    penalty: float = 2.0
+    penalty: float = 0.1
     min_segment_length: int = 2
     smoothing_window: int = 1
 
@@ -48,9 +48,13 @@ class PeltDetector:
         if token_count < max(2, params.min_segment_length * 2):
             return []
 
-        smoothed = _moving_average(signal, params.smoothing_window).reshape(-1, 1)
+        smoothed = _moving_average(signal, params.smoothing_window)
+        standardized = _standardize(smoothed)
+        if np.allclose(standardized, 0.0):
+            return []
+
         raw_breakpoints = rpt.Pelt(model=params.cost, min_size=params.min_segment_length).fit(
-            smoothed
+            standardized.reshape(-1, 1)
         ).predict(pen=params.penalty)
         return normalize_breakpoints(
             raw_breakpoints,
@@ -70,3 +74,13 @@ def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
         end = min(values.size, index + radius + 1)
         smoothed[index] = float(values[start:end].mean())
     return smoothed
+
+
+def _standardize(values: np.ndarray) -> np.ndarray:
+    if values.size == 0:
+        return values
+    mean = float(values.mean())
+    std = float(values.std())
+    if std <= 1e-8:
+        return np.zeros_like(values, dtype=float)
+    return (values - mean) / std

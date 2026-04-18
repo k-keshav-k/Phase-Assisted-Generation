@@ -4,7 +4,8 @@
 
 ## What it does
 
-- loads curated trace JSON files from `phase_cpd/data/traces/`
+- loads curated trace JSON files from `phase_cpd/data/traces_real/`
+- loads curated trace JSON files from `phase_cpd/data/traces_real/`
 - extracts a token-level feature series
 - runs PELT change-point detection with tunable settings
 - visualizes segmented text, feature trajectories, and segment summary statistics
@@ -40,23 +41,23 @@ make run-phase-cpd
 The UI reads curated traces from:
 
 ```text
-phase_cpd/data/traces/
+phase_cpd/data/traces_real/
 ```
 
-Two mock traces are included so the app runs immediately.
+If that directory is missing or empty, the app raises an error instead of falling back to synthetic data.
 
 ## Current feature and detector support
 
-- Feature: `top1_prob`
+- Features: `top1_prob_mean`, `top1_prob`
 - Detector: PELT via `ruptures`
 - Costs: `l2`, `normal`
 - Controls: penalty, min segment length, smoothing window
 
-`top1_prob` uses the selected token probability from the final available refinement step for each token.
+`top1_prob_mean` averages the selected-token probability across refinement steps and is the recommended default for segmentation.
+`top1_prob` uses the selected token probability from the final available refinement step and can become too flat on real Dream traces.
 
 ## Real backend status
 
-- `mock`: ready now through checked-in example traces
 - `Dream`: local trace-dump entrypoint added in `phase_cpd/trace_jobs/`
 
 Dream raw step dumps are converted into the unified `TraceRecord` schema through `phase_cpd/collect_traces.py` and `phase_cpd/importers/common.py`.
@@ -208,6 +209,6 @@ uv run --group phase_cpd_dream --python 3.11 \
 
 1. Produce trace artifacts offline on your own machine or GPU workflow.
 2. Convert them into the local `TraceRecord` schema.
-3. Save the resulting JSON into `phase_cpd/data/traces/`.
+3. Save the resulting JSON into `phase_cpd/data/traces_real/`.
 
 The app will pick up the new file automatically on reload.

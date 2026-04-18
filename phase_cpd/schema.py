@@ -19,6 +19,8 @@ def _require_non_negative(value: int, field_name: str) -> None:
 @dataclass(slots=True)
 class TokenStepObservation:
     step_index: int
+    token_id: int | None = None
+    token_text: str | None = None
     top1_prob: float | None = None
     selected_logit: float | None = None
     top2_prob: float | None = None
@@ -26,6 +28,8 @@ class TokenStepObservation:
 
     def __post_init__(self) -> None:
         _require_non_negative(self.step_index, "TokenStepObservation.step_index")
+        if self.token_id is not None:
+            _require_non_negative(self.token_id, "TokenStepObservation.token_id")
 
 
 @dataclass(slots=True)
@@ -101,4 +105,3 @@ class SegmentSummary:
         if self.end_token <= self.start_token:
             msg = "SegmentSummary.end_token must be greater than start_token"
             raise ValueError(msg)
-

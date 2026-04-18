@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import numpy as np
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,7 +11,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from phase_cpd.catalog import (  # noqa: E402
-    default_trace_dir,
     filter_catalog_entries,
     list_catalog_entries,
     load_trace_by_id,
@@ -21,20 +21,20 @@ from phase_cpd.segments import build_segment_summaries  # noqa: E402
 from phase_cpd.visualize import (  # noqa: E402
     build_feature_chart,
     build_segment_table,
+    format_breakpoints,
     render_segmented_text_html,
+    render_token_boundary_view_html,
 )
 
-_TRACE_DIR = default_trace_dir()
+
+@st.cache_data
+def _catalog() -> list:
+    return list_catalog_entries()
 
 
 @st.cache_data
-def _catalog(trace_dir: str) -> list:
-    return list_catalog_entries(trace_dir)
-
-
-@st.cache_data
-def _trace(trace_dir: str, trace_id: str):
-    return load_trace_by_id(trace_id, trace_dir)
+def _trace(trace_id: str):
+    return load_trace_by_id(trace_id)
 
 
 def main() -> None:
@@ -42,9 +42,10 @@ def main() -> None:
     st.title("PAG Phase Segmentation Explorer")
     st.caption("Offline change-point analysis over curated diffusion trace files.")
 
-    entries = _catalog(str(_TRACE_DIR))
-    if not entries:
-        st.error(f"No trace files were found in {_TRACE_DIR}.")
+    try:
+        entries = _catalog()
+    except FileNotFoundError as error:
+        st.error(str(error))
         return
 
     backends = sorted({entry.backend for entry in entries})
@@ -81,11 +82,35 @@ def main() -> None:
 
     trace_labels = {entry.label: entry.trace_id for entry in filtered_entries}
     selected_label = st.sidebar.selectbox("Trace", list(trace_labels))
-    trace = _trace(str(_TRACE_DIR), trace_labels[selected_label])
+    trace = _trace(trace_labels[selected_label])
 
-    feature_name = st.sidebar.selectbox("Feature", list(sorted(FEATURE_EXTRACTORS)))
+    available_feature_names = [
+        name
+        for name, extractor in FEATURE_EXTRACTORS.items()
+        if extractor.is_available(trace)
+    ]
+    if not available_feature_names:
+        st.error("No supported features are available for this trace.")
+        return
+
+    preferred_feature_order = ["top1_prob_stabilize", "top1_prob_mean", "top1_prob"]
+    default_feature_name = next(
+        name for name in preferred_feature_order if name in available_feature_names
+    )
+    feature_name = st.sidebar.selectbox(
+        "Feature",
+        available_feature_names,
+        index=available_feature_names.index(default_feature_name),
+    )
+
+    if "top1_prob_stabilize" not in available_feature_names:
+        st.info(
+            "Stabilization-based probability is unavailable for this trace. "
+            "Use traces converted from raw Dream step dumps with per-step token identities, "
+            "or keep the raw source_path accessible."
+        )
     cost = st.sidebar.selectbox("PELT cost", ["l2", "normal"])
-    penalty = st.sidebar.number_input("Penalty", min_value=0.0, value=2.0, step=0.5)
+    penalty = st.sidebar.number_input("Penalty", min_value=0.0, value=0.1, step=0.05, format="%.3f")
     min_segment_length = st.sidebar.number_input(
         "Min segment length",
         min_value=1,
@@ -111,6 +136,7 @@ def main() -> None:
         ),
     )
     segment_summaries = build_segment_summaries(trace, feature_series, breakpoints)
+    feature_std = float(np.std(feature_series.values))
 
     metadata_column, summary_column = st.columns([1.4, 1])
     with metadata_column:
@@ -126,7 +152,19 @@ def main() -> None:
         st.metric("Tokens", len(trace.tokens))
         st.metric("Breakpoints", len(breakpoints))
         st.metric("Segments", len(segment_summaries))
+        st.metric("Feature Std", f"{feature_std:.4f}")
         st.json(trace.decoding_metadata)
+
+    if not breakpoints:
+        st.warning(
+            "No internal boundaries were detected. On Dream traces this often happens when "
+            "final-step token confidence is too flat. `top1_prob_mean` is the better default "
+            "for segmentation, and lowering the penalty further can help."
+        )
+
+    st.subheader("Boundary overlay")
+    st.caption(f"Detected boundary indices: {format_breakpoints(breakpoints)}")
+    st.markdown(render_token_boundary_view_html(trace, breakpoints), unsafe_allow_html=True)
 
     st.subheader("Segmented text")
     st.markdown(render_segmented_text_html(segment_summaries), unsafe_allow_html=True)

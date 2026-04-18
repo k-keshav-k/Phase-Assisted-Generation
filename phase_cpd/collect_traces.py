@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 
 from phase_cpd.importers.common import load_step_dump_as_trace
-from phase_cpd.importers.mock import build_mock_trace_examples
 from phase_cpd.io import save_trace
 from phase_cpd.schema import TraceRecord
 
@@ -16,12 +15,9 @@ def main() -> int:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.backend == "mock":
-        traces = build_mock_trace_examples()
-    else:
-        if not args.source:
-            parser.error("--source is required for the dream backend")
-        traces = _load_dream_traces(Path(args.source), args.glob)
+    if not args.source:
+        parser.error("--source is required for the dream backend")
+    traces = _load_dream_traces(Path(args.source), args.glob)
 
     saved_paths = []
     for trace in traces:
@@ -39,13 +35,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--backend",
-        choices=["dream", "mock"],
+        choices=["dream"],
         required=True,
         help="Backend trace format to convert.",
     )
     parser.add_argument(
         "--source",
-        help="Raw trace JSON file or directory. Not required for the mock backend.",
+        help="Raw Dream trace JSON file or directory.",
     )
     parser.add_argument(
         "--output-dir",

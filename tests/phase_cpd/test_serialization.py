@@ -5,7 +5,7 @@ from phase_cpd.io import load_trace, save_trace
 
 
 def test_trace_json_round_trip(tmp_path) -> None:
-    trace = load_trace_by_id("mock-adaptive-001", default_trace_dir())
+    trace = load_trace_by_id("prompt-001", default_trace_dir())
     output_path = tmp_path / "trace.json"
 
     save_trace(output_path, trace)
@@ -13,5 +13,7 @@ def test_trace_json_round_trip(tmp_path) -> None:
 
     assert restored.trace_id == trace.trace_id
     assert restored.final_text == trace.final_text
-    assert restored.tokens[0].observations[-1].top1_prob == 0.91
-
+    assert (
+        restored.tokens[0].observations[-1].top1_prob
+        == trace.tokens[0].observations[-1].top1_prob
+    )

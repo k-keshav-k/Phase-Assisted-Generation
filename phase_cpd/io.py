@@ -28,6 +28,8 @@ def trace_to_dict(trace: TraceRecord) -> dict[str, object]:
                 "observations": [
                     {
                         "step_index": observation.step_index,
+                        "token_id": observation.token_id,
+                        "token_text": observation.token_text,
                         "top1_prob": observation.top1_prob,
                         "selected_logit": observation.selected_logit,
                         "top2_prob": observation.top2_prob,
@@ -61,6 +63,8 @@ def trace_from_dict(payload: dict[str, object]) -> TraceRecord:
                 observations=[
                     TokenStepObservation(
                         step_index=int(observation["step_index"]),
+                        token_id=_maybe_int(observation.get("token_id")),
+                        token_text=_maybe_str(observation.get("token_text")),
                         top1_prob=_maybe_float(observation.get("top1_prob")),
                         selected_logit=_maybe_float(observation.get("selected_logit")),
                         top2_prob=_maybe_float(observation.get("top2_prob")),
@@ -125,3 +129,9 @@ def _maybe_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+def _maybe_int(value: object) -> int | None:
+    if value is None:
+        return None
+    return int(value)

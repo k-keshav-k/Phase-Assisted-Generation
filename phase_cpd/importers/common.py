@@ -47,6 +47,8 @@ def load_step_dump_as_trace(
             observations_by_token[token_index].append(
                 TokenStepObservation(
                     step_index=step_index,
+                    token_id=_maybe_int(token.get("token_id")),
+                    token_text=_maybe_str(token.get("token_text", token.get("token"))),
                     top1_prob=_maybe_float(token.get("top1_prob")),
                     selected_logit=_maybe_float(token.get("selected_logit")),
                     top2_prob=_maybe_float(token.get("top2_prob")),
@@ -109,6 +111,12 @@ def _maybe_float(value: object) -> float | None:
     if value is None:
         return None
     return float(value)
+
+
+def _maybe_int(value: object) -> int | None:
+    if value is None:
+        return None
+    return int(value)
 
 
 def _maybe_str(value: object) -> str | None:

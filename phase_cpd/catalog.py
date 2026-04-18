@@ -20,13 +20,22 @@ class CatalogEntry:
 
 
 def default_trace_dir() -> Path:
-    return Path(__file__).resolve().parent / "data" / "traces"
+    return Path(__file__).resolve().parent / "data" / "traces_real"
 
 
 def list_catalog_entries(trace_dir: str | Path | None = None) -> list[CatalogEntry]:
     directory = Path(trace_dir) if trace_dir is not None else default_trace_dir()
+    if not directory.exists():
+        msg = f"Trace directory does not exist: {directory}"
+        raise FileNotFoundError(msg)
+
+    paths = sorted(directory.glob("*.json"))
+    if not paths:
+        msg = f"No trace JSON files were found in {directory}"
+        raise FileNotFoundError(msg)
+
     entries: list[CatalogEntry] = []
-    for path in sorted(directory.glob("*.json")):
+    for path in paths:
         trace = load_trace(path)
         run_id = _extract_run_id(trace)
         entries.append(
