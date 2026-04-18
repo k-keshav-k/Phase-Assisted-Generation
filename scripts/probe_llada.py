@@ -20,7 +20,7 @@ import json
 import math
 
 import torch
-from transformers import AutoModelForMaskedLM, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer
 
 MODEL_ID = "GSAI-ML/LLaDA-8B-Base"
 
@@ -48,10 +48,10 @@ def main() -> None:
 
     print(f"Loading {MODEL_ID} ...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
-    model = AutoModelForMaskedLM.from_pretrained(
+    model = AutoModel.from_pretrained(
         MODEL_ID,
         trust_remote_code=True,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         device_map="auto",
     )
     model.eval()
