@@ -17,6 +17,12 @@ The app does not call a model, host an API, or generate traces live. It is inten
 uv sync --group phase_cpd
 ```
 
+For Dream trace collection on GPU, use the Dream runtime group:
+
+```bash
+uv sync --group phase_cpd_dream
+```
+
 ## Run
 
 ```bash
@@ -133,7 +139,7 @@ phase_cpd/slurm/collect_phase_traces_nyu.sbatch
 
 It assumes:
 
-- you already have a working Dream environment inside your Singularity container
+- you have `uv` available inside your Singularity/container environment
 - the node can load the Dream weights from Hugging Face or a local cache
 - those raw dumps are converted in-place by `phase_cpd/collect_traces.py`
 
@@ -143,6 +149,8 @@ The main env vars you need to set before `sbatch` are:
 - `PROMPTS_FILE`
 - `RAW_TRACE_ROOT`
 - `TRACE_OUTPUT_DIR`
+- `UV_PROJECT_ENVIRONMENT` if you want the Dream venv somewhere other than the default project-local path
+- `UV_CACHE_DIR` if you want the uv cache somewhere other than the default project-local path
 - optionally `DREAM_TRACE_CMD` if you do not want to use the default local runner
 
 Example:
@@ -151,10 +159,19 @@ Example:
 sbatch phase_cpd/slurm/collect_phase_traces_nyu.sbatch
 ```
 
-By default the job now runs:
+By default the job now does two uv-managed steps:
+
+1. Create or update a dedicated project-local environment:
 
 ```bash
-python -m phase_cpd.trace_jobs.run_dream_trace_dump \
+uv sync --group phase_cpd_dream --python 3.11
+```
+
+2. Run Dream trace collection inside that uv environment:
+
+```bash
+uv run --group phase_cpd_dream --python 3.11 \
+  python -m phase_cpd.trace_jobs.run_dream_trace_dump \
   --prompts "$PROMPTS_FILE" \
   --output-dir "$RAW_TRACE_ROOT/dream" \
   --model-name "$DREAM_MODEL_NAME" \
@@ -175,7 +192,17 @@ torch==2.5.1
 transformers==4.46.2
 ```
 
-Once the raw files are written, the Slurm job automatically converts them into unified `TraceRecord` JSON under `TRACE_OUTPUT_DIR`.
+On Linux, `torch`, `torchvision`, and `torchaudio` are pinned to the PyTorch CUDA 12.1 wheel index through `pyproject.toml`, so the first `uv sync --group phase_cpd_dream` should provision the GPU runtime into the dedicated uv environment instead of reusing `llmr`.
+
+Once the raw files are written, the Slurm job converts them into unified `TraceRecord` JSON under `TRACE_OUTPUT_DIR` via:
+
+```bash
+uv run --group phase_cpd_dream --python 3.11 \
+  python -m phase_cpd.collect_traces \
+  --backend dream \
+  --source "$RAW_TRACE_ROOT/dream" \
+  --output-dir "$TRACE_OUTPUT_DIR"
+```
 
 ## Adding new traces
 
