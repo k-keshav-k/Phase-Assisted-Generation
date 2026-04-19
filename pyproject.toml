@@ -13,6 +13,7 @@ dependencies = [
   "torch>=2.0",
   "transformers==4.46.3",
   "accelerate>=0.30",
+  "datasets>=2.0",
 ]
 
 [dependency-groups]
