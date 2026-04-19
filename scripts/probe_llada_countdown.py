@@ -7,10 +7,11 @@ to a JSONL file (one record per sample).
 
 Collected signals per token:
   tau_commit          : denoising step at which token was unmasked
-  tau_stable          : first step confidence crossed threshold
+  tau_stable          : step at which confidence peaked (argmax of trajectory)
+                        always populated — no nulls
   max_refinement_step : last step token was still masked
   gap                 : tau_commit - tau_stable
-  confidence/entropy  : at commit and stable steps
+  confidence/entropy  : at commit and stable (peak) steps
   prob_trajectory     : confidence at every step while masked
 
 Usage:
@@ -37,20 +38,18 @@ if not hasattr(PreTrainedModel, "all_tied_weights_keys"):
 
 MODEL_ID          = "GSAI-ML/LLaDA-8B-Base"
 DATASET_ID        = "Jiayi-Pan/Countdown-Tasks-3to4"
-N_SAMPLES         = 50
-DENOISING_STEPS   = 64
-TARGET_LEN        = 32   # tokens to generate per sample
-CONFIDENCE_THRESHOLD = 0.85
+N_SAMPLES       = 50
+DENOISING_STEPS = 64
+TARGET_LEN      = 32   # tokens to generate per sample
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_samples",  type=int,   default=N_SAMPLES)
-    parser.add_argument("--steps",      type=int,   default=DENOISING_STEPS)
-    parser.add_argument("--target_len", type=int,   default=TARGET_LEN)
-    parser.add_argument("--threshold",  type=float, default=CONFIDENCE_THRESHOLD)
-    parser.add_argument("--output",     type=str,   default="countdown_baseline_traces.jsonl")
-    parser.add_argument("--split",      type=str,   default="train")
+    parser.add_argument("--n_samples",  type=int, default=N_SAMPLES)
+    parser.add_argument("--steps",      type=int, default=DENOISING_STEPS)
+    parser.add_argument("--target_len", type=int, default=TARGET_LEN)
+    parser.add_argument("--output",     type=str, default="countdown_baseline_traces.jsonl")
+    parser.add_argument("--split",      type=str, default="train")
     return parser.parse_args()
 
 
@@ -81,7 +80,6 @@ def run_denoising_loop(
     prompt_ids: torch.Tensor,
     target_len: int,
     T: int,
-    threshold: float,
     mask_token_id: int,
     device: torch.device,
 ) -> dict:
@@ -91,12 +89,13 @@ def run_denoising_loop(
     input_ids = torch.cat([prompt_ids, mask_ids], dim=1)
 
     tau_commit      = [None] * target_len
-    tau_stable      = [None] * target_len
+    tau_stable      = [0]    * target_len  # step where confidence peaked — never null
     max_refine_step = [None] * target_len
     conf_at_commit  = [0.0]  * target_len
-    conf_at_stable  = [0.0]  * target_len
+    conf_at_stable  = [0.0]  * target_len  # peak confidence value
     entr_at_commit  = [0.0]  * target_len
-    entr_at_stable  = [0.0]  * target_len
+    entr_at_stable  = [0.0]  * target_len  # entropy at peak confidence step
+    peak_conf       = [0.0]  * target_len  # running max confidence per token
     prob_trajectory = [[]    for _ in range(target_len)]
     committed       = [False] * target_len
 
@@ -117,7 +116,10 @@ def run_denoising_loop(
             conf = float(confidence[i].item())
             prob_trajectory[i].append(round(conf, 4))
             max_refine_step[i] = step
-            if tau_stable[i] is None and conf >= threshold:
+
+            # tau_stable = step where confidence peaked (argmax) — always populated
+            if conf > peak_conf[i]:
+                peak_conf[i]     = conf
                 tau_stable[i]    = step
                 conf_at_stable[i] = conf
                 entr_at_stable[i] = compute_entropy(probs[i])
@@ -128,7 +130,7 @@ def run_denoising_loop(
         to_unmask = ranked[:n_to_unmask]
 
         for i in to_unmask:
-            tau_commit[i]    = step
+            tau_commit[i]     = step
             conf_at_commit[i] = float(confidence[i].item())
             entr_at_commit[i] = compute_entropy(probs[i])
             input_ids[0, prompt_len + i] = top_ids[i]
@@ -137,12 +139,8 @@ def run_denoising_loop(
     final_token_ids = input_ids[0, prompt_len:].tolist()
     final_tokens    = [tokenizer.decode([tid]).strip() for tid in final_token_ids]
 
-    gap = [
-        (tau_commit[i] - tau_stable[i])
-        if (tau_commit[i] is not None and tau_stable[i] is not None)
-        else None
-        for i in range(target_len)
-    ]
+    # gap = tau_commit - tau_stable, always populated now
+    gap = [tau_commit[i] - tau_stable[i] for i in range(target_len)]
 
     return {
         "final_tokens":         final_tokens,
@@ -198,7 +196,6 @@ def main() -> None:
                 prompt_ids    = prompt_ids,
                 target_len    = args.target_len,
                 T             = args.steps,
-                threshold     = args.threshold,
                 mask_token_id = mask_token_id,
                 device        = device,
             )
@@ -237,7 +234,6 @@ def main() -> None:
                 "generated":    " ".join(results["final_tokens"]),
                 "denoising_steps": args.steps,
                 "target_len":   args.target_len,
-                "threshold":    args.threshold,
                 "token_records": token_records,
             }
 
