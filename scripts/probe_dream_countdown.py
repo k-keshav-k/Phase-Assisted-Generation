@@ -61,6 +61,24 @@ def build_prompt(nums: list[int], target: int) -> str:
     )
 
 
+def apply_chat_template(tokenizer, user_message: str) -> str:
+    """Format prompt using the model's chat template.
+
+    DREAM-7B Instruct is Qwen2.5-based and requires the im_start/im_end chat
+    format. Feeding a raw string without the template causes the model to predict
+    EOS for every masked position.
+    """
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": user_message},
+    ]
+    return tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+
+
 def compute_entropy(probs: torch.Tensor) -> float:
     return float(-(probs * torch.log(probs + 1e-10)).sum().item())
 
@@ -193,7 +211,10 @@ def main() -> None:
             target = int(sample["target"])
             prompt = build_prompt(nums, target)
 
-            prompt_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+            formatted  = apply_chat_template(tokenizer, prompt)
+            prompt_ids = tokenizer(
+                formatted, return_tensors="pt", add_special_tokens=False
+            ).input_ids.to(device)
 
             t0      = time.time()
             results = run_denoising_loop(
@@ -237,6 +258,7 @@ def main() -> None:
                 "nums":            nums,
                 "target":          target,
                 "prompt":          prompt,
+                "formatted_prompt": formatted,
                 "generated":       " ".join(results["final_tokens"]),
                 "denoising_steps": args.steps,
                 "target_len":      args.target_len,
