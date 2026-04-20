@@ -1,10 +1,25 @@
 from __future__ import annotations
 
+import hashlib
 import os
+import random
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
+
+_DEFAULT_DELIMITER_TEXTS = ("\n", ".", ",", ":", ";", "(", ")", "!", "?")
+_DELIMITER_NAME_OVERRIDES = {
+    "\n": "newline",
+    ".": "period",
+    ",": "comma",
+    ":": "colon",
+    ";": "semicolon",
+    "(": "left_paren",
+    ")": "right_paren",
+    "!": "exclamation",
+    "?": "question",
+}
 
 
 @dataclass(slots=True)
@@ -19,6 +34,16 @@ class DreamGenerationConfig:
     alg_temp: float | None = 0.0
     device: str | None = None
     torch_dtype: str = "auto"
+    trace_profile: str = "entropy_det"
+    seed: int = 0
+    delimiter_texts: tuple[str, ...] = field(default_factory=lambda: _DEFAULT_DELIMITER_TEXTS)
+
+
+@dataclass(frozen=True, slots=True)
+class _DelimiterFeatureSpec:
+    text: str
+    feature_key: str
+    token_id: int
 
 
 class DreamTraceCollector:
@@ -48,8 +73,16 @@ class DreamTraceCollector:
             trust_remote_code=True,
         )
         self._model = self._model.to(self._device).eval()
+        self._mask_token_id = getattr(self._tokenizer, "mask_token_id", None)
+        self._mask_token_text = getattr(self._tokenizer, "mask_token", None) or "<|mask|>"
+        self._delimiter_features = _resolve_delimiter_features(
+            self._tokenizer,
+            config.delimiter_texts,
+        )
 
     def collect(self, prompt_record: dict[str, Any]) -> dict[str, Any]:
+        prompt_seed = _prompt_seed(self._config.seed, self._config.trace_profile, prompt_record)
+        _seed_generation(self._torch, prompt_seed)
         prompt = str(prompt_record["prompt"])
         inputs = _build_inputs(self._tokenizer, prompt)
         input_ids = inputs["input_ids"].to(self._device)
@@ -61,6 +94,9 @@ class DreamTraceCollector:
             tokenizer=self._tokenizer,
             prompt_length=prompt_length,
             max_new_tokens=self._config.max_new_tokens,
+            mask_token_id=self._mask_token_id,
+            mask_token_text=self._mask_token_text,
+            delimiter_features=self._delimiter_features,
         )
 
         def generation_tokens_hook_func(step, x, logits):
@@ -114,15 +150,29 @@ class DreamTraceCollector:
             config=self._config,
             generated_ids=generated_ids,
             device=self._device,
+            prompt_seed=prompt_seed,
         )
 
 
 class _StepRecorder:
-    def __init__(self, *, torch_module, tokenizer, prompt_length: int, max_new_tokens: int) -> None:
+    def __init__(
+        self,
+        *,
+        torch_module,
+        tokenizer,
+        prompt_length: int,
+        max_new_tokens: int,
+        mask_token_id: int | None,
+        mask_token_text: str,
+        delimiter_features: tuple[_DelimiterFeatureSpec, ...],
+    ) -> None:
         self._torch = torch_module
         self._tokenizer = tokenizer
         self._prompt_length = prompt_length
         self._max_new_tokens = max_new_tokens
+        self._mask_token_id = mask_token_id
+        self._mask_token_text = mask_token_text
+        self._delimiter_features = delimiter_features
         self._snapshots: list[_StepSnapshot] = []
 
     def capture(self, step: int | None, x, logits) -> None:
@@ -147,12 +197,17 @@ class _StepRecorder:
         selected_probs: list[float | None]
         top2_probs: list[float | None]
         entropies: list[float | None]
+        delimiter_probabilities: dict[str, list[float | None]]
 
         if logits is None:
             selected_logits = [None] * int(generated_ids_row.shape[0])
             selected_probs = [None] * int(generated_ids_row.shape[0])
             top2_probs = [None] * int(generated_ids_row.shape[0])
             entropies = [None] * int(generated_ids_row.shape[0])
+            delimiter_probabilities = {
+                feature.feature_key: [None] * int(generated_ids_row.shape[0])
+                for feature in self._delimiter_features
+            }
         else:
             step_logits = _slice_generation_logits(
                 logits=logits,
@@ -182,6 +237,10 @@ class _StepRecorder:
                 step_logits_row,
                 token_ids_on_device,
             )
+            delimiter_probabilities = _delimiter_probabilities(
+                step_logits_row,
+                self._delimiter_features,
+            )
 
         self._snapshots.append(
             _StepSnapshot(
@@ -191,6 +250,7 @@ class _StepRecorder:
                 selected_probs=selected_probs,
                 top2_probs=top2_probs,
                 entropies=entropies,
+                delimiter_probabilities=delimiter_probabilities,
             )
         )
 
@@ -201,13 +261,47 @@ class _StepRecorder:
         config: DreamGenerationConfig,
         generated_ids: list[int],
         device: str,
+        prompt_seed: int,
     ) -> dict[str, Any]:
         steps: list[dict[str, Any]] = []
         final_length = len(generated_ids)
+        previous_token_ids: list[int] | None = None
         for snapshot in self._snapshots:
+            current_token_ids = [int(token_id) for token_id in snapshot.token_ids[:final_length]]
+            changed_flags = [
+                False
+                if previous_token_ids is None
+                else current_token_ids[token_index] != previous_token_ids[token_index]
+                for token_index in range(final_length)
+            ]
             tokens: list[dict[str, Any]] = []
+            delimiter_confidences: list[float | None] = []
             for token_index in range(final_length):
-                token_id = int(snapshot.token_ids[token_index])
+                token_id = current_token_ids[token_index]
+                delimiter_values = [
+                    snapshot.delimiter_probabilities[feature.feature_key][token_index]
+                    for feature in self._delimiter_features
+                ]
+                resolved_delimiter_values = [
+                    value for value in delimiter_values if value is not None
+                ]
+                delimiter_prob_max = (
+                    max(resolved_delimiter_values) if resolved_delimiter_values else None
+                )
+                delimiter_confidences.append(delimiter_prob_max)
+                is_mask = (
+                    self._mask_token_id is not None and token_id == self._mask_token_id
+                )
+                extras = {
+                    "entropy": _or_zero(snapshot.entropies[token_index]),
+                    "is_mask": 1.0 if is_mask else 0.0,
+                    "changed_from_prev_step": 1.0 if changed_flags[token_index] else 0.0,
+                    "delimiter_prob_max": _or_zero(delimiter_prob_max),
+                }
+                for feature in self._delimiter_features:
+                    extras[feature.feature_key] = _or_zero(
+                        snapshot.delimiter_probabilities[feature.feature_key][token_index]
+                    )
                 tokens.append(
                     {
                         "token_index": token_index,
@@ -217,11 +311,43 @@ class _StepRecorder:
                         "selected_logit": _maybe_round(snapshot.selected_logits[token_index]),
                         "top2_prob": _maybe_round(snapshot.top2_probs[token_index]),
                         "extras": {
-                            "entropy": _maybe_round(snapshot.entropies[token_index]),
+                            key: _maybe_round(value) for key, value in extras.items()
                         },
                     }
                 )
-            steps.append({"step_index": snapshot.step_index, "tokens": tokens})
+            mask_positions = [
+                index
+                for index, token_id in enumerate(current_token_ids)
+                if self._mask_token_id is not None and token_id == self._mask_token_id
+            ]
+            valid_delimiter_confidences = [
+                (index, confidence)
+                for index, confidence in enumerate(delimiter_confidences)
+                if confidence is not None
+            ]
+            if valid_delimiter_confidences:
+                best_delimiter_index, max_delimiter_confidence = max(
+                    valid_delimiter_confidences,
+                    key=lambda item: item[1],
+                )
+            else:
+                best_delimiter_index, max_delimiter_confidence = None, None
+            steps.append(
+                {
+                    "step_index": snapshot.step_index,
+                    "summary": {
+                        "mask_count": len(mask_positions),
+                        "changed_count": sum(changed_flags),
+                        "active_start": mask_positions[0] if mask_positions else None,
+                        "active_end": (mask_positions[-1] + 1) if mask_positions else None,
+                        "active_count": len(mask_positions),
+                        "best_delimiter_index": best_delimiter_index,
+                        "max_delimiter_confidence": _maybe_round(max_delimiter_confidence),
+                    },
+                    "tokens": tokens,
+                }
+            )
+            previous_token_ids = current_token_ids
 
         final_text = self._tokenizer.decode(
             generated_ids,
@@ -246,7 +372,20 @@ class _StepRecorder:
                 "top_k": config.top_k,
                 "alg": config.alg,
                 "alg_temp": config.alg_temp,
+                "trace_profile": config.trace_profile,
+                "seed": config.seed,
+                "prompt_seed": prompt_seed,
                 "device": device,
+                "mask_token_id": self._mask_token_id,
+                "mask_token_text": self._mask_token_text,
+                "delimiter_features": [
+                    {
+                        "text": feature.text,
+                        "feature_key": feature.feature_key,
+                        "token_id": feature.token_id,
+                    }
+                    for feature in self._delimiter_features
+                ],
             },
             "steps": steps,
         }
@@ -260,6 +399,7 @@ class _StepSnapshot:
     selected_probs: list[float | None]
     top2_probs: list[float | None]
     entropies: list[float | None]
+    delimiter_probabilities: dict[str, list[float | None]]
 
 
 def _build_inputs(tokenizer, prompt: str) -> dict[str, Any]:
@@ -279,6 +419,30 @@ def _build_inputs(tokenizer, prompt: str) -> dict[str, Any]:
 
 def _decode_single_token(tokenizer, token_id: int) -> str:
     return tokenizer.decode([token_id], clean_up_tokenization_spaces=False)
+
+
+def _resolve_delimiter_features(
+    tokenizer,
+    delimiter_texts: tuple[str, ...],
+) -> tuple[_DelimiterFeatureSpec, ...]:
+    resolved: list[_DelimiterFeatureSpec] = []
+    seen_token_ids: set[int] = set()
+    for delimiter_text in delimiter_texts:
+        token_ids = tokenizer.encode(delimiter_text, add_special_tokens=False)
+        if len(token_ids) != 1:
+            continue
+        token_id = int(token_ids[0])
+        if token_id in seen_token_ids:
+            continue
+        seen_token_ids.add(token_id)
+        resolved.append(
+            _DelimiterFeatureSpec(
+                text=delimiter_text,
+                feature_key=f"delimiter_prob_{_delimiter_feature_name(delimiter_text)}",
+                token_id=token_id,
+            )
+        )
+    return tuple(resolved)
 
 
 def _import_dream_runtime():
@@ -305,6 +469,22 @@ def _normalize_hook_step(step: object) -> int | None:
     if step is None:
         return None
     return int(step)
+
+
+def _delimiter_probabilities(
+    step_logits_row,
+    delimiter_features: tuple[_DelimiterFeatureSpec, ...],
+) -> dict[str, list[float | None]]:
+    if not delimiter_features:
+        return {}
+    probabilities = step_logits_row.log_softmax(dim=-1).exp()
+    return {
+        feature.feature_key: probabilities[:, feature.token_id]
+        .detach()
+        .to("cpu", dtype=probabilities.dtype)
+        .tolist()
+        for feature in delimiter_features
+    }
 
 
 def _selected_token_stats(torch_module, step_logits_row, token_ids_on_device):
@@ -398,3 +578,34 @@ def _truncate_generated_ids(
             break
         truncated.append(int(token_id))
     return truncated
+
+
+def _seed_generation(torch_module, seed: int) -> None:
+    random.seed(seed)
+    torch_module.manual_seed(seed)
+    if torch_module.cuda.is_available():
+        torch_module.cuda.manual_seed_all(seed)
+
+
+def _prompt_seed(
+    base_seed: int,
+    trace_profile: str,
+    prompt_record: dict[str, Any],
+) -> int:
+    seed_material = (
+        f"{base_seed}:{trace_profile}:"
+        f"{prompt_record.get('sample_id', prompt_record.get('prompt', 'dream-trace'))}"
+    )
+    digest = hashlib.sha256(seed_material.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % (2**31)
+
+
+def _delimiter_feature_name(delimiter_text: str) -> str:
+    return _DELIMITER_NAME_OVERRIDES.get(
+        delimiter_text,
+        delimiter_text.encode("unicode_escape").decode("ascii").replace("\\", "_"),
+    )
+
+
+def _or_zero(value: float | None) -> float:
+    return 0.0 if value is None else float(value)

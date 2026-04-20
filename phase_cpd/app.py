@@ -21,6 +21,7 @@ from phase_cpd.segments import build_segment_summaries  # noqa: E402
 from phase_cpd.visualize import (  # noqa: E402
     build_feature_chart,
     build_segment_table,
+    build_token_feature_table,
     format_breakpoints,
     render_token_boundary_view_html,
 )
@@ -118,17 +119,23 @@ def main() -> None:
         "stabilizing_entropy",
         "stabilizing_margin",
         "stabilizing_prob",
+        "stabilizing_refinement_step",
+    ]
+    ordered_features = [
+        *[name for name in preferred_feature_order if name in available_features],
+        *sorted(name for name in available_features if name not in preferred_feature_order),
     ]
     default_feature_name = next(
         name for name in preferred_feature_order if name in available_features
     )
     feature_name = st.sidebar.selectbox(
         "Feature",
-        available_features,
-        index=available_features.index(default_feature_name),
+        ordered_features,
+        index=ordered_features.index(default_feature_name),
         help=(
             "Select which token-level scalar signal to segment. Entropy is usually the best "
-            "starting point when probabilities saturate."
+            "starting point when probabilities saturate; stabilization step shows when each "
+            "token stops changing."
         ),
     )
     detector_name = st.sidebar.selectbox(
@@ -188,7 +195,10 @@ def main() -> None:
         ),
     )
 
-    feature_series = get_feature_extractor(feature_name).extract(trace)
+    feature_series_by_name = {
+        name: get_feature_extractor(name).extract(trace) for name in ordered_features
+    }
+    feature_series = feature_series_by_name[feature_name]
     detector = get_detector(detector_name, kernel=kernel)
     breakpoints = detector.detect(
         feature_series.values,
@@ -201,6 +211,7 @@ def main() -> None:
     )
     segment_summaries = build_segment_summaries(trace, feature_series, breakpoints)
     feature_std = float(np.std(feature_series.values))
+    stabilization_steps = feature_series_by_name.get("stabilizing_refinement_step")
 
     metadata_column, summary_column = st.columns([1.4, 1])
     with metadata_column:
@@ -219,6 +230,9 @@ def main() -> None:
         st.metric("Feature Std", f"{feature_std:.4f}")
         st.metric("Feature", feature_series.feature_name)
         st.metric("Detector", detector_name)
+        if stabilization_steps is not None:
+            st.metric("Mean Stable Step", f"{float(np.mean(stabilization_steps.values)):.1f}")
+            st.metric("Max Stable Step", f"{float(np.max(stabilization_steps.values)):.0f}")
         st.json(trace.decoding_metadata)
 
     if not breakpoints:
@@ -237,6 +251,16 @@ def main() -> None:
 
     st.subheader("Feature vs token index")
     st.altair_chart(build_feature_chart(feature_series, breakpoints), use_container_width=True)
+
+    st.subheader("Per-token stabilization features")
+    st.caption(
+        "`stabilizing_refinement_step` is the earliest recorded step_index after which a "
+        "token's identity no longer changes."
+    )
+    st.dataframe(
+        build_token_feature_table(trace, feature_series_by_name),
+        use_container_width=True,
+    )
 
     st.subheader("Segments")
     st.dataframe(build_segment_table(segment_summaries), use_container_width=True)

@@ -8,6 +8,7 @@ from phase_cpd.schema import (
     SegmentSummary,
     TokenStepObservation,
     TraceRecord,
+    TraceStepSummary,
     TraceToken,
 )
 
@@ -39,6 +40,19 @@ def trace_to_dict(trace: TraceRecord) -> dict[str, object]:
                 ],
             }
             for token in trace.tokens
+        ],
+        "step_summaries": [
+            {
+                "step_index": summary.step_index,
+                "mask_count": summary.mask_count,
+                "changed_count": summary.changed_count,
+                "active_start": summary.active_start,
+                "active_end": summary.active_end,
+                "active_count": summary.active_count,
+                "best_delimiter_index": summary.best_delimiter_index,
+                "max_delimiter_confidence": summary.max_delimiter_confidence,
+            }
+            for summary in trace.step_summaries
         ],
         "decoding_metadata": trace.decoding_metadata,
         "tags": trace.tags,
@@ -77,6 +91,19 @@ def trace_from_dict(payload: dict[str, object]) -> TraceRecord:
                 ],
             )
             for token in list(payload.get("tokens", []))
+        ],
+        step_summaries=[
+            TraceStepSummary(
+                step_index=int(summary["step_index"]),
+                mask_count=int(summary.get("mask_count", 0)),
+                changed_count=int(summary.get("changed_count", 0)),
+                active_start=_maybe_int(summary.get("active_start")),
+                active_end=_maybe_int(summary.get("active_end")),
+                active_count=int(summary.get("active_count", 0)),
+                best_delimiter_index=_maybe_int(summary.get("best_delimiter_index")),
+                max_delimiter_confidence=_maybe_float(summary.get("max_delimiter_confidence")),
+            )
+            for summary in list(payload.get("step_summaries", []))
         ],
         decoding_metadata=dict(payload.get("decoding_metadata", {})),
         tags=[str(tag) for tag in list(payload.get("tags", []))],

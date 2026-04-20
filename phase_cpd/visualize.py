@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import html
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import altair as alt
 import pandas as pd
@@ -63,6 +63,40 @@ def build_segment_table(segment_summaries: Sequence[SegmentSummary]) -> pd.DataF
                 "max": summary.maximum,
             }
             for index, summary in enumerate(segment_summaries)
+        ]
+    )
+
+
+def build_token_feature_table(
+    trace: TraceRecord,
+    feature_series_by_name: Mapping[str, FeatureSeries],
+) -> pd.DataFrame:
+    expected_token_indices = [token.token_index for token in trace.tokens]
+    feature_value_maps: dict[str, dict[int, float]] = {}
+    for feature_name, series in feature_series_by_name.items():
+        if len(series.token_indices) != len(trace.tokens):
+            msg = f"Feature series {feature_name!r} must have one value per trace token"
+            raise ValueError(msg)
+        value_map = {
+            token_index: value
+            for token_index, value in zip(series.token_indices, series.values, strict=True)
+        }
+        if set(value_map) != set(expected_token_indices):
+            msg = f"Feature series {feature_name!r} token indices do not match the trace"
+            raise ValueError(msg)
+        feature_value_maps[feature_name] = value_map
+
+    return pd.DataFrame(
+        [
+            {
+                "token_index": token.token_index,
+                "token_text": _display_token_text(token.token_text),
+                **{
+                    feature_name: feature_value_maps[feature_name][token.token_index]
+                    for feature_name in feature_series_by_name
+                },
+            }
+            for token in trace.tokens
         ]
     )
 
@@ -172,9 +206,7 @@ def _response_segment_box_inline(
 
 
 def _response_token_chip(token_text: str, token_bg: str) -> str:
-    display_text = token_text if token_text.strip() else token_text.replace(" ", "␠")
-    if not display_text:
-        display_text = "∅"
+    display_text = _display_token_text(token_text)
     return (
         "<span style='display:inline-block; padding:0.28rem 0.45rem; border:1px solid #94a3b8; "
         f"border-radius:0.45rem; background:{token_bg}; color:#0f172a; white-space:pre-wrap; "
@@ -182,6 +214,13 @@ def _response_token_chip(token_text: str, token_bg: str) -> str:
         f"{html.escape(display_text)}"
         "</span>"
     )
+
+
+def _display_token_text(token_text: str) -> str:
+    display_text = token_text if token_text.strip() else token_text.replace(" ", "␠")
+    if not display_text:
+        return "∅"
+    return display_text
 
 
 def _segment_style(segment_index: int) -> dict[str, str]:

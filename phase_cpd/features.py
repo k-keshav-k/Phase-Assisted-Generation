@@ -111,10 +111,44 @@ class StabilizingMarginExtractor:
         )
 
 
+class StabilizingRefinementStepExtractor:
+    name = "stabilizing_refinement_step"
+
+    def is_available(self, trace: TraceRecord) -> bool:
+        try:
+            identity_trace = _trace_with_identity_history(trace)
+        except (FileNotFoundError, ValueError):
+            return False
+        try:
+            for token in identity_trace.tokens:
+                _stabilizing_observation(token)
+        except ValueError:
+            return False
+        return True
+
+    def extract(self, trace: TraceRecord) -> FeatureSeries:
+        identity_trace = _trace_with_identity_history(trace)
+        token_indices: list[int] = []
+        values: list[float] = []
+        for token in identity_trace.tokens:
+            token_indices.append(token.token_index)
+            values.append(float(_stabilizing_observation(token).step_index))
+        return FeatureSeries(
+            feature_name=self.name,
+            token_indices=token_indices,
+            values=values,
+            metadata={
+                "reduction": "first_stable_step",
+                "measurement": "step_index",
+            },
+        )
+
+
 FEATURE_EXTRACTORS: dict[str, FeatureExtractor] = {
     StabilizingEntropyExtractor.name: StabilizingEntropyExtractor(),
     StabilizingMarginExtractor.name: StabilizingMarginExtractor(),
     StabilizingTop1ProbExtractor.name: StabilizingTop1ProbExtractor(),
+    StabilizingRefinementStepExtractor.name: StabilizingRefinementStepExtractor(),
 }
 
 

@@ -153,3 +153,66 @@ def test_dream_importer_uses_latest_token_text_for_final_trace(tmp_path: Path) -
 
     assert trace.final_text == "Final answer"
     assert [token.token_text for token in trace.tokens] == ["Final", " answer"]
+
+
+def test_dream_importer_preserves_step_summaries_and_scheduler_extras(tmp_path: Path) -> None:
+    raw_path = tmp_path / "dream_scheduler_ready.json"
+    raw_path.write_text(
+        json.dumps(
+            {
+                "trace_id": "dream-sample-004",
+                "prompt": "Explain scheduler labels.",
+                "decoding_metadata": {"trace_profile": "entropy_det", "seed": 0},
+                "steps": [
+                    {
+                        "step_index": 0,
+                        "summary": {
+                            "mask_count": 1,
+                            "changed_count": 0,
+                            "active_start": 0,
+                            "active_end": 1,
+                            "active_count": 1,
+                            "best_delimiter_index": 1,
+                            "max_delimiter_confidence": 0.75,
+                        },
+                        "tokens": [
+                            {
+                                "token_index": 0,
+                                "token_id": 99,
+                                "token_text": "<|mask|>",
+                                "extras": {
+                                    "entropy": 2.1,
+                                    "is_mask": 1.0,
+                                    "changed_from_prev_step": 0.0,
+                                    "delimiter_prob_max": 0.2,
+                                },
+                            },
+                            {
+                                "token_index": 1,
+                                "token_id": 12,
+                                "token_text": " token",
+                                "extras": {
+                                    "entropy": 0.4,
+                                    "is_mask": 0.0,
+                                    "changed_from_prev_step": 0.0,
+                                    "delimiter_prob_max": 0.75,
+                                },
+                            },
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    trace = load_step_dump_as_trace(
+        raw_path,
+        backend="dream",
+        default_model_name="dream-7b",
+    )
+
+    assert trace.step_summaries[0].mask_count == 1
+    assert trace.step_summaries[0].best_delimiter_index == 1
+    assert trace.tokens[0].observations[0].extras["is_mask"] == 1.0
+    assert trace.tokens[1].observations[0].extras["delimiter_prob_max"] == 0.75

@@ -31,11 +31,11 @@ export DREAM_MAX_NEW_TOKENS=\${DREAM_MAX_NEW_TOKENS:-256}
 export DREAM_STEPS=\${DREAM_STEPS:-256}
 export DREAM_TEMPERATURE=\${DREAM_TEMPERATURE:-0.2}
 export DREAM_TOP_P=\${DREAM_TOP_P:-0.95}
-export DREAM_ALG=\${DREAM_ALG:-entropy}
-export DREAM_ALG_TEMP=\${DREAM_ALG_TEMP:-0.0}
+export DREAM_TRACE_PROFILE=\${DREAM_TRACE_PROFILE:-all}
+export DREAM_SEED=\${DREAM_SEED:-0}
 export DREAM_TORCH_DTYPE=\${DREAM_TORCH_DTYPE:-bfloat16}
 export HF_HOME=\${HF_HOME:-/scratch/kk6081/.cache/huggingface}
-export DREAM_TRACE_CMD=\${DREAM_TRACE_CMD:-uv run --group phase_cpd_dream --python \"\$UV_PYTHON\" python -m phase_cpd.trace_jobs.run_dream_trace_dump --prompts \"\$PROMPTS_FILE\" --output-dir \"\$RAW_TRACE_ROOT/dream\" --model-name \"\$DREAM_MODEL_NAME\" --max-new-tokens \"\$DREAM_MAX_NEW_TOKENS\" --steps \"\$DREAM_STEPS\" --temperature \"\$DREAM_TEMPERATURE\" --top-p \"\$DREAM_TOP_P\" --alg \"\$DREAM_ALG\" --alg-temp \"\$DREAM_ALG_TEMP\" --torch-dtype \"\$DREAM_TORCH_DTYPE\"}
+export DREAM_TRACE_CMD=\${DREAM_TRACE_CMD:-uv run --group phase_cpd_dream --python \"\$UV_PYTHON\" python -m phase_cpd.trace_jobs.run_dream_trace_dump --prompts \"\$PROMPTS_FILE\" --output-dir \"\$RAW_TRACE_ROOT/dream\" --model-name \"\$DREAM_MODEL_NAME\" --max-new-tokens \"\$DREAM_MAX_NEW_TOKENS\" --steps \"\$DREAM_STEPS\" --temperature \"\$DREAM_TEMPERATURE\" --top-p \"\$DREAM_TOP_P\" --trace-profile \"\$DREAM_TRACE_PROFILE\" --seed \"\$DREAM_SEED\" --torch-dtype \"\$DREAM_TORCH_DTYPE\"}
 export PYTORCH_CUDA_ALLOC_CONF=\${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
 cd \$PROJECT_DIR
@@ -50,22 +50,49 @@ echo \"UV_PYTHON=\$UV_PYTHON\"
 echo \"DREAM_MODEL_NAME=\$DREAM_MODEL_NAME\"
 echo \"DREAM_STEPS=\$DREAM_STEPS\"
 echo \"DREAM_MAX_NEW_TOKENS=\$DREAM_MAX_NEW_TOKENS\"
+echo \"DREAM_TRACE_PROFILE=\$DREAM_TRACE_PROFILE\"
+echo \"DREAM_SEED=\$DREAM_SEED\"
 echo \"HF_HOME=\$HF_HOME\"
 
-# DREAM_TRACE_CMD should write one raw JSON file per prompt into:
+# DREAM_TRACE_CMD should write one raw JSON file per prompt/profile/seed into:
 #   \$RAW_TRACE_ROOT/dream
 #
 # Expected raw JSON shape per file:
 # {
-#   \"trace_id\": \"optional-id\",
+#   \"trace_id\": \"sample_id__trace_profile__seed-N\",
 #   \"prompt\": \"...\",
 #   \"model_name\": \"dream-7b\",
-#   \"decoding_metadata\": {\"run_id\": \"...\", \"chunk_size\": 4, \"refinement_steps\": 8},
+#   \"decoding_metadata\": {
+#     \"run_id\": \"...\",
+#     \"trace_profile\": \"entropy_det\",
+#     \"seed\": 0
+#   },
 #   \"steps\": [
 #     {
 #       \"step_index\": 0,
+#       \"summary\": {
+#         \"mask_count\": 12,
+#         \"changed_count\": 3,
+#         \"active_start\": 4,
+#         \"active_end\": 16,
+#         \"active_count\": 12,
+#         \"best_delimiter_index\": 10,
+#         \"max_delimiter_confidence\": 0.81
+#       },
 #       \"tokens\": [
-#         {\"token_index\": 0, \"token_text\": \"Hello\", \"top1_prob\": 0.62, \"selected_logit\": 2.1},
+#         {
+#           \"token_index\": 0,
+#           \"token_text\": \"Hello\",
+#           \"top1_prob\": 0.62,
+#           \"selected_logit\": 2.1,
+#           \"top2_prob\": 0.18,
+#           \"extras\": {
+#             \"entropy\": 1.23,
+#             \"is_mask\": 0.0,
+#             \"changed_from_prev_step\": 1.0,
+#             \"delimiter_prob_max\": 0.04
+#           }
+#         },
 #         ...
 #       ]
 #     },

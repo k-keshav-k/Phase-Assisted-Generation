@@ -15,6 +15,9 @@ _CollectorCacheKey = tuple[
     float | None,
     str | None,
     str,
+    str,
+    int,
+    tuple[str, ...],
 ]
 _COLLECTOR_CACHE: dict[_CollectorCacheKey, DreamTraceCollector] = {}
 
@@ -41,6 +44,9 @@ def _get_or_create_collector(config: DreamGenerationConfig) -> DreamTraceCollect
         config.alg_temp,
         config.device,
         config.torch_dtype,
+        config.trace_profile,
+        config.seed,
+        tuple(config.delimiter_texts),
     )
     collector = _COLLECTOR_CACHE.get(cache_key)
     if collector is None:

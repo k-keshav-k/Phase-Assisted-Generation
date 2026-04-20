@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from phase_cpd.io import trace_from_dict
-from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceToken
+from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceStepSummary, TraceToken
 
 
 def load_step_dump_as_trace(
@@ -36,9 +36,26 @@ def load_step_dump_as_trace(
 
     token_rows: dict[int, dict[str, Any]] = {}
     observations_by_token: dict[int, list[TokenStepObservation]] = defaultdict(list)
+    step_summaries: list[TraceStepSummary] = []
 
     for step in steps:
         step_index = int(step["step_index"])
+        summary_payload = step.get("summary")
+        if isinstance(summary_payload, dict):
+            step_summaries.append(
+                TraceStepSummary(
+                    step_index=step_index,
+                    mask_count=int(summary_payload.get("mask_count", 0)),
+                    changed_count=int(summary_payload.get("changed_count", 0)),
+                    active_start=_maybe_int(summary_payload.get("active_start")),
+                    active_end=_maybe_int(summary_payload.get("active_end")),
+                    active_count=int(summary_payload.get("active_count", 0)),
+                    best_delimiter_index=_maybe_int(summary_payload.get("best_delimiter_index")),
+                    max_delimiter_confidence=_maybe_float(
+                        summary_payload.get("max_delimiter_confidence")
+                    ),
+                )
+            )
         for inferred_index, token in enumerate(step.get("tokens", [])):
             token_index = int(token.get("token_index", inferred_index))
             # Real denoising traces can change the token content across steps. Keep the latest
@@ -92,6 +109,7 @@ def load_step_dump_as_trace(
         prompt=str(payload["prompt"]),
         final_text=str(final_text),
         tokens=tokens,
+        step_summaries=step_summaries,
         decoding_metadata=dict(payload.get("decoding_metadata", {})),
         tags=[str(tag) for tag in list(payload.get("tags", []))],
         source_path=str(source_path),

@@ -52,6 +52,7 @@ If that directory is missing or empty, the app raises an error instead of fallin
   - `stabilizing_entropy`
   - `stabilizing_margin`
   - `stabilizing_prob`
+  - `stabilizing_refinement_step`
 - Detectors:
   - `pelt`
   - `kernel_cpd`
@@ -62,6 +63,9 @@ If that directory is missing or empty, the app raises an error instead of fallin
 `stabilizing_prob` uses the selected-token probability at the first refinement step after which a token's identity no longer changes.
 `stabilizing_margin` uses `top1_prob - top2_prob` at that same stabilization step.
 `stabilizing_entropy` uses the full-vocabulary entropy at the stabilization step and is usually the better scalar when top-1 probabilities saturate.
+`stabilizing_refinement_step` uses the raw `step_index` of that first stabilization step, which is useful if you want to model when tokens settle.
+
+The UI also includes a per-token stabilization table so you can inspect refinement step, entropy, margin, and probability together before exporting features for downstream modeling.
 
 The smoothing window is a centered moving average applied to the chosen feature before CPD.
 `1` means no smoothing. Larger values suppress local noise, but they also blur sharp short-lived

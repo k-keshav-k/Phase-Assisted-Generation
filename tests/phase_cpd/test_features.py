@@ -4,6 +4,7 @@ from phase_cpd.catalog import default_trace_dir, load_trace_by_id
 from phase_cpd.features import (
     StabilizingEntropyExtractor,
     StabilizingMarginExtractor,
+    StabilizingRefinementStepExtractor,
     StabilizingTop1ProbExtractor,
 )
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceToken
@@ -148,3 +149,45 @@ def test_stabilizing_top1_prob_uses_first_stable_observation() -> None:
     assert feature_series.feature_name == "stabilizing_prob"
     assert feature_series.values == [0.42, 0.65]
     assert feature_series.metadata["reduction"] == "first_stable_step"
+
+
+def test_stabilizing_refinement_step_uses_first_stable_observation_step_index() -> None:
+    trace = TraceRecord(
+        trace_id="stabilize-step-test",
+        backend="dream",
+        model_name="dream-test",
+        prompt="Prompt",
+        final_text="AB",
+        tokens=[
+            TraceToken(
+                token_index=0,
+                token_text="A",
+                char_start=0,
+                char_end=1,
+                observations=[
+                    TokenStepObservation(step_index=0, token_id=10, token_text="X"),
+                    TokenStepObservation(step_index=1, token_id=20, token_text="A"),
+                    TokenStepObservation(step_index=2, token_id=20, token_text="A"),
+                ],
+            ),
+            TraceToken(
+                token_index=1,
+                token_text="B",
+                char_start=1,
+                char_end=2,
+                observations=[
+                    TokenStepObservation(step_index=0, token_id=30, token_text="Y"),
+                    TokenStepObservation(step_index=1, token_id=31, token_text="Z"),
+                    TokenStepObservation(step_index=2, token_id=40, token_text="B"),
+                    TokenStepObservation(step_index=3, token_id=40, token_text="B"),
+                ],
+            ),
+        ],
+    )
+
+    feature_series = StabilizingRefinementStepExtractor().extract(trace)
+
+    assert feature_series.feature_name == "stabilizing_refinement_step"
+    assert feature_series.values == [1.0, 2.0]
+    assert feature_series.metadata["reduction"] == "first_stable_step"
+    assert feature_series.metadata["measurement"] == "step_index"

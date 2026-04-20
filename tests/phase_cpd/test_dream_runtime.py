@@ -2,7 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from phase_cpd.trace_jobs.dream_runtime import _normalize_hook_step, _selected_token_stats
+from phase_cpd.trace_jobs.dream_runtime import (
+    DreamGenerationConfig,
+    _normalize_hook_step,
+    _prompt_seed,
+    _resolve_delimiter_features,
+    _selected_token_stats,
+)
+from phase_cpd.trace_jobs.run_dream_trace_dump import (
+    _normalize_payload,
+    _resolve_trace_profiles,
+)
 
 
 class _TorchStub:
@@ -13,6 +23,46 @@ class _TorchStub:
         import torch
 
         return torch.full_like(tensor, fill_value)
+
+
+class _TokenizerStub:
+    mask_token_id = 99
+    mask_token = "<|mask|>"
+    eos_token_id = None
+    pad_token_id = None
+
+    _DECODE_MAP = {
+        11: "A",
+        12: "B",
+        13: ".",
+        14: "\n",
+        99: "<|mask|>",
+    }
+
+    def decode(
+        self,
+        token_ids,
+        *,
+        clean_up_tokenization_spaces: bool = False,
+        skip_special_tokens: bool = False,
+    ) -> str:
+        del clean_up_tokenization_spaces
+        parts = []
+        for token_id in token_ids:
+            if skip_special_tokens and token_id == self.mask_token_id:
+                continue
+            parts.append(self._DECODE_MAP[int(token_id)])
+        return "".join(parts)
+
+    def encode(self, text: str, *, add_special_tokens: bool = False) -> list[int]:
+        del add_special_tokens
+        if text == ".":
+            return [13]
+        if text == "\n":
+            return [14]
+        if text == "..":
+            return [13, 13]
+        raise KeyError(text)
 
 
 def test_normalize_hook_step_skips_none() -> None:
@@ -39,3 +89,58 @@ def test_selected_token_stats_returns_entropy_and_top2() -> None:
     assert 0.0 < selected_probs[0] < 1.0
     assert 0.0 < top2_probs[0] < selected_probs[0]
     assert entropies[0] > 0.0
+
+
+def test_resolve_trace_profiles_expands_all() -> None:
+    profiles = _resolve_trace_profiles(trace_profile="all", alg=None, alg_temp=None)
+
+    assert [profile.name for profile in profiles] == [
+        "entropy_det",
+        "entropy_stochastic",
+        "origin_random",
+    ]
+    assert [profile.alg for profile in profiles] == ["entropy", "entropy", "origin"]
+    assert [profile.alg_temp for profile in profiles] == [0.0, 0.1, None]
+
+
+def test_normalize_payload_uses_profile_trace_id() -> None:
+    config = DreamGenerationConfig(
+        model_name="dream-test",
+        trace_profile="entropy_stochastic",
+        seed=7,
+        alg="entropy",
+        alg_temp=0.1,
+    )
+
+    normalized = _normalize_payload(
+        {
+            "steps": [{"step_index": 0, "tokens": [{"token_index": 0, "token_text": "A"}]}],
+            "decoding_metadata": {},
+        },
+        {"sample_id": "sample-1", "prompt": "Prompt"},
+        config,
+    )
+
+    assert normalized["trace_id"] == "sample-1__entropy_stochastic__seed-7"
+    assert normalized["decoding_metadata"]["trace_profile"] == "entropy_stochastic"
+    assert normalized["decoding_metadata"]["seed"] == 7
+
+
+def test_prompt_seed_is_stable_for_same_profile_and_prompt() -> None:
+    prompt_record = {"sample_id": "prompt-42", "prompt": "Explain phases."}
+
+    first = _prompt_seed(3, "entropy_stochastic", prompt_record)
+    second = _prompt_seed(3, "entropy_stochastic", prompt_record)
+    third = _prompt_seed(3, "origin_random", prompt_record)
+
+    assert first == second
+    assert first != third
+
+
+def test_resolve_delimiter_features_skips_multi_token_delimiters() -> None:
+    features = _resolve_delimiter_features(_TokenizerStub(), (".", "\n", ".."))
+
+    assert [feature.feature_key for feature in features] == [
+        "delimiter_prob_period",
+        "delimiter_prob_newline",
+    ]

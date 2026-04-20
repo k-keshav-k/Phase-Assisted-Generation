@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,19 @@ if __package__ in {None, ""}:
 from phase_cpd.trace_jobs.dream_local_adapter import collect_trace
 from phase_cpd.trace_jobs.dream_runtime import DreamGenerationConfig
 
+_TRACE_PROFILES: dict[str, tuple[str, float | None]] = {
+    "entropy_det": ("entropy", 0.0),
+    "entropy_stochastic": ("entropy", 0.1),
+    "origin_random": ("origin", None),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class _ResolvedTraceProfile:
+    name: str
+    alg: str
+    alg_temp: float | None
+
 
 def main() -> int:
     parser = _build_parser()
@@ -23,30 +37,38 @@ def main() -> int:
     prompts_path = Path(args.prompts)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    config = DreamGenerationConfig(
-        model_name=args.model_name,
-        max_new_tokens=args.max_new_tokens,
-        steps=args.steps,
-        temperature=args.temperature,
-        top_p=args.top_p,
-        top_k=args.top_k,
-        alg=args.alg,
-        alg_temp=args.alg_temp,
-        device=args.device,
-        torch_dtype=args.torch_dtype,
-    )
-
     prompt_records = _load_prompt_records(prompts_path)
     if args.limit is not None:
         prompt_records = prompt_records[: args.limit]
 
     written_paths: list[Path] = []
-    for prompt_record in prompt_records:
-        payload = collect_trace(prompt_record, config)
-        normalized = _normalize_payload(payload, prompt_record, config.model_name)
-        target = output_dir / f"{normalized['trace_id']}.json"
-        target.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
-        written_paths.append(target)
+    profiles = _resolve_trace_profiles(
+        trace_profile=args.trace_profile,
+        alg=args.alg,
+        alg_temp=args.alg_temp,
+    )
+    steps = args.max_new_tokens if args.steps is None else args.steps
+    for profile in profiles:
+        config = DreamGenerationConfig(
+            model_name=args.model_name,
+            max_new_tokens=args.max_new_tokens,
+            steps=steps,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            top_k=args.top_k,
+            alg=profile.alg,
+            alg_temp=profile.alg_temp,
+            device=args.device,
+            torch_dtype=args.torch_dtype,
+            trace_profile=profile.name,
+            seed=args.seed,
+        )
+        for prompt_record in prompt_records:
+            payload = collect_trace(prompt_record, config)
+            normalized = _normalize_payload(payload, prompt_record, config)
+            target = output_dir / f"{normalized['trace_id']}.json"
+            target.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
+            written_paths.append(target)
 
     for path in written_paths:
         print(path)
@@ -78,12 +100,34 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional cap on the number of prompts to process.",
     )
     parser.add_argument("--max-new-tokens", type=int, default=256)
-    parser.add_argument("--steps", type=int, default=256)
+    parser.add_argument(
+        "--steps",
+        type=int,
+        help="Dream denoising steps. Defaults to --max-new-tokens when omitted.",
+    )
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--top-k", type=int)
-    parser.add_argument("--alg", default="entropy")
-    parser.add_argument("--alg-temp", type=float, default=0.0)
+    parser.add_argument(
+        "--trace-profile",
+        choices=[*sorted(_TRACE_PROFILES), "all"],
+        help="Vanilla Dream remasking profile to collect. Defaults to entropy_det.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Base seed used to derive per-prompt deterministic seeds.",
+    )
+    parser.add_argument(
+        "--alg",
+        help="Backward-compatible override. Must match one of the supported trace profiles.",
+    )
+    parser.add_argument(
+        "--alg-temp",
+        type=float,
+        help="Backward-compatible override. Must match one of the supported trace profiles.",
+    )
     parser.add_argument("--device", help="Override Dream runtime device, e.g. cuda or cpu.")
     parser.add_argument(
         "--torch-dtype",
@@ -106,16 +150,25 @@ def _load_prompt_records(path: Path) -> list[dict[str, Any]]:
 def _normalize_payload(
     payload: dict[str, Any],
     prompt_record: dict[str, Any],
-    model_name: str,
+    config: DreamGenerationConfig,
 ) -> dict[str, Any]:
     sample_id = str(prompt_record.get("sample_id", "trace"))
     prompt = str(prompt_record["prompt"])
     normalized = dict(payload)
-    normalized.setdefault("trace_id", sample_id)
+    normalized["trace_id"] = _profile_trace_id(
+        sample_id=sample_id,
+        trace_profile=config.trace_profile,
+        seed=config.seed,
+    )
     normalized.setdefault("prompt", prompt)
-    normalized.setdefault("model_name", model_name)
+    normalized.setdefault("model_name", config.model_name)
     normalized.setdefault("tags", list(prompt_record.get("tags", [])))
-    normalized.setdefault("decoding_metadata", {})
+    metadata = dict(normalized.setdefault("decoding_metadata", {}))
+    metadata.setdefault("trace_profile", config.trace_profile)
+    metadata.setdefault("alg", config.alg)
+    metadata.setdefault("alg_temp", config.alg_temp)
+    metadata.setdefault("seed", config.seed)
+    normalized["decoding_metadata"] = metadata
 
     steps = normalized.get("steps")
     if not isinstance(steps, list) or not steps:
@@ -126,6 +179,69 @@ def _normalize_payload(
         raise ValueError(msg)
 
     return normalized
+
+
+def _resolve_trace_profiles(
+    *,
+    trace_profile: str | None,
+    alg: str | None,
+    alg_temp: float | None,
+) -> list[_ResolvedTraceProfile]:
+    if trace_profile == "all":
+        if alg is not None or alg_temp is not None:
+            msg = "--alg/--alg-temp cannot be combined with --trace-profile=all"
+            raise ValueError(msg)
+        return [
+            _ResolvedTraceProfile(name=name, alg=profile_alg, alg_temp=profile_alg_temp)
+            for name, (profile_alg, profile_alg_temp) in _TRACE_PROFILES.items()
+        ]
+
+    if trace_profile is not None:
+        profile_alg, profile_alg_temp = _TRACE_PROFILES[trace_profile]
+        if alg is not None and alg != profile_alg:
+            msg = f"--alg={alg!r} conflicts with --trace-profile={trace_profile!r}"
+            raise ValueError(msg)
+        if alg_temp is not None and alg_temp != profile_alg_temp:
+            msg = f"--alg-temp={alg_temp!r} conflicts with --trace-profile={trace_profile!r}"
+            raise ValueError(msg)
+        return [
+            _ResolvedTraceProfile(
+                name=trace_profile,
+                alg=profile_alg,
+                alg_temp=profile_alg_temp,
+            )
+        ]
+
+    inferred = _infer_trace_profile(alg=alg, alg_temp=alg_temp)
+    profile_alg, profile_alg_temp = _TRACE_PROFILES[inferred]
+    return [
+        _ResolvedTraceProfile(
+            name=inferred,
+            alg=profile_alg,
+            alg_temp=profile_alg_temp,
+        )
+    ]
+
+
+def _infer_trace_profile(*, alg: str | None, alg_temp: float | None) -> str:
+    normalized_alg = "entropy" if alg is None else alg
+    normalized_alg_temp = 0.0 if alg_temp is None else alg_temp
+    for profile_name, (profile_alg, profile_alg_temp) in _TRACE_PROFILES.items():
+        if normalized_alg != profile_alg:
+            continue
+        if normalized_alg_temp == (0.0 if profile_alg_temp is None else profile_alg_temp):
+            if profile_alg_temp is None and alg_temp is not None:
+                continue
+            return profile_name
+    msg = (
+        "Unsupported --alg/--alg-temp combination. "
+        "Use one of the built-in trace profiles instead."
+    )
+    raise ValueError(msg)
+
+
+def _profile_trace_id(*, sample_id: str, trace_profile: str, seed: int) -> str:
+    return f"{sample_id}__{trace_profile}__seed-{seed}"
 
 
 if __name__ == "__main__":

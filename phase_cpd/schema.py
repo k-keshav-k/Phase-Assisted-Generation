@@ -50,6 +50,40 @@ class TraceToken:
 
 
 @dataclass(slots=True)
+class TraceStepSummary:
+    step_index: int
+    mask_count: int = 0
+    changed_count: int = 0
+    active_start: int | None = None
+    active_end: int | None = None
+    active_count: int = 0
+    best_delimiter_index: int | None = None
+    max_delimiter_confidence: float | None = None
+
+    def __post_init__(self) -> None:
+        _require_non_negative(self.step_index, "TraceStepSummary.step_index")
+        _require_non_negative(self.mask_count, "TraceStepSummary.mask_count")
+        _require_non_negative(self.changed_count, "TraceStepSummary.changed_count")
+        _require_non_negative(self.active_count, "TraceStepSummary.active_count")
+        if self.active_start is not None:
+            _require_non_negative(self.active_start, "TraceStepSummary.active_start")
+        if self.active_end is not None:
+            _require_non_negative(self.active_end, "TraceStepSummary.active_end")
+        if self.best_delimiter_index is not None:
+            _require_non_negative(
+                self.best_delimiter_index,
+                "TraceStepSummary.best_delimiter_index",
+            )
+        if (
+            self.active_start is not None
+            and self.active_end is not None
+            and self.active_end < self.active_start
+        ):
+            msg = "TraceStepSummary.active_end must be >= active_start"
+            raise ValueError(msg)
+
+
+@dataclass(slots=True)
 class TraceRecord:
     trace_id: str
     backend: str
@@ -57,6 +91,7 @@ class TraceRecord:
     prompt: str
     final_text: str
     tokens: list[TraceToken] = field(default_factory=list)
+    step_summaries: list[TraceStepSummary] = field(default_factory=list)
     decoding_metadata: dict[str, Any] = field(default_factory=dict)
     tags: list[str] = field(default_factory=list)
     source_path: str | None = None
@@ -70,6 +105,11 @@ class TraceRecord:
         _require_text(self.final_text, "TraceRecord.final_text")
         if self.tokens and len(self.tokens) != len({token.token_index for token in self.tokens}):
             msg = "TraceRecord.tokens must have unique token_index values"
+            raise ValueError(msg)
+        if self.step_summaries and len(self.step_summaries) != len(
+            {summary.step_index for summary in self.step_summaries}
+        ):
+            msg = "TraceRecord.step_summaries must have unique step_index values"
             raise ValueError(msg)
 
 
