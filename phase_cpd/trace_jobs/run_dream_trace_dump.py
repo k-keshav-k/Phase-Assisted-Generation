@@ -42,6 +42,7 @@ def main() -> int:
         prompt_records = prompt_records[: args.limit]
 
     written_paths: list[Path] = []
+    skipped_prompts: list[str] = []
     profiles = _resolve_trace_profiles(
         trace_profile=args.trace_profile,
         alg=args.alg,
@@ -64,14 +65,41 @@ def main() -> int:
             seed=args.seed,
         )
         for prompt_record in prompt_records:
-            payload = collect_trace(prompt_record, config)
+            try:
+                payload = collect_trace(prompt_record, config)
+            except ValueError as error:
+                if not _should_skip_prompt_error(error):
+                    raise
+                sample_id = str(prompt_record.get("sample_id", "unknown"))
+                skipped_prompts.append(f"{sample_id}:{profile.name}")
+                print(
+                    (
+                        "Skipping prompt after empty Dream generation: "
+                        f"sample_id={sample_id!r}, trace_profile={profile.name!r}. "
+                        "Dream returned no non-special generated tokens."
+                    ),
+                    file=sys.stderr,
+                )
+                continue
             normalized = _normalize_payload(payload, prompt_record, config)
             target = output_dir / f"{normalized['trace_id']}.json"
             target.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
             written_paths.append(target)
 
+    if not written_paths:
+        msg = (
+            "Dream trace collection did not produce any trace files. "
+            f"Skipped prompts: {', '.join(skipped_prompts) if skipped_prompts else 'none'}"
+        )
+        raise ValueError(msg)
+
     for path in written_paths:
         print(path)
+    if skipped_prompts:
+        print(
+            f"Skipped {len(skipped_prompts)} prompt/profile runs due to empty Dream generations.",
+            file=sys.stderr,
+        )
     return 0
 
 
@@ -242,6 +270,10 @@ def _infer_trace_profile(*, alg: str | None, alg_temp: float | None) -> str:
 
 def _profile_trace_id(*, sample_id: str, trace_profile: str, seed: int) -> str:
     return f"{sample_id}__{trace_profile}__seed-{seed}"
+
+
+def _should_skip_prompt_error(error: ValueError) -> bool:
+    return "Dream returned no non-special generated tokens." in str(error)
 
 
 if __name__ == "__main__":

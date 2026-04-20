@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+import phase_cpd.trace_jobs.run_dream_trace_dump as dream_trace_dump
 from phase_cpd.trace_jobs.dream_runtime import (
     DreamGenerationConfig,
     _normalize_hook_step,
@@ -144,3 +145,61 @@ def test_resolve_delimiter_features_skips_multi_token_delimiters() -> None:
         "delimiter_prob_period",
         "delimiter_prob_newline",
     ]
+
+
+def test_run_dream_trace_dump_skips_empty_generations(
+    tmp_path,
+    monkeypatch,
+    capsys,
+) -> None:
+    prompts_path = tmp_path / "prompts.jsonl"
+    output_dir = tmp_path / "out"
+    prompts_path.write_text(
+        "\n".join(
+            [
+                '{"sample_id":"prompt-001","prompt":"ok"}',
+                '{"sample_id":"prompt-002","prompt":"skip"}',
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    def _fake_collect_trace(prompt_record, config):
+        if prompt_record["sample_id"] == "prompt-002":
+            raise ValueError(
+                "Dream returned no non-special generated tokens. Prompt sample_id='prompt-002'."
+            )
+        return {
+            "trace_id": prompt_record["sample_id"],
+            "prompt": prompt_record["prompt"],
+            "model_name": config.model_name,
+            "decoding_metadata": {},
+            "steps": [
+                {
+                    "step_index": 0,
+                    "tokens": [{"token_index": 0, "token_text": "A"}],
+                }
+            ],
+        }
+
+    monkeypatch.setattr(dream_trace_dump, "collect_trace", _fake_collect_trace)
+    monkeypatch.setattr(
+        dream_trace_dump.sys,
+        "argv",
+        [
+            "run_dream_trace_dump.py",
+            "--prompts",
+            str(prompts_path),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    exit_code = dream_trace_dump.main()
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert (output_dir / "prompt-001__entropy_det__seed-0.json").exists()
+    assert not (output_dir / "prompt-002__entropy_det__seed-0.json").exists()
+    assert "Skipping prompt after empty Dream generation" in captured.err
