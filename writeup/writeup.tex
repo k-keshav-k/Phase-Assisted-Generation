@@ -1,0 +1,151 @@
+\documentclass[11pt]{article}
+
+% Compact layout
+\usepackage[margin=0.75in, top=0.85in, bottom=0.85in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+
+\setstretch{0.92}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+% Title formatting
+\newcommand{\papertitle}[1]{%
+  \begin{center}
+    {\LARGE\bfseries #1 \par}
+    \vspace{0.3em}
+  \end{center}
+}
+\newcommand{\paperauthor}[1]{%
+  \begin{center}
+    {\large #1 \par}
+    \vspace{0.15em}
+  \end{center}
+}
+\newcommand{\paperaffiliation}[1]{%
+  \begin{center}
+    {\normalsize\itshape #1 \par}
+    \vspace{0.6em}
+  \end{center}
+}
+
+\setlength{\parskip}{0.25em}
+\setlength{\parindent}{0pt}
+
+% Tighter section headings
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{0.6em}{0.3em}
+
+\begin{document}
+
+\papertitle{Phase-Adaptive Generation: Difficulty-Aware Semi-Autoregressive Decoding for Diffusion Language Models}
+
+\paperauthor{Keshav Krishna \quad Prajesh Kumar \quad Siva Satvik Mandapati}
+\paperaffiliation{New York University \\ Building LLM Reasoners --- Spring 2026 \\ \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
+
+\begin{abstract}
+Phase-Adaptive Generation (PAG) is an original research project on difficulty-aware decoding for diffusion language models. The central hypothesis is that generated text follows recoverable ``difficulty phases'' that can be segmented from token-level confidence trajectories and used to predict the next control tuple for decoding. Our current pipeline builds fixed-decoding traces, segments them with change-point detection over stabilizing token signals, and trains a next-segment predictor over tuples that encode block number and maximum refinement step, with support for extensible fields. This paper-style writeup describes the problem setting, the data pipeline, the segmentation and prediction method, and the current implementation status of the project.
+\end{abstract}
+
+\section{Introduction}
+
+Autoregressive (AR) language models generate one token at a time and therefore pay a latency cost that becomes significant on long reasoning traces. Diffusion-based LLMs (dLLMs) such as Dream 7B~\citep{ye2025dream} and LLaDA~\citep{nie2025llada} reduce this cost by generating in blocks through iterative denoising, but existing decoding policies are typically uniform: the same chunk size and refinement budget are applied regardless of whether the model is in an easy completion region or a difficult reasoning region.
+
+Our project studies whether these generation traces contain reusable structure that can support better scheduling. The working hypothesis is that dLLM outputs move through difficulty phases: some spans stabilize quickly, while others remain uncertain and require more refinement. If those phases can be detected early enough, a scheduler can allocate compute more intelligently. In our current formulation, PAG aims to use phase predictions to adapt both chunk size and refinement intensity.
+
+The writeup and codebase are organized to support that question in stages. We first collect traces from a baseline decoder, then segment the traces with change-point detection, then turn each segment into a tuple sequence, and finally predict the next segment tuple from previous ones. This staged setup is intentionally testable so that each step can yield intermediate evidence even before a full adaptive decoder is completed.
+
+\section{Related Work}
+
+\textbf{Diffusion LLM decoding.} Dream 7B~\citep{ye2025dream} and LLaDA~\citep{nie2025llada} show that diffusion-style decoding can be competitive with AR baselines on reasoning and planning tasks. Block Diffusion~\citep{arriola2025block} frames semi-autoregressive generation as a bridge between AR and diffusion decoding.
+
+\textbf{Adaptive block inference.} AdaBlock-dLLM~\citep{lu2025adablock} is the closest prior idea to our project because it adapts block size based on confidence-like signals. Our project differs in two ways. First, we treat segmentation as an explicit learning problem over trace signals rather than only as a reactive confidence heuristic. Second, we predict a richer control tuple that can later drive both block size and refinement intensity.
+
+\textbf{Why this formulation matters.} In the repository, the phase-analysis stage already exposes token-level traces, stabilizing features, and segment summaries. That makes the project a natural fit for a learned next-segment model: the model can operate on symbolic segment tuples rather than raw text, which keeps the method lightweight and interpretable.
+
+\section{Method}
+
+\subsection{Pipeline Overview}
+
+The pipeline used in the repository is:
+baseline decoding $\rightarrow$ trace collection $\rightarrow$ phase segmentation $\rightarrow$ tuple construction $\rightarrow$ next-segment prediction $\rightarrow$ tuple-conditioned unmasking.
+
+The baseline stage produces token-level traces and per-step token signals. The phase stage converts those traces into phase annotations and predictor-ready examples. The predict stage then uses those segment sequences to learn a next-tuple for generation.
+
+\subsection{Step 1: Baseline Trace Collection}
+
+The first scheme point is to generate baseline traces with per-step token probabilities and stabilization information. In the current codebase, the baseline stage records each token's refinement history, including top-1 probability, top-2 probability, selected logit, and extra scalar values such as entropy. The important conceptual output is a token trajectory over refinement steps, which allows us to ask when each token becomes stable.
+
+This trace representation is essential because phase prediction depends on the dynamics of confidence, not just the final decoded text. The repository already stores these traces in a unified JSON schema so that downstream analysis can consume them without depending on a specific inference backend.
+
+\subsection{Step 2: Change-Point Detection and Segment Extraction}
+
+The second scheme point is to sweep detection sensitivity and run change-point detection to obtain segment candidates. In practice, the code uses stabilizing scalar features such as entropy, margin, or top-1 probability, then applies PELT over the resulting series. The detector produces breakpoints that partition the token sequence into contiguous segments.
+
+For each segment, we compute summary statistics and derive the segment-level control variables. This is where the tuple representation begins to take shape: the segment index acts as a block identifier, while the maximum refinement step observed in the segment captures how much iterative effort the model needed before that segment stabilized. Optional additional fields can be appended later, such as segment length or other summary statistics.
+
+\subsection{Step 3: Tuple Sequences and Next-Segment Prediction}
+
+The third scheme point is to represent each segment as an ordered tuple and predict the next tuple from the current history. In the current implementation, a tuple is represented as $(\text{block number}, \text{max refinement step}, \ldots)$. The representation is intentionally extensible, so the system can later add more fields without changing the model interface.
+
+We currently use an interpolated variable-order Markov predictor in the prototype package \texttt{phase\_predict}. This model is a strong fit for the present setting because the data is symbolic, the sequence lengths are moderate, and the main signal is transition structure rather than high-dimensional continuous embeddings. It can produce top-$k$ next-segment candidates and probabilities, which makes it suitable for downstream scheduling policies.
+
+\subsection{Step 4: Tuple-Conditioned Diffusion Unmasking}
+
+The fourth step is to consume the predicted control tuple as an inference-time command for the diffusion decoder. Concretely, once the model predicts a tuple like $(b, \tau, \ldots)$, we interpret it as scheduling parameters for the next decode action: block size $b$ determines how many masked positions to unmask in the next chunk, and refinement budget $\tau$ determines how many denoising/refinement iterations are spent on that chunk.
+
+Operationally, the decoder selects the next block according to the predicted block size, applies diffusion unmasking over those positions, and runs exactly the tuple-specified refinement schedule before committing tokens. The resulting partially decoded sequence is then fed back into the same loop, producing an updated tuple history for the next prediction. This closes the control loop from phase prediction to token generation and makes tuple prediction directly actionable for adaptive decoding.
+
+\section{Implementation Status}
+
+The repository already contains the building blocks for the final system. The \texttt{phase\_cpd} package handles trace collection, feature extraction, and segmentation. The new \texttt{phase\_predict} package adds segment-tuple extraction, model training, model serialization, and a CLI for training and inference. Tests cover tuple extraction and model round-tripping, which gives us a correctness baseline before any larger-scale experiments.
+
+This stage is therefore more than a sketch: the data pipeline exists, the tuple encoding is implemented, and the next-segment predictor can be trained on extracted segment sequences. What remains for the final project is to connect the predictor more tightly to full adaptive scheduling and report quantitative results on held-out traces.
+
+\section{Preliminary Analysis and Limitations}
+
+At the moment, the strongest evidence we have is architectural rather than benchmark-based: the pipeline is modular, the tuple representation is interpretable, and the next-segment task is well matched to the symbolic nature of the data. The main limitation is that we have not yet run a full held-out evaluation of next-segment accuracy against baselines such as a simple frequency model or a neural sequence model.
+
+Another limitation is that the current tuple uses block index and maximum refinement step, which is a compact summary rather than a full representation of decoding state. That is acceptable for a first report because it keeps the problem well defined, but the representation can be expanded if later ablations show that additional context is needed.
+
+\section{Conclusion}
+
+PAG frames phase-aware decoding as a prediction problem over segment tuples derived from dLLM traces. The current codebase supports the first four scheme points at the design level: trace collection, change-point segmentation, next-tuple prediction, and tuple-conditioned unmasking control. That gives us a clear experimental path toward evaluating whether phase-aware scheduling can improve the quality--latency trade-off for diffusion language models.
+
+\bibliographystyle{plainnat}
+
+\begin{thebibliography}{6}
+\bibitem[Ye et al.(2025)]{ye2025dream}
+J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
+Dream 7B: Diffusion large language models. \textit{arXiv:2508.15487}, 2025.
+
+\bibitem[Nie et al.(2025)]{nie2025llada}
+S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
+Large language diffusion models. \textit{arXiv:2502.09992}, 2025.
+
+\bibitem[Lu et al.(2025)]{lu2025adablock}
+G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
+AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size. \textit{ICLR}, 2026.
+
+\bibitem[Arriola et al.(2025)]{arriola2025block}
+M.~Arriola, A.~Gokaslan, J.~T.~Chiu, Z.~Yang, Z.~Qi, J.~Han, S.~S.~Sahoo, and V.~Kuleshov.
+Block diffusion: Interpolating between autoregressive and diffusion language models. \textit{ICLR (Oral)}, 2025.
+
+\bibitem[Wu et al.(2025)]{wu2025fastdllm}
+C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
+Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding. \textit{ICLR}, 2026.
+
+\bibitem[Gong et al.(2025)]{gong2025diffullama}
+S.~Gong, S.~Agarwal, Y.~Zhang, J.~Ye, L.~Zheng, M.~Li, C.~An, P.~Zhao, W.~Bi, J.~Han, H.~Peng, and L.~Kong.
+Scaling diffusion language models via adaptation from autoregressive models. \textit{ICLR}, 2025.
+\end{thebibliography}
+
+\end{document}

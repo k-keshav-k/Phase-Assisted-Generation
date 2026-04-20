@@ -1,0 +1,106 @@
+\documentclass[11pt]{article}
+
+% Compact layout
+\usepackage[margin=0.75in, top=0.85in, bottom=0.85in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+
+\setstretch{0.92}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+% Title formatting
+\newcommand{\papertitle}[1]{%
+  \begin{center}
+    {\LARGE\bfseries #1 \par}
+    \vspace{0.3em}
+  \end{center}
+}
+\newcommand{\paperauthor}[1]{%
+  \begin{center}
+    {\large #1 \par}
+    \vspace{0.15em}
+  \end{center}
+}
+\newcommand{\paperaffiliation}[1]{%
+  \begin{center}
+    {\normalsize\itshape #1 \par}
+    \vspace{0.6em}
+  \end{center}
+}
+
+\setlength{\parskip}{0.25em}
+\setlength{\parindent}{0pt}
+
+% Tighter section headings
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{0.6em}{0.3em}
+
+\begin{document}
+
+\papertitle{Phase-Adaptive Generation: Difficulty-Aware Semi-Autoregressive Decoding for Diffusion Language Models}
+
+\paperauthor{Keshav Krishna \quad Prajesh Kumar \quad Siva Satvik Mandapati}
+\paperaffiliation{New York University \\ Building LLM Reasoners --- Spring 2026 \\ \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
+
+\section{Problem and Motivation}
+
+Autoregressive (AR) models generate tokens one at a time, incurring high latency. Diffusion-based LLMs (dLLMs) such as Dream 7B~\citep{ye2025dream} and LLaDA~\citep{nie2025llada} generate tokens in parallel via iterative denoising, but apply uniform block sizes and denoising effort regardless of token difficulty. We observe that generation proceeds through \textbf{difficulty phases}: low-entropy stretches (e.g., ``Ok, I will solve this'') alternate with high-entropy reasoning tokens (e.g., ``derivative of $x^2$ is $2x$''). We propose \textbf{Phase-Adaptive Generation (PAG)}, a semi-AR decoding framework that detects these phases at inference time and adapts two dimensions per phase: (1)~\textit{chunk size} (tokens generated in parallel), and (2)~\textit{refinement intensity} (denoising steps per chunk). A lightweight learned MLP \textit{proactively} predicts phase boundaries from hidden states, enabling anticipatory scheduling.
+
+\section{Related Work and Our Contribution}
+
+\textbf{dLLMs.} Dream 7B~\citep{ye2025dream} matches AR baselines on general/math/code tasks and excels at planning (Countdown, Sudoku). Block Diffusion~\citep{arriola2025block} introduced semi-AR decoding for dLLMs.
+\textbf{AdaBlock-dLLM}~\citep{lu2025adablock} (ICLR 2026) is the closest prior work: it adapts block size reactively using confidence-based ``volatility band'' detection, achieving up to 5.3\% accuracy gains. However, it adjusts only \textit{one} dimension (block size) and detects boundaries \textit{after the fact}.
+\textbf{PAG} extends this along two axes: (i) a second adaptive dimension---refinement intensity---allocating more denoising compute to hard phases; (ii) proactive, learned phase prediction rather than reactive detection.
+
+\section{Experimental Plan}
+
+\textbf{Models.} Dream 7B (Base + Instruct) as primary dLLM; LLaDA-8B-Instruct as secondary. Qwen2.5-7B and LLaMA3-8B as AR baselines.
+
+\textbf{Benchmarks.} GSM8K, MATH (math reasoning with clear easy/hard phase transitions); HumanEval, MBPP (code generation); Countdown, Sudoku (planning tasks where dLLMs excel). These align with AdaBlock-dLLM's evaluation suite~\citep{lu2025adablock} for direct comparison.
+
+\textbf{Compute \& Feasibility.} We freeze the base dLLM entirely and only train a lightweight phase-prediction MLP ($\sim$100K parameters). Individual run estimates on a single A100 40GB: $\sim$10--12 hrs to train the phase predictor per benchmark configuration, $\sim$2 hrs for full evaluation per model--benchmark pair. Estimated total compute across all phases: $\sim$120 GPU-hours.
+
+\textbf{Phased Plan.} (1)~Reproduce baselines + AdaBlock-dLLM ($\sim$20 hrs). (2)~Analyze difficulty phases via hidden-state similarity and per-token entropy---this yields a standalone analytical contribution ($\sim$30 hrs). (3)~Implement PAG: train phase predictor, adaptive chunk/refinement scheduling ($\sim$40 hrs). (4)~Ablations: chunk-only vs.\ refinement-only, throughput--accuracy Pareto curves ($\sim$30 hrs).
+
+\textbf{Metrics.} Task accuracy (exact-match, pass@1), throughput (tokens/sec), NFE, Pareto efficiency.
+
+\textbf{Risk Mitigation.} If the learned predictor underperforms, we fall back to heuristic phase detection (confidence thresholds + clustering), still contributing the refinement-intensity dimension. Phase 2 alone provides a publishable characterization of difficulty phases in dLLM generation.
+
+\bibliographystyle{plainnat}
+
+\begin{thebibliography}{6}
+\bibitem[Ye et al.(2025)]{ye2025dream}
+J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
+Dream 7B: Diffusion large language models. \textit{arXiv:2508.15487}, 2025.
+
+\bibitem[Nie et al.(2025)]{nie2025llada}
+S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
+Large language diffusion models. \textit{arXiv:2502.09992}, 2025.
+
+\bibitem[Lu et al.(2025)]{lu2025adablock}
+G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
+AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size. \textit{ICLR}, 2026.
+
+\bibitem[Arriola et al.(2025)]{arriola2025block}
+M.~Arriola, A.~Gokaslan, J.~T.~Chiu, Z.~Yang, Z.~Qi, J.~Han, S.~S.~Sahoo, and V.~Kuleshov.
+Block diffusion: Interpolating between autoregressive and diffusion language models. \textit{ICLR (Oral)}, 2025.
+
+\bibitem[Wu et al.(2025)]{wu2025fastdllm}
+C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
+Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding. \textit{ICLR}, 2026.
+
+\bibitem[Gong et al.(2025)]{gong2025diffullama}
+S.~Gong, S.~Agarwal, Y.~Zhang, J.~Ye, L.~Zheng, M.~Li, C.~An, P.~Zhao, W.~Bi, J.~Han, H.~Peng, and L.~Kong.
+Scaling diffusion language models via adaptation from autoregressive models. \textit{ICLR}, 2025.
+\end{thebibliography}
+
+\end{document}
