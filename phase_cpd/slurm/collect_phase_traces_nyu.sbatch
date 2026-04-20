@@ -8,6 +8,9 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH --requeue
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEFAULT_PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 mkdir -p ./logs
 
 singularity exec --nv \
@@ -19,7 +22,7 @@ export PATH=/ext3/miniconda3/bin:\$PATH
 conda activate llmr
 set -euo pipefail
 
-export PROJECT_DIR=\${PROJECT_DIR:-/scratch/kk6081/nyu-llm-reasoners-a3}
+export PROJECT_DIR=\${PROJECT_DIR:-$DEFAULT_PROJECT_DIR}
 export PROMPTS_FILE=\${PROMPTS_FILE:-\$PROJECT_DIR/phase_cpd/data/prompts/research_prompts.jsonl}
 export RAW_TRACE_ROOT=\${RAW_TRACE_ROOT:-\$PROJECT_DIR/outputs/phase_cpd_raw}
 export TRACE_OUTPUT_DIR=\${TRACE_OUTPUT_DIR:-\$PROJECT_DIR/phase_cpd/data/traces_real}
@@ -41,6 +44,8 @@ export PYTORCH_CUDA_ALLOC_CONF=\${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:T
 cd \$PROJECT_DIR
 mkdir -p ./logs \$RAW_TRACE_ROOT/dream \$TRACE_OUTPUT_DIR \$HF_HOME \$UV_CACHE_DIR
 
+echo \"PROJECT_DIR=\$PROJECT_DIR\"
+echo \"PWD=\$(pwd)\"
 echo \"PROMPTS_FILE=\$PROMPTS_FILE\"
 echo \"RAW_TRACE_ROOT=\$RAW_TRACE_ROOT\"
 echo \"TRACE_OUTPUT_DIR=\$TRACE_OUTPUT_DIR\"
