@@ -50,13 +50,21 @@ def _extract_tuples_from_traces(
     trace_dir: Path,
     *,
     per_token: bool = False,
+    cpd_penalty: float = 0.1,
+    cpd_min_segment: int = 2,
+    cpd_smoothing: int = 3,
 ) -> list[PhaseTuple]:
     """Load all traces and extract PhaseTuple sequences."""
     entries = list_catalog_entries(trace_dir)
     all_tuples: list[PhaseTuple] = []
 
     detector = PeltDetector()
-    cpd_params = CPDParameters(cost="l2", penalty=0.1, min_segment_length=2, smoothing_window=3)
+    cpd_params = CPDParameters(
+        cost="l2",
+        penalty=cpd_penalty,
+        min_segment_length=cpd_min_segment,
+        smoothing_window=cpd_smoothing,
+    )
 
     for entry in entries:
         try:
@@ -97,12 +105,24 @@ def main(argv: list[str] | None = None) -> None:
                         help="Path to save the checkpoint.")
     parser.add_argument("--per-token", action="store_true",
                         help="Use one tuple per token (instead of per CPD segment).")
+    parser.add_argument("--cpd-penalty", type=float, default=0.1,
+                        help="CPD penalty for breakpoint detection (default: 0.1).")
+    parser.add_argument("--cpd-min-segment", type=int, default=2,
+                        help="CPD minimum segment length in tokens (default: 2).")
+    parser.add_argument("--cpd-smoothing", type=int, default=3,
+                        help="CPD smoothing window size (default: 3).")
     args = parser.parse_args(argv)
 
     trace_dir = args.trace_dir or default_trace_dir()
     print(f"Loading traces from: {trace_dir}")  # noqa: T201
 
-    all_tuples = _extract_tuples_from_traces(trace_dir, per_token=args.per_token)
+    all_tuples = _extract_tuples_from_traces(
+        trace_dir,
+        per_token=args.per_token,
+        cpd_penalty=args.cpd_penalty,
+        cpd_min_segment=args.cpd_min_segment,
+        cpd_smoothing=args.cpd_smoothing,
+    )
     print(f"\nTotal tuples extracted: {len(all_tuples)}")  # noqa: T201
 
     if len(all_tuples) < args.window_size + 2:

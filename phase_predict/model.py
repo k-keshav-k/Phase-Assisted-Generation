@@ -115,7 +115,7 @@ class PhaseTransformer(nn.Module):
             dim_feedforward=config.d_model * 4,
             dropout=config.dropout,
             batch_first=True,  # (batch, seq, feature) convention
-            norm_first=True,   # pre-norm for more stable training
+            norm_first=True,  # pre-norm for more stable training
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.n_layers)
 

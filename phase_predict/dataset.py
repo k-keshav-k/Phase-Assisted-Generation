@@ -16,6 +16,9 @@ from torch.utils.data import Dataset
 
 from phase_predict.schema import ModelConfig, PhaseTuple
 
+# Minimum standard deviation used in normalisation to avoid division by zero.
+_MIN_STD_EPSILON: float = 1e-6
+
 
 def build_windows(
     sequence: Sequence[PhaseTuple],
@@ -93,7 +96,7 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
                 self.mean, self.std = stats
             else:
                 self.mean = raw.mean(dim=0)
-                self.std = raw.std(dim=0).clamp(min=1e-6)
+                self.std = raw.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             self._raw_normalised = (raw - self.mean) / self.std
         else:
             self.mean = torch.zeros(self.tuple_size)

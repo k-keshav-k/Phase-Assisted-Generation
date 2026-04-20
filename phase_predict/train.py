@@ -45,6 +45,7 @@ def train_epoch(
     optimizer: torch.optim.Optimizer,
     criterion: nn.Module,
     device: torch.device,
+    config: TrainConfig | None = None,
 ) -> float:
     """Run one training epoch.
 
@@ -54,6 +55,8 @@ def train_epoch(
         optimizer: PyTorch optimiser.
         criterion: loss function (MSELoss).
         device:    compute device.
+        config:    optional :class:`~phase_predict.schema.TrainConfig` used for
+                   gradient clipping (``max_grad_norm``).
 
     Returns:
         Mean loss over all batches in this epoch.
@@ -68,8 +71,9 @@ def train_epoch(
         preds = model(inputs)
         loss = criterion(preds, targets)
         loss.backward()
-        # gradient clipping for stability
-        nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        # gradient clipping for stability (configurable via TrainConfig.max_grad_norm)
+        if config is not None and config.max_grad_norm > 0:
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_grad_norm)
         optimizer.step()
         total_loss += float(loss.item())
         n_batches += 1
@@ -181,7 +185,7 @@ class Trainer:
 
         for epoch in range(1, self.config.max_epochs + 1):
             train_loss = train_epoch(
-                self.model, train_loader, optimizer, criterion, self.device
+                self.model, train_loader, optimizer, criterion, self.device, self.config
             )
             val_loss = evaluate(self.model, val_loader, criterion, self.device)
 
