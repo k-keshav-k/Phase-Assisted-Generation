@@ -43,6 +43,18 @@ def test_pelt_detector_returns_interior_sorted_breakpoints() -> None:
     assert all(1 <= breakpoint < len(values) for breakpoint in breakpoints)
 
 
+def test_pelt_detector_does_not_snap_breakpoints_to_stride_five() -> None:
+    detector = PeltDetector()
+    values = [0.0, 0.0, 0.0, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0]
+
+    breakpoints = detector.detect(
+        values,
+        CPDParameters(cost="l2", penalty=0.001, min_segment_length=2, smoothing_window=1),
+    )
+
+    assert breakpoints == [3, 6]
+
+
 def test_kernel_cpd_detector_returns_interior_sorted_breakpoints() -> None:
     detector = KernelCPDDetector(kernel="rbf")
     values = [
