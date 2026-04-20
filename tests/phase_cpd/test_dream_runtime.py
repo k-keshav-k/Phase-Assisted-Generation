@@ -5,6 +5,7 @@ import pytest
 import phase_cpd.trace_jobs.run_dream_trace_dump as dream_trace_dump
 from phase_cpd.trace_jobs.dream_runtime import (
     DreamGenerationConfig,
+    _load_dream_model,
     _normalize_hook_step,
     _prompt_seed,
     _resolve_delimiter_features,
@@ -24,6 +25,59 @@ class _TorchStub:
         import torch
 
         return torch.full_like(tensor, fill_value)
+
+
+class _OutOfMemoryError(RuntimeError):
+    pass
+
+
+class _CudaStub:
+    @staticmethod
+    def is_available() -> bool:
+        return True
+
+    @staticmethod
+    def manual_seed_all(seed: int) -> None:
+        del seed
+
+    @staticmethod
+    def empty_cache() -> None:
+        return None
+
+
+class _TorchLoadStub:
+    OutOfMemoryError = _OutOfMemoryError
+    cuda = _CudaStub()
+
+
+class _ModelStub:
+    def __init__(self, *, raise_oom_on_to: bool = False) -> None:
+        self.raise_oom_on_to = raise_oom_on_to
+        self.to_calls: list[tuple[str, object]] = []
+        self.eval_called = False
+
+    def to(self, *, device: str, dtype):
+        self.to_calls.append((device, dtype))
+        if self.raise_oom_on_to:
+            raise _OutOfMemoryError("oom")
+        return self
+
+    def eval(self):
+        self.eval_called = True
+        return self
+
+
+class _AutoModelStub:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, object]] = []
+        self.first_model = _ModelStub(raise_oom_on_to=True)
+        self.second_model = _ModelStub()
+
+    def from_pretrained(self, model_name: str, **kwargs):
+        self.calls.append({"model_name": model_name, **kwargs})
+        if len(self.calls) == 1:
+            return self.first_model
+        return self.second_model
 
 
 class _TokenizerStub:
@@ -147,6 +201,24 @@ def test_resolve_delimiter_features_skips_multi_token_delimiters() -> None:
     ]
 
 
+def test_load_dream_model_falls_back_to_device_map_auto_on_cuda_oom() -> None:
+    auto_model = _AutoModelStub()
+
+    model = _load_dream_model(
+        auto_model=auto_model,
+        model_name="dream-test",
+        device="cuda",
+        dtype="bf16",
+        torch_module=_TorchLoadStub(),
+    )
+
+    assert model is auto_model.second_model
+    assert auto_model.calls[0]["low_cpu_mem_usage"] is True
+    assert "device_map" not in auto_model.calls[0]
+    assert auto_model.calls[1]["device_map"] == "auto"
+    assert auto_model.second_model.eval_called is True
+
+
 def test_run_dream_trace_dump_skips_empty_generations(
     tmp_path,
     monkeypatch,
@@ -203,3 +275,58 @@ def test_run_dream_trace_dump_skips_empty_generations(
     assert (output_dir / "prompt-001__entropy_det__seed-0.json").exists()
     assert not (output_dir / "prompt-002__entropy_det__seed-0.json").exists()
     assert "Skipping prompt after empty Dream generation" in captured.err
+
+
+def test_run_dream_trace_dump_clears_collector_cache_between_profiles(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    prompts_path = tmp_path / "prompts.jsonl"
+    output_dir = tmp_path / "out"
+    prompts_path.write_text(
+        '{"sample_id":"prompt-001","prompt":"ok"}\n',
+        encoding="utf-8",
+    )
+    clear_calls: list[str] = []
+
+    def _fake_collect_trace(prompt_record, config):
+        return {
+            "trace_id": prompt_record["sample_id"],
+            "prompt": prompt_record["prompt"],
+            "model_name": config.model_name,
+            "decoding_metadata": {},
+            "steps": [
+                {
+                    "step_index": 0,
+                    "tokens": [{"token_index": 0, "token_text": config.trace_profile}],
+                }
+            ],
+        }
+
+    monkeypatch.setattr(dream_trace_dump, "collect_trace", _fake_collect_trace)
+    monkeypatch.setattr(
+        dream_trace_dump,
+        "clear_collector_cache",
+        lambda: clear_calls.append("cleared"),
+    )
+    monkeypatch.setattr(
+        dream_trace_dump.sys,
+        "argv",
+        [
+            "run_dream_trace_dump.py",
+            "--prompts",
+            str(prompts_path),
+            "--output-dir",
+            str(output_dir),
+            "--trace-profile",
+            "all",
+        ],
+    )
+
+    exit_code = dream_trace_dump.main()
+
+    assert exit_code == 0
+    assert clear_calls == ["cleared", "cleared", "cleared"]
+    assert (output_dir / "prompt-001__entropy_det__seed-0.json").exists()
+    assert (output_dir / "prompt-001__entropy_stochastic__seed-0.json").exists()
+    assert (output_dir / "prompt-001__origin_random__seed-0.json").exists()

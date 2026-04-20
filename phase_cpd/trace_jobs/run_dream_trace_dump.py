@@ -13,7 +13,7 @@ if sys.version_info < (3, 11):  # noqa: UP036
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from phase_cpd.trace_jobs.dream_local_adapter import collect_trace
+from phase_cpd.trace_jobs.dream_local_adapter import clear_collector_cache, collect_trace
 from phase_cpd.trace_jobs.dream_runtime import DreamGenerationConfig
 
 _TRACE_PROFILES: dict[str, tuple[str, float | None]] = {
@@ -64,27 +64,30 @@ def main() -> int:
             trace_profile=profile.name,
             seed=args.seed,
         )
-        for prompt_record in prompt_records:
-            try:
-                payload = collect_trace(prompt_record, config)
-            except ValueError as error:
-                if not _should_skip_prompt_error(error):
-                    raise
-                sample_id = str(prompt_record.get("sample_id", "unknown"))
-                skipped_prompts.append(f"{sample_id}:{profile.name}")
-                print(
-                    (
-                        "Skipping prompt after empty Dream generation: "
-                        f"sample_id={sample_id!r}, trace_profile={profile.name!r}. "
-                        "Dream returned no non-special generated tokens."
-                    ),
-                    file=sys.stderr,
-                )
-                continue
-            normalized = _normalize_payload(payload, prompt_record, config)
-            target = output_dir / f"{normalized['trace_id']}.json"
-            target.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
-            written_paths.append(target)
+        try:
+            for prompt_record in prompt_records:
+                try:
+                    payload = collect_trace(prompt_record, config)
+                except ValueError as error:
+                    if not _should_skip_prompt_error(error):
+                        raise
+                    sample_id = str(prompt_record.get("sample_id", "unknown"))
+                    skipped_prompts.append(f"{sample_id}:{profile.name}")
+                    print(
+                        (
+                            "Skipping prompt after empty Dream generation: "
+                            f"sample_id={sample_id!r}, trace_profile={profile.name!r}. "
+                            "Dream returned no non-special generated tokens."
+                        ),
+                        file=sys.stderr,
+                    )
+                    continue
+                normalized = _normalize_payload(payload, prompt_record, config)
+                target = output_dir / f"{normalized['trace_id']}.json"
+                target.write_text(json.dumps(normalized, indent=2), encoding="utf-8")
+                written_paths.append(target)
+        finally:
+            clear_collector_cache()
 
     if not written_paths:
         msg = (

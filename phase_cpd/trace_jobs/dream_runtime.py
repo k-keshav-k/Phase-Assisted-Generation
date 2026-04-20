@@ -63,16 +63,17 @@ class DreamTraceCollector:
         self._device = config.device or _select_device(self._torch)
         self._dtype = _resolve_torch_dtype(self._torch, config.torch_dtype, self._device)
 
-        self._model = self._auto_model.from_pretrained(
-            config.model_name,
-            torch_dtype=self._dtype,
-            trust_remote_code=True,
-        )
         self._tokenizer = self._auto_tokenizer.from_pretrained(
             config.model_name,
             trust_remote_code=True,
         )
-        self._model = self._model.to(self._device).eval()
+        self._model = _load_dream_model(
+            auto_model=self._auto_model,
+            model_name=config.model_name,
+            device=self._device,
+            dtype=self._dtype,
+            torch_module=self._torch,
+        )
         self._mask_token_id = getattr(self._tokenizer, "mask_token_id", None)
         self._mask_token_text = getattr(self._tokenizer, "mask_token", None) or "<|mask|>"
         self._delimiter_features = _resolve_delimiter_features(
@@ -457,6 +458,46 @@ def _import_dream_runtime():
         )
         raise ImportError(msg) from error
     return torch, AutoModel, AutoTokenizer
+
+
+def _load_dream_model(
+    *,
+    auto_model,
+    model_name: str,
+    device: str,
+    dtype,
+    torch_module,
+):
+    load_kwargs: dict[str, Any] = {
+        "torch_dtype": dtype,
+        "trust_remote_code": True,
+    }
+    if device == "cuda":
+        load_kwargs["low_cpu_mem_usage"] = True
+
+    try:
+        model = auto_model.from_pretrained(model_name, **load_kwargs)
+        return _move_model_to_device(model, device=device, dtype=dtype)
+    except torch_module.OutOfMemoryError:
+        if device != "cuda":
+            raise
+        warnings.warn(
+            (
+                "CUDA OOM while loading Dream on a single GPU. "
+                "Retrying with Accelerate device_map='auto' and CPU offload."
+            ),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        torch_module.cuda.empty_cache()
+        offload_kwargs = dict(load_kwargs)
+        offload_kwargs["device_map"] = "auto"
+        model = auto_model.from_pretrained(model_name, **offload_kwargs)
+        return model.eval()
+
+
+def _move_model_to_device(model, *, device: str, dtype):
+    return model.to(device=device, dtype=dtype).eval()
 
 
 def _maybe_round(value: float | None) -> float | None:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 from typing import Any
 
 from phase_cpd.trace_jobs.dream_runtime import DreamGenerationConfig, DreamTraceCollector
@@ -30,6 +31,20 @@ def collect_trace(
 
     collector = _get_or_create_collector(config)
     return collector.collect(prompt_record)
+
+
+def clear_collector_cache() -> None:
+    collectors = list(_COLLECTOR_CACHE.values())
+    _COLLECTOR_CACHE.clear()
+    for collector in collectors:
+        torch_module = getattr(collector, "_torch", None)
+        if torch_module is None:
+            continue
+        cuda_module = getattr(torch_module, "cuda", None)
+        if cuda_module is None or not cuda_module.is_available():
+            continue
+        cuda_module.empty_cache()
+    gc.collect()
 
 
 def _get_or_create_collector(config: DreamGenerationConfig) -> DreamTraceCollector:
