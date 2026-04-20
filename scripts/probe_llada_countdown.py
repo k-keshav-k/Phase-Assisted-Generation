@@ -2,17 +2,34 @@
 LLaDA-8B baseline probe on the Countdown dataset.
 
 Loads the first N samples from Jiayi-Pan/Countdown-Tasks-3to4, runs the full
-T-step masked diffusion denoising loop on each, and saves per-token signals
-to a JSONL file (one record per sample).
+T-step masked diffusion denoising loop on each, and saves traces to a JSONL
+file in the unified TraceRecord format consumed by phase_cpd.
 
-Collected signals per token:
-  tau_commit          : denoising step at which token was unmasked
-  tau_stable          : step at which confidence peaked (argmax of trajectory)
-                        always populated — no nulls
-  max_refinement_step : last step token was still masked
+Output format (one JSON object per line) matches phase_cpd's TraceRecord schema
+so that load_step_dump_as_trace() can import each record directly:
+
+  trace_id            : "countdown-llada-NNNN"
+  backend             : "llada"
+  model_name          : MODEL_ID
+  prompt              : raw task prompt
+  final_text          : space-joined generated tokens
+  decoding_metadata   : algorithm settings + per-token commit/gap summary
+  tokens[]            : TraceToken list, each with observations[]
+
+Per-step observations (TokenStepObservation) recorded while token is masked:
+  step_index          : denoising step (0-indexed)
+  token_id            : argmax token id predicted at this step
+  token_text          : decoded text of predicted token
+  top1_prob           : max softmax probability  (= confidence)
+  top2_prob           : second-highest softmax probability
+  extras["entropy"]   : Shannon entropy of full distribution
+
+Per-token summary stored in decoding_metadata["token_summaries"]:
+  tau_commit          : step at which token was committed (unmasked)
+  tau_stable          : first step predicted identity matched final AND stayed
+                        stable — uses phase_cpd stabilization definition
+  max_refinement_step : last step token was still masked (== tau_commit)
   gap                 : tau_commit - tau_stable
-  confidence/entropy  : at commit and stable (peak) steps
-  prob_trajectory     : confidence at every step while masked
 
 Usage:
     uv run python scripts/probe_llada_countdown.py
@@ -36,8 +53,8 @@ from transformers import AutoModel, AutoTokenizer, PreTrainedModel
 if not hasattr(PreTrainedModel, "all_tied_weights_keys"):
     PreTrainedModel.all_tied_weights_keys = property(lambda _: {})
 
-MODEL_ID          = "GSAI-ML/LLaDA-8B-Base"
-DATASET_ID        = "Jiayi-Pan/Countdown-Tasks-3to4"
+MODEL_ID        = "GSAI-ML/LLaDA-8B-Base"
+DATASET_ID      = "Jiayi-Pan/Countdown-Tasks-3to4"
 N_SAMPLES       = 50
 DENOISING_STEPS = 64
 TARGET_LEN      = 32   # tokens to generate per sample
@@ -74,6 +91,29 @@ def get_mask_token_id(tokenizer) -> int:
     return mask_token_id
 
 
+def _first_stable_step(
+    predicted_ids: list[int],
+    final_token_id: int,
+) -> int:
+    """Return the first step index where the predicted identity matches the
+    final committed token AND stays stable for all subsequent steps.
+
+    This is the stabilization definition used by phase_cpd feature extractors
+    (StabilizingEntropyExtractor etc.) — NOT the argmax-of-confidence definition.
+
+    If the token was always predicted as something else until the commit step,
+    returns tau_commit (the last entry index).
+    """
+    n = len(predicted_ids)
+    for idx in range(n):
+        if predicted_ids[idx] == final_token_id:
+            # Check that it stays stable from here to the end
+            if all(predicted_ids[j] == final_token_id for j in range(idx, n)):
+                return idx
+    # Never stabilized — return the commit step (last observation)
+    return n - 1
+
+
 def run_denoising_loop(
     model,
     tokenizer,
@@ -83,21 +123,28 @@ def run_denoising_loop(
     mask_token_id: int,
     device: torch.device,
 ) -> dict:
+    """Run T denoising steps and collect per-token per-step observations.
+
+    Returns a dict with:
+      final_token_ids  : list[int]  committed token ids
+      final_tokens     : list[str]  decoded committed tokens
+      tau_commit       : list[int]  step at which each token was committed
+      tau_stable       : list[int]  first stable step (phase_cpd definition)
+      gap              : list[int]  tau_commit - tau_stable
+      observations     : list[list[dict]]  per-token step-level observations
+                         each observation: {step_index, token_id, token_text,
+                                           top1_prob, top2_prob, entropy}
+    """
     prompt_len = prompt_ids.shape[1]
 
-    mask_ids = torch.full((1, target_len), mask_token_id, dtype=torch.long, device=device)
+    mask_ids  = torch.full((1, target_len), mask_token_id, dtype=torch.long, device=device)
     input_ids = torch.cat([prompt_ids, mask_ids], dim=1)
 
     tau_commit      = [None] * target_len
-    tau_stable      = [0]    * target_len  # step where confidence peaked — never null
-    max_refine_step = [None] * target_len
-    conf_at_commit  = [0.0]  * target_len
-    conf_at_stable  = [0.0]  * target_len  # peak confidence value
-    entr_at_commit  = [0.0]  * target_len
-    entr_at_stable  = [0.0]  * target_len  # entropy at peak confidence step
-    peak_conf       = [0.0]  * target_len  # running max confidence per token
-    prob_trajectory = [[]    for _ in range(target_len)]
     committed       = [False] * target_len
+
+    # Per-step observation log: observations[i] = list of dicts, one per masked step
+    observations: list[list[dict]] = [[] for _ in range(target_len)]
 
     for step in range(T):
         masked_positions = [i for i in range(target_len) if not committed[i]]
@@ -108,52 +155,59 @@ def run_denoising_loop(
             outputs = model(input_ids)
             logits  = outputs.logits[0, prompt_len:].float()
 
-        probs      = torch.softmax(logits, dim=-1)
-        confidence = probs.max(dim=-1).values
-        top_ids    = probs.argmax(dim=-1)
+        probs   = torch.softmax(logits, dim=-1)
+        top2    = probs.topk(2, dim=-1)
+        top_ids = top2.indices[:, 0]   # argmax token id per position
+        top1_p  = top2.values[:, 0]    # max probability
+        top2_p  = top2.values[:, 1]    # second-highest probability
 
         for i in masked_positions:
-            conf = float(confidence[i].item())
-            prob_trajectory[i].append(round(conf, 4))
-            max_refine_step[i] = step
+            tid       = int(top_ids[i].item())
+            tok_text  = tokenizer.decode([tid]).strip()
+            t1p       = round(float(top1_p[i].item()), 6)
+            t2p       = round(float(top2_p[i].item()), 6)
+            ent       = round(compute_entropy(probs[i]), 6)
 
-            # tau_stable = step where confidence peaked (argmax) — always populated
-            if conf > peak_conf[i]:
-                peak_conf[i]     = conf
-                tau_stable[i]    = step
-                conf_at_stable[i] = conf
-                entr_at_stable[i] = compute_entropy(probs[i])
+            observations[i].append({
+                "step_index": step,
+                "token_id":   tid,
+                "token_text": tok_text,
+                "top1_prob":  t1p,
+                "top2_prob":  t2p,
+                "extras":     {"entropy": ent},
+            })
 
         remaining_steps = T - step
         n_to_unmask = math.ceil(len(masked_positions) / remaining_steps)
-        ranked    = sorted(masked_positions, key=lambda i: confidence[i].item(), reverse=True)
-        to_unmask = ranked[:n_to_unmask]
+        ranked      = sorted(masked_positions, key=lambda i: top1_p[i].item(), reverse=True)
+        to_unmask   = ranked[:n_to_unmask]
 
         for i in to_unmask:
-            tau_commit[i]     = step
-            conf_at_commit[i] = float(confidence[i].item())
-            entr_at_commit[i] = compute_entropy(probs[i])
+            tau_commit[i]              = step
             input_ids[0, prompt_len + i] = top_ids[i]
-            committed[i] = True
+            committed[i]               = True
 
     final_token_ids = input_ids[0, prompt_len:].tolist()
     final_tokens    = [tokenizer.decode([tid]).strip() for tid in final_token_ids]
 
-    # gap = tau_commit - tau_stable, always populated now
+    # Compute tau_stable using phase_cpd stabilization definition:
+    # first step where predicted token_id == final token_id AND stays stable.
+    tau_stable = []
+    for i in range(target_len):
+        predicted_ids = [obs["token_id"] for obs in observations[i]]
+        stable_idx    = _first_stable_step(predicted_ids, final_token_ids[i])
+        # stable_idx is an index into observations[i]; convert to actual step number
+        tau_stable.append(observations[i][stable_idx]["step_index"])
+
     gap = [tau_commit[i] - tau_stable[i] for i in range(target_len)]
 
     return {
-        "final_tokens":         final_tokens,
-        "final_token_ids":      final_token_ids,
-        "tau_commit":           tau_commit,
-        "tau_stable":           tau_stable,
-        "max_refinement_step":  max_refine_step,
-        "gap":                  gap,
-        "confidence_at_commit": conf_at_commit,
-        "confidence_at_stable": conf_at_stable,
-        "entropy_at_commit":    entr_at_commit,
-        "entropy_at_stable":    entr_at_stable,
-        "prob_trajectory":      prob_trajectory,
+        "final_token_ids": final_token_ids,
+        "final_tokens":    final_tokens,
+        "tau_commit":      tau_commit,
+        "tau_stable":      tau_stable,
+        "gap":             gap,
+        "observations":    observations,
     }
 
 
@@ -208,37 +262,61 @@ def main() -> None:
             nums_str = str(nums)
             print(f"{idx:>4}  {target:>6}  {nums_str:<20}  {steps_used:>5}  {elapsed:>5.1f}s")
 
-            # Build per-token records
-            token_records = []
+            final_text = " ".join(results["final_tokens"])
+
+            # ── Build TraceToken list (phase_cpd TraceRecord schema) ──────────
+            # char offsets are approximate (space-separated tokens)
+            tokens = []
+            cursor = 0
             for i in range(args.target_len):
-                token_records.append({
-                    "position":             i,
-                    "token":                results["final_tokens"][i],
-                    "token_id":             results["final_token_ids"][i],
-                    "tau_commit":           results["tau_commit"][i],
-                    "tau_stable":           results["tau_stable"][i],
-                    "max_refinement_step":  results["max_refinement_step"][i],
-                    "gap":                  results["gap"][i],
-                    "confidence_at_commit": round(results["confidence_at_commit"][i], 6),
-                    "confidence_at_stable": round(results["confidence_at_stable"][i], 6),
-                    "entropy_at_commit":    round(results["entropy_at_commit"][i], 6),
-                    "entropy_at_stable":    round(results["entropy_at_stable"][i], 6),
-                    "prob_trajectory":      results["prob_trajectory"][i],
+                tok_text  = results["final_tokens"][i]
+                char_start = cursor
+                char_end   = cursor + len(tok_text)
+                cursor     = char_end + 1  # +1 for the space separator
+
+                tokens.append({
+                    "token_index": i,
+                    "token_text":  tok_text,
+                    "char_start":  char_start,
+                    "char_end":    char_end,
+                    "observations": results["observations"][i],
                 })
 
+            # Per-token summary kept in decoding_metadata for downstream analysis
+            token_summaries = []
+            for i in range(args.target_len):
+                token_summaries.append({
+                    "position":            i,
+                    "token":               results["final_tokens"][i],
+                    "token_id":            results["final_token_ids"][i],
+                    "tau_commit":          results["tau_commit"][i],
+                    "tau_stable":          results["tau_stable"][i],
+                    "max_refinement_step": results["tau_commit"][i],  # last masked step == commit
+                    "gap":                 results["gap"][i],
+                })
+
+            # ── Unified TraceRecord output (phase_cpd compatible) ─────────────
             record = {
-                "sample_id":    f"countdown-{idx:04d}",
-                "nums":         nums,
-                "target":       target,
-                "prompt":       prompt,
-                "generated":    " ".join(results["final_tokens"]),
-                "denoising_steps": args.steps,
-                "target_len":   args.target_len,
-                "token_records": token_records,
+                "trace_id":    f"countdown-llada-{idx:04d}",
+                "backend":     "llada",
+                "model_name":  MODEL_ID,
+                "prompt":      prompt,
+                "final_text":  final_text,
+                "tokens":      tokens,
+                "decoding_metadata": {
+                    "dataset":          DATASET_ID,
+                    "nums":             nums,
+                    "target":           target,
+                    "denoising_steps":  args.steps,
+                    "target_len":       args.target_len,
+                    "algorithm":        "greedy_confidence",
+                    "token_summaries":  token_summaries,
+                },
+                "tags": ["countdown", "arithmetic", "baseline"],
             }
 
             out_f.write(json.dumps(record) + "\n")
-            out_f.flush()  # write immediately so progress is saved if job is killed
+            out_f.flush()
 
     print(f"\nDone. Traces saved to {args.output}")
 
