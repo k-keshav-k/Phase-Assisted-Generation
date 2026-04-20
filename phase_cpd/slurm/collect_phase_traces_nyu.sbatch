@@ -8,8 +8,7 @@
 #SBATCH --gres=gpu:a100:1
 #SBATCH --requeue
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEFAULT_PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+DEFAULT_PROJECT_DIR="${PROJECT_DIR:-${SLURM_SUBMIT_DIR:-$(pwd)}}"
 
 mkdir -p ./logs
 
