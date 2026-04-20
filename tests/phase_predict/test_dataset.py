@@ -11,7 +11,7 @@ from phase_predict.schema import ModelConfig, PhaseTuple
 
 def _make_sequence(n: int = 20) -> list[PhaseTuple]:
     """Return a deterministic synthetic sequence of length *n*."""
-    return [PhaseTuple(block_size=(i % 8) + 1, stabilizing_steps=i % 4, refinement_steps=i % 6)
+    return [PhaseTuple(block_size=(i % 8) + 1, refinement_steps=i % 6)
             for i in range(n)]
 
 
@@ -54,11 +54,11 @@ class TestPhaseSequenceDataset:
 
     def test_item_shapes(self) -> None:
         seq = _make_sequence(20)
-        cfg = ModelConfig(window_size=4, tuple_size=3)
+        cfg = ModelConfig(window_size=4, tuple_size=2)
         ds = PhaseSequenceDataset(seq, cfg)
         inp, tgt = ds[0]
-        assert inp.shape == (4, 3)
-        assert tgt.shape == (3,)
+        assert inp.shape == (4, 2)
+        assert tgt.shape == (2,)
 
     def test_item_dtype(self) -> None:
         seq = _make_sequence(20)

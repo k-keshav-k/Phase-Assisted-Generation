@@ -6,17 +6,19 @@ pipeline.
 
 The extraction strategy is:
   - For each token in a TraceRecord, compute:
-      * stabilizing_steps: the diffusion step index at which the token first
-        reached its final identity and never changed afterwards.
       * refinement_steps:  the total number of diffusion steps observed for
         the token (i.e. len(token.observations)).
   - CPD (change-point detection) segments the trace into blocks.  The
     block_size is the number of tokens in each CPD segment.
-  - Per-segment statistics (mean stabilizing_steps, mean refinement_steps,
-    rounded to int) become one PhaseTuple per segment.
+  - Per-segment statistics (mean refinement_steps, rounded to int) become
+    one PhaseTuple per segment.
 
 If no CPD segmentation is desired, ``extract_per_token`` returns one
 PhaseTuple per token (block_size=1).
+
+Additional fields (e.g. stabilizing_steps) can be added to PhaseTuple and
+to the extraction functions below without changing the model architecture —
+just update ``ModelConfig.tuple_size`` to match.
 """
 
 from __future__ import annotations
@@ -76,9 +78,8 @@ def extract_per_token(trace: object) -> list[PhaseTuple]:
     """
     tuples: list[PhaseTuple] = []
     for token in trace.tokens:  # type: ignore[union-attr]
-        stab = _stabilizing_step(token.observations)
         ref = len(token.observations)
-        tuples.append(PhaseTuple(block_size=1, stabilizing_steps=stab, refinement_steps=ref))
+        tuples.append(PhaseTuple(block_size=1, refinement_steps=ref))
     return tuples
 
 
@@ -96,9 +97,8 @@ def extract_per_segment(
 
     Returns:
         One PhaseTuple per segment.  ``block_size`` equals the number of
-        tokens in the segment; ``stabilizing_steps`` and
-        ``refinement_steps`` are the rounded mean values across tokens in
-        the segment.
+        tokens in the segment; ``refinement_steps`` is the rounded mean
+        across tokens in the segment.
     """
     tokens = trace.tokens  # type: ignore[union-attr]
     n = len(tokens)
@@ -110,14 +110,11 @@ def extract_per_segment(
     for start, end in zip(boundaries[:-1], boundaries[1:]):
         segment_tokens = tokens[start:end]
         block_size = end - start
-        stab_vals = [_stabilizing_step(t.observations) for t in segment_tokens]
         ref_vals = [len(t.observations) for t in segment_tokens]
-        mean_stab = round(sum(stab_vals) / len(stab_vals)) if stab_vals else 0
         mean_ref = round(sum(ref_vals) / len(ref_vals)) if ref_vals else 0
         tuples.append(
             PhaseTuple(
                 block_size=block_size,
-                stabilizing_steps=mean_stab,
                 refinement_steps=mean_ref,
             )
         )

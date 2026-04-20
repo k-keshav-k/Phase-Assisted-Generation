@@ -9,7 +9,7 @@ from phase_predict.train import Trainer, evaluate, train_epoch
 
 
 def _make_sequence(n: int = 40) -> list[PhaseTuple]:
-    return [PhaseTuple((i % 8) + 1, i % 4, i % 6) for i in range(n)]
+    return [PhaseTuple((i % 8) + 1, i % 6) for i in range(n)]
 
 
 def _small_setup():
@@ -50,9 +50,9 @@ class TestTrainer:
         """With patience=2 the loop should stop before max_epochs."""
         cfg = ModelConfig(window_size=4, d_model=16, n_heads=2, n_layers=1, dropout=0.0)
         # tiny train set with a repeating pattern – easy to overfit
-        train_seq = [PhaseTuple((i % 2) + 1, 0, 0) for i in range(10)]
+        train_seq = [PhaseTuple((i % 2) + 1, 0) for i in range(10)]
         # val set with a very different scale – model cannot improve on it
-        val_seq = [PhaseTuple(100 + i, 200, 300) for i in range(10)]
+        val_seq = [PhaseTuple(100 + i, 300) for i in range(10)]
         train_ds = PhaseSequenceDataset(train_seq, cfg)
         val_ds = PhaseSequenceDataset(
             val_seq,

@@ -15,18 +15,16 @@ class PhaseTuple(NamedTuple):
 
     Fields map directly to the scheduling decisions produced by the PAG
     scheduler:
-      - block_size:         number of tokens decoded together in this block
-      - stabilizing_steps:  diffusion steps at which the block's tokens first
-                            reached their final identity (integer, >= 0)
-      - refinement_steps:   total refinement iterations applied to the block
-                            (integer, >= 0)
+      - block_size:        number of tokens decoded together in this block
+      - refinement_steps:  total refinement iterations applied to the block
+                           (integer, >= 0)
 
-    The NamedTuple representation keeps the API extensible: subclasses or
-    alternative tuple sizes can be dropped in by updating ``ModelConfig.tuple_size``.
+    The NamedTuple representation keeps the API extensible: additional fields
+    (e.g. stabilizing_steps, temperature) can be appended here and the model
+    will pick them up automatically once ``ModelConfig.tuple_size`` is updated.
     """
 
     block_size: int
-    stabilizing_steps: int
     refinement_steps: int
 
 
@@ -49,8 +47,8 @@ class ModelConfig:
     # dropout probability applied in embedding and attention sublayers
     dropout: float = 0.1
     # number of integer fields in each input tuple; update when the tuple
-    # structure changes (e.g. adding a fourth field)
-    tuple_size: int = 3
+    # structure changes (e.g. adding a third field such as stabilizing_steps)
+    tuple_size: int = 2
 
     def __post_init__(self) -> None:
         if self.d_model % self.n_heads != 0:

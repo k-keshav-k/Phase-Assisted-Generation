@@ -101,15 +101,14 @@ class Predictor:
         # round to nearest non-negative integer for each field
         ints = [max(0, round(float(v))) for v in denormed.cpu().tolist()]
 
-        # pad or truncate to exactly 3 fields for PhaseTuple
-        while len(ints) < 3:
+        # pad or truncate to exactly 2 fields for PhaseTuple
+        while len(ints) < 2:
             ints.append(0)
-        block_size, stab_steps, ref_steps = ints[0], ints[1], ints[2]
+        block_size, ref_steps = ints[0], ints[1]
 
         return PredictionResult(
             predicted_tuple=PhaseTuple(
                 block_size=block_size,
-                stabilizing_steps=stab_steps,
                 refinement_steps=ref_steps,
             ),
             raw_output=denormed.cpu().tolist(),

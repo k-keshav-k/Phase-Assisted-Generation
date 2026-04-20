@@ -9,7 +9,7 @@ from phase_predict.schema import ModelConfig
 
 
 def _make_cfg(**kwargs) -> ModelConfig:
-    defaults = dict(window_size=4, d_model=16, n_heads=2, n_layers=1, tuple_size=3, dropout=0.0)
+    defaults = dict(window_size=4, d_model=16, n_heads=2, n_layers=1, tuple_size=2, dropout=0.0)
     defaults.update(kwargs)
     return ModelConfig(**defaults)
 
@@ -67,7 +67,7 @@ class TestPhaseTransformer:
                 assert param.grad is not None, f"No gradient for {name}"
 
     def test_custom_tuple_size(self) -> None:
-        """Model should work for tuple_size != 3."""
+        """Model should work for tuple_size != 2."""
         cfg = _make_cfg(tuple_size=5, d_model=20, n_heads=2)
         model = PhaseTransformer(cfg)
         x = torch.randn(2, cfg.window_size, 5)

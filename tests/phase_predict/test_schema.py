@@ -9,24 +9,22 @@ from phase_predict.schema import ModelConfig, PhaseTuple, PredictionResult, Trai
 
 class TestPhaseTuple:
     def test_named_fields(self) -> None:
-        t = PhaseTuple(block_size=4, stabilizing_steps=2, refinement_steps=3)
+        t = PhaseTuple(block_size=4, refinement_steps=3)
         assert t.block_size == 4
-        assert t.stabilizing_steps == 2
         assert t.refinement_steps == 3
 
     def test_positional_construction(self) -> None:
-        t = PhaseTuple(8, 5, 10)
+        t = PhaseTuple(8, 10)
         assert t[0] == 8
-        assert t[1] == 5
-        assert t[2] == 10
+        assert t[1] == 10
 
     def test_equality(self) -> None:
-        assert PhaseTuple(1, 2, 3) == PhaseTuple(1, 2, 3)
-        assert PhaseTuple(1, 2, 3) != PhaseTuple(1, 2, 4)
+        assert PhaseTuple(1, 3) == PhaseTuple(1, 3)
+        assert PhaseTuple(1, 3) != PhaseTuple(1, 4)
 
     def test_iterable(self) -> None:
-        t = PhaseTuple(4, 2, 3)
-        assert list(t) == [4, 2, 3]
+        t = PhaseTuple(4, 3)
+        assert list(t) == [4, 3]
 
 
 class TestModelConfig:
@@ -36,10 +34,10 @@ class TestModelConfig:
         assert cfg.d_model == 64
         assert cfg.n_heads == 4
         assert cfg.n_layers == 2
-        assert cfg.tuple_size == 3
+        assert cfg.tuple_size == 2
 
     def test_custom_values(self) -> None:
-        cfg = ModelConfig(window_size=4, d_model=32, n_heads=2, n_layers=1, tuple_size=3)
+        cfg = ModelConfig(window_size=4, d_model=32, n_heads=2, n_layers=1, tuple_size=2)
         assert cfg.window_size == 4
         assert cfg.d_model == 32
         assert cfg.n_heads == 2
@@ -78,17 +76,17 @@ class TestTrainConfig:
 class TestPredictionResult:
     def test_construction(self) -> None:
         result = PredictionResult(
-            predicted_tuple=PhaseTuple(4, 2, 3),
-            raw_output=[3.7, 1.9, 2.8],
+            predicted_tuple=PhaseTuple(4, 3),
+            raw_output=[3.7, 2.8],
         )
         assert result.predicted_tuple.block_size == 4
-        assert len(result.raw_output) == 3
+        assert len(result.raw_output) == 2
         assert result.metadata == {}
 
     def test_metadata(self) -> None:
         result = PredictionResult(
-            predicted_tuple=PhaseTuple(1, 0, 1),
-            raw_output=[1.0, 0.1, 0.9],
+            predicted_tuple=PhaseTuple(1, 1),
+            raw_output=[1.0, 0.9],
             metadata={"window_size_used": 4},
         )
         assert result.metadata["window_size_used"] == 4

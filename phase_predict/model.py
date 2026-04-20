@@ -2,7 +2,7 @@
 
 # Model choice rationale
 # -----------------------
-# We need to predict the next integer tuple (block_size, stabilizing_steps,
+# We need to predict the next integer tuple (block_size, refinement_steps)
 # refinement_steps) given the previous n such tuples.  Several architectures
 # were considered:
 #

@@ -7,7 +7,7 @@ Usage example::
     from phase_predict.model import PhaseTransformer
     from phase_predict.train import Trainer
 
-    tuples = [PhaseTuple(4, 2, 3), PhaseTuple(8, 3, 4), ...]
+    tuples = [PhaseTuple(4, 3), PhaseTuple(8, 4), ...]
     model_cfg = ModelConfig()
     dataset = PhaseSequenceDataset(tuples, model_cfg)
     model = PhaseTransformer(model_cfg)

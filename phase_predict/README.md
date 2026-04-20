@@ -4,21 +4,22 @@ A Transformer-based sequence predictor for **phase tuple prediction** in Phase-A
 
 ## Overview
 
-Given a sliding window of previous `(block_size, stabilizing_steps, refinement_steps)` integer tuples, `phase_predict` trains and runs a compact Transformer model that predicts the *next* tuple in the sequence.
+Given a sliding window of previous `(block_size, refinement_steps)` integer tuples, `phase_predict` trains and runs a compact Transformer model that predicts the *next* tuple in the sequence.
 
 This replaces the variable-order Markov predictor previously used in the pipeline.
+
+The tuple starts with two fields and is designed to be **extended** — additional fields (e.g. `stabilizing_steps`, temperature targets) can be appended to `PhaseTuple` and the model will accommodate them by updating `ModelConfig.tuple_size`.
 
 ---
 
 ## Data Format
 
-Each **phase tuple** is a triplet of non-negative integers:
+Each **phase tuple** is currently a pair of non-negative integers:
 
 | Field | Description |
 |-------|-------------|
 | `block_size` | Number of tokens decoded together in one generation block |
-| `stabilizing_steps` | Diffusion step at which the block's tokens first stabilised |
-| `refinement_steps` | Total diffusion steps applied to the block |
+| `refinement_steps` | Total refinement iterations applied to the block |
 
 Data can be extracted from `phase_cpd` `TraceRecord` objects using `phase_predict.data_utils`:
 
@@ -76,7 +77,7 @@ from phase_predict.train import Trainer
 from phase_predict.predict import Predictor
 
 # create some example sequences
-tuples = [PhaseTuple(4, 2, 3), PhaseTuple(8, 3, 4), PhaseTuple(4, 2, 3)] * 30
+tuples = [PhaseTuple(4, 3), PhaseTuple(8, 4), PhaseTuple(4, 3)] * 30
 
 model_cfg = ModelConfig(window_size=4)
 dataset = PhaseSequenceDataset(tuples, model_cfg)

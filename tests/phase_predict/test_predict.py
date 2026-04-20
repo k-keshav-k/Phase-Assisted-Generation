@@ -14,7 +14,7 @@ from phase_predict.schema import ModelConfig, PhaseTuple
 
 
 def _make_sequence(n: int = 20) -> list[PhaseTuple]:
-    return [PhaseTuple((i % 8) + 1, i % 4, i % 6) for i in range(n)]
+    return [PhaseTuple((i % 8) + 1, i % 6) for i in range(n)]
 
 
 def _make_predictor() -> tuple[Predictor, PhaseSequenceDataset]:
@@ -39,19 +39,18 @@ class TestPredictor:
         result = predictor.predict(seq[-4:])
         t = result.predicted_tuple
         assert t.block_size >= 0
-        assert t.stabilizing_steps >= 0
         assert t.refinement_steps >= 0
 
     def test_raw_output_length(self) -> None:
         predictor, ds = _make_predictor()
         seq = _make_sequence(20)
         result = predictor.predict(seq[-4:])
-        assert len(result.raw_output) == 3
+        assert len(result.raw_output) == 2
 
     def test_short_context_window_padded(self) -> None:
         """Predict should accept context shorter than window_size."""
         predictor, _ = _make_predictor()
-        short_ctx = [PhaseTuple(4, 2, 3)]  # only 1 tuple; window_size is 4
+        short_ctx = [PhaseTuple(4, 3)]  # only 1 tuple; window_size is 4
         result = predictor.predict(short_ctx)
         assert isinstance(result.predicted_tuple, PhaseTuple)
 

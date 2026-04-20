@@ -1,6 +1,6 @@
 """Transformer-based sequence predictor for phase tuple prediction.
 
-Given a window of previous (block_size, stabilizing_steps, refinement_steps) tuples,
+Given a window of previous (block_size, refinement_steps) tuples,
 predict the next such tuple. Designed for use with phase_cpd trace data but fully
 standalone as a sequence prediction library.
 """

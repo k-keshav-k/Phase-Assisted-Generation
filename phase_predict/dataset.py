@@ -87,7 +87,7 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.tuple_size = model_config.tuple_size
 
         raw = torch.tensor(
-            [[t.block_size, t.stabilizing_steps, t.refinement_steps] for t in sequence],
+            [[t.block_size, t.refinement_steps] for t in sequence],
             dtype=torch.float32,
         )  # (N, tuple_size)
 
