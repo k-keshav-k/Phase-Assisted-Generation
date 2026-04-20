@@ -31,8 +31,11 @@ test-integration:
 test-phase-cpd:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run --group phase_cpd pytest tests/phase_cpd
 
+test-phase-predict:
+	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run --group phase_predict pytest tests/phase_predict
+
 lint:
-	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff check src tests scripts phase_cpd
+	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff check src tests scripts phase_cpd phase_predict
 
 format:
-	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff format src tests scripts phase_cpd
+	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff format src tests scripts phase_cpd phase_predict
