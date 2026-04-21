@@ -147,14 +147,14 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         help="Optional cap on the number of prompts to process.",
     )
-    parser.add_argument("--max-new-tokens", type=int, default=256)
+    parser.add_argument("--max-new-tokens", type=int, default=1024)
     parser.add_argument(
         "--min-new-tokens",
         type=int,
-        default=1,
+        default=512,
         help=(
             "Minimum generated tokens before EOS/PAD may be selected. "
-            "The default prevents deterministic Dream runs from ending immediately."
+            "The default keeps deterministic Dream traces long enough for segmentation."
         ),
     )
     parser.add_argument(

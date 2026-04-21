@@ -29,9 +29,9 @@ _DELIMITER_NAME_OVERRIDES = {
 @dataclass(slots=True)
 class DreamGenerationConfig:
     model_name: str
-    max_new_tokens: int = 256
-    min_new_tokens: int = 1
-    steps: int = 256
+    max_new_tokens: int = 1024
+    min_new_tokens: int = 512
+    steps: int = 1024
     temperature: float | None = 0.0
     top_p: float | None = 0.95
     top_k: int | None = None

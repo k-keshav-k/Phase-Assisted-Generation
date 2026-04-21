@@ -105,7 +105,8 @@ The recommended/default collection settings for phase-predictor training are:
 ```text
 --trace-profile entropy_stochastic
 --temperature 0.0
---min-new-tokens 1
+--max-new-tokens 1024
+--min-new-tokens 512
 ```
 
 That profile resolves to `alg=entropy` and `alg_temp=0.1`.
@@ -116,7 +117,7 @@ Use `--trace-profile all` only when you want comparison/ablation traces. `--alg`
 
 - generation `temperature` controls token sampling randomness in the emitted answer. Keep it at `0.0` for phase-predictor training traces so math/task correctness is not degraded by token sampling.
 - `alg_temp` controls randomness in Dream's entropy/confidence-based refinement order. A small nonzero value such as `0.1` reduces overly monotone stabilization labels without changing token sampling.
-- `min_new_tokens` prevents immediate EOS/PAD selection at the first generated position. The default `1` avoids empty deterministic Dream completions while preserving the rest of the EOS stopping behavior.
+- `min_new_tokens` prevents early EOS/PAD selection. The default `512` keeps deterministic Dream completions long enough for response-level segmentation while preserving EOS stopping after that minimum. The default `max_new_tokens` is `1024`.
 
 ## Trace format
 
@@ -152,9 +153,9 @@ Each raw dump can use this stepwise format:
     "alg_temp": 0.1,
     "seed": 0,
     "prompt_seed": 123456,
-    "max_new_tokens": 256,
-    "min_new_tokens": 1,
-    "steps": 256,
+    "max_new_tokens": 1024,
+    "min_new_tokens": 512,
+    "steps": 1024,
     "delimiter_features": [
       {
         "text": ".",
@@ -206,8 +207,9 @@ uv run --group phase_cpd_dream --python 3.11 \
   --prompts phase_cpd/data/prompts/research_prompts.jsonl \
   --output-dir outputs/phase_cpd_raw/dream \
   --model-name Dream-org/Dream-v0-Instruct-7B \
+  --max-new-tokens 1024 \
+  --min-new-tokens 512 \
   --temperature 0.0 \
-  --min-new-tokens 1 \
   --trace-profile entropy_stochastic \
   --seed 0
 ```

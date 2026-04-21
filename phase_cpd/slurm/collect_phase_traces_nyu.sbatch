@@ -29,9 +29,9 @@ export UV_PROJECT_ENVIRONMENT=\${UV_PROJECT_ENVIRONMENT:-\$PROJECT_DIR/.venv-pha
 export UV_CACHE_DIR=\${UV_CACHE_DIR:-\$PROJECT_DIR/.uv-cache}
 export UV_PYTHON=\${UV_PYTHON:-3.11}
 export DREAM_MODEL_NAME=\${DREAM_MODEL_NAME:-Dream-org/Dream-v0-Instruct-7B}
-export DREAM_MAX_NEW_TOKENS=\${DREAM_MAX_NEW_TOKENS:-256}
-export DREAM_MIN_NEW_TOKENS=\${DREAM_MIN_NEW_TOKENS:-1}
-export DREAM_STEPS=\${DREAM_STEPS:-256}
+export DREAM_MAX_NEW_TOKENS=\${DREAM_MAX_NEW_TOKENS:-1024}
+export DREAM_MIN_NEW_TOKENS=\${DREAM_MIN_NEW_TOKENS:-512}
+export DREAM_STEPS=\${DREAM_STEPS:-\$DREAM_MAX_NEW_TOKENS}
 export DREAM_TEMPERATURE=\${DREAM_TEMPERATURE:-0.0}
 export DREAM_TOP_P=\${DREAM_TOP_P:-0.95}
 export DREAM_TRACE_PROFILE=\${DREAM_TRACE_PROFILE:-entropy_stochastic}
@@ -75,7 +75,7 @@ echo \"HF_HOME=\$HF_HOME\"
 #     \"temperature\": 0.0,
 #     \"alg_temp\": 0.1,
 #     \"seed\": 0,
-#     \"min_new_tokens\": 1
+#     \"min_new_tokens\": 512
 #   },
 #   \"steps\": [
 #     {
