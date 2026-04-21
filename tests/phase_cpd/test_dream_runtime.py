@@ -10,6 +10,8 @@ from phase_cpd.trace_jobs.dream_runtime import (
     _prompt_seed,
     _resolve_delimiter_features,
     _selected_token_stats,
+    _slice_generated_canvas,
+    _truncate_generated_ids,
 )
 from phase_cpd.trace_jobs.run_dream_trace_dump import (
     _normalize_payload,
@@ -144,6 +146,62 @@ def test_selected_token_stats_returns_entropy_and_top2() -> None:
     assert 0.0 < selected_probs[0] < 1.0
     assert 0.0 < top2_probs[0] < selected_probs[0]
     assert entropies[0] > 0.0
+
+
+def test_slice_generated_canvas_drops_prompt_prefix() -> None:
+    torch = pytest.importorskip("torch")
+    token_canvas = torch.tensor([[1, 2, 3, 11, 12, 13]], dtype=torch.long)
+
+    generated = _slice_generated_canvas(
+        token_canvas=token_canvas,
+        prompt_token_ids=[1, 2, 3],
+        max_new_tokens=2,
+        torch_module=torch,
+    )
+
+    assert generated.tolist() == [[11, 12]]
+
+
+def test_slice_generated_canvas_keeps_generated_only_canvas() -> None:
+    torch = pytest.importorskip("torch")
+    token_canvas = torch.tensor([[11, 12, 13]], dtype=torch.long)
+
+    generated = _slice_generated_canvas(
+        token_canvas=token_canvas,
+        prompt_token_ids=[1, 2, 3, 4],
+        max_new_tokens=2,
+        torch_module=torch,
+    )
+
+    assert generated.tolist() == [[11, 12]]
+
+
+def test_truncate_generated_ids_drops_prompt_prefix() -> None:
+    torch = pytest.importorskip("torch")
+    sequence = torch.tensor([1, 2, 3, 11, 12, 0, 13], dtype=torch.long)
+
+    generated = _truncate_generated_ids(
+        sequence,
+        prompt_token_ids=[1, 2, 3],
+        eos_token_id=0,
+        pad_token_id=None,
+    )
+
+    assert generated == [11, 12]
+
+
+def test_truncate_generated_ids_keeps_generated_only_sequence() -> None:
+    torch = pytest.importorskip("torch")
+    sequence = torch.tensor([11, 12, 0, 13], dtype=torch.long)
+
+    generated = _truncate_generated_ids(
+        sequence,
+        prompt_token_ids=[1, 2, 3],
+        eos_token_id=0,
+        pad_token_id=None,
+    )
+
+    assert generated == [11, 12]
 
 
 def test_resolve_trace_profiles_expands_all() -> None:

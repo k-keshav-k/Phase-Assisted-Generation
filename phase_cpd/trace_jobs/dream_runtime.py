@@ -4,10 +4,14 @@ import hashlib
 import os
 import random
 import warnings
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
+_DETERMINISTIC_TEMPERATURE_WARNING = (
+    r"`do_sample` is set to `False`\. However, `temperature` is set to `0\.0`"
+)
 _DEFAULT_DELIMITER_TEXTS = ("\n", ".", ",", ":", ";", "(", ")", "!", "?")
 _DELIMITER_NAME_OVERRIDES = {
     "\n": "newline",
@@ -88,12 +92,12 @@ class DreamTraceCollector:
         inputs = _build_inputs(self._tokenizer, prompt)
         input_ids = inputs["input_ids"].to(self._device)
         attention_mask = inputs["attention_mask"].to(self._device)
-        prompt_length = int(input_ids.shape[1])
+        prompt_token_ids = input_ids[0].detach().to("cpu", dtype=self._torch.long).tolist()
 
         recorder = _StepRecorder(
             torch_module=self._torch,
             tokenizer=self._tokenizer,
-            prompt_length=prompt_length,
+            prompt_token_ids=prompt_token_ids,
             max_new_tokens=self._config.max_new_tokens,
             mask_token_id=self._mask_token_id,
             mask_token_text=self._mask_token_text,
@@ -122,21 +126,13 @@ class DreamTraceCollector:
         if self._config.alg_temp is not None:
             generation_kwargs["alg_temp"] = self._config.alg_temp
 
-        with self._torch.inference_mode(), warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message=(
-                    r"`do_sample` is set to `False`\. However, `temperature` is set to `0\.0`"
-                ),
-                category=UserWarning,
-                module=r"transformers\.generation\.configuration_utils",
-            )
+        with self._torch.inference_mode(), _ignore_deterministic_temperature_warning():
             output = self._model.diffusion_generate(input_ids, **generation_kwargs)
 
         final_sequence = output.sequences[0].detach().to("cpu")
         generated_ids = _truncate_generated_ids(
             final_sequence,
-            prompt_length=prompt_length,
+            prompt_token_ids=prompt_token_ids,
             eos_token_id=self._tokenizer.eos_token_id,
             pad_token_id=self._tokenizer.pad_token_id,
         )
@@ -161,7 +157,7 @@ class _StepRecorder:
         *,
         torch_module,
         tokenizer,
-        prompt_length: int,
+        prompt_token_ids: list[int],
         max_new_tokens: int,
         mask_token_id: int | None,
         mask_token_text: str,
@@ -169,7 +165,8 @@ class _StepRecorder:
     ) -> None:
         self._torch = torch_module
         self._tokenizer = tokenizer
-        self._prompt_length = prompt_length
+        self._prompt_token_ids = prompt_token_ids
+        self._prompt_length = len(prompt_token_ids)
         self._max_new_tokens = max_new_tokens
         self._mask_token_id = mask_token_id
         self._mask_token_text = mask_token_text
@@ -182,10 +179,12 @@ class _StepRecorder:
             return
 
         token_canvas = _normalize_token_canvas(x)
-        generated_ids = token_canvas[
-            :,
-            self._prompt_length : self._prompt_length + self._max_new_tokens,
-        ]
+        generated_ids = _slice_generated_canvas(
+            token_canvas=token_canvas,
+            prompt_token_ids=self._prompt_token_ids,
+            max_new_tokens=self._max_new_tokens,
+            torch_module=self._torch,
+        )
         if int(generated_ids.shape[0]) != 1:
             msg = (
                 "Dream trace collection currently expects a single prompt per hook call. "
@@ -476,7 +475,8 @@ def _load_dream_model(
         load_kwargs["low_cpu_mem_usage"] = True
 
     try:
-        model = auto_model.from_pretrained(model_name, **load_kwargs)
+        with _ignore_deterministic_temperature_warning():
+            model = auto_model.from_pretrained(model_name, **load_kwargs)
         return _move_model_to_device(model, device=device, dtype=dtype)
     except torch_module.OutOfMemoryError:
         if device != "cuda":
@@ -492,7 +492,8 @@ def _load_dream_model(
         torch_module.cuda.empty_cache()
         offload_kwargs = dict(load_kwargs)
         offload_kwargs["device_map"] = "auto"
-        model = auto_model.from_pretrained(model_name, **offload_kwargs)
+        with _ignore_deterministic_temperature_warning():
+            model = auto_model.from_pretrained(model_name, **offload_kwargs)
         return model.eval()
 
 
@@ -562,6 +563,35 @@ def _normalize_token_canvas(x):
     return x
 
 
+def _slice_generated_canvas(
+    *,
+    token_canvas,
+    prompt_token_ids: list[int],
+    max_new_tokens: int,
+    torch_module,
+):
+    if _canvas_has_prompt_prefix(
+        token_canvas,
+        prompt_token_ids=prompt_token_ids,
+        torch_module=torch_module,
+    ):
+        prompt_length = len(prompt_token_ids)
+        return token_canvas[:, prompt_length : prompt_length + max_new_tokens]
+    return token_canvas[:, :max_new_tokens]
+
+
+def _canvas_has_prompt_prefix(token_canvas, *, prompt_token_ids: list[int], torch_module) -> bool:
+    prompt_length = len(prompt_token_ids)
+    if prompt_length == 0 or int(token_canvas.shape[1]) < prompt_length:
+        return False
+    prompt_tensor = torch_module.tensor(
+        prompt_token_ids,
+        device=token_canvas.device,
+        dtype=token_canvas.dtype,
+    )
+    return bool((token_canvas[:, :prompt_length] == prompt_tensor).all().item())
+
+
 def _resolve_torch_dtype(torch_module, dtype_name: str, device: str):
     if dtype_name == "auto":
         if device == "cuda":
@@ -606,11 +636,15 @@ def _slice_generation_logits(*, logits, prompt_length: int, generated_length: in
 def _truncate_generated_ids(
     sequence,
     *,
-    prompt_length: int,
+    prompt_token_ids: list[int],
     eos_token_id: int | None,
     pad_token_id: int | None,
 ) -> list[int]:
-    generated = sequence[prompt_length:].tolist()
+    sequence_ids = [int(token_id) for token_id in sequence.tolist()]
+    if _starts_with_prompt_ids(sequence_ids, prompt_token_ids):
+        generated = sequence_ids[len(prompt_token_ids) :]
+    else:
+        generated = sequence_ids
     truncated: list[int] = []
     for token_id in generated:
         if eos_token_id is not None and token_id == eos_token_id:
@@ -619,6 +653,25 @@ def _truncate_generated_ids(
             break
         truncated.append(int(token_id))
     return truncated
+
+
+def _starts_with_prompt_ids(sequence_ids: list[int], prompt_token_ids: list[int]) -> bool:
+    prompt_length = len(prompt_token_ids)
+    if prompt_length == 0 or len(sequence_ids) < prompt_length:
+        return False
+    return sequence_ids[:prompt_length] == prompt_token_ids
+
+
+@contextmanager
+def _ignore_deterministic_temperature_warning():
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=_DETERMINISTIC_TEMPERATURE_WARNING,
+            category=UserWarning,
+            module=r"transformers\.generation\.configuration_utils",
+        )
+        yield
 
 
 def _seed_generation(torch_module, seed: int) -> None:
