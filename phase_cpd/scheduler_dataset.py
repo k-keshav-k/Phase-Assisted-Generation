@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
+from math import sqrt
 from statistics import pvariance
 from typing import Any
 
@@ -15,6 +16,15 @@ from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceStepSummary
 from phase_cpd.segments import segment_ranges
 
 _FALLBACK_MASK_TEXTS = {"<|mask|>", "<mask>", "[MASK]"}
+_TASK_CORRECTNESS_KEYS = ("task_correct", "is_correct", "correct", "correctness")
+_EXACT_MATCH_KEYS = ("exact_match", "em")
+_EXPECTED_ANSWER_KEYS = (
+    "expected_answer",
+    "reference_answer",
+    "gold_answer",
+    "target",
+    "answer",
+)
 
 
 @dataclass(slots=True)
@@ -134,20 +144,34 @@ def build_profile_report(
     rows_by_profile: dict[str, list[dict[str, Any]]] = defaultdict(list)
     tokens_by_profile: dict[str, list[TraceToken]] = defaultdict(list)
     traces_by_profile: dict[str, int] = defaultdict(int)
+    exact_matches_by_profile: dict[str, list[bool]] = defaultdict(list)
+    task_correctness_by_profile: dict[str, list[bool]] = defaultdict(list)
+    stable_steps_by_profile: dict[str, list[int]] = defaultdict(list)
+    token_index_r2_by_profile: dict[str, list[float]] = defaultdict(list)
 
     for trace in traces:
         profile = _trace_profile(trace)
+        stable_steps = _stable_steps_by_token(trace)
+        exact_match = _trace_exact_match(trace)
+        task_correct = _trace_task_correct(trace)
         traces_by_profile[profile] += 1
         tokens_by_profile[profile].extend(trace.tokens)
+        stable_steps_by_profile[profile].extend(stable_steps)
+        token_index_r2_by_profile[profile].append(_token_index_stabilization_r2(stable_steps))
+        if exact_match is not None:
+            exact_matches_by_profile[profile].append(exact_match)
+        if task_correct is not None:
+            task_correctness_by_profile[profile].append(task_correct)
         rows_by_profile[profile].extend(build_scheduler_rows(trace, config=resolved_config))
 
     summaries: list[dict[str, Any]] = []
     for profile in sorted(traces_by_profile):
         tokens = tokens_by_profile[profile]
         rows = rows_by_profile[profile]
-        direct_mask_to_final = sum(
-            1 for token in tokens if _is_direct_mask_to_final(profile, token)
-        )
+        exact_matches = exact_matches_by_profile[profile]
+        task_correctness = task_correctness_by_profile[profile]
+        stable_steps = stable_steps_by_profile[profile]
+        direct_mask_to_final = sum(1 for token in tokens if _is_direct_mask_to_final(token))
         rewrite_counts = [_rewrite_count(token) for token in tokens]
         monotonicity_scores = [
             _stabilization_monotonicity(trace)
@@ -160,11 +184,20 @@ def build_profile_report(
                 "trace_count": traces_by_profile[profile],
                 "token_count": len(tokens),
                 "row_count": len(rows),
+                "task_correct_available_count": len(task_correctness),
+                "task_correct_rate": _mean(task_correctness),
+                "exact_match_available_count": len(exact_matches),
+                "exact_match_rate": _mean(exact_matches),
                 "direct_mask_to_final_fraction": (
                     direct_mask_to_final / len(tokens) if tokens else 0.0
                 ),
                 "mean_token_rewrite_count": _mean(rewrite_counts),
                 "stabilization_monotonicity": _mean(monotonicity_scores),
+                "token_index_stabilization_r2": _mean(token_index_r2_by_profile[profile]),
+                "stabilization_step_min": _min(stable_steps),
+                "stabilization_step_mean": _mean(stable_steps),
+                "stabilization_step_std": _std(stable_steps),
+                "stabilization_step_max": _max(stable_steps),
                 "oracle_block_size_variance": _variance(
                     row["oracle_block_size"] for row in rows
                 ),
@@ -232,6 +265,22 @@ def _max(values) -> float | None:
     return max(filtered)
 
 
+def _min(values) -> float | None:
+    filtered = [float(value) for value in values if value is not None]
+    if not filtered:
+        return None
+    return min(filtered)
+
+
+def _std(values) -> float | None:
+    filtered = [float(value) for value in values if value is not None]
+    if not filtered:
+        return None
+    if len(filtered) < 2:
+        return 0.0
+    return sqrt(float(pvariance(filtered)))
+
+
 def _variance(values) -> float:
     filtered = [float(value) for value in values if value is not None]
     if len(filtered) < 2:
@@ -251,8 +300,69 @@ def _stabilization_monotonicity(trace: TraceRecord) -> float:
     return nondecreasing_pairs / (len(stable_steps) - 1)
 
 
-def _is_direct_mask_to_final(trace_profile: str, token: TraceToken) -> bool:
-    del trace_profile
+def _token_index_stabilization_r2(stable_steps: list[int]) -> float:
+    if len(stable_steps) < 2:
+        return 0.0
+
+    xs = [float(index) for index in range(len(stable_steps))]
+    ys = [float(step) for step in stable_steps]
+    x_mean = sum(xs) / len(xs)
+    y_mean = sum(ys) / len(ys)
+    x_var = sum((value - x_mean) ** 2 for value in xs)
+    total = sum((value - y_mean) ** 2 for value in ys)
+    if x_var == 0.0 or total == 0.0:
+        return 0.0
+
+    slope = sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys, strict=True)) / x_var
+    intercept = y_mean - (slope * x_mean)
+    residual = sum(
+        (y - (intercept + (slope * x))) ** 2 for x, y in zip(xs, ys, strict=True)
+    )
+    return max(0.0, min(1.0, 1.0 - (residual / total)))
+
+
+def _trace_task_correct(trace: TraceRecord) -> bool | None:
+    metadata = trace.decoding_metadata
+    for key in (*_TASK_CORRECTNESS_KEYS, *_EXACT_MATCH_KEYS):
+        if key in metadata:
+            value = _maybe_bool(metadata[key])
+            if value is not None:
+                return value
+    return _trace_exact_match(trace)
+
+
+def _trace_exact_match(trace: TraceRecord) -> bool | None:
+    metadata = trace.decoding_metadata
+    for key in _EXACT_MATCH_KEYS:
+        if key in metadata:
+            value = _maybe_bool(metadata[key])
+            if value is not None:
+                return value
+    for key in _EXPECTED_ANSWER_KEYS:
+        if key in metadata:
+            return _normalize_answer(trace.final_text) == _normalize_answer(metadata[key])
+    return None
+
+
+def _maybe_bool(value: object) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int | float):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        if normalized in {"true", "1", "yes", "y"}:
+            return True
+        if normalized in {"false", "0", "no", "n"}:
+            return False
+    return None
+
+
+def _normalize_answer(value: object) -> str:
+    return " ".join(str(value).strip().casefold().split())
+
+
+def _is_direct_mask_to_final(token: TraceToken) -> bool:
     runs = _identity_runs(token)
     if len(runs) != 2:
         return False

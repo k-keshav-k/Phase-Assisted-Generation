@@ -21,6 +21,8 @@ def _make_trace(
     trace_profile: str,
     stable_steps: list[int],
     stabilizing_entropies: list[float],
+    expected_answer: str | None = None,
+    task_correct: bool | None = None,
 ) -> TraceRecord:
     final_tokens = [chr(ord("A") + index) for index in range(len(stable_steps))]
     tokens: list[TraceToken] = []
@@ -82,6 +84,19 @@ def _make_trace(
             )
         )
 
+    decoding_metadata = {
+        "trace_profile": trace_profile,
+        "alg": "entropy" if trace_profile != "origin_random" else "origin",
+        "alg_temp": _alg_temp_for_profile(trace_profile),
+        "seed": 0,
+        "mask_token_id": 99,
+        "mask_token_text": "<|mask|>",
+    }
+    if expected_answer is not None:
+        decoding_metadata["expected_answer"] = expected_answer
+    if task_correct is not None:
+        decoding_metadata["task_correct"] = task_correct
+
     return TraceRecord(
         trace_id=trace_id,
         backend="dream",
@@ -90,14 +105,7 @@ def _make_trace(
         final_text="".join(final_tokens),
         tokens=tokens,
         step_summaries=step_summaries,
-        decoding_metadata={
-            "trace_profile": trace_profile,
-            "alg": "entropy" if trace_profile != "origin_random" else "origin",
-            "alg_temp": _alg_temp_for_profile(trace_profile),
-            "seed": 0,
-            "mask_token_id": 99,
-            "mask_token_text": "<|mask|>",
-        },
+        decoding_metadata=decoding_metadata,
     )
 
 
@@ -136,12 +144,16 @@ def test_build_profile_report_groups_metrics_by_profile(monkeypatch) -> None:
             trace_profile="entropy_det",
             stable_steps=[1, 2, 3, 4],
             stabilizing_entropies=[0.0, 0.1, 4.0, 4.1],
+            expected_answer="ABCD",
+            task_correct=True,
         ),
         _make_trace(
             trace_id="trace-c",
             trace_profile="origin_random",
             stable_steps=[1, 2, 3, 4],
             stabilizing_entropies=[0.0, 0.1, 4.0, 4.1],
+            expected_answer="wrong",
+            task_correct=False,
         ),
     ]
 
@@ -167,9 +179,18 @@ def test_build_profile_report_groups_metrics_by_profile(monkeypatch) -> None:
             "trace_count": 1,
             "token_count": 4,
             "row_count": 2,
+            "task_correct_available_count": 1,
+            "task_correct_rate": 1.0,
+            "exact_match_available_count": 1,
+            "exact_match_rate": 1.0,
             "direct_mask_to_final_fraction": 1.0,
             "mean_token_rewrite_count": 1.0,
             "stabilization_monotonicity": 1.0,
+            "token_index_stabilization_r2": 1.0,
+            "stabilization_step_min": 1.0,
+            "stabilization_step_mean": 2.5,
+            "stabilization_step_std": 1.118033988749895,
+            "stabilization_step_max": 4.0,
             "oracle_block_size_variance": 1.0,
             "oracle_max_refinement_steps_variance": 1.0,
         },
@@ -178,9 +199,18 @@ def test_build_profile_report_groups_metrics_by_profile(monkeypatch) -> None:
             "trace_count": 1,
             "token_count": 4,
             "row_count": 2,
+            "task_correct_available_count": 1,
+            "task_correct_rate": 0.0,
+            "exact_match_available_count": 1,
+            "exact_match_rate": 0.0,
             "direct_mask_to_final_fraction": 1.0,
             "mean_token_rewrite_count": 1.0,
             "stabilization_monotonicity": 1.0,
+            "token_index_stabilization_r2": 1.0,
+            "stabilization_step_min": 1.0,
+            "stabilization_step_mean": 2.5,
+            "stabilization_step_std": 1.118033988749895,
+            "stabilization_step_max": 4.0,
             "oracle_block_size_variance": 0.0,
             "oracle_max_refinement_steps_variance": 0.0,
         },

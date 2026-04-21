@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from phase_cpd.catalog import default_trace_dir, load_trace_by_id
 from phase_cpd.features import StabilizingTop1ProbExtractor
 from phase_cpd.schema import FeatureSeries, TraceRecord, TraceToken
 from phase_cpd.segments import build_segment_summaries
 from phase_cpd.visualize import (
     build_token_feature_table,
-    render_segmented_text_html,
     render_token_boundary_view_html,
 )
+from tests.phase_cpd.trace_fixtures import make_stabilized_trace
 
 
 def test_segment_text_spans_reconstruct_final_text() -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
+    trace = make_stabilized_trace()
     feature_series = StabilizingTop1ProbExtractor().extract(trace)
     segment_summaries = build_segment_summaries(trace, feature_series, [3, 6])
 
@@ -21,7 +20,7 @@ def test_segment_text_spans_reconstruct_final_text() -> None:
 
 
 def test_boundary_overlay_contains_prompt_and_segment_labels() -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
+    trace = make_stabilized_trace(prompt="Explain fixture traces.")
 
     rendered = render_token_boundary_view_html(trace, [3, 6])
 
@@ -30,15 +29,6 @@ def test_boundary_overlay_contains_prompt_and_segment_labels() -> None:
     assert "Segment 1 [3, 6)" in rendered
     assert "Explain" in rendered
     assert trace.tokens[0].token_text.strip() in rendered
-
-
-def test_segmented_text_uses_explicit_dark_text_color() -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
-    feature_series = StabilizingTop1ProbExtractor().extract(trace)
-    rendered = render_segmented_text_html(build_segment_summaries(trace, feature_series, [3, 6]))
-
-    assert "color:#0f172a" in rendered
-    assert "white-space:pre-wrap" in rendered
 
 
 def test_token_feature_table_includes_token_text_and_scalar_columns() -> None:

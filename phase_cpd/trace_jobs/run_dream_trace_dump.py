@@ -16,11 +16,27 @@ if __package__ in {None, ""}:
 from phase_cpd.trace_jobs.dream_local_adapter import clear_collector_cache, collect_trace
 from phase_cpd.trace_jobs.dream_runtime import DreamGenerationConfig
 
+_DEFAULT_TRAINING_TRACE_PROFILE = "entropy_stochastic"
 _TRACE_PROFILES: dict[str, tuple[str, float | None]] = {
     "entropy_det": ("entropy", 0.0),
     "entropy_stochastic": ("entropy", 0.1),
     "origin_random": ("origin", None),
 }
+_DEFAULT_ALG_TEMP_BY_ALG: dict[str, float | None] = {
+    "entropy": 0.1,
+    "origin": None,
+}
+_PROMPT_METADATA_KEYS = (
+    "expected_answer",
+    "reference_answer",
+    "gold_answer",
+    "target",
+    "answer",
+    "exact_match",
+    "task_correct",
+    "is_correct",
+    "correct",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,13 +152,24 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         help="Dream denoising steps. Defaults to --max-new-tokens when omitted.",
     )
-    parser.add_argument("--temperature", type=float, default=0.2)
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help=(
+            "Generation temperature controlling token sampling randomness. "
+            "The training default is 0.0; use --alg-temp for refinement-order randomness."
+        ),
+    )
     parser.add_argument("--top-p", type=float, default=0.95)
     parser.add_argument("--top-k", type=int)
     parser.add_argument(
         "--trace-profile",
         choices=[*sorted(_TRACE_PROFILES), "all"],
-        help="Vanilla Dream remasking profile to collect. Defaults to entropy_det.",
+        help=(
+            "Vanilla Dream remasking profile to collect. Defaults to "
+            f"{_DEFAULT_TRAINING_TRACE_PROFILE}; use all for comparison/ablation runs."
+        ),
     )
     parser.add_argument(
         "--seed",
@@ -198,7 +225,11 @@ def _normalize_payload(
     metadata.setdefault("trace_profile", config.trace_profile)
     metadata.setdefault("alg", config.alg)
     metadata.setdefault("alg_temp", config.alg_temp)
+    metadata.setdefault("temperature", config.temperature)
     metadata.setdefault("seed", config.seed)
+    for key in _PROMPT_METADATA_KEYS:
+        if key in prompt_record:
+            metadata.setdefault(key, prompt_record[key])
     normalized["decoding_metadata"] = metadata
 
     steps = normalized.get("steps")
@@ -255,14 +286,19 @@ def _resolve_trace_profiles(
 
 
 def _infer_trace_profile(*, alg: str | None, alg_temp: float | None) -> str:
+    if alg is None and alg_temp is None:
+        return _DEFAULT_TRAINING_TRACE_PROFILE
+
     normalized_alg = "entropy" if alg is None else alg
-    normalized_alg_temp = 0.0 if alg_temp is None else alg_temp
+    normalized_alg_temp = (
+        _DEFAULT_ALG_TEMP_BY_ALG.get(normalized_alg)
+        if alg_temp is None
+        else alg_temp
+    )
     for profile_name, (profile_alg, profile_alg_temp) in _TRACE_PROFILES.items():
         if normalized_alg != profile_alg:
             continue
-        if normalized_alg_temp == (0.0 if profile_alg_temp is None else profile_alg_temp):
-            if profile_alg_temp is None and alg_temp is not None:
-                continue
+        if normalized_alg_temp == profile_alg_temp:
             return profile_name
     msg = (
         "Unsupported --alg/--alg-temp combination. "

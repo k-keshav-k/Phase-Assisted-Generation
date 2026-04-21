@@ -9,7 +9,7 @@ _CollectorCacheKey = tuple[
     str,
     int,
     int,
-    float,
+    float | None,
     float | None,
     int | None,
     str,

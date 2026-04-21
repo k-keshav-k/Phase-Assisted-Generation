@@ -158,6 +158,15 @@ def test_resolve_trace_profiles_expands_all() -> None:
     assert [profile.alg_temp for profile in profiles] == [0.0, 0.1, None]
 
 
+def test_resolve_trace_profiles_defaults_to_training_profile() -> None:
+    profiles = _resolve_trace_profiles(trace_profile=None, alg=None, alg_temp=None)
+
+    assert len(profiles) == 1
+    assert profiles[0].name == "entropy_stochastic"
+    assert profiles[0].alg == "entropy"
+    assert profiles[0].alg_temp == 0.1
+
+
 def test_normalize_payload_uses_profile_trace_id() -> None:
     config = DreamGenerationConfig(
         model_name="dream-test",
@@ -172,12 +181,14 @@ def test_normalize_payload_uses_profile_trace_id() -> None:
             "steps": [{"step_index": 0, "tokens": [{"token_index": 0, "token_text": "A"}]}],
             "decoding_metadata": {},
         },
-        {"sample_id": "sample-1", "prompt": "Prompt"},
+        {"sample_id": "sample-1", "prompt": "Prompt", "expected_answer": "A"},
         config,
     )
 
     assert normalized["trace_id"] == "sample-1__entropy_stochastic__seed-7"
     assert normalized["decoding_metadata"]["trace_profile"] == "entropy_stochastic"
+    assert normalized["decoding_metadata"]["temperature"] == config.temperature
+    assert normalized["decoding_metadata"]["expected_answer"] == "A"
     assert normalized["decoding_metadata"]["seed"] == 7
 
 
@@ -272,8 +283,8 @@ def test_run_dream_trace_dump_skips_empty_generations(
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert (output_dir / "prompt-001__entropy_det__seed-0.json").exists()
-    assert not (output_dir / "prompt-002__entropy_det__seed-0.json").exists()
+    assert (output_dir / "prompt-001__entropy_stochastic__seed-0.json").exists()
+    assert not (output_dir / "prompt-002__entropy_stochastic__seed-0.json").exists()
     assert "Skipping prompt after empty Dream generation" in captured.err
 
 

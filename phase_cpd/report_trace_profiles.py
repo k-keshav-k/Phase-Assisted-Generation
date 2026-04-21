@@ -41,7 +41,10 @@ def main() -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Summarize scheduler-supervision quality by Dream trace profile."
+        description=(
+            "Summarize correctness, stabilization, and scheduler-supervision quality by "
+            "Dream trace profile."
+        )
     )
     parser.add_argument("--source", required=True, help="Trace JSON file or directory.")
     parser.add_argument("--output", help="Optional JSON report output path.")

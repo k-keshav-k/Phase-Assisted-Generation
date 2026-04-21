@@ -27,14 +27,14 @@ class DreamGenerationConfig:
     model_name: str
     max_new_tokens: int = 256
     steps: int = 256
-    temperature: float | None = 0.2
+    temperature: float | None = 0.0
     top_p: float | None = 0.95
     top_k: int | None = None
     alg: str = "entropy"
-    alg_temp: float | None = 0.0
+    alg_temp: float | None = 0.1
     device: str | None = None
     torch_dtype: str = "auto"
-    trace_profile: str = "entropy_det"
+    trace_profile: str = "entropy_stochastic"
     seed: int = 0
     delimiter_texts: tuple[str, ...] = field(default_factory=lambda: _DEFAULT_DELIMITER_TEXTS)
 
@@ -113,7 +113,7 @@ class DreamTraceCollector:
             "alg": self._config.alg,
             "generation_tokens_hook_func": generation_tokens_hook_func,
         }
-        if self._config.temperature is not None and self._config.temperature > 0:
+        if self._config.temperature is not None:
             generation_kwargs["temperature"] = self._config.temperature
         if self._config.top_p is not None:
             generation_kwargs["top_p"] = self._config.top_p

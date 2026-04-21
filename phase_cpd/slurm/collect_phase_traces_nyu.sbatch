@@ -31,9 +31,9 @@ export UV_PYTHON=\${UV_PYTHON:-3.11}
 export DREAM_MODEL_NAME=\${DREAM_MODEL_NAME:-Dream-org/Dream-v0-Instruct-7B}
 export DREAM_MAX_NEW_TOKENS=\${DREAM_MAX_NEW_TOKENS:-256}
 export DREAM_STEPS=\${DREAM_STEPS:-256}
-export DREAM_TEMPERATURE=\${DREAM_TEMPERATURE:-0.2}
+export DREAM_TEMPERATURE=\${DREAM_TEMPERATURE:-0.0}
 export DREAM_TOP_P=\${DREAM_TOP_P:-0.95}
-export DREAM_TRACE_PROFILE=\${DREAM_TRACE_PROFILE:-all}
+export DREAM_TRACE_PROFILE=\${DREAM_TRACE_PROFILE:-entropy_stochastic}
 export DREAM_SEED=\${DREAM_SEED:-0}
 export DREAM_TORCH_DTYPE=\${DREAM_TORCH_DTYPE:-bfloat16}
 export HF_HOME=\${HF_HOME:-/scratch/kk6081/.cache/huggingface}
@@ -54,6 +54,7 @@ echo \"UV_PYTHON=\$UV_PYTHON\"
 echo \"DREAM_MODEL_NAME=\$DREAM_MODEL_NAME\"
 echo \"DREAM_STEPS=\$DREAM_STEPS\"
 echo \"DREAM_MAX_NEW_TOKENS=\$DREAM_MAX_NEW_TOKENS\"
+echo \"DREAM_TEMPERATURE=\$DREAM_TEMPERATURE\"
 echo \"DREAM_TRACE_PROFILE=\$DREAM_TRACE_PROFILE\"
 echo \"DREAM_SEED=\$DREAM_SEED\"
 echo \"HF_HOME=\$HF_HOME\"
@@ -68,7 +69,9 @@ echo \"HF_HOME=\$HF_HOME\"
 #   \"model_name\": \"dream-7b\",
 #   \"decoding_metadata\": {
 #     \"run_id\": \"...\",
-#     \"trace_profile\": \"entropy_det\",
+#     \"trace_profile\": \"entropy_stochastic\",
+#     \"temperature\": 0.0,
+#     \"alg_temp\": 0.1,
 #     \"seed\": 0
 #   },
 #   \"steps\": [

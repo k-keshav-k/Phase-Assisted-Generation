@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from phase_cpd.catalog import default_trace_dir, load_trace_by_id
 from phase_cpd.io import load_trace, save_trace
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceStepSummary, TraceToken
+from tests.phase_cpd.trace_fixtures import make_stabilized_trace
 
 
 def test_trace_json_round_trip(tmp_path) -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
+    trace = make_stabilized_trace()
     output_path = tmp_path / "trace.json"
 
     save_trace(output_path, trace)

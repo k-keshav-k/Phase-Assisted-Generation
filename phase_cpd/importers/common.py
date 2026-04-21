@@ -8,6 +8,18 @@ from typing import Any
 from phase_cpd.io import trace_from_dict
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceStepSummary, TraceToken
 
+_TRACE_METADATA_KEYS = (
+    "expected_answer",
+    "reference_answer",
+    "gold_answer",
+    "target",
+    "answer",
+    "exact_match",
+    "task_correct",
+    "is_correct",
+    "correct",
+)
+
 
 def load_step_dump_as_trace(
     source: str | Path,
@@ -102,6 +114,11 @@ def load_step_dump_as_trace(
         cursor = int(char_end)
 
     final_text = payload.get("final_text") or "".join(token.token_text for token in tokens)
+    decoding_metadata = dict(payload.get("decoding_metadata", {}))
+    for key in _TRACE_METADATA_KEYS:
+        if key in payload:
+            decoding_metadata.setdefault(key, payload[key])
+
     return TraceRecord(
         trace_id=str(payload.get("trace_id", source_path.stem)),
         backend=str(payload.get("backend", backend)),
@@ -110,7 +127,7 @@ def load_step_dump_as_trace(
         final_text=str(final_text),
         tokens=tokens,
         step_summaries=step_summaries,
-        decoding_metadata=dict(payload.get("decoding_metadata", {})),
+        decoding_metadata=decoding_metadata,
         tags=[str(tag) for tag in list(payload.get("tags", []))],
         source_path=str(source_path),
         created_at=_maybe_str(payload.get("created_at")),

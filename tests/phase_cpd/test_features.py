@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from phase_cpd.catalog import default_trace_dir, load_trace_by_id
 from phase_cpd.features import (
     StabilizingEntropyExtractor,
     StabilizingMarginExtractor,
@@ -8,10 +7,11 @@ from phase_cpd.features import (
     StabilizingTop1ProbExtractor,
 )
 from phase_cpd.schema import TokenStepObservation, TraceRecord, TraceToken
+from tests.phase_cpd.trace_fixtures import make_stabilized_trace
 
 
-def test_stabilizing_prob_is_available_on_real_trace() -> None:
-    trace = load_trace_by_id("prompt-001", default_trace_dir())
+def test_stabilizing_prob_is_available_on_step_trace() -> None:
+    trace = make_stabilized_trace()
     extractor = StabilizingTop1ProbExtractor()
 
     assert extractor.is_available(trace)

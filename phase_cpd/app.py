@@ -14,6 +14,7 @@ from phase_cpd.catalog import (  # noqa: E402
     filter_catalog_entries,
     list_catalog_entries,
     load_trace_by_id,
+    trace_dir_signature,
 )
 from phase_cpd.cpd import CPDParameters, get_detector  # noqa: E402
 from phase_cpd.features import FEATURE_EXTRACTORS, get_feature_extractor  # noqa: E402
@@ -28,12 +29,12 @@ from phase_cpd.visualize import (  # noqa: E402
 
 
 @st.cache_data
-def _catalog() -> list:
+def _catalog(_signature) -> list:
     return list_catalog_entries()
 
 
 @st.cache_data
-def _trace(trace_id: str):
+def _trace(trace_id: str, _signature):
     return load_trace_by_id(trace_id)
 
 
@@ -43,7 +44,8 @@ def main() -> None:
     st.caption("Offline change-point analysis over curated diffusion trace files.")
 
     try:
-        entries = _catalog()
+        signature = trace_dir_signature()
+        entries = _catalog(signature)
     except FileNotFoundError as error:
         st.error(str(error))
         return
@@ -86,10 +88,38 @@ def main() -> None:
         help="Filter traces to a specific collection run id from the stored decoding metadata.",
     )
 
-    filtered_entries = filter_catalog_entries(
+    run_filtered = filter_catalog_entries(
         model_filtered,
         required_tags=set(selected_tags),
         run_id=None if selected_run == "All" else selected_run,
+    )
+
+    profile_options = sorted({entry.profile_label for entry in run_filtered})
+    selected_profile = st.sidebar.selectbox(
+        "Trace profile",
+        ["All", *profile_options],
+        help=(
+            "Preferred phase-predictor training policy is entropy with generation "
+            "temperature=0.0 and alg_temp=0.1. entropy_det and origin_random are "
+            "comparison/ablation policies."
+        ),
+    )
+
+    profile_filtered = filter_catalog_entries(
+        run_filtered,
+        profile_label=None if selected_profile == "All" else selected_profile,
+    )
+
+    seed_options = sorted({entry.seed for entry in profile_filtered if entry.seed is not None})
+    selected_seed_label = st.sidebar.selectbox(
+        "Seed filter",
+        ["All", *[str(seed) for seed in seed_options]],
+        help="Restrict traces to a specific collection seed when multiple seeds are present.",
+    )
+
+    filtered_entries = filter_catalog_entries(
+        profile_filtered,
+        seed=None if selected_seed_label == "All" else int(selected_seed_label),
     )
 
     if not filtered_entries:
@@ -102,7 +132,7 @@ def main() -> None:
         list(trace_labels),
         help="Choose the exact stored trace to analyze after applying the catalog filters.",
     )
-    trace = _trace(trace_labels[selected_label])
+    trace = _trace(trace_labels[selected_label], signature)
 
     available_features = [
         name
@@ -222,6 +252,45 @@ def main() -> None:
         st.write(f"**Prompt:** {trace.prompt}")
         if trace.tags:
             st.write(f"**Tags:** {', '.join(trace.tags)}")
+        profile_label = selected_profile
+        if profile_label == "All":
+            profile_label = next(
+                entry.profile_label
+                for entry in filtered_entries
+                if entry.trace_id == trace.trace_id
+            )
+        st.write(f"**Trace profile:** {profile_label}")
+        temperature = trace.decoding_metadata.get("temperature")
+        alg_temp = trace.decoding_metadata.get("alg_temp")
+        if temperature is not None:
+            st.write(f"**Generation temperature:** {temperature}")
+        if alg_temp is not None:
+            st.write(f"**Refinement alg_temp:** {alg_temp}")
+        seed = trace.decoding_metadata.get("seed")
+        if seed is not None:
+            st.write(f"**Seed:** {seed}")
+        trace_profile = trace.decoding_metadata.get("trace_profile")
+        if trace_profile == "entropy_det":
+            st.caption(
+                "Ablation profile: deterministic entropy ordering can make stabilization "
+                "steps overly monotone with token index."
+            )
+        elif trace_profile == "origin_random":
+            st.caption(
+                "Ablation profile: random refinement order injects policy noise and can "
+                "hurt task correctness."
+            )
+        elif (
+            trace.decoding_metadata.get("alg") == "entropy"
+            and temperature is not None
+            and alg_temp is not None
+            and float(temperature) == 0.0
+            and float(alg_temp) == 0.1
+        ):
+            st.caption(
+                "Preferred training profile: deterministic token generation with small "
+                "refinement-order randomness."
+            )
     with summary_column:
         st.subheader("Summary")
         st.metric("Tokens", len(trace.tokens))
@@ -245,9 +314,6 @@ def main() -> None:
     st.subheader("Boundary overlay")
     st.caption(f"Detected boundary indices: {format_breakpoints(breakpoints)}")
     st.markdown(render_token_boundary_view_html(trace, breakpoints), unsafe_allow_html=True)
-
-    # st.subheader("Segmented text")
-    # st.markdown(render_segmented_text_html(segment_summaries), unsafe_allow_html=True)
 
     st.subheader("Feature vs token index")
     st.altair_chart(build_feature_chart(feature_series, breakpoints), use_container_width=True)
