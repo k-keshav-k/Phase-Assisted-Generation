@@ -52,7 +52,7 @@
 \paperaffiliation{New York University \\ Building LLM Reasoners --- Spring 2026 \\ \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
 
 \begin{abstract}
-Phase-Adaptive Generation (PAG) is an original research project on difficulty-aware decoding for diffusion language models. The central hypothesis is that generated text follows recoverable ``difficulty phases'' that can be segmented from token-level confidence trajectories and used to predict the next control tuple for decoding. Our current pipeline builds fixed-decoding traces, segments them with change-point detection over stabilizing token signals, and trains a next-segment predictor over tuples that encode block number and maximum refinement step, with support for extensible fields. This paper-style writeup describes the problem setting, the data pipeline, the segmentation and prediction method, and the current implementation status of the project.
+Phase-Adaptive Generation (PAG) is an original research project on difficulty-aware decoding for diffusion language models. The central hypothesis is that generated text follows recoverable ``difficulty phases'' that can be segmented from token-level confidence trajectories and used to predict the next control tuple for decoding. Our current pipeline builds fixed-decoding traces, segments them with change-point detection over stabilizing token signals, and trains a Transformer next-segment predictor over tuples that encode block size and refinement steps, with support for extensible fields. This paper-style writeup describes the problem setting, the data pipeline, the segmentation and prediction method, and the current implementation status of the project.
 \end{abstract}
 
 \section{Introduction}
@@ -90,13 +90,13 @@ This trace representation is essential because phase prediction depends on the d
 
 The second scheme point is to sweep detection sensitivity and run change-point detection to obtain segment candidates. In practice, the code uses stabilizing scalar features such as entropy, margin, or top-1 probability, then applies PELT over the resulting series. The detector produces breakpoints that partition the token sequence into contiguous segments.
 
-For each segment, we compute summary statistics and derive the segment-level control variables. This is where the tuple representation begins to take shape: the segment index acts as a block identifier, while the maximum refinement step observed in the segment captures how much iterative effort the model needed before that segment stabilized. Optional additional fields can be appended later, such as segment length or other summary statistics.
+For each segment, we compute summary statistics and derive the segment-level control variables. In the current extraction pipeline, each segment tuple stores $(\text{block\_size}, \text{refinement\_steps})$, where block size is the number of tokens in the segment and refinement steps are obtained from token-level observation histories (per-token counts aggregated at the segment level). Optional additional fields can be appended later, such as stabilization statistics, segment-level uncertainty measures, or scheduler-specific controls.
 
 \subsection{Step 3: Tuple Sequences and Next-Segment Prediction}
 
-The third scheme point is to represent each segment as an ordered tuple and predict the next tuple from the current history. In the current implementation, a tuple is represented as $(\text{block number}, \text{max refinement step}, \ldots)$. The representation is intentionally extensible, so the system can later add more fields without changing the model interface.
+The third scheme point is to represent each segment as an ordered tuple and predict the next tuple from the current history. In the current implementation, a tuple is represented as $(\text{block\_size}, \text{refinement\_steps}, \ldots)$. The representation is intentionally extensible through the shared schema so additional integer control fields can be added with minimal code changes.
 
-We currently use an interpolated variable-order Markov predictor in the prototype package \texttt{phase\_predict}. This model is a strong fit for the present setting because the data is symbolic, the sequence lengths are moderate, and the main signal is transition structure rather than high-dimensional continuous embeddings. It can produce top-$k$ next-segment candidates and probabilities, which makes it suitable for downstream scheduling policies.
+We currently use a compact Transformer encoder predictor in \texttt{phase\_predict}. Given a fixed window of previous tuples, the model applies self-attention over the full context and regresses the next tuple fields, which are then rounded to non-negative integers at inference time. This design retains parallel training efficiency, captures longer-range tuple interactions than a fixed-order heuristic model, and supports future extension to richer tuple schemas.
 
 \subsection{Step 4: Tuple-Conditioned Diffusion Unmasking}
 
@@ -106,15 +106,15 @@ Operationally, the decoder selects the next block according to the predicted blo
 
 \section{Implementation Status}
 
-The repository already contains the building blocks for the final system. The \texttt{phase\_cpd} package handles trace collection, feature extraction, and segmentation. The new \texttt{phase\_predict} package adds segment-tuple extraction, model training, model serialization, and a CLI for training and inference. Tests cover tuple extraction and model round-tripping, which gives us a correctness baseline before any larger-scale experiments.
+The repository already contains the building blocks for the final system. The \texttt{phase\_cpd} package handles trace collection, feature extraction, and segmentation. The new \texttt{phase\_predict} package adds tuple extraction utilities, a Transformer model, training and prediction wrappers, checkpointing, and an end-to-end training script (\texttt{scripts/train\_phase\_predict.py}) for command-line experimentation on real traces. Tests cover schema validation, dataset/window construction, extraction utilities, model forward passes, training behavior, and prediction/checkpoint round-trips, which gives us a correctness baseline before larger-scale experiments.
 
 This stage is therefore more than a sketch: the data pipeline exists, the tuple encoding is implemented, and the next-segment predictor can be trained on extracted segment sequences. What remains for the final project is to connect the predictor more tightly to full adaptive scheduling and report quantitative results on held-out traces.
 
 \section{Preliminary Analysis and Limitations}
 
-At the moment, the strongest evidence we have is architectural rather than benchmark-based: the pipeline is modular, the tuple representation is interpretable, and the next-segment task is well matched to the symbolic nature of the data. The main limitation is that we have not yet run a full held-out evaluation of next-segment accuracy against baselines such as a simple frequency model or a neural sequence model.
+At the moment, the strongest evidence we have is architectural rather than benchmark-based: the pipeline is modular, the tuple representation is interpretable, and the next-segment task is now modeled by an explicitly sequence-aware neural architecture. The main limitation is that we have not yet run a full held-out evaluation of next-segment accuracy and downstream scheduling gains across broad benchmark settings.
 
-Another limitation is that the current tuple uses block index and maximum refinement step, which is a compact summary rather than a full representation of decoding state. That is acceptable for a first report because it keeps the problem well defined, but the representation can be expanded if later ablations show that additional context is needed.
+Another limitation is that the current tuple uses only block size and refinement steps, which is a compact summary rather than a full representation of decoding state. That is acceptable for a first report because it keeps the problem well defined, but the representation can be expanded if later ablations show that additional context is needed.
 
 \section{Conclusion}
 
