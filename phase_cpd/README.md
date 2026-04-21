@@ -105,6 +105,7 @@ The recommended/default collection settings for phase-predictor training are:
 ```text
 --trace-profile entropy_stochastic
 --temperature 0.0
+--min-new-tokens 1
 ```
 
 That profile resolves to `alg=entropy` and `alg_temp=0.1`.
@@ -115,6 +116,7 @@ Use `--trace-profile all` only when you want comparison/ablation traces. `--alg`
 
 - generation `temperature` controls token sampling randomness in the emitted answer. Keep it at `0.0` for phase-predictor training traces so math/task correctness is not degraded by token sampling.
 - `alg_temp` controls randomness in Dream's entropy/confidence-based refinement order. A small nonzero value such as `0.1` reduces overly monotone stabilization labels without changing token sampling.
+- `min_new_tokens` prevents immediate EOS/PAD selection at the first generated position. The default `1` avoids empty deterministic Dream completions while preserving the rest of the EOS stopping behavior.
 
 ## Trace format
 
@@ -151,6 +153,7 @@ Each raw dump can use this stepwise format:
     "seed": 0,
     "prompt_seed": 123456,
     "max_new_tokens": 256,
+    "min_new_tokens": 1,
     "steps": 256,
     "delimiter_features": [
       {
@@ -204,6 +207,7 @@ uv run --group phase_cpd_dream --python 3.11 \
   --output-dir outputs/phase_cpd_raw/dream \
   --model-name Dream-org/Dream-v0-Instruct-7B \
   --temperature 0.0 \
+  --min-new-tokens 1 \
   --trace-profile entropy_stochastic \
   --seed 0
 ```
@@ -243,6 +247,7 @@ The main env vars you need to set before `sbatch` are:
 - `UV_CACHE_DIR` if you want the uv cache somewhere other than the default project-local path
 - `DREAM_TRACE_PROFILE` if you want a profile other than the default Slurm value of `entropy_stochastic`
 - `DREAM_TEMPERATURE` if you want a generation temperature other than the default `0.0`
+- `DREAM_MIN_NEW_TOKENS` if you want to allow immediate EOS/PAD by setting it to `0`, or force a longer minimum completion
 - `DREAM_SEED` if you want a base seed other than `0`
 - optionally `DREAM_TRACE_CMD` if you do not want to use the default local runner
 
@@ -269,6 +274,7 @@ uv run --group phase_cpd_dream --python 3.11 \
   --output-dir "$RAW_TRACE_ROOT/dream" \
   --model-name "$DREAM_MODEL_NAME" \
   --max-new-tokens "$DREAM_MAX_NEW_TOKENS" \
+  --min-new-tokens "$DREAM_MIN_NEW_TOKENS" \
   --steps "$DREAM_STEPS" \
   --temperature "$DREAM_TEMPERATURE" \
   --top-p "$DREAM_TOP_P" \

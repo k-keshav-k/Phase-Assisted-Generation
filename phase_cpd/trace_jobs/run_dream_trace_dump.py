@@ -69,6 +69,7 @@ def main() -> int:
         config = DreamGenerationConfig(
             model_name=args.model_name,
             max_new_tokens=args.max_new_tokens,
+            min_new_tokens=args.min_new_tokens,
             steps=steps,
             temperature=args.temperature,
             top_p=args.top_p,
@@ -148,6 +149,15 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--max-new-tokens", type=int, default=256)
     parser.add_argument(
+        "--min-new-tokens",
+        type=int,
+        default=1,
+        help=(
+            "Minimum generated tokens before EOS/PAD may be selected. "
+            "The default prevents deterministic Dream runs from ending immediately."
+        ),
+    )
+    parser.add_argument(
         "--steps",
         type=int,
         help="Dream denoising steps. Defaults to --max-new-tokens when omitted.",
@@ -226,6 +236,7 @@ def _normalize_payload(
     metadata.setdefault("alg", config.alg)
     metadata.setdefault("alg_temp", config.alg_temp)
     metadata.setdefault("temperature", config.temperature)
+    metadata.setdefault("min_new_tokens", config.min_new_tokens)
     metadata.setdefault("seed", config.seed)
     for key in _PROMPT_METADATA_KEYS:
         if key in prompt_record:

@@ -9,6 +9,7 @@ _CollectorCacheKey = tuple[
     str,
     int,
     int,
+    int,
     float | None,
     float | None,
     int | None,
@@ -51,6 +52,7 @@ def _get_or_create_collector(config: DreamGenerationConfig) -> DreamTraceCollect
     cache_key = (
         config.model_name,
         config.max_new_tokens,
+        config.min_new_tokens,
         config.steps,
         config.temperature,
         config.top_p,

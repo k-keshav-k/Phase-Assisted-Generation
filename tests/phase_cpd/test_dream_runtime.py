@@ -11,6 +11,8 @@ from phase_cpd.trace_jobs.dream_runtime import (
     _resolve_delimiter_features,
     _selected_token_stats,
     _slice_generated_canvas,
+    _special_token_ids,
+    _suppress_special_tokens_before_min_new_tokens,
     _truncate_generated_ids,
 )
 from phase_cpd.trace_jobs.run_dream_trace_dump import (
@@ -204,6 +206,28 @@ def test_truncate_generated_ids_keeps_generated_only_sequence() -> None:
     assert generated == [11, 12]
 
 
+def test_suppress_special_tokens_before_min_new_tokens_only_updates_min_span() -> None:
+    torch = pytest.importorskip("torch")
+    logits = torch.zeros((1, 5, 10), dtype=torch.float32)
+
+    adjusted = _suppress_special_tokens_before_min_new_tokens(
+        logits=logits,
+        prompt_length=2,
+        min_new_tokens=2,
+        special_token_ids=(3, 4),
+    )
+
+    assert adjusted[0, 2, 3].item() == float("-inf")
+    assert adjusted[0, 2, 4].item() == float("-inf")
+    assert adjusted[0, 3, 3].item() == float("-inf")
+    assert adjusted[0, 4, 3].item() == 0.0
+    assert logits[0, 2, 3].item() == 0.0
+
+
+def test_special_token_ids_flattens_and_deduplicates_values() -> None:
+    assert _special_token_ids(1, [2, 1], None, (3,)) == (1, 2, 3)
+
+
 def test_resolve_trace_profiles_expands_all() -> None:
     profiles = _resolve_trace_profiles(trace_profile="all", alg=None, alg_temp=None)
 
@@ -246,6 +270,7 @@ def test_normalize_payload_uses_profile_trace_id() -> None:
     assert normalized["trace_id"] == "sample-1__entropy_stochastic__seed-7"
     assert normalized["decoding_metadata"]["trace_profile"] == "entropy_stochastic"
     assert normalized["decoding_metadata"]["temperature"] == config.temperature
+    assert normalized["decoding_metadata"]["min_new_tokens"] == config.min_new_tokens
     assert normalized["decoding_metadata"]["expected_answer"] == "A"
     assert normalized["decoding_metadata"]["seed"] == 7
 

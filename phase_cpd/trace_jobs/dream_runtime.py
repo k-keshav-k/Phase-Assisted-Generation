@@ -30,6 +30,7 @@ _DELIMITER_NAME_OVERRIDES = {
 class DreamGenerationConfig:
     model_name: str
     max_new_tokens: int = 256
+    min_new_tokens: int = 1
     steps: int = 256
     temperature: float | None = 0.0
     top_p: float | None = 0.95
@@ -125,6 +126,21 @@ class DreamTraceCollector:
             generation_kwargs["top_k"] = self._config.top_k
         if self._config.alg_temp is not None:
             generation_kwargs["alg_temp"] = self._config.alg_temp
+        if self._config.min_new_tokens > 0:
+
+            def generation_logits_hook_func(step, x, logits):
+                del step, x
+                return _suppress_special_tokens_before_min_new_tokens(
+                    logits=logits,
+                    prompt_length=len(prompt_token_ids),
+                    min_new_tokens=self._config.min_new_tokens,
+                    special_token_ids=_special_token_ids(
+                        self._tokenizer.eos_token_id,
+                        self._tokenizer.pad_token_id,
+                    ),
+                )
+
+            generation_kwargs["generation_logits_hook_func"] = generation_logits_hook_func
 
         with self._torch.inference_mode(), _ignore_deterministic_temperature_warning():
             output = self._model.diffusion_generate(input_ids, **generation_kwargs)
@@ -366,6 +382,7 @@ class _StepRecorder:
             "decoding_metadata": {
                 "run_id": os.environ.get("SLURM_JOB_ID", "local"),
                 "max_new_tokens": config.max_new_tokens,
+                "min_new_tokens": config.min_new_tokens,
                 "steps": config.steps,
                 "temperature": config.temperature,
                 "top_p": config.top_p,
@@ -633,6 +650,33 @@ def _slice_generation_logits(*, logits, prompt_length: int, generated_length: in
     raise ValueError(msg)
 
 
+def _suppress_special_tokens_before_min_new_tokens(
+    *,
+    logits,
+    prompt_length: int,
+    min_new_tokens: int,
+    special_token_ids: tuple[int, ...],
+):
+    if min_new_tokens <= 0 or not special_token_ids or not logits.is_floating_point():
+        return logits
+    if logits.ndim != 3:
+        return logits
+    end = min(int(logits.shape[1]), prompt_length + min_new_tokens)
+    if end <= prompt_length:
+        return logits
+    vocab_size = int(logits.shape[-1])
+    token_ids = [
+        token_id
+        for token_id in special_token_ids
+        if 0 <= token_id < vocab_size
+    ]
+    if not token_ids:
+        return logits
+    adjusted = logits.clone()
+    adjusted[:, prompt_length:end, token_ids] = float("-inf")
+    return adjusted
+
+
 def _truncate_generated_ids(
     sequence,
     *,
@@ -660,6 +704,25 @@ def _starts_with_prompt_ids(sequence_ids: list[int], prompt_token_ids: list[int]
     if prompt_length == 0 or len(sequence_ids) < prompt_length:
         return False
     return sequence_ids[:prompt_length] == prompt_token_ids
+
+
+def _special_token_ids(*values: object) -> tuple[int, ...]:
+    token_ids: list[int] = []
+    for value in values:
+        _append_token_ids(token_ids, value)
+    return tuple(dict.fromkeys(token_ids))
+
+
+def _append_token_ids(token_ids: list[int], value: object) -> None:
+    if value is None:
+        return
+    if hasattr(value, "tolist"):
+        value = value.tolist()
+    if isinstance(value, (list, tuple, set)):
+        for item in value:
+            _append_token_ids(token_ids, item)
+        return
+    token_ids.append(int(value))
 
 
 @contextmanager
