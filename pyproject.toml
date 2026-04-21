@@ -28,6 +28,10 @@ phase_cpd = [
   "ruptures>=1.1.9",
   "streamlit>=1.42",
 ]
+phase_predict = [
+  "numpy>=1.26",
+  "torch>=2.0",
+]
 phase_cpd_dream = [
   "accelerate>=0.33",
   "altair>=5.0",
