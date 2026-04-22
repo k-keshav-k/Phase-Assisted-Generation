@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+torch._dynamo.disable()
 
 # Make AdaBlock llada helpers importable
 _ADABLOCK_LLADA = Path(__file__).resolve().parents[1] / "AdaBlock-dLLM" / "llada"
