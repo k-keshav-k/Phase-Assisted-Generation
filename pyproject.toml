@@ -7,7 +7,7 @@ name = "pag"
 version = "0.1.0"
 description = "Loose-contract skeleton for the Phase-Adaptive Generation project."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.14"
 dependencies = [
   "PyYAML>=6.0",
   "torch>=2.0",
