@@ -101,25 +101,27 @@ Qualitatively, PELT produced useful structure: some prompts show clear regime sh
     \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob_segments.png}
 \end{center}
 
+\textbf{Inference:} For a prompt in algebra, the stabilizing probability signal shows good block structure, and PELT surfaces breakpoints that align with intuitive phase transitions. For example, the blocks where the probability is high for multiple tokens in a row correspond to the model confidently filling in easy spans like tokens it got from the prompt, while the blocks where the probability is low and noisy correspond to harder reasoning spans. This supports our hypothesis that there are meaningful difficulty phases in dLLM generation, but also shows that CPD can be sensitive to hyperparameters and may not yield stable block boundaries across prompts or models.
+
 \begin{center}
     \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_ref_steps.png}
     \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_ref_steps_segments.png}
 \end{center}
 
-\textbf{Inference:} For a prompt in algebra, the stabilizing probability signal shows good block structure, and PELT surfaces breakpoints that align with intuitive phase transitions. But looking at stabilizing refinement steps signal, the increment is monotonic and hard to predict exact breakpoints. And these breakpoints are sensitive to the penalty parameter as well, which motivates our shift toward using AdaBlock-native traces where block boundaries and stabilization signals are directly available without CPD hyperparameters.
+\textbf{Inference:} Based on the stabilizing refinement signal, we were not able to infer much due to the monotonic increase of the signal. We did see a spike in the signal at certain points where it tried to reason the answer it genereated in previous tokens. We observed that these breakpoints are sensitive to the penalty parameter as well, which motivates our shift toward using AdaBlock-native traces where block boundaries and stabilization signals are directly available without CPD hyperparameters.
 
 \begin{center}
     \includegraphics[height=0.3\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_prompt.png}
     \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob.png}
     \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob_segments.png}
 \end{center}
+\textbf{Inference:} For a prompt in coding, the stabilizing probability signal shows some structure (especially for the code tokens) but is noisier, and PELT breakpoints are less stable across penalty settings. For example, some blocks where it predicted code tokens show high confidence and low entropy, while the reasoning tokens in between are more uncertain. However, the exact block boundaries vary with PELT hyperparameters, which again motivates our decision to use AdaBlock traces directly for training, where block-level controls are explicit and CPD is not required to recover them.
 
 \begin{center}
     \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_ref_steps.png}
     \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_ref_steps_segments.png}
 \end{center}
-
-\textbf{Inference:} For a prompt in coding, the stabilizing probability signal shows some structure (especially for the code tokens) but is noisier, and PELT breakpoints are less stable across penalty settings. Similar monotonic behavior is observed in the refinement steps signal as compared to the algebraic case. This again supports our decision to use AdaBlock traces directly for training, where block-level controls are explicit and CPD is not required to recover them.
+\textbf{Inference} Similar monotonic behavior is observed in the refinement steps signal as compared to the algebraic case. We wre not able to infer much from this signal.
 
 
 Because our predictor target is block-level scheduling, we ultimately decided to use AdaBlock traces for training labels, where block size and stabilization-step signals are directly available without running CPD to recover breakpoints.
