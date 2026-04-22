@@ -34,6 +34,18 @@ test-phase-cpd:
 test-phase-predict:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run --group phase_predict pytest tests/phase_predict
 
+clone-adablock:
+	git clone https://github.com/lgxi24/AdaBlock-dLLM.git AdaBlock-dLLM
+
+probe-adablock:
+	python scripts/probe_adablock_llada.py \
+		--prompts phase_cpd/data/prompts/research_prompts.jsonl \
+		--output-dir traces/adablock \
+		--gen-length 128 \
+		--init-block-length 16 \
+		--delimiter-threshold 0.3 \
+		--threshold 0.9
+
 lint:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff check src tests scripts phase_cpd phase_predict
 
