@@ -98,18 +98,28 @@ Qualitatively, PELT produced useful structure: some prompts show clear regime sh
 \begin{center}
     \includegraphics[height=0.3\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_prompt.png}
     \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob.png}
-    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_segments.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob_segments.png}
 \end{center}
 
-\textbf{Inference:} For a prompt in algebra, the stabilizing probability signal shows good block structure, and PELT surfaces breakpoints that align with intuitive phase transitions. However, the exact breakpoints are sensitive to the penalty parameter, which motivates our shift toward using AdaBlock-native traces where block boundaries and stabilization signals are directly available without CPD hyperparameters.
+\begin{center}
+    \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_ref_steps.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_ref_steps_segments.png}
+\end{center}
+
+\textbf{Inference:} For a prompt in algebra, the stabilizing probability signal shows good block structure, and PELT surfaces breakpoints that align with intuitive phase transitions. But looking at stabilizing refinement steps signal, the increment is monotonic and hard to predict exact breakpoints. And these breakpoints are sensitive to the penalty parameter as well, which motivates our shift toward using AdaBlock-native traces where block boundaries and stabilization signals are directly available without CPD hyperparameters.
 
 \begin{center}
     \includegraphics[height=0.3\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_prompt.png}
     \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob.png}
-    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_segments.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob_segments.png}
 \end{center}
 
-\textbf{Inference:} For a prompt in coding, the stabilizing probability signal shows some structure but is noisier, and PELT breakpoints are less stable across penalty settings. This again supports our decision to use AdaBlock traces directly for training, where block-level controls are explicit and CPD is not required to recover them.
+\begin{center}
+    \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_ref_steps.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_ref_steps_segments.png}
+\end{center}
+
+\textbf{Inference:} For a prompt in coding, the stabilizing probability signal shows some structure (especially for the code tokens) but is noisier, and PELT breakpoints are less stable across penalty settings. Similar monotonic behavior is observed in the refinement steps signal as compared to the algebraic case. This again supports our decision to use AdaBlock traces directly for training, where block-level controls are explicit and CPD is not required to recover them.
 
 
 Because our predictor target is block-level scheduling, we ultimately decided to use AdaBlock traces for training labels, where block size and stabilization-step signals are directly available without running CPD to recover breakpoints.
