@@ -52,7 +52,7 @@
 \paperaffiliation{New York University \\ Building LLM Reasoners --- Spring 2026 \\ \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
 
 \begin{abstract}
-Phase-Adaptive Generation (PAG) is an original research project on difficulty-aware decoding for diffusion language models. The central hypothesis is that generated text follows recoverable ``difficulty phases'' that can be segmented from token-level confidence trajectories and used to predict the next control tuple for decoding. Our current pipeline builds fixed-decoding traces, segments them with change-point detection over stabilizing token signals, and trains a Transformer next-segment predictor over tuples that encode block size and refinement steps, with support for extensible fields. This paper-style writeup describes the problem setting, the data pipeline, the segmentation and prediction method, and the current implementation status of the project.
+Phase-Adaptive Generation (PAG) is an original research project on difficulty-aware decoding for diffusion language models. We first built a baseline pipeline around LLaDA and Dream traces: collect token-level confidence signals (top-1 probability, top-2 probability, entropy, $\tau_{\text{stability}}$, and $\tau_{\text{commit}}$), run change-point detection (CPD), derive segment tuples, and train a next-segment predictor. Through that process, we observed that CPD is useful for analysis but adds an avoidable intermediate step when the training target is block-level controls. Based on these observations, we now prioritize an AdaBlock-centered data path where traces directly provide block size and stabilization-step signals per block. This writeup documents both the attempted pipeline and the revised design decision, together with the current Transformer-based phase predictor and planned model ablations.
 \end{abstract}
 
 \section{Introduction}
@@ -75,50 +75,74 @@ The writeup and codebase are organized to support that question in stages. We fi
 
 \subsection{Pipeline Overview}
 
-The pipeline used in the repository is:
-baseline decoding $\rightarrow$ trace collection $\rightarrow$ phase segmentation $\rightarrow$ tuple construction $\rightarrow$ next-segment prediction $\rightarrow$ tuple-conditioned unmasking.
+The initial pipeline we implemented in the repository was:
+baseline decoding $\rightarrow$ trace collection $\rightarrow$ CPD phase segmentation $\rightarrow$ tuple construction $\rightarrow$ next-segment prediction $\rightarrow$ tuple-conditioned unmasking.
 
-The baseline stage produces token-level traces and per-step token signals. The phase stage converts those traces into phase annotations and predictor-ready examples. The predict stage then uses those segment sequences to learn a next-tuple for generation.
+After running this workflow on Dream 7B and LLaDA traces, we revised the design direction. Our current preferred pipeline is:
+AdaBlock trace collection (block-native) $\rightarrow$ block tuple sequence construction $\rightarrow$ next-segment prediction $\rightarrow$ tuple-conditioned unmasking.
+
+The key difference is that CPD is no longer required to recover block boundaries: AdaBlock traces already expose the block-level controls needed for training (block size and stabilization/refinement behavior), which reduces label-construction ambiguity and simplifies end-to-end training.
 
 \subsection{Step 1: Baseline Trace Collection}
 
-The first scheme point is to generate baseline traces with per-step token probabilities and stabilization information. In the current codebase, the baseline stage records each token's refinement history, including top-1 probability, top-2 probability, selected logit, and extra scalar values such as entropy. The important conceptual output is a token trajectory over refinement steps, which allows us to ask when each token becomes stable.
+In the baseline trace-collection stage, we instrumented LLaDA and Dream generation to capture token-level trajectories over refinement steps. The tracked signals include top-1 probability, top-2 probability, entropy, and stabilization-oriented timing signals ($\tau_{\text{stability}}$, $\tau_{\text{commit}}$). These trajectories were used as raw material for downstream phase analysis.
 
-This trace representation is essential because phase prediction depends on the dynamics of confidence, not just the final decoded text. The repository already stores these traces in a unified JSON schema so that downstream analysis can consume them without depending on a specific inference backend.
+This design gave us rich diagnostics but also revealed a bottleneck: the model controls we ultimately need for scheduling are block-level values, while LLaDA/Dream traces are token-level. As a result, we had to add a CPD stage to infer breakpoints before producing block-size labels. The revised plan is to use AdaBlock traces directly, where block size and stabilization-step information are already present at the block granularity needed for training.
 
 \subsection{Step 2: Change-Point Detection and Segment Extraction}
 
-The second scheme point is to sweep detection sensitivity and run change-point detection to obtain segment candidates. In practice, the code uses stabilizing scalar features such as entropy, margin, or top-1 probability, then applies PELT over the resulting series. The detector produces breakpoints that partition the token sequence into contiguous segments.
+The second stage of the initial pipeline applies CPD to stabilization-oriented feature series. We used PELT with configurable cost (L2/normal), penalty, minimum segment length, and smoothing-window controls, and experimented across Dream 7B and LLaDA traces using scalar signals such as stabilizing entropy, margin, and top-1 probability.
 
-For each segment, we compute summary statistics and derive the segment-level control variables. In the current extraction pipeline, each segment tuple stores $(\text{block\_size}, \text{refinement\_steps})$, where block size is the number of tokens in the segment and refinement steps are obtained from token-level observation histories (per-token counts aggregated at the segment level). Optional additional fields can be appended later, such as stabilization statistics, segment-level uncertainty measures, or scheduler-specific controls.
+Qualitatively, PELT produced useful structure: some prompts show clear regime shifts that align with intuitive reasoning transitions, while others are sensitive to smoothing and penalty settings. This made CPD valuable for understanding model behavior but less attractive as a permanent label-generation dependency for predictor training.
+
+\begin{center}
+    \includegraphics[height=0.3\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_prompt.png}
+    \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_segments.png}
+\end{center}
+
+\textbf{Inference:} For a prompt in algebra, the stabilizing probability signal shows good block structure, and PELT surfaces breakpoints that align with intuitive phase transitions. However, the exact breakpoints are sensitive to the penalty parameter, which motivates our shift toward using AdaBlock-native traces where block boundaries and stabilization signals are directly available without CPD hyperparameters.
+
+\begin{center}
+    \includegraphics[height=0.3\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_prompt.png}
+    \includegraphics[width=1\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob.png}
+    \includegraphics[width=0.8\linewidth,height=0.4\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_segments.png}
+\end{center}
+
+\textbf{Inference:} For a prompt in coding, the stabilizing probability signal shows some structure but is noisier, and PELT breakpoints are less stable across penalty settings. This again supports our decision to use AdaBlock traces directly for training, where block-level controls are explicit and CPD is not required to recover them.
+
+
+Because our predictor target is block-level scheduling, we ultimately decided to use AdaBlock traces for training labels, where block size and stabilization-step signals are directly available without running CPD to recover breakpoints.
 
 \subsection{Step 3: Tuple Sequences and Next-Segment Prediction}
 
-The third scheme point is to represent each segment as an ordered tuple and predict the next tuple from the current history. In the current implementation, a tuple is represented as $(\text{block\_size}, \text{refinement\_steps}, \ldots)$. The representation is intentionally extensible through the shared schema so additional integer control fields can be added with minimal code changes.
+The third stage represents each block/segment as an ordered control tuple and learns next-tuple prediction from history. In the current implementation (\texttt{phase\_predict}), a tuple contains at least $(\text{block\_size}, \text{refinement\_steps})$, with schema support for adding additional control dimensions later.
 
-We currently use a compact Transformer encoder predictor in \texttt{phase\_predict}. Given a fixed window of previous tuples, the model applies self-attention over the full context and regresses the next tuple fields, which are then rounded to non-negative integers at inference time. This design retains parallel training efficiency, captures longer-range tuple interactions than a fixed-order heuristic model, and supports future extension to richer tuple schemas.
+Our current predictor is a compact Transformer encoder trained as a regression model over normalized tuple sequences. Given a context window, the model predicts the next tuple and maps outputs back to integer scheduler controls. Compared with fixed-order heuristics, this architecture can model longer-range dependencies across blocks while remaining lightweight.
+
+We treat this as a strong baseline rather than a final choice. Planned ablations include alternative sequence models (for example MLP/linear baselines, recurrent variants, and other Transformer sizes) to identify the best quality-latency trade-off for control prediction.
 
 \subsection{Step 4: Tuple-Conditioned Diffusion Unmasking}
 
-The fourth step is to consume the predicted control tuple as an inference-time command for the diffusion decoder. Concretely, once the model predicts a tuple like $(b, \tau, \ldots)$, we interpret it as scheduling parameters for the next decode action: block size $b$ determines how many masked positions to unmask in the next chunk, and refinement budget $\tau$ determines how many denoising/refinement iterations are spent on that chunk.
+The fourth stage consumes the predicted tuple as a scheduling command for the next unmasking action. If the predicted tuple is $(b, \tau)$, block size $b$ controls how many positions are unmasked in the next decode block, and $\tau$ controls stabilization/refinement intensity before committing.
 
-Operationally, the decoder selects the next block according to the predicted block size, applies diffusion unmasking over those positions, and runs exactly the tuple-specified refinement schedule before committing tokens. The resulting partially decoded sequence is then fed back into the same loop, producing an updated tuple history for the next prediction. This closes the control loop from phase prediction to token generation and makes tuple prediction directly actionable for adaptive decoding.
+In the revised pipeline, this loop is designed around AdaBlock-native traces and controls: train on observed block sequences, predict the next block tuple, apply tuple-conditioned unmasking, append the realized block outcome, and repeat. This keeps the training target and inference control space aligned and removes the CPD-derived boundary recovery step from the production training path.
 
 \section{Implementation Status}
 
-The repository already contains the building blocks for the final system. The \texttt{phase\_cpd} package handles trace collection, feature extraction, and segmentation. The new \texttt{phase\_predict} package adds tuple extraction utilities, a Transformer model, training and prediction wrappers, checkpointing, and an end-to-end training script (\texttt{scripts/train\_phase\_predict.py}) for command-line experimentation on real traces. Tests cover schema validation, dataset/window construction, extraction utilities, model forward passes, training behavior, and prediction/checkpoint round-trips, which gives us a correctness baseline before larger-scale experiments.
+The repository currently includes both the analysis-first pipeline and the revised training direction. The \texttt{phase\_cpd} package supports trace exploration, stabilization-feature extraction, and CPD experiments (including PELT controls and feature choices). The \texttt{phase\_predict} package implements tuple extraction, dataset construction, a Transformer next-segment predictor, training/inference wrappers, and checkpointing.
 
-This stage is therefore more than a sketch: the data pipeline exists, the tuple encoding is implemented, and the next-segment predictor can be trained on extracted segment sequences. What remains for the final project is to connect the predictor more tightly to full adaptive scheduling and report quantitative results on held-out traces.
+Practically, we view the CPD path as an exploratory analysis tool that helped us interpret phase structure in Dream/LLaDA traces, while the AdaBlock path is the intended data source for final predictor training because it provides block-size and stabilization-step signals directly. Remaining work is to complete the AdaBlock-integrated end-to-end loop and compare predictor variants under a common evaluation protocol.
 
 \section{Preliminary Analysis and Limitations}
 
-At the moment, the strongest evidence we have is architectural rather than benchmark-based: the pipeline is modular, the tuple representation is interpretable, and the next-segment task is now modeled by an explicitly sequence-aware neural architecture. The main limitation is that we have not yet run a full held-out evaluation of next-segment accuracy and downstream scheduling gains across broad benchmark settings.
+Our preliminary takeaway from CPD experiments is directional: PELT is effective for surfacing phase-like structure and for diagnosing where confidence dynamics shift, but it also introduces hyperparameter-sensitive boundary decisions when used as a mandatory label-construction step. That observation motivated the design change toward AdaBlock-native traces for predictor training.
 
-Another limitation is that the current tuple uses only block size and refinement steps, which is a compact summary rather than a full representation of decoding state. That is acceptable for a first report because it keeps the problem well defined, but the representation can be expanded if later ablations show that additional context is needed.
+The main current limitation is evaluation depth: we still need systematic held-out comparisons across predictor families and direct downstream measurements of quality, latency, and compute efficiency. A second limitation is that the present tuple schema is intentionally compact (block size and refinement/stabilization behavior), so richer controls may be needed if future experiments show underfitting of complex phase transitions.
 
 \section{Conclusion}
 
-PAG frames phase-aware decoding as a prediction problem over segment tuples derived from dLLM traces. The current codebase supports the first four scheme points at the design level: trace collection, change-point segmentation, next-tuple prediction, and tuple-conditioned unmasking control. That gives us a clear experimental path toward evaluating whether phase-aware scheduling can improve the quality--latency trade-off for diffusion language models.
+PAG frames adaptive diffusion decoding as a next-control prediction problem over block/segment tuples. Our project progress includes an end-to-end attempt built on LLaDA/Dream traces plus PELT-based segmentation, and a revised pipeline decision informed by those results: train on AdaBlock-native traces where block size and stabilization-step controls are directly available. This revision simplifies label construction, aligns training and inference controls, and preserves CPD as a valuable analysis tool rather than a required production dependency.
 
 \bibliographystyle{plainnat}
 
