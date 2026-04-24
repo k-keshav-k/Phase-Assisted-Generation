@@ -72,6 +72,8 @@ def generate_adablock_traced(
     ).to(model.device)
     x[:, : prompt.shape[1]] = prompt.clone()
 
+    eot_id = tokenizer.convert_tokens_to_ids("<|eot_id|>")
+
     generated_length = 0
     nfe_history: list[int] = []
     block_history: list[int] = []
@@ -162,6 +164,10 @@ def generate_adablock_traced(
             "tokens": token_traces,
         })
 
+        # stop early if eot was generated in this block
+        if eot_id is not None and any(t["token_id"] == eot_id for t in token_traces):
+            break
+
     final_text = tokenizer.decode(
         x[0, prompt.shape[1]:].tolist(),
         skip_special_tokens=True,
@@ -184,12 +190,29 @@ def generate_adablock_traced(
 # I/O helpers
 # ---------------------------------------------------------------------------
 
-def _load_prompts(path: Path) -> list[dict[str, Any]]:
+def _load_prompts_jsonl(path: Path) -> list[dict[str, Any]]:
     records = []
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if line:
             records.append(json.loads(line))
+    return records
+
+
+def _load_gsm8k(split: str = "test", limit: int | None = None) -> list[dict[str, Any]]:
+    from datasets import load_dataset
+    ds = load_dataset("openai/gsm8k", "main", split=split)
+    if limit:
+        ds = ds.select(range(min(limit, len(ds))))
+    records = []
+    for i, example in enumerate(ds):
+        records.append({
+            "sample_id": f"gsm8k-{split}-{i:04d}",
+            "prompt": example["question"],
+            "reference_answer": example["answer"],
+            "dataset": "gsm8k",
+            "split": split,
+        })
     return records
 
 
@@ -210,20 +233,30 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Probe AdaBlock LLaDA: record block_history, nfe_history, and stabilizing steps."
     )
-    parser.add_argument(
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument(
         "--prompts",
         type=Path,
-        default=Path("phase_cpd/data/prompts/research_prompts.jsonl"),
+        help="JSONL prompt file (default if neither --prompts nor --gsm8k given).",
+    )
+    source.add_argument(
+        "--gsm8k",
+        action="store_true",
+        help="Load prompts from GSM8K (openai/gsm8k on HuggingFace).",
+    )
+    parser.add_argument(
+        "--gsm8k-split", default="test", choices=["train", "test"],
+        help="GSM8K split to use (default: test).",
     )
     parser.add_argument("--output-dir", type=Path, default=Path("traces/adablock"))
     parser.add_argument("--model", default="GSAI-ML/LLaDA-8B-Instruct")
-    parser.add_argument("--gen-length", type=int, default=128)
+    parser.add_argument("--gen-length", type=int, default=256)
     parser.add_argument("--init-block-length", type=int, default=16)
     parser.add_argument("--delimiter-threshold", type=float, default=0.3)
     parser.add_argument("--threshold", type=float, default=0.9)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--device", default=None)
-    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--limit", type=int, default=200)
     args = parser.parse_args(argv)
 
     device = args.device or ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -236,18 +269,37 @@ def main(argv: list[str] | None = None) -> int:
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
     print("Model loaded.")
 
-    prompts = _load_prompts(args.prompts)
-    if args.limit:
-        prompts = prompts[: args.limit]
+    if args.gsm8k:
+        print(f"Loading GSM8K ({args.gsm8k_split}, limit={args.limit}) ...")
+        prompts = _load_gsm8k(split=args.gsm8k_split, limit=args.limit)
+        out_filename = f"gsm8k_{args.gsm8k_split}_traces.jsonl"
+    else:
+        prompts_path = args.prompts or Path("phase_cpd/data/prompts/research_prompts.jsonl")
+        prompts = _load_prompts_jsonl(prompts_path)
+        if args.limit:
+            prompts = prompts[: args.limit]
+        out_filename = "adablock_llada_traces.jsonl"
 
+    print(f"Loaded {len(prompts)} prompts.")
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    out_path = args.output_dir / "adablock_llada_traces.jsonl"
+    out_path = args.output_dir / out_filename
 
-    with out_path.open("w", encoding="utf-8") as f:
-        for record in prompts:
-            sample_id = record.get("sample_id", "unknown")
+    # resume: skip already-written sample_ids
+    done_ids: set[str] = set()
+    if out_path.exists():
+        for line in out_path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                done_ids.add(json.loads(line)["sample_id"])
+        print(f"Resuming — {len(done_ids)} already done.")
+
+    with out_path.open("a", encoding="utf-8") as f:
+        for i, record in enumerate(prompts):
+            sample_id = record.get("sample_id", f"sample-{i:04d}")
+            if sample_id in done_ids:
+                continue
+
             prompt_text = record["prompt"]
-            print(f"  [{sample_id}] {prompt_text[:60]}...")
+            print(f"  [{i+1}/{len(prompts)}] [{sample_id}] {prompt_text[:60]}...")
 
             input_ids = _build_input(tokenizer, prompt_text).to(device)
 
@@ -266,6 +318,8 @@ def main(argv: list[str] | None = None) -> int:
                 "sample_id": sample_id,
                 "prompt": prompt_text,
                 "model_name": args.model,
+                "dataset": record.get("dataset", "custom"),
+                "reference_answer": record.get("reference_answer"),
                 "created_at": datetime.now(UTC).isoformat(),
                 "decoding_config": {
                     "gen_length": args.gen_length,
