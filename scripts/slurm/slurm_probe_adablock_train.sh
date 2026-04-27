@@ -5,24 +5,23 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=23:59:00
 #SBATCH --requeue
-#SBATCH --output=logs/adablock_probe_train_%j.out
-#SBATCH --error=logs/adablock_probe_train_%j.err
+#SBATCH --output=%x_%j.out
+#SBATCH --error=%x_%j.err
 #SBATCH --open-mode=append
 
-# --requeue: if preempted the job re-enters the queue automatically.
-# The probe has file-based resume logic (skips already-written sample_ids)
-# so each requeued run picks up exactly where the previous run stopped.
+# Submit from the repo root: sbatch scripts/slurm/slurm_probe_adablock_train.sh
+# --requeue + file-based resume in the probe means preempted jobs restart safely.
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$REPO_ROOT"
+cd "$SLURM_SUBMIT_DIR"
 
-mkdir -p logs traces/adablock
+mkdir -p traces/adablock
 
 echo "======================================================"
 echo "Job ID    : $SLURM_JOB_ID"
 echo "Node      : $(hostname)"
+echo "Dir       : $SLURM_SUBMIT_DIR"
 echo "Started   : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "======================================================"
 
