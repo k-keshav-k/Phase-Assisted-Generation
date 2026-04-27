@@ -1,4 +1,4 @@
-.PHONY: install install-phase-cpd run-phase-cpd test test-baselines test-phases test-scheduler test-integration test-phase-cpd lint format
+.PHONY: install install-phase-cpd run-phase-cpd test test-baselines test-phases test-scheduler test-integration test-phase-cpd lint format probe-adablock-train make-phase-tuples
 
 UV ?= uv
 PYTHON_VERSION ?= 3.11
@@ -45,6 +45,25 @@ probe-adablock:
 		--init-block-length 16 \
 		--delimiter-threshold 0.3 \
 		--threshold 0.9
+
+probe-adablock-train:
+	python scripts/probe_adablock_llada.py \
+		--gsm8k \
+		--gsm8k-split train \
+		--output-dir traces/adablock \
+		--gen-length 256 \
+		--init-block-length 16 \
+		--delimiter-threshold 0.3 \
+		--threshold 0.9 \
+		--limit 5000
+
+make-phase-tuples:
+	python scripts/make_phase_tuples.py \
+		--traces traces/adablock/gsm8k_train_traces.jsonl \
+		--output traces/adablock/phase_tuples_train.jsonl
+	python scripts/make_phase_tuples.py \
+		--traces traces/adablock/gsm8k_test_traces.jsonl \
+		--output traces/adablock/phase_tuples_test.jsonl
 
 lint:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff check src tests scripts phase_cpd phase_predict
