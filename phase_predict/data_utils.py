@@ -185,6 +185,71 @@ def tuples_from_token_summaries(
     return tuples
 
 
+def tuples_from_phase_tuples_record(
+    record: dict[str, Any],
+    *,
+    block_field: str = "block_size",
+    second_field: str = "nfe",
+    default_value: int = 0,
+) -> list[PhaseTuple]:
+    """Convert a phase_tuples JSON record into PhaseTuple values.
+
+    This supports the ``traces/phase_tuples_train.jsonl`` and
+    ``traces/phase_tuples_test.jsonl`` file structure where each line has a
+    top-level ``tuples`` list with ``block_size`` and ``nfe`` fields.
+    """
+    raw_tuples = record.get("tuples", [])
+    if not isinstance(raw_tuples, list):
+        return []
+
+    tuples: list[PhaseTuple] = []
+    for item in raw_tuples:
+        if not isinstance(item, dict):
+            continue
+
+        block_raw = item.get(block_field, default_value)
+        second_raw = item.get(second_field, item.get("refinement_steps", default_value))
+
+        block_value = default_value if block_raw is None else int(block_raw)
+        second_value = default_value if second_raw is None else int(second_raw)
+
+        tuples.append(
+            PhaseTuple(
+                block_size=max(0, block_value),
+                refinement_steps=max(0, second_value),
+            )
+        )
+
+    return tuples
+
+
+def tuple_sequences_from_phase_tuples_jsonl(
+    jsonl_path: str | Path,
+) -> list[list[PhaseTuple]]:
+    """Load PhaseTuple sequences from a phase_tuples JSONL file.
+
+    Each JSON record is expected to have a top-level ``tuples`` list.
+    """
+    path = Path(jsonl_path)
+    sequences: list[list[PhaseTuple]] = []
+
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            record = json.loads(stripped)
+            if not isinstance(record, dict):
+                continue
+
+            seq = tuples_from_phase_tuples_record(record)
+            if seq:
+                sequences.append(seq)
+
+    return sequences
+
+
 def tuple_sequences_from_trace_jsonl(
     jsonl_path: str | Path,
     *,

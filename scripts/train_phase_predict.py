@@ -1,4 +1,4 @@
-"""Train and evaluate the PhaseTransformer on trace data.
+"""Train and evaluate the PhaseTransformer on tuple-sequence data.
 
 Usage
 -----
@@ -8,6 +8,8 @@ Run from the repository root::
 
 Optional flags::
 
+    --train-jsonl PATH    path to phase_tuples training JSONL file or directory
+    --test-jsonl PATH     path to phase_tuples test JSONL file or directory
     --trace-dir PATH      path to trace JSON directory (default: phase_cpd default)
     --trace-jsonl PATH    path to trace JSONL file or directory of JSONL files
     --window-size N       context window size (default: 8)
@@ -19,20 +21,17 @@ Optional flags::
 
     Example with JSONL input:
     python scripts/train_phase_predict.py \
-      --trace-jsonl /path/to/traces.jsonl \
-      --whole-sequence \
+            --train-jsonl traces/phase_tuples_train.jsonl \
+            --test-jsonl traces/phase_tuples_test.jsonl \
       --epochs 50 \
       --lr 5e-4 \
       --output output/phase_predict_checkpoint.pt
 
 The script:
-    1. Loads traces from a phase_cpd trace directory or trace JSONL file(s).
-    2. Extracts PhaseTuple sequences (one per CPD segment, one per token,
-         or directly from JSONL token summaries).
-    3. Concatenates sequences across all traces, or keeps one full sequence per
-         trace when --whole-sequence is enabled.
-    4. Trains the PhaseTransformer with early stopping.
-    5. Reports validation loss and saves the checkpoint.
+    1. Loads PhaseTuple sequences from phase_tuples JSONL files when present.
+    2. Falls back to legacy trace directories or trace JSONL files.
+    3. Trains either a full-sequence or sliding-window dataset.
+    4. Reports validation loss and saves the checkpoint.
 """
 
 from __future__ import annotations
@@ -51,6 +50,7 @@ from phase_cpd.features import get_feature_extractor
 from phase_cpd.io import load_trace
 
 from phase_predict.data_utils import tuples_from_trace
+from phase_predict.data_utils import tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.data_utils import tuple_sequences_from_trace_jsonl
 from phase_predict.dataset import PhaseFullSequenceDataset
 from phase_predict.dataset import PhaseSequenceDataset
@@ -188,8 +188,39 @@ def _extract_sequences_from_trace_jsonl(trace_path: Path) -> list[list[PhaseTupl
     return sequences
 
 
+def _extract_sequences_from_phase_tuples_jsonl(jsonl_path: Path) -> list[list[PhaseTuple]]:
+    """Load tuple sequences from phase_tuples JSONL file(s)."""
+    jsonl_paths = [jsonl_path] if jsonl_path.is_file() else sorted(jsonl_path.glob("*.jsonl"))
+    if not jsonl_paths:
+        msg = f"No JSONL trace files were found in {jsonl_path}"
+        raise FileNotFoundError(msg)
+
+    sequences: list[list[PhaseTuple]] = []
+    for path in jsonl_paths:
+        file_sequences = tuple_sequences_from_phase_tuples_jsonl(path)
+        file_tuple_count = sum(len(sequence) for sequence in file_sequences)
+        print(f"  Loaded {path.name}: {file_tuple_count} tuples across {len(file_sequences)} sequences")  # noqa: T201
+        sequences.extend(file_sequences)
+
+    return sequences
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Train PhaseTransformer on phase_cpd data.")
+    default_train_jsonl = Path("traces/phase_tuples_train.jsonl")
+    default_test_jsonl = Path("traces/phase_tuples_test.jsonl")
+    parser.add_argument(
+        "--train-jsonl",
+        type=Path,
+        default=None,
+        help="Path to phase_tuples training JSONL file or directory.",
+    )
+    parser.add_argument(
+        "--test-jsonl",
+        type=Path,
+        default=None,
+        help="Path to phase_tuples test JSONL file or directory.",
+    )
     parser.add_argument("--trace-dir", type=Path, default=None,
                         help="Path to trace JSON directory.")
     parser.add_argument("--trace-jsonl", type=Path, default=None,
@@ -212,18 +243,65 @@ def main(argv: list[str] | None = None) -> None:
                         help="CPD smoothing window size (default: 3).")
     args = parser.parse_args(argv)
 
+    if args.train_jsonl is not None and not args.train_jsonl.exists():
+        parser.error(f"Training JSONL path does not exist: {args.train_jsonl}")
+    if args.test_jsonl is not None and not args.test_jsonl.exists():
+        parser.error(f"Test JSONL path does not exist: {args.test_jsonl}")
     if args.trace_jsonl is not None and args.trace_dir is not None:
         parser.error("Provide only one of --trace-dir or --trace-jsonl")
 
-    if args.whole_sequence:
+    if args.trace_dir is None and args.trace_jsonl is None:
+        if args.train_jsonl is None and default_train_jsonl.exists():
+            args.train_jsonl = default_train_jsonl
+        if args.test_jsonl is None and default_test_jsonl.exists():
+            args.test_jsonl = default_test_jsonl
+
+    use_phase_tuples_jsonl = args.train_jsonl is not None
+    use_sequence_mode = use_phase_tuples_jsonl or args.whole_sequence
+
+    train_sequences: list[list[PhaseTuple]] = []
+    val_sequences: list[list[PhaseTuple]] = []
+    all_tuples: list[PhaseTuple] = []
+    inferred_window_size = args.window_size
+
+    if use_phase_tuples_jsonl:
+        train_sequences = _extract_sequences_from_phase_tuples_jsonl(args.train_jsonl)
+        val_sequences = (
+            _extract_sequences_from_phase_tuples_jsonl(args.test_jsonl)
+            if args.test_jsonl is not None
+            else []
+        )
+
+        if not train_sequences:
+            print("ERROR: No training sequences were extracted.", file=sys.stderr)  # noqa: T201
+            sys.exit(1)
+
+        if not val_sequences:
+            if len(train_sequences) < 2:
+                print(  # noqa: T201
+                    "ERROR: phase_tuples training needs at least two sequences "
+                    "when no --test-jsonl is provided.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+            split_index = max(1, int(len(train_sequences) * 0.8))
+            split_index = min(split_index, len(train_sequences) - 1)
+            val_sequences = train_sequences[split_index:]
+            train_sequences = train_sequences[:split_index]
+
+        all_sequences = train_sequences + val_sequences
+        inferred_window_size = max(len(sequence) for sequence in all_sequences) - 1
+        print(f"Inferred whole-sequence window size: {inferred_window_size}")  # noqa: T201
+        all_tuples = [tuple_value for sequence in all_sequences for tuple_value in sequence]
+    elif args.whole_sequence:
         if args.trace_jsonl is not None:
             trace_source = args.trace_jsonl
             print(f"Loading trace JSONL from: {trace_source}")  # noqa: T201
-            sequences = _extract_sequences_from_trace_jsonl(trace_source)
+            all_sequences = _extract_sequences_from_trace_jsonl(trace_source)
         else:
             trace_dir = args.trace_dir or default_trace_dir()
             print(f"Loading traces from: {trace_dir}")  # noqa: T201
-            sequences = _extract_sequences_from_traces(
+            all_sequences = _extract_sequences_from_traces(
                 trace_dir,
                 per_token=args.per_token,
                 cpd_penalty=args.cpd_penalty,
@@ -231,22 +309,24 @@ def main(argv: list[str] | None = None) -> None:
                 cpd_smoothing=args.cpd_smoothing,
             )
 
-        if not sequences:
+        if not all_sequences:
             print("ERROR: No sequences were extracted.", file=sys.stderr)  # noqa: T201
             sys.exit(1)
 
-        sequence_lengths = {len(sequence) for sequence in sequences}
-        if len(sequence_lengths) != 1:
+        if len(all_sequences) < 2:
             print(  # noqa: T201
-                "ERROR: --whole-sequence requires equal-length sequences. "
-                f"Found lengths: {sorted(sequence_lengths)}",
+                "ERROR: --whole-sequence needs at least two sequences to train and validate.",
                 file=sys.stderr,
             )
             sys.exit(1)
 
-        inferred_window_size = next(iter(sequence_lengths)) - 1
+        split_index = max(1, int(len(all_sequences) * 0.8))
+        split_index = min(split_index, len(all_sequences) - 1)
+        train_sequences = all_sequences[:split_index]
+        val_sequences = all_sequences[split_index:]
+        inferred_window_size = max(len(sequence) for sequence in all_sequences) - 1
         print(f"Inferred whole-sequence window size: {inferred_window_size}")  # noqa: T201
-        all_tuples = [tuple_value for sequence in sequences for tuple_value in sequence]
+        all_tuples = [tuple_value for sequence in all_sequences for tuple_value in sequence]
     else:
         if args.trace_jsonl is not None:
             trace_source = args.trace_jsonl
@@ -263,9 +343,11 @@ def main(argv: list[str] | None = None) -> None:
                 cpd_min_segment=args.cpd_min_segment,
                 cpd_smoothing=args.cpd_smoothing,
             )
+        train_sequences = []
+        val_sequences = []
     print(f"\nTotal tuples extracted: {len(all_tuples)}")  # noqa: T201
 
-    effective_window_size = inferred_window_size if args.whole_sequence else args.window_size
+    effective_window_size = inferred_window_size if use_sequence_mode else args.window_size
 
     if len(all_tuples) < effective_window_size + 2:
         print(  # noqa: T201
@@ -276,8 +358,17 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     model_cfg = ModelConfig(window_size=effective_window_size)
-    if args.whole_sequence:
-        dataset = PhaseFullSequenceDataset(sequences, model_cfg)
+    if use_sequence_mode:
+        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg)
+        if val_sequences:
+            val_dataset = PhaseFullSequenceDataset(
+                val_sequences,
+                model_cfg,
+                stats=(train_dataset.mean, train_dataset.std),
+            )
+        else:
+            val_dataset = None
+        dataset = train_dataset
     else:
         dataset = PhaseSequenceDataset(all_tuples, model_cfg)
 
@@ -286,11 +377,15 @@ def main(argv: list[str] | None = None) -> None:
         max_epochs=args.epochs,
         learning_rate=args.lr,
         log_interval=10,
+        batch_size=1 if use_sequence_mode else 32,
     )
 
     print(f"\nTraining PhaseTransformer for up to {args.epochs} epochs …")  # noqa: T201
     trainer = Trainer(model, train_cfg)
-    history = trainer.fit(dataset)
+    if use_sequence_mode and val_sequences:
+        history = trainer.fit(dataset, val_dataset=val_dataset)
+    else:
+        history = trainer.fit(dataset)
 
     print(  # noqa: T201
         f"\nTraining complete. "
@@ -302,8 +397,14 @@ def main(argv: list[str] | None = None) -> None:
     print(f"Checkpoint saved to: {args.output}")  # noqa: T201
 
     # quick sanity-check prediction
-    if len(all_tuples) >= effective_window_size:
+    if use_sequence_mode and all_sequences:
+        context = all_sequences[-1]
+    elif len(all_tuples) >= effective_window_size:
         context = all_tuples[-effective_window_size:]
+    else:
+        context = []
+
+    if context:
         result = predictor.predict(context)
         print(f"\nSample prediction (last {effective_window_size} tuples → next):")  # noqa: T201
         print(f"  predicted: {result.predicted_tuple}")  # noqa: T201

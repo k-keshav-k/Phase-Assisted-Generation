@@ -152,8 +152,8 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         model_config: :class:`~phase_predict.schema.ModelConfig` whose
                      ``tuple_size`` is used when building tensors.
         normalize:   when *True* (default) each tuple field is standardised
-                     using the per-field mean and standard deviation computed
-                     from all tuples across *sequences*.
+                 using the per-field mean and standard deviation computed
+                 from all tuples across *sequences*.
         stats:       optional ``(mean, std)`` tensors of shape
                      ``(tuple_size,)`` to use instead of computing them from
                      *sequences*.
@@ -173,15 +173,12 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
             msg = "PhaseFullSequenceDataset requires at least one sequence"
             raise ValueError(msg)
 
-        lengths = {len(sequence) for sequence in sequences}
+        lengths = [len(sequence) for sequence in sequences]
         if any(length < 2 for length in lengths):
             msg = "Each sequence must contain at least 2 tuples"
             raise ValueError(msg)
-        if len(lengths) != 1:
-            msg = "PhaseFullSequenceDataset requires sequences of equal length"
-            raise ValueError(msg)
 
-        self.window_size = next(iter(lengths)) - 1
+        self.window_size = max(lengths) - 1
 
         raw_sequences = [_sequence_tensor(sequence) for sequence in sequences]
         raw_all = torch.cat(raw_sequences, dim=0)
