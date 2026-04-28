@@ -23,7 +23,10 @@ just update ``ModelConfig.tuple_size`` to match.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
 
 from phase_predict.schema import PhaseTuple
 
@@ -141,3 +144,87 @@ def tuples_from_trace(
     if breakpoints is not None:
         return extract_per_segment(trace, breakpoints)
     return extract_per_token(trace)
+
+
+def tuples_from_token_summaries(
+    token_summaries: Sequence[dict[str, Any]],
+    *,
+    first_field: str = "tau_commit",
+    second_field: str = "tau_stable",
+    default_value: int = 0,
+) -> list[PhaseTuple]:
+    """Convert token summary dictionaries to PhaseTuple values.
+
+    This is intended for JSONL traces containing
+    ``decoding_metadata.token_summaries`` where each item may include
+    fields such as ``tau_commit`` and ``tau_stable``.
+
+    Args:
+        token_summaries: sequence of per-token summary dictionaries.
+        first_field: key used as the first tuple component.
+        second_field: key used as the second tuple component.
+        default_value: fallback integer when a key is missing or null.
+
+    Returns:
+        A list of :class:`~phase_predict.schema.PhaseTuple` values.
+    """
+    tuples: list[PhaseTuple] = []
+    for summary in token_summaries:
+        first_raw = summary.get(first_field, default_value)
+        second_raw = summary.get(second_field, default_value)
+
+        first_value = default_value if first_raw is None else int(first_raw)
+        second_value = default_value if second_raw is None else int(second_raw)
+
+        tuples.append(
+            PhaseTuple(
+                block_size=max(0, first_value),
+                refinement_steps=max(0, second_value),
+            )
+        )
+    return tuples
+
+
+def tuple_sequences_from_trace_jsonl(
+    jsonl_path: str | Path,
+    *,
+    first_field: str = "tau_commit",
+    second_field: str = "tau_stable",
+) -> list[list[PhaseTuple]]:
+    """Load tuple sequences from a trace JSONL file.
+
+    Each JSON line is expected to include
+    ``decoding_metadata.token_summaries``.
+
+    Args:
+        jsonl_path: path to JSONL trace file.
+        first_field: key used as the first tuple component.
+        second_field: key used as the second tuple component.
+
+    Returns:
+        A list of tuple sequences, one sequence per JSONL record.
+    """
+    path = Path(jsonl_path)
+    sequences: list[list[PhaseTuple]] = []
+
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            record = json.loads(stripped)
+            metadata = record.get("decoding_metadata", {})
+            summaries = metadata.get("token_summaries", [])
+            if not isinstance(summaries, list):
+                continue
+
+            seq = tuples_from_token_summaries(
+                summaries,
+                first_field=first_field,
+                second_field=second_field,
+            )
+            if seq:
+                sequences.append(seq)
+
+    return sequences

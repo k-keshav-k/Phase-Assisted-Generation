@@ -4,6 +4,8 @@ Provides:
   - ``build_windows``: convert a flat sequence of PhaseTuples into
     (input_window, target) pairs suitable for supervised training.
   - ``PhaseSequenceDataset``: PyTorch Dataset wrapping the windowed pairs.
+    - ``PhaseFullSequenceDataset``: PyTorch Dataset wrapping one full
+        context/target pair per trace sequence.
   - ``split_dataset``: reproducible train / validation split.
 """
 
@@ -53,6 +55,14 @@ def build_windows(
     return samples
 
 
+def _sequence_tensor(sequence: Sequence[PhaseTuple]) -> torch.Tensor:
+    """Convert a PhaseTuple sequence to a float tensor."""
+    return torch.tensor(
+        [[t.block_size, t.refinement_steps] for t in sequence],
+        dtype=torch.float32,
+    )
+
+
 class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
     """PyTorch Dataset of windowed phase-tuple sequences.
 
@@ -86,10 +96,7 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.window_size = model_config.window_size
         self.tuple_size = model_config.tuple_size
 
-        raw = torch.tensor(
-            [[t.block_size, t.refinement_steps] for t in sequence],
-            dtype=torch.float32,
-        )  # (N, tuple_size)
+        raw = _sequence_tensor(sequence)  # (N, tuple_size)
 
         if normalize:
             if stats is not None:
@@ -130,6 +137,79 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         Returns:
             Tensor in the original (un-normalised) scale.
         """
+        return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
+
+
+class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
+    """PyTorch Dataset of one full context/target pair per sequence.
+
+    Each item uses the entire tuple history of a trace as context and the
+    final tuple as the target. This is useful when training should consume
+    complete trace sequences instead of fixed-size sliding windows.
+
+    Args:
+        sequences:   ordered list of PhaseTuple sequences, one per trace.
+        model_config: :class:`~phase_predict.schema.ModelConfig` whose
+                     ``tuple_size`` is used when building tensors.
+        normalize:   when *True* (default) each tuple field is standardised
+                     using the per-field mean and standard deviation computed
+                     from all tuples across *sequences*.
+        stats:       optional ``(mean, std)`` tensors of shape
+                     ``(tuple_size,)`` to use instead of computing them from
+                     *sequences*.
+    """
+
+    def __init__(
+        self,
+        sequences: Sequence[Sequence[PhaseTuple]],
+        model_config: ModelConfig,
+        *,
+        normalize: bool = True,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+    ) -> None:
+        self.tuple_size = model_config.tuple_size
+
+        if not sequences:
+            msg = "PhaseFullSequenceDataset requires at least one sequence"
+            raise ValueError(msg)
+
+        lengths = {len(sequence) for sequence in sequences}
+        if any(length < 2 for length in lengths):
+            msg = "Each sequence must contain at least 2 tuples"
+            raise ValueError(msg)
+        if len(lengths) != 1:
+            msg = "PhaseFullSequenceDataset requires sequences of equal length"
+            raise ValueError(msg)
+
+        self.window_size = next(iter(lengths)) - 1
+
+        raw_sequences = [_sequence_tensor(sequence) for sequence in sequences]
+        raw_all = torch.cat(raw_sequences, dim=0)
+
+        if normalize:
+            if stats is not None:
+                self.mean, self.std = stats
+            else:
+                self.mean = raw_all.mean(dim=0)
+                self.std = raw_all.std(dim=0).clamp(min=_MIN_STD_EPSILON)
+            norm_sequences = [(raw - self.mean) / self.std for raw in raw_sequences]
+        else:
+            self.mean = torch.zeros(self.tuple_size)
+            self.std = torch.ones(self.tuple_size)
+            norm_sequences = raw_sequences
+
+        self._samples: list[tuple[torch.Tensor, torch.Tensor]] = []
+        for raw in norm_sequences:
+            self._samples.append((raw[:-1], raw[-1]))
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self._samples[idx]
+
+    def denormalize(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Map normalised float values back to the original integer scale."""
         return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
 
 

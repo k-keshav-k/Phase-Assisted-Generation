@@ -15,10 +15,14 @@ Example::
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import torch
 
 from phase_predict.model import PhaseTransformer
 from phase_predict.schema import ModelConfig, PhaseTuple, PredictionResult
+
+TupleLike = PhaseTuple | Sequence[int]
 
 
 class Predictor:
@@ -64,15 +68,47 @@ class Predictor:
         self.std = (std if std is not None else torch.ones(ts)).to(self.device)
         self.model.eval()
 
+    @staticmethod
+    def _coerce_tuple(value: TupleLike) -> tuple[int, int]:
+        """Convert a PhaseTuple or tuple-like value to a 2-int tuple.
+
+        Args:
+            value: input tuple-like object. The first two entries are used.
+
+        Returns:
+            ``(block_size, refinement_steps)`` as integers.
+
+        Raises:
+            ValueError: if fewer than 2 values are provided.
+            TypeError: if values are not integer-like.
+        """
+        if isinstance(value, PhaseTuple):
+            return value.block_size, value.refinement_steps
+
+        if len(value) < 2:
+            msg = "Each input tuple must contain at least 2 values"
+            raise ValueError(msg)
+
+        try:
+            block_size = int(value[0])
+            refinement_steps = int(value[1])
+        except (TypeError, ValueError) as exc:
+            msg = "Input tuples must contain integer-like values"
+            raise TypeError(msg) from exc
+
+        return block_size, refinement_steps
+
     @torch.no_grad()
-    def predict(self, context: list[PhaseTuple]) -> PredictionResult:
+    def predict(self, context: Sequence[TupleLike]) -> PredictionResult:
         """Predict the next phase tuple from a context window.
 
         Args:
-            context: list of :class:`~phase_predict.schema.PhaseTuple` values
-                     of length ``model_config.window_size``.  Shorter windows
-                     are left-padded with zeros; longer windows are truncated
-                     to the most recent ``window_size`` tuples.
+            context: sequence of tuple-like values. Each item can be either
+                     :class:`~phase_predict.schema.PhaseTuple` or a plain
+                     tuple/list with at least two integer-like values.
+                     Shorter windows are left-padded with zeros; longer
+                     windows are truncated to the most recent
+                     ``window_size`` tuples.
 
         Returns:
             :class:`~phase_predict.schema.PredictionResult` with the
@@ -87,7 +123,11 @@ class Predictor:
         effective = context[-window_size:]
         for i, t in enumerate(effective):
             offset = window_size - len(effective)
-            raw[offset + i] = torch.tensor(list(t)[:tuple_size], dtype=torch.float32)
+            block_size, refinement_steps = self._coerce_tuple(t)
+            raw[offset + i] = torch.tensor(
+                [block_size, refinement_steps][:tuple_size],
+                dtype=torch.float32,
+            )
 
         # normalise
         normed = (raw - self.mean.cpu()) / self.std.cpu()
