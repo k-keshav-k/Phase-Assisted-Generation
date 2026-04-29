@@ -303,7 +303,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--test-jsonl",
         type=Path,
-        default=None,
+        default=Path("traces/phase_tuples_test.jsonl"),
         help="Path to phase_tuples test JSONL (optional; else use 80/20 split).",
     )
     parser.add_argument(
