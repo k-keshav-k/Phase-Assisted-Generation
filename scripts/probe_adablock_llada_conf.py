@@ -18,8 +18,10 @@ Difference from existing stab_step:
   conf_stab_step <= stab_step always.
 
 Per-token output adds:
-  "step_max_probs":  [p0, p1, ...]   softmax prob of argmax at each step
-  "conf_stab_step":  int             first step argmax == final token
+  "stabilizing_step": int            first step logit argmax == final token (pre-unmask)
+  "refinement_step":  int            step token was actually unmasked in x
+  "step_logit_ids":   [id0, id1...] raw logit argmax at each step
+  "step_logit_probs": [p0, p1, ...]  softmax prob of that argmax
 
 Usage
 -----
@@ -168,28 +170,28 @@ def generate_adablock_conf_traced(
             prob_history  = [float(snap[tok_idx].item()) for snap in step_logit_probs]
             final_id      = final_token_ids[tok_idx]
 
-            # stab_step: first step x contains final token AND stays (= unmask step)
-            stab_step = len(x_history) - 1
+            # refinement_step: step when token was actually unmasked in x
+            refinement_step = len(x_history) - 1
             for s, tok_id in enumerate(x_history):
                 if tok_id == final_id and all(h == final_id for h in x_history[s:]):
-                    stab_step = s
+                    refinement_step = s
                     break
 
-            # conf_stab_step: first step logit argmax == final (even transiently, pre-unmask)
-            conf_stab_step = len(logit_history) - 1
+            # stabilizing_step: first step logit argmax == final (even transiently, pre-unmask)
+            stabilizing_step = len(logit_history) - 1
             for s, tok_id in enumerate(logit_history):
                 if tok_id == final_id:
-                    conf_stab_step = s
+                    stabilizing_step = s
                     break
 
             token_traces.append({
                 "token_index":      tok_idx,
                 "token_id":         final_id,
                 "token_text":       tokenizer.decode([final_id], clean_up_tokenization_spaces=False),
-                "stabilizing_step": stab_step,       # unmask timing (x-based)
-                "conf_stab_step":   conf_stab_step,  # first logit argmax == final (pre-unmask)
-                "step_token_ids":   x_history,       # x contents per step
-                "step_logit_ids":   logit_history,   # raw logit argmax per step
+                "stabilizing_step": stabilizing_step,  # first logit argmax == final (pre-unmask)
+                "refinement_step":  refinement_step,   # step token was actually unmasked in x
+                "step_token_ids":   x_history,         # x contents per step
+                "step_logit_ids":   logit_history,     # raw logit argmax per step
                 "step_logit_probs": [round(p, 6) for p in prob_history],
             })
 
