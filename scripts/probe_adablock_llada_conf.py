@@ -35,7 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -336,7 +336,7 @@ def main(argv: list[str] | None = None) -> int:
                 "model_name":  args.model,
                 "dataset":     record.get("dataset", "custom"),
                 "reference_answer": record.get("reference_answer"),
-                "created_at":  datetime.now(UTC).isoformat(),
+                "created_at":  datetime.now(timezone.utc).isoformat(),
                 "decoding_config": {
                     "gen_length":          args.gen_length,
                     "init_block_length":   args.init_block_length,
