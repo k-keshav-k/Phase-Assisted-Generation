@@ -1,0 +1,173 @@
+from __future__ import annotations
+
+import importlib
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+import torch
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
+if str(LLADA_DIR) not in sys.path:
+    sys.path.insert(0, str(LLADA_DIR))
+
+run_pag_dummy_api = importlib.import_module("run_pag_dummy_api")
+
+
+class FakePredictor:
+    def __init__(self, outputs, window_size: int = 4) -> None:
+        self.outputs = list(outputs)
+        self.calls: list[list[run_pag_dummy_api.BlockTuple]] = []
+        self.config = SimpleNamespace(window_size=window_size)
+
+    def predict(self, context):
+        self.calls.append(list(context))
+        predicted_tuple = self.outputs[len(self.calls) - 1]
+        return SimpleNamespace(
+            predicted_tuple=predicted_tuple,
+            raw_output=[
+                float(predicted_tuple.block_size),
+                float(predicted_tuple.refinement_steps),
+            ],
+            metadata={"window_size_used": len(context)},
+        )
+
+
+class FakeTokenizer:
+    def decode(self, token_ids, skip_special_tokens=True):
+        del skip_special_tokens
+        return "|".join(str(token_id) for token_id in token_ids)
+
+
+def test_parse_tuple_schedule_parses_entries() -> None:
+    parsed = run_pag_dummy_api.parse_tuple_schedule("16:4,8:2,4:1")
+
+    assert parsed == [
+        run_pag_dummy_api.BlockTuple(16, 4),
+        run_pag_dummy_api.BlockTuple(8, 2),
+        run_pag_dummy_api.BlockTuple(4, 1),
+    ]
+
+
+def test_dummy_scheduler_uses_seed_then_dummy_api_and_clamps() -> None:
+    api = run_pag_dummy_api.DummyTupleAPI(
+        scripted_tuples=[run_pag_dummy_api.BlockTuple(9, 0)],
+        fallback_block_size=5,
+        fallback_refinement_steps=3,
+        verbose=False,
+    )
+    scheduler = run_pag_dummy_api.DummyAPIScheduler(
+        prompt_text="test prompt",
+        seed_block_length=6,
+        seed_refinement_steps=2,
+        api=api,
+    )
+
+    first = scheduler.next_schedule(
+        remaining_tokens=20,
+        max_block_length=10,
+        max_refinement_steps=8,
+    )
+    scheduler.record_realized(first.applied_block_size, 4)
+
+    second = scheduler.next_schedule(
+        remaining_tokens=3,
+        max_block_length=2,
+        max_refinement_steps=7,
+    )
+
+    assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(6, 2)
+    assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(9, 0)
+    assert second.applied_block_size == 2
+    assert second.budgeted_refinement_steps == 1
+    assert api.requests == [
+        {
+            "prompt": "test prompt",
+            "block_index": 1,
+            "remaining_tokens": 3,
+            "history": [{"block_size": 6, "refinement_steps": 4}],
+        }
+    ]
+    assert scheduler.prediction_trace[1]["source"] == "dummy_api"
+
+
+def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
+    predictor = FakePredictor([run_pag_dummy_api.BlockTuple(5, 3)])
+    scheduler = run_pag_dummy_api.CheckpointTupleScheduler(
+        prompt_text="hello",
+        predictor_ckpt="unused.pt",
+        seed_block_length=8,
+        seed_refinement_steps=2,
+        predictor=predictor,
+    )
+
+    first = scheduler.next_schedule(
+        remaining_tokens=32,
+        max_block_length=16,
+        max_refinement_steps=12,
+    )
+    scheduler.record_realized(first.applied_block_size, 4)
+
+    second = scheduler.next_schedule(
+        remaining_tokens=24,
+        max_block_length=16,
+        max_refinement_steps=12,
+    )
+
+    assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(8, 2)
+    assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(5, 3)
+    assert predictor.calls == [
+        [
+            run_pag_dummy_api.BlockTuple(8, 2),
+            run_pag_dummy_api.BlockTuple(8, 2),
+            run_pag_dummy_api.BlockTuple(8, 2),
+            run_pag_dummy_api.BlockTuple(8, 4),
+        ]
+    ]
+    assert scheduler.prediction_trace[1]["source"] == "checkpoint"
+    assert scheduler.prediction_trace[1]["raw_output"] == [5.0, 3.0]
+
+
+def test_build_block_visualization_includes_block_text() -> None:
+    tokenizer = FakeTokenizer()
+    input_ids = torch.tensor([[10, 11]], dtype=torch.long)
+    output_ids = torch.tensor([[10, 11, 21, 22, 23, 24]], dtype=torch.long)
+    schedule_history = [
+        {
+            "block_index": 0,
+            "predicted_tuple": {"block_size": 2, "refinement_steps": 3},
+            "applied_block_size": 2,
+            "budgeted_refinement_steps": 3,
+            "actual_nfe_used": 2,
+            "block_start": 2,
+            "block_end": 4,
+        },
+        {
+            "block_index": 1,
+            "predicted_tuple": {"block_size": 2, "refinement_steps": 2},
+            "applied_block_size": 2,
+            "budgeted_refinement_steps": 2,
+            "actual_nfe_used": 1,
+            "block_start": 4,
+            "block_end": 6,
+        },
+    ]
+    prediction_trace = [
+        {"source": "seed"},
+        {"source": "checkpoint"},
+    ]
+
+    blocks = run_pag_dummy_api._build_block_visualization(
+        tokenizer=tokenizer,
+        input_ids=input_ids,
+        output_ids=output_ids,
+        schedule_history=schedule_history,
+        prediction_trace=prediction_trace,
+    )
+
+    assert blocks[0]["block_text"] == "21|22"
+    assert blocks[0]["text_so_far"] == "21|22"
+    assert blocks[1]["block_text"] == "23|24"
+    assert blocks[1]["text_so_far"] == "21|22|23|24"
+    assert blocks[1]["predictor_trace"] == {"source": "checkpoint"}
