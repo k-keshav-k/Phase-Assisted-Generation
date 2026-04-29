@@ -44,7 +44,7 @@ phase_cpd_dream = [
   "torch==2.5.1",
   "torchaudio==2.5.1",
   "torchvision==0.20.1",
-  "transformers==4.46.2",
+  "transformers==4.46.3",
 ]
 
 [project.scripts]
