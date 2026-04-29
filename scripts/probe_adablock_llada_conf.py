@@ -122,11 +122,15 @@ def generate_adablock_conf_traced(
         )
         x[transfer_index] = x0[transfer_index]
 
-        # Snapshot step 0: token IDs + softmax confidence from RAW logits
-        block_logits_raw = logits[0, block_start:block_end]          # (block_len, vocab)
-        block_probs = torch.softmax(block_logits_raw.float(), dim=-1) # float32 for stability
-        step_snapshots: list[torch.Tensor] = [x[0, block_start:block_end].clone()]
-        step_prob_snapshots: list[torch.Tensor] = [block_probs.max(dim=-1).values.cpu().clone()]
+        # ── step 0 snapshots ────────────────────────────────────────────────
+        # step_snapshots      : what is in x (MASK_ID until token is unmasked)
+        # step_logit_snapshots: argmax of RAW logits (true model prediction, pre-threshold)
+        # step_logit_probs    : softmax prob of that argmax (model confidence)
+        raw0 = logits[0, block_start:block_end].float()
+        probs0 = torch.softmax(raw0, dim=-1)
+        step_snapshots:       list[torch.Tensor] = [x[0, block_start:block_end].clone()]
+        step_logit_snapshots: list[torch.Tensor] = [probs0.argmax(dim=-1).cpu().clone()]
+        step_logit_probs:     list[torch.Tensor] = [probs0.max(dim=-1).values.cpu().clone()]
 
         # Inner refinement loop
         while True:
@@ -144,12 +148,11 @@ def generate_adablock_conf_traced(
             )
             x[transfer_index] = x0[transfer_index]
 
+            raw_block = block_logits[0, block_start:block_end].float()
+            probs_block = torch.softmax(raw_block, dim=-1)
             step_snapshots.append(x[0, block_start:block_end].clone())
-
-            # confidence from raw logits (not Gumbel-noised)
-            raw_block = block_logits[0, block_start:block_end]
-            probs = torch.softmax(raw_block.float(), dim=-1)
-            step_prob_snapshots.append(probs.max(dim=-1).values.cpu().clone())
+            step_logit_snapshots.append(probs_block.argmax(dim=-1).cpu().clone())
+            step_logit_probs.append(probs_block.max(dim=-1).values.cpu().clone())
 
         nfe_history.append(nfe)
 
@@ -158,32 +161,36 @@ def generate_adablock_conf_traced(
         token_traces: list[dict[str, Any]] = []
 
         for tok_idx in range(block_length):
-            history      = [int(snap[tok_idx].item()) for snap in step_snapshots]
-            prob_history = [float(snap[tok_idx].item()) for snap in step_prob_snapshots]
-            final_id     = final_token_ids[tok_idx]
+            # x-based: shows MASK_ID until token is unmasked (unmask timing)
+            x_history     = [int(snap[tok_idx].item()) for snap in step_snapshots]
+            # logit-based: model's raw argmax at every step, before threshold gate
+            logit_history = [int(snap[tok_idx].item()) for snap in step_logit_snapshots]
+            prob_history  = [float(snap[tok_idx].item()) for snap in step_logit_probs]
+            final_id      = final_token_ids[tok_idx]
 
-            # Original stab_step: argmax matches final AND stays final
-            stab_step = len(history) - 1
-            for s, tok_id in enumerate(history):
-                if tok_id == final_id and all(h == final_id for h in history[s:]):
+            # stab_step: first step x contains final token AND stays (= unmask step)
+            stab_step = len(x_history) - 1
+            for s, tok_id in enumerate(x_history):
+                if tok_id == final_id and all(h == final_id for h in x_history[s:]):
                     stab_step = s
                     break
 
-            # First step where argmax == final token (no threshold, even transient)
-            conf_stab_step = len(history) - 1
-            for s, tok_id in enumerate(history):
+            # conf_stab_step: first step logit argmax == final (even transiently, pre-unmask)
+            conf_stab_step = len(logit_history) - 1
+            for s, tok_id in enumerate(logit_history):
                 if tok_id == final_id:
                     conf_stab_step = s
                     break
 
             token_traces.append({
-                "token_index":     tok_idx,
-                "token_id":        final_id,
-                "token_text":      tokenizer.decode([final_id], clean_up_tokenization_spaces=False),
-                "stabilizing_step":      stab_step,
-                "conf_stab_step":        conf_stab_step,
-                "step_token_ids":        history,
-                "step_max_probs":        [round(p, 6) for p in prob_history],
+                "token_index":      tok_idx,
+                "token_id":         final_id,
+                "token_text":       tokenizer.decode([final_id], clean_up_tokenization_spaces=False),
+                "stabilizing_step": stab_step,       # unmask timing (x-based)
+                "conf_stab_step":   conf_stab_step,  # first logit argmax == final (pre-unmask)
+                "step_token_ids":   x_history,       # x contents per step
+                "step_logit_ids":   logit_history,   # raw logit argmax per step
+                "step_logit_probs": [round(p, 6) for p in prob_history],
             })
 
         block_traces.append({
