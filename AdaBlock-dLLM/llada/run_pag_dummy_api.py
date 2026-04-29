@@ -344,18 +344,44 @@ def _resolve_torch_dtype(dtype_name: str | None):
     return getattr(torch, dtype_name)
 
 
-def _load_model_and_tokenizer(model_path: str, device: str, dtype_name: str | None):
+def _maybe_disable_torch_compile(disable_torch_compile: bool) -> None:
     import torch
-    from model.modeling_llada import LLaDAModelLM
+
+    if not disable_torch_compile or not hasattr(torch, "compile"):
+        return
+    if getattr(torch.compile, "__name__", "") == "_identity_torch_compile":
+        return
+
+    def _identity_torch_compile(fn=None, *args, **kwargs):
+        del args, kwargs
+        if fn is None:
+            return _identity_torch_compile
+        return fn
+
+    torch.compile = _identity_torch_compile
+
+
+def _load_model_and_tokenizer(
+    model_path: str,
+    device: str,
+    dtype_name: str | None,
+    *,
+    disable_torch_compile: bool,
+):
+    import torch
     from transformers import AutoConfig, AutoTokenizer
 
     if device.startswith("cuda") and not torch.cuda.is_available():
         msg = f"Requested device '{device}', but CUDA is not available"
         raise RuntimeError(msg)
 
+    _maybe_disable_torch_compile(disable_torch_compile)
+
     dtype = _resolve_torch_dtype(dtype_name)
     if dtype is None:
         dtype = torch.bfloat16 if device.startswith("cuda") else torch.float32
+
+    from model.modeling_llada import LLaDAModelLM
 
     config = AutoConfig.from_pretrained(model_path)
     config.flash_attention = True
@@ -474,6 +500,7 @@ def run_prompt(args: argparse.Namespace) -> dict[str, object]:
         args.model_path,
         args.device,
         args.dtype,
+        disable_torch_compile=args.disable_torch_compile,
     )
     user_input = _build_prompt(tokenizer, args.model_path, args.prompt)
     input_ids = torch.tensor(
@@ -584,6 +611,21 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-cache", action="store_true")
     parser.add_argument("--dual-cache", action="store_true")
     parser.add_argument("--quiet-api", action="store_true")
+    parser.add_argument(
+        "--disable-torch-compile",
+        action="store_true",
+        default=True,
+        help=(
+            "Disable the torch.compile decorator used by the LLaDA attention "
+            "wrapper. Keep this enabled unless Triton is installed and working."
+        ),
+    )
+    parser.add_argument(
+        "--enable-torch-compile",
+        dest="disable_torch_compile",
+        action="store_false",
+        help="Re-enable torch.compile for LLaDA if your environment has Triton.",
+    )
     return parser
 
 

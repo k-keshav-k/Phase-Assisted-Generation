@@ -171,3 +171,18 @@ def test_build_block_visualization_includes_block_text() -> None:
     assert blocks[1]["block_text"] == "23|24"
     assert blocks[1]["text_so_far"] == "21|22|23|24"
     assert blocks[1]["predictor_trace"] == {"source": "checkpoint"}
+
+
+def test_disable_torch_compile_replaces_compile_with_identity() -> None:
+    original_compile = torch.compile
+    try:
+        run_pag_dummy_api._maybe_disable_torch_compile(True)
+
+        @torch.compile()
+        def identity(value):
+            return value + 1
+
+        assert identity(2) == 3
+        assert getattr(torch.compile, "__name__", "") == "_identity_torch_compile"
+    finally:
+        torch.compile = original_compile
