@@ -187,6 +187,64 @@ accelerate launch --num_processes=1 eval_llada_pag.py --tasks gsm8k --num_fewsho
 --model_args model_path=${MODEL_PATH},gen_length=${GEN_LENGTH},steps=$((GEN_LENGTH/BLOCK_LENGTH)),block_length=${BLOCK_LENGTH},threshold=${THRESHOLD},predictor_ckpt=${PREDICTOR_CKPT},seed_block_length=${SEED_BLOCK_LENGTH},seed_refinement_steps=${SEED_REFINEMENT_STEPS},use_cache=True,dual_cache=True,show_speed=True
 ```
 
+### Prompt Log Runner
+For one-off qualitative analysis, `run_pag_dummy_api.py` writes structured JSONL
+records with decoded block text, predicted tuple, applied block size, and actual
+NFE per block.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_dummy_api.py \
+  --model-path GSAI-ML/LLaDA-8B-Instruct \
+  --prompt-file AdaBlock-dLLM/llada/sample_prompts.jsonl \
+  --max-prompts 3 \
+  --gen-length 256 \
+  --steps 64 \
+  --threshold 0.9 \
+  --seed-block-length 32 \
+  --seed-refinement-steps 4 \
+  --predictor-ckpt output/phase_predict_model_checkpoint.pt \
+  --predictor-device cuda \
+  --device cuda \
+  --dtype bfloat16 \
+  --use-cache \
+  --dual-cache \
+  --disable-torch-compile \
+  --log-file logs/llada_pag_inference.jsonl
+```
+
+View the log UI:
+```bash
+uv run --python 3.11 --group phase_cpd streamlit run scripts/view_llada_pag_logs.py -- \
+  --log-file logs/llada_pag_inference.jsonl
+```
+
+### Quick PAG vs AdaBlock Comparison
+Use this for preliminary side-by-side runs on a small prompt suite. It writes one
+JSONL record per prompt with both generations, total NFE, block counts, elapsed
+time, and simple substring checks.
+
+```bash
+CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_vs_adablock_eval.py \
+  --model-path GSAI-ML/LLaDA-8B-Instruct \
+  --prompt-file AdaBlock-dLLM/llada/quick_eval_prompts.jsonl \
+  --max-prompts 3 \
+  --gen-length 256 \
+  --steps 64 \
+  --threshold 0.9 \
+  --seed-block-length 32 \
+  --seed-refinement-steps 4 \
+  --predictor-ckpt output/phase_predict_model_checkpoint.pt \
+  --predictor-device cuda \
+  --adablock-init-block-length 32 \
+  --delimiter-threshold 0.3 \
+  --device cuda \
+  --dtype bfloat16 \
+  --use-cache \
+  --dual-cache \
+  --disable-torch-compile \
+  --log-file logs/llada_pag_vs_adablock_eval.jsonl
+```
+
 ## Parameter Reference
 
 ### Common Parameters

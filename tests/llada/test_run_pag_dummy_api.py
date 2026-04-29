@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -48,6 +49,32 @@ def test_parse_tuple_schedule_parses_entries() -> None:
         run_pag_dummy_api.BlockTuple(8, 2),
         run_pag_dummy_api.BlockTuple(4, 1),
     ]
+
+
+def test_load_prompt_records_from_jsonl(tmp_path) -> None:
+    prompt_file = tmp_path / "prompts.jsonl"
+    prompt_file.write_text(
+        '{"id":"a","category":"math","tags":["short"],"prompt":"What is 2+2?"}\n'
+        '{"id":"b","category":"code","prompt":"Write a loop."}\n',
+        encoding="utf-8",
+    )
+
+    records = run_pag_dummy_api.load_prompt_records(prompt_file)
+
+    assert [record.prompt_id for record in records] == ["a", "b"]
+    assert records[0].category == "math"
+    assert records[0].tags == ["short"]
+    assert records[1].prompt == "Write a loop."
+
+
+def test_write_log_record_appends_jsonl(tmp_path) -> None:
+    log_file = tmp_path / "logs" / "runs.jsonl"
+    run_pag_dummy_api.write_log_record(log_file, {"prompt_id": "a", "value": 1})
+    run_pag_dummy_api.write_log_record(log_file, {"prompt_id": "b", "value": 2})
+
+    rows = [json.loads(line) for line in log_file.read_text(encoding="utf-8").splitlines()]
+
+    assert rows == [{"prompt_id": "a", "value": 1}, {"prompt_id": "b", "value": 2}]
 
 
 def test_dummy_scheduler_uses_seed_then_dummy_api_and_clamps() -> None:

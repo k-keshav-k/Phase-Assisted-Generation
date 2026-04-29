@@ -5,8 +5,10 @@ import importlib
 import json
 import sys
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -16,6 +18,7 @@ Predictor = importlib.import_module("phase_predict.predict").Predictor
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
 
 DEFAULT_PREDICTOR_CKPT = ROOT / "output" / "phase_predict_model_checkpoint.pt"
+DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_inference.jsonl"
 BlockTuple = PhaseTuple
 
 
@@ -24,6 +27,15 @@ class ScheduledBlock:
     predicted_tuple: BlockTuple
     applied_block_size: int
     budgeted_refinement_steps: int
+
+
+@dataclass(slots=True)
+class PromptRecord:
+    prompt: str
+    prompt_id: str | None = None
+    category: str | None = None
+    tags: list[str] | None = None
+    notes: str | None = None
 
 
 def _tuple_to_dict(value: BlockTuple) -> dict[str, int]:
@@ -54,6 +66,63 @@ def parse_tuple_schedule(raw: str | None) -> list[BlockTuple]:
             )
         )
     return schedule
+
+
+def _coerce_prompt_record(value: object, *, index: int) -> PromptRecord:
+    if isinstance(value, str):
+        return PromptRecord(prompt=value, prompt_id=f"prompt_{index:03d}")
+    if not isinstance(value, dict):
+        msg = f"Prompt entry {index} must be a string or JSON object"
+        raise TypeError(msg)
+    prompt = value.get("prompt")
+    if not isinstance(prompt, str) or not prompt.strip():
+        msg = f"Prompt entry {index} is missing a non-empty 'prompt' field"
+        raise ValueError(msg)
+    raw_tags = value.get("tags", [])
+    if raw_tags is None:
+        tags: list[str] | None = None
+    elif isinstance(raw_tags, list):
+        tags = [str(item) for item in raw_tags]
+    else:
+        tags = [str(raw_tags)]
+    return PromptRecord(
+        prompt=prompt,
+        prompt_id=str(value.get("id", f"prompt_{index:03d}")),
+        category=str(value["category"]) if value.get("category") is not None else None,
+        tags=tags,
+        notes=str(value["notes"]) if value.get("notes") is not None else None,
+    )
+
+
+def load_prompt_records(path: str | Path) -> list[PromptRecord]:
+    prompt_path = Path(path)
+    records: list[PromptRecord] = []
+    if prompt_path.suffix.lower() == ".json":
+        payload = json.loads(prompt_path.read_text(encoding="utf-8"))
+        entries = payload.get("prompts", payload) if isinstance(payload, dict) else payload
+        if not isinstance(entries, list):
+            msg = "JSON prompt files must contain a list or an object with a 'prompts' list"
+            raise ValueError(msg)
+        return [_coerce_prompt_record(item, index=index) for index, item in enumerate(entries)]
+
+    with prompt_path.open(encoding="utf-8") as file_obj:
+        for index, line in enumerate(file_obj):
+            line = line.strip()
+            if not line:
+                continue
+            records.append(_coerce_prompt_record(json.loads(line), index=index))
+    return records
+
+
+def _prompt_record_from_args(args: argparse.Namespace) -> PromptRecord:
+    return PromptRecord(
+        prompt=args.prompt,
+        prompt_id=args.prompt_id,
+        category=args.prompt_category,
+        tags=[tag.strip() for tag in args.prompt_tags.split(",") if tag.strip()]
+        if args.prompt_tags
+        else None,
+    )
 
 
 class DummyTupleAPI:
@@ -448,7 +517,7 @@ def _build_block_visualization(
     return blocks
 
 
-def _make_scheduler(args: argparse.Namespace):
+def _make_scheduler(args: argparse.Namespace, prompt_text: str):
     scripted_tuples = parse_tuple_schedule(args.dummy_tuples)
     if scripted_tuples:
         dummy_api = DummyTupleAPI(
@@ -466,7 +535,7 @@ def _make_scheduler(args: argparse.Namespace):
             verbose=not args.quiet_api,
         )
         return DummyAPIScheduler(
-            prompt_text=args.prompt,
+            prompt_text=prompt_text,
             seed_block_length=args.seed_block_length,
             seed_refinement_steps=args.seed_refinement_steps,
             api=dummy_api,
@@ -480,7 +549,7 @@ def _make_scheduler(args: argparse.Namespace):
         )
         raise FileNotFoundError(msg)
     return CheckpointTupleScheduler(
-        prompt_text=args.prompt,
+        prompt_text=prompt_text,
         predictor_ckpt=predictor_ckpt,
         seed_block_length=args.seed_block_length,
         seed_refinement_steps=args.seed_refinement_steps,
@@ -488,26 +557,23 @@ def _make_scheduler(args: argparse.Namespace):
     )
 
 
-def run_prompt(args: argparse.Namespace) -> dict[str, object]:
+def _run_one_prompt(
+    *,
+    args: argparse.Namespace,
+    model,
+    tokenizer,
+    prompt_record: PromptRecord,
+    run_id: str,
+) -> dict[str, object]:
     import torch
-    from generate_pag import (
-        generate_pag,
-        generate_pag_dual_cache,
-        generate_pag_prefix_cache,
-    )
+    from generate_pag import generate_pag, generate_pag_dual_cache, generate_pag_prefix_cache
 
-    model, tokenizer = _load_model_and_tokenizer(
-        args.model_path,
-        args.device,
-        args.dtype,
-        disable_torch_compile=args.disable_torch_compile,
-    )
-    user_input = _build_prompt(tokenizer, args.model_path, args.prompt)
+    user_input = _build_prompt(tokenizer, args.model_path, prompt_record.prompt)
     input_ids = torch.tensor(
         tokenizer(user_input)["input_ids"],
         device=args.device,
     ).unsqueeze(0)
-    scheduler = _make_scheduler(args)
+    scheduler = _make_scheduler(args, prompt_record.prompt)
 
     if args.use_cache and args.dual_cache:
         generator = generate_pag_dual_cache
@@ -542,7 +608,14 @@ def run_prompt(args: argparse.Namespace) -> dict[str, object]:
         prediction_trace=scheduler.prediction_trace,
     )
     return {
-        "prompt": args.prompt,
+        "schema_version": 1,
+        "run_id": run_id,
+        "created_at": datetime.now(UTC).isoformat(),
+        "prompt_id": prompt_record.prompt_id,
+        "prompt_category": prompt_record.category,
+        "prompt_tags": prompt_record.tags or [],
+        "prompt_notes": prompt_record.notes,
+        "prompt": prompt_record.prompt,
         "wrapped_prompt": user_input,
         "generated_text": generated_text,
         "nfe_history": nfe_history,
@@ -553,7 +626,103 @@ def run_prompt(args: argparse.Namespace) -> dict[str, object]:
         "realized_history": [_tuple_to_dict(item) for item in scheduler.history],
         "predictor_checkpoint": str(_resolve_predictor_ckpt(args.predictor_ckpt)),
         "used_dummy_schedule": bool(parse_tuple_schedule(args.dummy_tuples)),
+        "config": {
+            "model_path": args.model_path,
+            "gen_length": args.gen_length,
+            "steps": args.steps,
+            "threshold": args.threshold,
+            "seed_block_length": args.seed_block_length,
+            "seed_refinement_steps": args.seed_refinement_steps,
+            "predictor_device": args.predictor_device,
+            "device": args.device,
+            "dtype": args.dtype,
+            "use_cache": args.use_cache,
+            "dual_cache": args.dual_cache,
+            "disable_torch_compile": args.disable_torch_compile,
+            "max_block_length": args.max_block_length,
+            "max_refinement_steps": args.max_refinement_steps,
+        },
+        "summary": {
+            "num_blocks": len(block_history),
+            "total_nfe": sum(nfe_history),
+            "avg_block_size": (sum(block_history) / len(block_history))
+            if block_history
+            else 0,
+            "avg_refinement_steps": (sum(nfe_history) / len(nfe_history))
+            if nfe_history
+            else 0,
+        },
     }
+
+
+def _resolve_log_file(path: str | Path | None) -> Path | None:
+    if path is None:
+        return None
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    return candidate
+
+
+def write_log_record(path: str | Path | None, record: dict[str, object]) -> None:
+    log_path = _resolve_log_file(path)
+    if log_path is None:
+        return
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as file_obj:
+        file_obj.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _load_records_for_args(args: argparse.Namespace) -> list[PromptRecord]:
+    if args.prompt_file:
+        prompt_path = Path(args.prompt_file)
+        if not prompt_path.is_absolute():
+            prompt_path = ROOT / prompt_path
+        records = load_prompt_records(prompt_path)
+    else:
+        if not args.prompt:
+            msg = "Either --prompt or --prompt-file is required"
+            raise ValueError(msg)
+        records = [_prompt_record_from_args(args)]
+    if args.max_prompts is not None:
+        records = records[: args.max_prompts]
+    return records
+
+
+def run_prompts(args: argparse.Namespace) -> list[dict[str, object]]:
+    model, tokenizer = _load_model_and_tokenizer(
+        args.model_path,
+        args.device,
+        args.dtype,
+        disable_torch_compile=args.disable_torch_compile,
+    )
+    records = _load_records_for_args(args)
+    if not records:
+        msg = "No prompts were found to run"
+        raise ValueError(msg)
+    run_id = args.run_id or uuid4().hex
+    results = []
+    for index, prompt_record in enumerate(records, start=1):
+        print(
+            f"[{index}/{len(records)}] Running prompt "
+            f"{prompt_record.prompt_id or index}: {prompt_record.prompt[:90]}"
+        )
+        result = _run_one_prompt(
+            args=args,
+            model=model,
+            tokenizer=tokenizer,
+            prompt_record=prompt_record,
+            run_id=run_id,
+        )
+        results.append(result)
+        write_log_record(args.log_file, result)
+        if args.log_file is not None:
+            print(f"  wrote log record: {_resolve_log_file(args.log_file)}")
+    return results
+
+
+def run_prompt(args: argparse.Namespace) -> dict[str, object]:
+    return run_prompts(args)[0]
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -564,7 +733,36 @@ def build_arg_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument("--model-path", required=True)
-    parser.add_argument("--prompt", required=True)
+    parser.add_argument("--prompt", default=None)
+    parser.add_argument("--prompt-id", default=None)
+    parser.add_argument("--prompt-category", default=None)
+    parser.add_argument(
+        "--prompt-tags",
+        default=None,
+        help="Comma-separated tags for a single --prompt run.",
+    )
+    parser.add_argument(
+        "--prompt-file",
+        default=None,
+        help=(
+            "JSONL or JSON prompt suite. JSONL entries may contain id, category, "
+            "tags, notes, and prompt."
+        ),
+    )
+    parser.add_argument("--max-prompts", type=int, default=None)
+    parser.add_argument("--run-id", default=None)
+    parser.add_argument(
+        "--log-file",
+        default=str(DEFAULT_LOG_FILE.relative_to(ROOT)),
+        help="Append one structured JSON record per prompt to this JSONL file.",
+    )
+    parser.add_argument(
+        "--no-log",
+        dest="log_file",
+        action="store_const",
+        const=None,
+        help="Disable JSONL logging.",
+    )
     parser.add_argument("--gen-length", type=int, default=128)
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--threshold", type=float, default=0.9)
@@ -629,15 +827,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
-    parser = build_arg_parser()
-    args = parser.parse_args()
-    if args.dual_cache and not args.use_cache:
-        parser.error("--dual-cache requires --use-cache")
-
-    result = run_prompt(args)
+def _print_result(result: dict[str, object]) -> None:
     print("=" * 20)
     print(f"Prompt: {result['prompt']}")
+    if result.get("prompt_id"):
+        print(f"Prompt ID: {result['prompt_id']}")
+    if result.get("prompt_category"):
+        print(f"Category: {result['prompt_category']}")
     print(f"Predictor checkpoint: {result['predictor_checkpoint']}")
     print(f"Dummy schedule mode: {result['used_dummy_schedule']}")
     print()
@@ -670,6 +866,19 @@ def main() -> None:
         print(f"  token_ids: {block['block_token_ids']}")
         print(f"  text_so_far: {json.dumps(block['text_so_far'])}")
     print("=" * 20)
+
+
+def main() -> None:
+    parser = build_arg_parser()
+    args = parser.parse_args()
+    if args.dual_cache and not args.use_cache:
+        parser.error("--dual-cache requires --use-cache")
+
+    results = run_prompts(args)
+    for result in results:
+        _print_result(result)
+    if args.log_file is not None:
+        print(f"Structured log written to: {_resolve_log_file(args.log_file)}")
 
 
 if __name__ == "__main__":
