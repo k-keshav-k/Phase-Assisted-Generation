@@ -126,6 +126,31 @@ accelerate launch eval_dream_adablock.py --model dream \
     --output_path eval_results_adablock/humaneval/dual_cache --log_samples
 ```
 
+## PAG Predictor Evaluation (`eval_dream_pag.py`)
+
+PAG uses a trained `phase_predict` checkpoint to predict one
+`(block_size, refinement_steps)` tuple per block during Dream decoding.
+
+### Example
+```bash
+model="Dream-org/Dream-v0-Base-7B"
+length=512
+block_length=32
+threshold=0.9
+predictor_ckpt=/absolute/path/to/phase_predict.pt
+seed_block_length=32
+seed_refinement_steps=4
+
+accelerate launch eval_dream_pag.py --model dream \
+    --model_args pretrained=${model},max_new_tokens=${length},diffusion_steps=${length},block_length=${block_length},add_bos_token=true,alg=confidence_threshold,threshold=${threshold},predictor_ckpt=${predictor_ckpt},seed_block_length=${seed_block_length},seed_refinement_steps=${seed_refinement_steps},use_cache=true,dual_cache=true,show_speed=True \
+    --tasks gsm8k --num_fewshot 5 --batch_size 1 --confirm_run_unsafe_code
+```
+
+Optional PAG-specific model args:
+- `predictor_device=cpu`
+- `max_block_length=<block_length>`
+- `max_refinement_steps=<diffusion_steps>`
+
 ## Parameter Reference
 
 ### Common Parameters

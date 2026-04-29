@@ -161,6 +161,32 @@ accelerate launch --num_processes=1 eval_llada_adablock.py --tasks humaneval --n
 --output_path eval_results_adablock/humaneval/dual_cache --log_samples
 ```
 
+## PAG Predictor Evaluation (`eval_llada_pag.py`)
+
+PAG uses a trained `phase_predict` checkpoint to predict one
+`(block_size, refinement_steps)` tuple per block. The first block uses the
+explicit seed tuple, and later blocks use realized `(block_size, nfe)` history
+to predict the next schedule.
+
+### PAG-specific Parameters
+```bash
+PREDICTOR_CKPT="/path/to/phase_predict.ckpt"
+SEED_BLOCK_LENGTH=32
+SEED_REFINEMENT_STEPS=4
+```
+
+Optional PAG-specific model args:
+- `predictor_device=cpu`
+- `max_block_length=${BLOCK_LENGTH}` (defaults to `block_length`)
+- `max_refinement_steps=${GEN_LENGTH}` (defaults to `steps`)
+
+### Example
+```bash
+accelerate launch --num_processes=1 eval_llada_pag.py --tasks gsm8k --num_fewshot 5 \
+--confirm_run_unsafe_code --model llada_dist \
+--model_args model_path=${MODEL_PATH},gen_length=${GEN_LENGTH},steps=$((GEN_LENGTH/BLOCK_LENGTH)),block_length=${BLOCK_LENGTH},threshold=${THRESHOLD},predictor_ckpt=${PREDICTOR_CKPT},seed_block_length=${SEED_BLOCK_LENGTH},seed_refinement_steps=${SEED_REFINEMENT_STEPS},use_cache=True,dual_cache=True,show_speed=True
+```
+
 ## Parameter Reference
 
 ### Common Parameters
