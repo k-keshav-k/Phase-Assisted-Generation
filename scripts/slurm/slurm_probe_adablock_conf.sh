@@ -29,6 +29,7 @@ uv run python scripts/probe_adablock_llada_conf.py \
     --gsm8k \
     --gsm8k-split train \
     --output-dir traces/adablock \
+    --output-file gsm8k_train_conf_traces.jsonl \
     --gen-length 512 \
     --init-block-length 16 \
     --delimiter-threshold 0.3 \
@@ -39,6 +40,7 @@ uv run python scripts/probe_adablock_llada_conf.py \
     --gsm8k \
     --gsm8k-split test \
     --output-dir traces/adablock \
+    --output-file gsm8k_test_conf_traces.jsonl \
     --gen-length 512 \
     --init-block-length 16 \
     --delimiter-threshold 0.3 \

@@ -12,17 +12,25 @@ Each output line is one problem:
     "tuples": [
       {
         "block_size":     16,
-        "mean_stab_step": 2.1,   # mean across tokens in the block
-        "max_stab_step":  5      # last token to stabilise (= nfe - 1 typically)
+        "nfe":            9,
+        "mean_stab_step": 1.2,   # mean step argmax==final while masked (across tokens)
+        "max_stab_step":  4,     # latest token to reach stable argmax prediction
+        "mean_ref_step":  3.8,   # mean step token was actually unmasked in x
+        "max_ref_step":   8,     # latest token to be unmasked
+        "mean_gap":       2.6,   # mean (refinement - stabilizing) per token
+        "max_gap":        5,     # max gap in block
       },
       ...
     ]
   }
 
-Relationship to NFE:
-  stabilizing_step(token) ∈ [0, nfe-1]
-  max_stab_step per block ≈ nfe - 1   (the token that needed the most passes)
-  mean_stab_step < max_stab_step      (earlier tokens stabilise sooner)
+Definitions:
+  stabilizing_step: first step argmax(logits)==final_token while token still masked,
+                    AND argmax stays correct for all remaining masked steps (no transient flips).
+                    stabilizing_step <= refinement_step always.
+  refinement_step:  step the token was actually unmasked in x.
+  gap:              refinement_step - stabilizing_step (how many steps between
+                    model committing internally vs AdaBlock unmasking externally).
 
 By default all blocks are kept. Pass --no-delimiters to drop delimiter blocks
 (size=1, only special tokens) which have trivially zero stabilizing steps.
@@ -55,11 +63,18 @@ def _block_tuple(block: dict) -> dict:
     stab_steps = [t["stabilizing_step"] for t in block["tokens"]]
     ref_steps  = [t["refinement_step"]  for t in block["tokens"]]
     gaps = [r - s for r, s in zip(ref_steps, stab_steps)]
+    n = len(block["tokens"])
     return {
         "block_size":      block["block_size"],
-        "mean_stab_step":  round(sum(stab_steps) / len(stab_steps), 4) if stab_steps else 0.0,
+        "nfe":             block["nfe"],
+        # stabilizing step: first step argmax==final while still masked
+        "mean_stab_step":  round(sum(stab_steps) / n, 4) if n else 0.0,
         "max_stab_step":   max(stab_steps) if stab_steps else 0,
-        "mean_gap":        round(sum(gaps) / len(gaps), 4) if gaps else 0.0,  # avg refinement-stabilizing gap
+        # refinement step: step token was actually unmasked in x
+        "mean_ref_step":   round(sum(ref_steps) / n, 4) if n else 0.0,
+        "max_ref_step":    max(ref_steps) if ref_steps else 0,
+        # gap = refinement - stabilizing: steps between model deciding and committing
+        "mean_gap":        round(sum(gaps) / n, 4) if n else 0.0,
         "max_gap":         max(gaps) if gaps else 0,
     }
 

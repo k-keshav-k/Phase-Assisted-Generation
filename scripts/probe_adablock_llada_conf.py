@@ -293,6 +293,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--device", default=None)
     parser.add_argument("--limit", type=int, default=200)
+    parser.add_argument("--output-file", type=str, default=None,
+                        help="Output filename (overrides default). E.g. my_traces.jsonl")
     args = parser.parse_args(argv)
 
     device = args.device or (
@@ -311,14 +313,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.gsm8k:
         print(f"Loading GSM8K ({args.gsm8k_split}, limit={args.limit}) ...")
         prompts = _load_gsm8k(split=args.gsm8k_split, limit=args.limit)
-        out_filename = f"gsm8k_{args.gsm8k_split}_conf_traces.jsonl"
+        default_filename = f"gsm8k_{args.gsm8k_split}_conf_traces.jsonl"
     else:
         prompts_path = args.prompts or Path("phase_cpd/data/prompts/research_prompts.jsonl")
         prompts = _load_prompts_jsonl(prompts_path)
         if args.limit:
             prompts = prompts[: args.limit]
-        out_filename = "adablock_llada_conf_traces.jsonl"
+        default_filename = "adablock_llada_conf_traces.jsonl"
 
+    out_filename = args.output_file if args.output_file else default_filename
     print(f"Loaded {len(prompts)} prompts.")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     out_path = args.output_dir / out_filename
