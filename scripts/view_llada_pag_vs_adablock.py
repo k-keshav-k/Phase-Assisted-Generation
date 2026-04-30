@@ -653,30 +653,6 @@ def render_prompt_detail(records: list[dict[str, Any]], method_df: pd.DataFrame)
             color=ADABLOCK_COLOR,
         )
 
-    pag_blocks = record.get("pag", {}).get("block_visualization", [])
-    if pag_blocks:
-        st.markdown("**PAG Block Trace**")
-        for block in pag_blocks:
-            predicted = block.get("predicted_tuple", {})
-            title = (
-                f"Block {block.get('block_index')} | "
-                f"pred=({predicted.get('block_size')}, "
-                f"{predicted.get('refinement_steps')}) | "
-                f"actual_nfe={block.get('actual_nfe_used')}"
-            )
-            with st.expander(title):
-                st.code(block.get("block_text", ""), language="text")
-                st.json(
-                    {
-                        "applied_block_size": block.get("applied_block_size"),
-                        "budgeted_refinement_steps": block.get(
-                            "budgeted_refinement_steps"
-                        ),
-                        "actual_nfe_used": block.get("actual_nfe_used"),
-                        "predictor_trace": block.get("predictor_trace"),
-                    }
-                )
-
 
 def render_pag_block_analysis(block_df: pd.DataFrame) -> None:
     if block_df.empty:
