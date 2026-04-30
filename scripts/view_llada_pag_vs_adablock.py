@@ -13,8 +13,9 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
 METHOD_COLORS = ["#0b7285", "#d9480f"]
-PAG_BLOCK_COLOR = "rgba(11, 114, 133, 0.12)"
-ADABLOCK_COLOR = "rgba(217, 72, 15, 0.11)"
+METHOD_DOMAIN = ["PAG", "AdaBlock"]
+PAG_BLOCK_COLOR = "rgba(11, 114, 133, 0.78)"
+ADABLOCK_COLOR = "rgba(217, 72, 15, 0.76)"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -79,6 +80,40 @@ def _readable(chart: alt.Chart) -> alt.Chart:
     )
 
 
+def _method_color() -> alt.Color:
+    return alt.Color(
+        "method:N",
+        title="Method",
+        scale=alt.Scale(domain=METHOD_DOMAIN, range=METHOD_COLORS),
+        sort=METHOD_DOMAIN,
+    )
+
+
+def _method_offset() -> alt.XOffset:
+    return alt.XOffset("method:N", sort=METHOD_DOMAIN)
+
+
+def _run_label(record: dict[str, Any]) -> str:
+    return str(record.get("run_id") or "no_run_id")
+
+
+def _latest_run_label(records: list[dict[str, Any]]) -> str | None:
+    latest_by_run: dict[str, str] = {}
+    for record in records:
+        run_label = _run_label(record)
+        created_at = str(record.get("created_at") or "")
+        latest_by_run[run_label] = max(created_at, latest_by_run.get(run_label, ""))
+    if not latest_by_run:
+        return None
+    return max(latest_by_run, key=lambda run_label: latest_by_run[run_label])
+
+
+def _filter_records_by_run(records: list[dict[str, Any]], run_label: str) -> list[dict[str, Any]]:
+    if run_label == "All runs":
+        return records
+    return [record for record in records if _run_label(record) == run_label]
+
+
 def flatten_methods(records: list[dict[str, Any]]) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for record_index, record in enumerate(records):
@@ -89,7 +124,12 @@ def flatten_methods(records: list[dict[str, Any]]) -> pd.DataFrame:
                 {
                     "record_index": record_index,
                     "run_id": record.get("run_id"),
+                    "run_label": _run_label(record),
                     "prompt_id": record.get("prompt_id") or f"record_{record_index}",
+                    "prompt_label": (
+                        f"{record.get('prompt_id') or f'record_{record_index}'} "
+                        f"#{record_index}"
+                    ),
                     "category": record.get("prompt_category") or "uncategorized",
                     "created_at": record.get("created_at"),
                     "method": "PAG" if method == "pag" else "AdaBlock",
@@ -117,7 +157,12 @@ def flatten_deltas(records: list[dict[str, Any]]) -> pd.DataFrame:
             {
                 "record_index": record_index,
                 "run_id": record.get("run_id"),
+                "run_label": _run_label(record),
                 "prompt_id": record.get("prompt_id") or f"record_{record_index}",
+                "prompt_label": (
+                    f"{record.get('prompt_id') or f'record_{record_index}'} "
+                    f"#{record_index}"
+                ),
                 "category": record.get("prompt_category") or "uncategorized",
                 "prompt": record.get("prompt", ""),
                 "nfe_delta_pag_minus_adablock": delta.get("nfe_delta_pag_minus_adablock"),
@@ -162,18 +207,65 @@ def flatten_pag_blocks(records: list[dict[str, Any]]) -> pd.DataFrame:
 
 
 def _block_badge(block: dict[str, Any]) -> str:
-    nfe = block.get("actual_nfe_used")
-    if nfe is None:
-        nfe = block.get("budgeted_refinement_steps")
-    return f"r{nfe}" if nfe is not None else "r?"
+    refinement = block.get("budgeted_refinement_steps")
+    if refinement is None:
+        predicted = block.get("predicted_tuple") or {}
+        refinement = predicted.get("refinement_steps")
+    if refinement is None:
+        refinement = block.get("actual_nfe_used")
+    return str(refinement) if refinement is not None else "?"
 
 
 def _block_title(block: dict[str, Any]) -> str:
     return (
         f"block {block.get('block_index')} | "
         f"size {block.get('applied_block_size')} | "
-        f"refinement {block.get('actual_nfe_used')}"
+        f"max refinement {block.get('budgeted_refinement_steps')}"
     )
+
+
+def _approximate_blocks_from_history(output: dict[str, Any]) -> list[dict[str, Any]]:
+    generated_text = str(output.get("generated_text", ""))
+    block_history = output.get("block_history") or []
+    nfe_history = output.get("nfe_history") or []
+    if not generated_text or not block_history:
+        return []
+
+    sizes = [max(1, int(size)) for size in block_history]
+    total_size = sum(sizes)
+    blocks: list[dict[str, Any]] = []
+    cursor = 0
+    cumulative = 0
+
+    for index, block_size in enumerate(sizes):
+        cumulative += block_size
+        if index == len(sizes) - 1:
+            end = len(generated_text)
+        else:
+            end = round(len(generated_text) * cumulative / total_size)
+            end = max(cursor + 1, min(end, len(generated_text)))
+        actual_nfe = int(nfe_history[index]) if index < len(nfe_history) else None
+        blocks.append(
+            {
+                "block_index": index,
+                "applied_block_size": block_size,
+                "budgeted_refinement_steps": actual_nfe,
+                "actual_nfe_used": actual_nfe,
+                "block_text": generated_text[cursor:end],
+            }
+        )
+        cursor = end
+        if cursor >= len(generated_text):
+            break
+
+    return blocks
+
+
+def _blocks_for_output(output: dict[str, Any]) -> tuple[list[dict[str, Any]], bool]:
+    blocks = output.get("block_visualization") or []
+    if blocks:
+        return blocks, False
+    return _approximate_blocks_from_history(output), True
 
 
 def _render_blocked_output(
@@ -182,11 +274,11 @@ def _render_blocked_output(
     output: dict[str, Any],
     color: str,
 ) -> None:
-    blocks = output.get("block_visualization") or []
+    blocks, is_approximate = _blocks_for_output(output)
     generated_text = output.get("generated_text", "")
     if not blocks:
         st.write(generated_text)
-        st.caption("No block visualization found in this log. Re-run the comparison eval.")
+        st.caption("No block history found in this log. Re-run the comparison eval.")
         return
 
     pieces = []
@@ -195,13 +287,14 @@ def _render_blocked_output(
         if not block_text:
             continue
         title = html.escape(_block_title(block), quote=True)
-        badge = html.escape(_block_badge(block))
+        badge = html.escape(_block_badge(block), quote=True)
         pieces.append(
-            "<span class='pag-block' "
+            "<div class='generation-block' "
             f"style='--block-color:{color}' "
-            f"title='{title}'>"
-            f"{block_text}<span class='pag-block-badge'>{badge}</span>"
-            "</span>"
+            f"title='{title}' "
+            f"data-refinement='{badge}'>"
+            f"{block_text}"
+            "</div>"
         )
 
     if not pieces:
@@ -209,6 +302,8 @@ def _render_blocked_output(
         return
 
     st.markdown(f"**{label} Output**")
+    if is_approximate:
+        st.caption("Block boundaries are approximate for this older log.")
     st.markdown(
         "<div class='blocked-output'>" + "".join(pieces) + "</div>",
         unsafe_allow_html=True,
@@ -220,28 +315,34 @@ def _render_block_css() -> None:
         """
         <style>
         .blocked-output {
-            white-space: pre-wrap;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.28rem;
+            align-items: flex-start;
+            white-space: normal;
             font-size: 0.96rem;
-            line-height: 2.05;
-            color: #222;
+            line-height: 1.55;
+            color: #ffffff;
         }
-        .pag-block {
+        .generation-block {
             position: relative;
-            display: inline;
-            padding: 0.06rem 1.05rem 0.08rem 0.14rem;
-            margin: 0 0.06rem 0.12rem 0;
-            border: 1px solid rgba(42, 48, 55, 0.22);
-            border-radius: 0.34rem;
+            display: block;
+            max-width: 100%;
+            padding: 0.16rem 0.62rem 0.54rem 0.22rem;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 0.28rem;
             background: var(--block-color);
-            box-decoration-break: clone;
-            -webkit-box-decoration-break: clone;
+            color: #ffffff !important;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
         }
-        .pag-block-badge {
+        .generation-block::after {
+            content: attr(data-refinement);
             position: absolute;
-            right: 0.18rem;
-            bottom: -0.48rem;
-            color: rgba(42, 48, 55, 0.72);
-            font-size: 0.56rem;
+            right: 0.16rem;
+            bottom: 0.04rem;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 0.54rem;
             font-weight: 600;
             letter-spacing: 0.01em;
             pointer-events: none;
@@ -285,15 +386,22 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
         .mark_bar()
         .encode(
             x=alt.X(
-                "prompt_id:N",
+                "prompt_label:N",
                 title="Prompt",
                 sort=None,
                 axis=alt.Axis(labelAngle=-35, labelLimit=170),
             ),
-            xOffset=alt.XOffset("method:N"),
+            xOffset=_method_offset(),
             y=alt.Y("total_nfe:Q", title="Total NFE"),
-            color=alt.Color("method:N", title="Method", scale=alt.Scale(range=METHOD_COLORS)),
-            tooltip=["prompt_id:N", "category:N", "method:N", "total_nfe:Q", "num_blocks:Q"],
+            color=_method_color(),
+            tooltip=[
+                "prompt_id:N",
+                "run_label:N",
+                "category:N",
+                "method:N",
+                "total_nfe:Q",
+                "num_blocks:Q",
+            ],
         )
         .properties(height=340)
     )
@@ -304,7 +412,7 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
         .mark_bar()
         .encode(
             x=alt.X(
-                "prompt_id:N",
+                "prompt_label:N",
                 title="Prompt",
                 sort=None,
                 axis=alt.Axis(labelAngle=-35, labelLimit=170),
@@ -320,6 +428,7 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
             ),
             tooltip=[
                 "prompt_id:N",
+                "run_label:N",
                 "category:N",
                 "nfe_delta_pag_minus_adablock:Q",
                 "nfe_ratio_pag_over_adablock:Q",
@@ -341,16 +450,17 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
             .mark_bar()
             .encode(
                 x=alt.X(
-                    "prompt_id:N",
+                    "prompt_label:N",
                     title="Prompt",
                     sort=None,
                     axis=alt.Axis(labelAngle=-35, labelLimit=170),
                 ),
-                xOffset=alt.XOffset("method:N"),
+                xOffset=_method_offset(),
                 y=alt.Y("answer_score:Q", title="Answer accuracy", scale=alt.Scale(domain=[0, 1])),
-                color=alt.Color("method:N", title="Method", scale=alt.Scale(range=METHOD_COLORS)),
+                color=_method_color(),
                 tooltip=[
                     "prompt_id:N",
+                    "run_label:N",
                     "category:N",
                     "method:N",
                     "answer_correct:N",
@@ -367,10 +477,11 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
         .encode(
             x=alt.X("elapsed_sec:Q", title="Runtime seconds"),
             y=alt.Y("total_nfe:Q", title="Total NFE"),
-            color=alt.Color("method:N", title="Method", scale=alt.Scale(range=METHOD_COLORS)),
+            color=_method_color(),
             shape=alt.Shape("category:N", title="Category"),
             tooltip=[
                 "prompt_id:N",
+                "run_label:N",
                 "category:N",
                 "method:N",
                 "elapsed_sec:Q",
@@ -529,6 +640,17 @@ def main() -> None:
     if not records:
         st.warning(f"No comparison records found at {log_file}")
         return
+
+    run_options = ["All runs", *sorted({_run_label(record) for record in records})]
+    latest_run = _latest_run_label(records)
+    default_run_index = run_options.index(latest_run) if latest_run in run_options else 0
+    selected_run = st.sidebar.selectbox(
+        "Run",
+        options=run_options,
+        index=default_run_index,
+        help="Defaulting to the latest run avoids mixing stale and fresh records.",
+    )
+    records = _filter_records_by_run(records, selected_run)
 
     all_categories = sorted(
         {
