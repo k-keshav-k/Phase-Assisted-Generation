@@ -9,6 +9,7 @@ from typing import Any
 import altair as alt
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
@@ -348,74 +349,95 @@ def _render_blocked_output(
         st.caption("No block history found in this log. Re-run the comparison eval.")
         return
 
-    pieces = []
-    for block in blocks:
-        block_text = html.escape(str(block.get("block_text", ""))).replace("\n", "<br>")
-        if not block_text:
-            continue
-        title = html.escape(_block_title(block), quote=True)
-        badge = html.escape(_block_badge(block), quote=True)
-        pieces.append(
-            "<span class='generation-block' "
-            f"style='--block-color:{color}' "
-            f"title='{title}' "
-            f"data-refinement='{badge}'>"
-            f"{block_text}"
-            "</span>"
-        )
-
-    if not pieces:
-        st.write(generated_text)
-        return
-
+    rendered_any = False
     st.markdown(f"**{label} Output**")
     if is_approximate:
         st.caption("Block boundaries are approximate for this older log.")
-    st.markdown(
-        "<span class='blocked-output'>" + "".join(pieces) + "</span>",
-        unsafe_allow_html=True,
-    )
+
+    pieces: list[str] = []
+    for block in blocks:
+        raw_text = str(block.get("block_text", ""))
+        if not raw_text:
+            continue
+        rendered_any = True
+        escaped_text = html.escape(raw_text).replace("\n", "<br>")
+        title = html.escape(_block_title(block), quote=True)
+        badge = html.escape(_block_badge(block), quote=True)
+        pieces.append(
+            "<span "
+            "class=\"generation-block\" "
+            f"style=\"--block-color: {color};\" "
+            f"title=\"{title}\" "
+            f"data-refinement=\"{badge}\">"
+            f"{escaped_text}"
+            "</span>"
+        )
+
+    if not rendered_any:
+        st.write(generated_text)
+        return
+
+    total_chars = sum(len(str(block.get("block_text", ""))) for block in blocks)
+    height = min(760, max(280, total_chars // 3))
+    components.html(_blocked_output_document("".join(pieces)), height=height, scrolling=True)
+
+
+def _blocked_output_document(body: str) -> str:
+    return f"""<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root {{
+      color-scheme: dark;
+      background: transparent;
+    }}
+    body {{
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      color: #ffffff;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.72;
+    }}
+    .blocked-output {{
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: normal;
+    }}
+    .generation-block {{
+      display: inline;
+      color: #ffffff;
+      border: 1px solid var(--block-color);
+      border-radius: 4px;
+      padding: 0.05rem 0.22rem 0.26rem;
+      margin: 0 0.05rem;
+      background: color-mix(in srgb, var(--block-color) 14%, transparent);
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      position: relative;
+    }}
+    .generation-block::after {{
+      content: attr(data-refinement);
+      color: #ffffff;
+      font-size: 0.58rem;
+      line-height: 1;
+      opacity: 0.82;
+      margin-left: 0.14rem;
+      vertical-align: sub;
+    }}
+  </style>
+</head>
+<body>
+  <div class="blocked-output">{body}</div>
+</body>
+</html>"""
 
 
 def _render_block_css() -> None:
-    st.markdown(
-        """
-        <style>
-        .blocked-output {
-            white-space: normal;
-            font-size: 0.96rem;
-            line-height: 2.0;
-            color: #ffffff;
-        }
-        .generation-block {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
-            padding: 0.16rem 0.62rem 0.54rem 0.22rem;
-            margin: 0 0.14rem 0.28rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            border-radius: 0.28rem;
-            background: var(--block-color);
-            color: #ffffff !important;
-            overflow-wrap: anywhere;
-            white-space: normal;
-            vertical-align: top;
-        }
-        .generation-block::after {
-            content: attr(data-refinement);
-            position: absolute;
-            right: 0.16rem;
-            bottom: 0.04rem;
-            color: rgba(255, 255, 255, 0.86);
-            font-size: 0.54rem;
-            font-weight: 600;
-            letter-spacing: 0.01em;
-            pointer-events: none;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    return
 
 
 def render_metrics(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> None:
