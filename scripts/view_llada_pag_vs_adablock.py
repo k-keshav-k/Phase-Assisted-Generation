@@ -206,6 +206,73 @@ def flatten_pag_blocks(records: list[dict[str, Any]]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def validate_graph_data(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> list[str]:
+    issues: list[str] = []
+    if method_df.empty:
+        return ["No method rows are available for graphing."]
+
+    duplicate_methods = method_df.groupby(["record_index", "method"]).size()
+    duplicate_methods = duplicate_methods[duplicate_methods > 1]
+    if not duplicate_methods.empty:
+        issues.append(
+            "Duplicate method rows detected for at least one prompt; "
+            "method comparison bars may overlap."
+        )
+
+    methods_by_record = method_df.groupby("record_index")["method"].apply(set)
+    missing_methods = methods_by_record[
+        methods_by_record.apply(lambda methods: set(METHOD_DOMAIN) - methods != set())
+    ]
+    if not missing_methods.empty:
+        issues.append("At least one prompt is missing a PAG or AdaBlock row.")
+
+    if len(delta_df) != method_df["record_index"].nunique():
+        issues.append("Delta rows do not align one-to-one with prompts.")
+
+    answer_df = method_df.dropna(subset=["answer_score"])
+    if not answer_df.empty:
+        inconsistent_answer = answer_df[
+            answer_df.apply(
+                lambda row: bool(row["answer_correct"]) != bool(row["answer_score"]),
+                axis=1,
+            )
+        ]
+        if not inconsistent_answer.empty:
+            issues.append("Answer score and answer_correct disagree for at least one row.")
+
+    for record_index, rows in method_df.groupby("record_index"):
+        by_method = rows.set_index("method")
+        if not set(METHOD_DOMAIN).issubset(by_method.index):
+            continue
+        delta_rows = delta_df[delta_df["record_index"] == record_index]
+        if delta_rows.empty:
+            continue
+        delta = delta_rows.iloc[0]
+        expected_nfe_delta = (
+            by_method.loc["PAG", "total_nfe"] - by_method.loc["AdaBlock", "total_nfe"]
+        )
+        actual_nfe_delta = delta.get("nfe_delta_pag_minus_adablock")
+        if pd.notna(actual_nfe_delta) and float(actual_nfe_delta) != float(expected_nfe_delta):
+            issues.append(f"NFE delta mismatch for record {record_index}.")
+
+        pag_answer = by_method.loc["PAG", "answer_score"]
+        adablock_answer = by_method.loc["AdaBlock", "answer_score"]
+        expected_answer_delta = (
+            pag_answer - adablock_answer
+            if pd.notna(pag_answer) and pd.notna(adablock_answer)
+            else None
+        )
+        actual_answer_delta = delta.get("answer_score_delta_pag_minus_adablock")
+        if (
+            expected_answer_delta is not None
+            and pd.notna(actual_answer_delta)
+            and float(actual_answer_delta) != float(expected_answer_delta)
+        ):
+            issues.append(f"Answer delta mismatch for record {record_index}.")
+
+    return issues
+
+
 def _block_badge(block: dict[str, Any]) -> str:
     refinement = block.get("budgeted_refinement_steps")
     if refinement is None:
@@ -283,18 +350,18 @@ def _render_blocked_output(
 
     pieces = []
     for block in blocks:
-        block_text = html.escape(str(block.get("block_text", "")))
+        block_text = html.escape(str(block.get("block_text", ""))).replace("\n", "<br>")
         if not block_text:
             continue
         title = html.escape(_block_title(block), quote=True)
         badge = html.escape(_block_badge(block), quote=True)
         pieces.append(
-            "<div class='generation-block' "
+            "<span class='generation-block' "
             f"style='--block-color:{color}' "
             f"title='{title}' "
             f"data-refinement='{badge}'>"
             f"{block_text}"
-            "</div>"
+            "</span>"
         )
 
     if not pieces:
@@ -305,7 +372,7 @@ def _render_blocked_output(
     if is_approximate:
         st.caption("Block boundaries are approximate for this older log.")
     st.markdown(
-        "<div class='blocked-output'>" + "".join(pieces) + "</div>",
+        "<span class='blocked-output'>" + "".join(pieces) + "</span>",
         unsafe_allow_html=True,
     )
 
@@ -315,26 +382,24 @@ def _render_block_css() -> None:
         """
         <style>
         .blocked-output {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.28rem;
-            align-items: flex-start;
             white-space: normal;
             font-size: 0.96rem;
-            line-height: 1.55;
+            line-height: 2.0;
             color: #ffffff;
         }
         .generation-block {
             position: relative;
-            display: block;
+            display: inline-block;
             max-width: 100%;
             padding: 0.16rem 0.62rem 0.54rem 0.22rem;
+            margin: 0 0.14rem 0.28rem 0;
             border: 1px solid rgba(255, 255, 255, 0.28);
             border-radius: 0.28rem;
             background: var(--block-color);
             color: #ffffff !important;
             overflow-wrap: anywhere;
-            white-space: pre-wrap;
+            white-space: normal;
+            vertical-align: top;
         }
         .generation-block::after {
             content: attr(data-refinement);
@@ -667,11 +732,16 @@ def main() -> None:
     method_df = flatten_methods(records)
     delta_df = flatten_deltas(records)
     block_df = flatten_pag_blocks(records)
+    graph_issues = validate_graph_data(method_df, delta_df)
 
     tab_overview, tab_categories, tab_prompt, tab_pag_blocks, tab_data = st.tabs(
         ["Overview", "Categories", "Prompt Detail", "PAG Blocks", "Raw Tables"]
     )
     with tab_overview:
+        if graph_issues:
+            st.warning("Graph data validation found issues:\n\n" + "\n".join(graph_issues))
+        else:
+            st.success("Graph data validation passed for the selected run/categories.")
         render_metrics(method_df, delta_df)
         render_overview_charts(method_df, delta_df)
     with tab_categories:
@@ -681,6 +751,11 @@ def main() -> None:
     with tab_pag_blocks:
         render_pag_block_analysis(block_df)
     with tab_data:
+        st.markdown("**Graph Data Validation**")
+        if graph_issues:
+            st.warning("\n".join(graph_issues))
+        else:
+            st.success("No graph data issues detected.")
         st.markdown("**Method Metrics**")
         st.dataframe(method_df, use_container_width=True, hide_index=True)
         st.markdown("**Deltas**")
