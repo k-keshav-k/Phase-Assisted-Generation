@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 from phase_predict.schema import ModelConfig, PhaseTuple
@@ -144,8 +145,8 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
     """PyTorch Dataset of one full context/target pair per sequence.
 
     Each item uses the entire tuple history of a trace as context and the
-    final tuple as the target. This is useful when training should consume
-    complete trace sequences instead of fixed-size sliding windows.
+    final tuple as the target. Contexts are left-padded to a shared
+    ``window_size`` so batches can be stacked by the default DataLoader.
 
     Args:
         sequences:   ordered list of PhaseTuple sequences, one per trace.
@@ -197,7 +198,12 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
 
         self._samples: list[tuple[torch.Tensor, torch.Tensor]] = []
         for raw in norm_sequences:
-            self._samples.append((raw[:-1], raw[-1]))
+            context = raw[:-1]
+            target = raw[-1]
+            if context.size(0) < self.window_size:
+                pad_len = self.window_size - context.size(0)
+                context = F.pad(context, (0, 0, pad_len, 0))
+            self._samples.append((context, target))
 
     def __len__(self) -> int:
         return len(self._samples)
