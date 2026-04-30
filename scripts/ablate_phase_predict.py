@@ -359,7 +359,8 @@ def main(argv: list[str] | None = None) -> None:
                 f"d{model_cfg.d_model}_"
                 f"h{model_cfg.n_heads}_"
                 f"l{model_cfg.n_layers}_"
-                f"dp{int(model_cfg.dropout*100)}"
+                f"dp{int(model_cfg.dropout*100)}_"
+                f"lr{_train_cfg.learning_rate*1000}"
             )
             print(f"  {i:3d}. {run_id}")  # noqa: T201
         return
@@ -375,7 +376,8 @@ def main(argv: list[str] | None = None) -> None:
             f"d{model_cfg.d_model}_"
             f"h{model_cfg.n_heads}_"
             f"l{model_cfg.n_layers}_"
-            f"dp{int(model_cfg.dropout*100)}"
+            f"dp{int(model_cfg.dropout*100)}_"
+            f"lr{train_cfg.learning_rate*1000}m"
         )
 
         # Override epochs from CLI
