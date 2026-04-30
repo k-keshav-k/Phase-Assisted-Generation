@@ -221,7 +221,9 @@ uv run --python 3.11 --group phase_cpd streamlit run scripts/view_llada_pag_logs
 ### Quick PAG vs AdaBlock Comparison
 Use this for preliminary side-by-side runs on a small prompt suite. It writes one
 JSONL record per prompt with both generations, total NFE, block counts, elapsed
-time, and simple substring checks.
+time, answer accuracy, and simple substring checks. Re-run this command after
+pulling prompt or checker changes so the dashboard has fresh `answer_check`
+fields.
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_vs_adablock_eval.py \
@@ -242,6 +244,12 @@ CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_v
   --use-cache \
   --dual-cache \
   --disable-torch-compile \
+  --log-file logs/llada_pag_vs_adablock_eval.jsonl
+```
+
+View the comparison dashboard:
+```bash
+uv run --python 3.11 --group phase_cpd streamlit run scripts/view_llada_pag_vs_adablock.py -- \
   --log-file logs/llada_pag_vs_adablock_eval.jsonl
 ```
 

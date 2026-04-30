@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -28,6 +29,7 @@ DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
 @dataclass(slots=True)
 class EvalPromptRecord(PromptRecord):
     expected_contains: list[str] | None = None
+    expected_answers: list[str] | None = None
 
 
 def _resolve_path(path: str | Path) -> Path:
@@ -49,6 +51,14 @@ def load_eval_prompts(path: str | Path) -> list[EvalPromptRecord]:
             expected = payload.get("expected_contains") or []
             if isinstance(expected, str):
                 expected = [expected]
+            expected_answers = (
+                payload.get("expected_answers")
+                or payload.get("accepted_answers")
+                or payload.get("answer")
+                or []
+            )
+            if isinstance(expected_answers, str):
+                expected_answers = [expected_answers]
             records.append(
                 EvalPromptRecord(
                     prompt=payload["prompt"],
@@ -57,20 +67,53 @@ def load_eval_prompts(path: str | Path) -> list[EvalPromptRecord]:
                     tags=[str(tag) for tag in payload.get("tags", [])],
                     notes=payload.get("notes"),
                     expected_contains=[str(item) for item in expected],
+                    expected_answers=[str(item) for item in expected_answers],
                 )
             )
     return records
 
 
+def _normalize_text(value: str) -> str:
+    value = value.lower()
+    value = value.replace("$", "")
+    value = value.replace(",", "")
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()
+
+
 def _substring_score(text: str, expected_contains: list[str] | None) -> dict[str, object]:
     expected = expected_contains or []
-    lowered = text.lower()
-    matched = [item for item in expected if item.lower() in lowered]
+    normalized = _normalize_text(text)
+    matched = [item for item in expected if _normalize_text(item) in normalized]
     return {
         "expected_contains": expected,
         "matched": matched,
         "missing": [item for item in expected if item not in matched],
         "score": (len(matched) / len(expected)) if expected else None,
+    }
+
+
+def _answer_present(text: str, answer: str) -> bool:
+    normalized_text = _normalize_text(text)
+    normalized_answer = _normalize_text(answer)
+    if not normalized_answer:
+        return False
+    if re.search(r"\d", normalized_answer):
+        # Avoid counting "72" as correct when the model emitted "772".
+        pattern = rf"(?<!\d){re.escape(normalized_answer)}(?!\d)"
+        return re.search(pattern, normalized_text) is not None
+    return normalized_answer in normalized_text
+
+
+def _answer_score(text: str, expected_answers: list[str] | None) -> dict[str, object]:
+    expected = expected_answers or []
+    matched = [answer for answer in expected if _answer_present(text, answer)]
+    return {
+        "expected_answers": expected,
+        "matched": matched,
+        "missing": [answer for answer in expected if answer not in matched],
+        "is_correct": bool(matched) if expected else None,
+        "score": 1.0 if matched else 0.0 if expected else None,
     }
 
 
@@ -89,6 +132,7 @@ def _summarize_method(
     block_history: list[int],
     elapsed_sec: float,
     expected_contains: list[str] | None,
+    expected_answers: list[str] | None,
     block_visualization: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     return {
@@ -109,6 +153,7 @@ def _summarize_method(
             else 0,
             "decoded_chars": len(generated_text),
             "substring_check": _substring_score(generated_text, expected_contains),
+            "answer_check": _answer_score(generated_text, expected_answers),
         },
     }
 
@@ -157,6 +202,7 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         block_history=block_history,
         elapsed_sec=elapsed,
         expected_contains=record.expected_contains,
+        expected_answers=record.expected_answers,
         block_visualization=block_visualization,
     )
 
@@ -200,6 +246,7 @@ def _run_adablock(args: argparse.Namespace, model, tokenizer, record: EvalPrompt
         block_history=block_history,
         elapsed_sec=elapsed,
         expected_contains=record.expected_contains,
+        expected_answers=record.expected_answers,
     )
 
 
@@ -223,6 +270,12 @@ def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> di
             pag_metrics["substring_check"]["score"] - adablock_metrics["substring_check"]["score"]
             if pag_metrics["substring_check"]["score"] is not None
             and adablock_metrics["substring_check"]["score"] is not None
+            else None
+        ),
+        "answer_score_delta_pag_minus_adablock": (
+            pag_metrics["answer_check"]["score"] - adablock_metrics["answer_check"]["score"]
+            if pag_metrics["answer_check"]["score"] is not None
+            and adablock_metrics["answer_check"]["score"] is not None
             else None
         ),
     }
@@ -311,6 +364,7 @@ def main() -> None:
             "prompt_tags": record.tags or [],
             "prompt": record.prompt,
             "expected_contains": record.expected_contains or [],
+            "expected_answers": record.expected_answers or [],
             "predictor_checkpoint": str(_resolve_predictor_ckpt(args.predictor_ckpt)),
             "config": {
                 "model_path": args.model_path,
@@ -331,13 +385,16 @@ def main() -> None:
         }
         write_log_record(args.log_file, result)
         print(
-            "  PAG total_nfe={pag_nfe} blocks={pag_blocks} score={pag_score}; "
-            "AdaBlock total_nfe={ada_nfe} blocks={ada_blocks} score={ada_score}".format(
+            "  PAG total_nfe={pag_nfe} blocks={pag_blocks} answer={pag_answer} score={pag_score}; "
+            "AdaBlock total_nfe={ada_nfe} blocks={ada_blocks} answer={ada_answer} "
+            "score={ada_score}".format(
                 pag_nfe=pag["metrics"]["total_nfe"],
                 pag_blocks=pag["metrics"]["num_blocks"],
+                pag_answer=pag["metrics"]["answer_check"]["is_correct"],
                 pag_score=pag["metrics"]["substring_check"]["score"],
                 ada_nfe=adablock["metrics"]["total_nfe"],
                 ada_blocks=adablock["metrics"]["num_blocks"],
+                ada_answer=adablock["metrics"]["answer_check"]["is_correct"],
                 ada_score=adablock["metrics"]["substring_check"]["score"],
             )
         )
