@@ -1,27 +1,30 @@
 """Confidence-aware probe for AdaBlock LLaDA generation.
 
-Extends probe_adablock_llada.py by also tracking the softmax probability of the
-argmax token at every diffusion step for each position in the block.
+Extends probe_adablock_llada.py by tracking per-step logit argmax and softmax
+probability of the final token at every diffusion step for each block position.
 
-This enables a first-peak stabilizing step:
+Definitions
+-----------
+  refinement_step  : step at which the token is actually unmasked in x
+                     (x[pos] first contains final_token_id and stays)
 
-  conf_stab_step = first step where argmax(logits[pos]) == final_token_id
+  stabilizing_step : earliest step where argmax(logits[pos]) == final_token_id
+                     AND the token is still masked in x (x[pos] == MASK_ID).
+                     Defaults to refinement_step when the model's argmax only
+                     matches the final token at or after unmask time.
 
-No probability threshold required. This captures the earliest moment the model's
-top prediction matches the final token, even transiently at low confidence
-(e.g. prob 0.4 at step 4), well before it gets unmasked at step 10.
+  stabilizing_step <= refinement_step  always.
 
-Difference from existing stab_step:
-  stab_step      = first step where argmax==final AND stays final forever after
-  conf_stab_step = first step where argmax==final (even if it later flips back)
+  gap = refinement_step - stabilizing_step
+      = how many steps before unmask the model was already predicting
+        the correct token. gap=0 means the model was uncertain until commit.
 
-  conf_stab_step <= stab_step always.
-
-Per-token output adds:
-  "stabilizing_step": int            first step logit argmax == final token (pre-unmask)
-  "refinement_step":  int            step token was actually unmasked in x
-  "step_logit_ids":   [id0, id1...] raw logit argmax at each step
-  "step_logit_probs": [p0, p1, ...]  softmax prob of that argmax
+Per-token output:
+  "stabilizing_step": int            (see above)
+  "refinement_step":  int            step token was unmasked in x
+  "p_final_per_step": [p0, p1, ...]  p(final_token) via softmax at each step
+  "step_token_ids":   [id0, id1...]  x contents at each step (MASK_ID until unmasked)
+  "step_logit_ids":   [id0, id1...]  argmax of logits at each step
 
 Usage
 -----
@@ -179,21 +182,29 @@ def generate_adablock_conf_traced(
                     refinement_step = s
                     break
 
-            # stabilizing_step: first step p(final_token) >= unmask threshold
-            stabilizing_step = len(p_final) - 1
-            for s, p in enumerate(p_final):
-                if p >= threshold:
-                    stabilizing_step = s
-                    break
+            # stabilizing_step: first step where argmax(logits) == final_token while
+            # still masked AND argmax stays == final_token for all remaining masked
+            # steps until unmask. Transient flips (correct at step s, wrong at s+1)
+            # are ignored. Defaults to refinement_step when no such stable run exists.
+            # Guarantees stabilizing_step <= refinement_step.
+            stabilizing_step = refinement_step
+            for s, (logit_id, tok_in_x) in enumerate(zip(logit_ids, x_history)):
+                if tok_in_x == MASK_ID and logit_id == final_id:
+                    if all(
+                        x_h != MASK_ID or lid == final_id
+                        for lid, x_h in zip(logit_ids[s:], x_history[s:])
+                    ):
+                        stabilizing_step = s
+                        break
 
             token_traces.append({
                 "token_index":      tok_idx,
                 "token_id":         final_id,
                 "token_text":       tokenizer.decode([final_id], clean_up_tokenization_spaces=False),
-                "stabilizing_step": stabilizing_step,               # first step p(final_token) >= 0.9
+                "stabilizing_step": stabilizing_step,               # first step argmax==final while masked
                 "refinement_step":  refinement_step,                # step token was unmasked in x
                 "p_final_per_step": [round(p, 6) for p in p_final], # p(final_token) at each step
-                "step_token_ids":   x_history,                      # x contents per step
+                "step_token_ids":   x_history,                      # x contents per step (MASK_ID until unmasked)
                 "step_logit_ids":   [int(i) for i in logit_ids],    # argmax logit per step
             })
 

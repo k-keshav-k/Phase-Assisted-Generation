@@ -53,10 +53,14 @@ def _is_content_block(block: dict) -> bool:
 
 def _block_tuple(block: dict) -> dict:
     stab_steps = [t["stabilizing_step"] for t in block["tokens"]]
+    ref_steps  = [t["refinement_step"]  for t in block["tokens"]]
+    gaps = [r - s for r, s in zip(ref_steps, stab_steps)]
     return {
-        "block_size":     block["block_size"],
-        "mean_stab_step": round(sum(stab_steps) / len(stab_steps), 4) if stab_steps else 0.0,
-        "max_stab_step":  max(stab_steps) if stab_steps else 0,
+        "block_size":      block["block_size"],
+        "mean_stab_step":  round(sum(stab_steps) / len(stab_steps), 4) if stab_steps else 0.0,
+        "max_stab_step":   max(stab_steps) if stab_steps else 0,
+        "mean_gap":        round(sum(gaps) / len(gaps), 4) if gaps else 0.0,  # avg refinement-stabilizing gap
+        "max_gap":         max(gaps) if gaps else 0,
     }
 
 
