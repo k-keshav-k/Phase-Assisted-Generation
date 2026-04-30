@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import torch
 
@@ -15,6 +16,10 @@ run_eval = importlib.import_module("run_pag_vs_adablock_eval")
 
 
 class FakeTokenizer:
+    def __call__(self, text):
+        del text
+        return {"input_ids": [1, 2, 3]}
+
     def decode(self, token_ids, skip_special_tokens=True) -> str:  # noqa: ARG002
         return "".join(chr(96 + int(token_id)) for token_id in token_ids)
 
@@ -136,6 +141,57 @@ def test_seed_from_adablock_flag_defaults_on_and_supports_aliases() -> None:
     assert default_args.seed_from_adablock_first_block
     assert not disabled_args.seed_from_adablock_first_block
     assert not legacy_disabled_args.seed_from_adablock_first_block
+
+
+def test_run_pag_passes_effective_seed_to_scheduler(monkeypatch) -> None:
+    captured = {}
+
+    def fake_make_scheduler(args, prompt_text, *, seed):
+        captured["seed"] = seed
+        captured["prompt_text"] = prompt_text
+        return SimpleNamespace(prediction_trace=[{"source": "seed"}])
+
+    def fake_generator(*args, **kwargs):  # noqa: ARG001
+        return (
+            torch.tensor([[1, 2, 3, 4, 5]]),
+            [2],
+            [7],
+            [
+                {
+                    "block_index": 0,
+                    "predicted_tuple": {"block_size": 7, "refinement_steps": 2},
+                    "applied_block_size": 7,
+                    "budgeted_refinement_steps": 2,
+                    "actual_nfe_used": 2,
+                    "block_start": 3,
+                    "block_end": 5,
+                }
+            ],
+        )
+
+    monkeypatch.setattr(run_eval, "_make_scheduler", fake_make_scheduler)
+    import generate_pag
+
+    monkeypatch.setattr(generate_pag, "generate_pag", fake_generator)
+    args = run_eval.build_arg_parser().parse_args(
+        [
+            "--model-path",
+            "dummy",
+            "--device",
+            "cpu",
+            "--seed-block-length",
+            "7",
+            "--seed-refinement-steps",
+            "2",
+        ]
+    )
+    record = run_eval.EvalPromptRecord(prompt="hello", prompt_id="p")
+
+    run_eval._run_pag(args, model=object(), tokenizer=FakeTokenizer(), record=record)
+
+    assert captured["prompt_text"] == "hello"
+    assert captured["seed"].block_length == 7
+    assert captured["seed"].refinement_steps == 2
 
 
 def test_comparison_delta_reports_nfe_ratio() -> None:

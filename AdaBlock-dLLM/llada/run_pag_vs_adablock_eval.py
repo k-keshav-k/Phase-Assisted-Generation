@@ -13,6 +13,7 @@ from uuid import uuid4
 import torch
 from run_pag_dummy_api import (
     ROOT,
+    EffectiveSeed,
     PromptRecord,
     _build_block_visualization,
     _build_prompt,
@@ -211,7 +212,15 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
 
     user_input = _build_prompt(tokenizer, args.model_path, record.prompt)
     input_ids = torch.tensor(tokenizer(user_input)["input_ids"], device=args.device).unsqueeze(0)
-    scheduler = _make_scheduler(args, record.prompt)
+    scheduler = _make_scheduler(
+        args,
+        record.prompt,
+        seed=EffectiveSeed(
+            block_length=args.seed_block_length,
+            refinement_steps=args.seed_refinement_steps,
+            source="comparator_effective",
+        ),
+    )
     generator = (
         generate_pag_dual_cache
         if args.use_cache and args.dual_cache
