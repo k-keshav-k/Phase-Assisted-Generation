@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=adablock-conf-probe
 #SBATCH --account=csci_ga_3033_131-2026sp
-#SBATCH --partition=c12m85-a100-1
-#SBATCH --gres=gpu:1
+#SBATCH --partition=c24m170-a100-2
+#SBATCH --gres=gpu:2
 #SBATCH --time=23:59:00
 #SBATCH --requeue
 #SBATCH --output=%x_%j.out
