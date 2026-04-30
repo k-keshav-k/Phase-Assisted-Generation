@@ -192,6 +192,10 @@ For one-off qualitative analysis, `run_pag_dummy_api.py` writes structured JSONL
 records with decoded block text, predicted tuple, applied block size, and actual
 NFE per block.
 
+By default, this runner now probes AdaBlock for block 0 and uses the realized
+first `(block_size, nfe)` as PAG's seed tuple. Pass
+`--no-seed-from-adablock-first-block` to force the explicit `--seed-*` values.
+
 ```bash
 CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_dummy_api.py \
   --model-path GSAI-ML/LLaDA-8B-Instruct \
@@ -224,6 +228,13 @@ JSONL record per prompt with both generations, total NFE, block counts, elapsed
 time, answer accuracy, and simple substring checks. Re-run this command after
 pulling prompt or checker changes so the dashboard has fresh `answer_check`
 fields.
+
+By default, this comparison seeds PAG block 0 from AdaBlock's realized first
+block for the same prompt: `seed_block_length = adablock.block_history[0]` and
+`seed_refinement_steps = adablock.nfe_history[0]`. This keeps the initial
+block-size/refinement setup aligned with AdaBlock. Pass
+`--no-seed-from-adablock-first-block` to use the explicit `--seed-*` values
+instead.
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 uv run --python 3.11 python AdaBlock-dLLM/llada/run_pag_vs_adablock_eval.py \

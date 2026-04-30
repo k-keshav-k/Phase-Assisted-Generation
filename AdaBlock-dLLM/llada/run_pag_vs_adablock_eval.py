@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import time
@@ -337,6 +338,27 @@ def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> di
     }
 
 
+def _args_with_pag_seed(
+    args: argparse.Namespace,
+    *,
+    seed_block_length: int,
+    seed_refinement_steps: int,
+) -> argparse.Namespace:
+    seeded_args = copy.copy(args)
+    seeded_args.seed_block_length = max(1, int(seed_block_length))
+    seeded_args.seed_refinement_steps = max(1, int(seed_refinement_steps))
+    return seeded_args
+
+
+def _adablock_first_seed(adablock: dict[str, object]) -> tuple[int, int]:
+    block_history = adablock.get("block_history") or []
+    nfe_history = adablock.get("nfe_history") or []
+    if not block_history or not nfe_history:
+        msg = "AdaBlock did not return a first block/nfe seed"
+        raise ValueError(msg)
+    return int(block_history[0]), int(nfe_history[0])
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run a quick qualitative/efficiency comparison of PAG vs AdaBlock."
@@ -377,6 +399,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fallback-block-length", type=int, default=None)
     parser.add_argument("--fallback-refinement-steps", type=int, default=None)
     parser.add_argument("--quiet-api", action="store_true")
+    parser.add_argument(
+        "--seed-from-adablock-first-block",
+        "--match-adablock-initial-seed",
+        dest="seed_from_adablock_first_block",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Seed PAG block 0 from AdaBlock's realized first "
+            "(block_size, nfe) for the same prompt. Pass "
+            "--no-seed-from-adablock-first-block to use explicit seed args."
+        ),
+    )
     parser.add_argument("--disable-torch-compile", action="store_true", default=True)
     parser.add_argument(
         "--enable-torch-compile",
@@ -409,8 +443,18 @@ def main() -> None:
 
     for index, record in enumerate(records, start=1):
         print(f"[{index}/{len(records)}] {record.prompt_id}: {record.prompt[:90]}")
-        pag = _run_pag(args, model, tokenizer, record)
         adablock = _run_adablock(args, model, tokenizer, record)
+        pag_args = args
+        seed_source = "explicit"
+        if args.seed_from_adablock_first_block:
+            seed_block_length, seed_refinement_steps = _adablock_first_seed(adablock)
+            pag_args = _args_with_pag_seed(
+                args,
+                seed_block_length=seed_block_length,
+                seed_refinement_steps=seed_refinement_steps,
+            )
+            seed_source = "adablock_first_block"
+        pag = _run_pag(pag_args, model, tokenizer, record)
         result = {
             "schema_version": 1,
             "run_id": run_id,
@@ -427,8 +471,14 @@ def main() -> None:
                 "gen_length": args.gen_length,
                 "steps": args.steps,
                 "threshold": args.threshold,
-                "seed_block_length": args.seed_block_length,
-                "seed_refinement_steps": args.seed_refinement_steps,
+                "requested_seed_block_length": args.seed_block_length,
+                "requested_seed_refinement_steps": args.seed_refinement_steps,
+                "effective_seed_block_length": pag_args.seed_block_length,
+                "effective_seed_refinement_steps": pag_args.seed_refinement_steps,
+                "seed_source": seed_source,
+                "seed_from_adablock_first_block": args.seed_from_adablock_first_block,
+                "pag_seed_source": seed_source,
+                "match_adablock_initial_seed": args.seed_from_adablock_first_block,
                 "adablock_init_block_length": args.adablock_init_block_length,
                 "delimiter_threshold": args.delimiter_threshold,
                 "delimiter_ids": args.delimiter_ids,

@@ -38,6 +38,13 @@ class PromptRecord:
     notes: str | None = None
 
 
+@dataclass(slots=True)
+class EffectiveSeed:
+    block_length: int
+    refinement_steps: int
+    source: str
+
+
 def _tuple_to_dict(value: BlockTuple) -> dict[str, int]:
     return {
         "block_size": int(value.block_size),
@@ -517,7 +524,109 @@ def _build_block_visualization(
     return blocks
 
 
-def _make_scheduler(args: argparse.Namespace, prompt_text: str):
+def _adablock_first_seed(
+    *,
+    args: argparse.Namespace,
+    model,
+    prompt,
+) -> EffectiveSeed:
+    import torch
+    from generate_adablock import compute_block_length, get_transfer_index
+    from generate_pag import add_gumbel_noise
+
+    assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
+    assert args.threshold is not None, "threshold must be set"
+
+    x = torch.full(
+        (prompt.shape[0], prompt.shape[1] + args.gen_length),
+        args.mask_id,
+        dtype=torch.long,
+    ).to(model.device)
+    x[:, : prompt.shape[1]] = prompt.clone()
+
+    with torch.no_grad():
+        output = model(x)
+        logits = output.logits
+        logits_with_noise = add_gumbel_noise(logits, temperature=args.temperature)
+        predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
+        nfe = 1
+
+        block_length = compute_block_length(
+            logits,
+            predicted_tokens,
+            prompt,
+            args.gen_length,
+            0,
+            args.adablock_init_block_length,
+            delimiter_ids=args.delimiter_ids,
+            delimiter_threshold=args.delimiter_threshold,
+        )
+        block_start = prompt.shape[1]
+        block_end = block_start + int(block_length)
+
+        mask_index = x == args.mask_id
+        mask_index[:, block_end:] = 0
+        x0, transfer_index = get_transfer_index(
+            logits,
+            predicted_tokens,
+            args.remasking,
+            mask_index,
+            x,
+            None,
+            args.threshold,
+        )
+        x[transfer_index] = x0[transfer_index]
+
+        while (x[:, block_start:block_end] == args.mask_id).sum() != 0:
+            mask_index = x == args.mask_id
+            mask_index[:, block_end:] = 0
+            block_output = model(x)
+            block_logits = block_output.logits
+            block_logits_with_noise = add_gumbel_noise(
+                block_logits,
+                temperature=args.temperature,
+            )
+            block_predicted_tokens = torch.argmax(block_logits_with_noise, dim=-1)
+            nfe += 1
+            x0, transfer_index = get_transfer_index(
+                block_logits,
+                block_predicted_tokens,
+                args.remasking,
+                mask_index,
+                x,
+                None,
+                args.threshold,
+            )
+            x[transfer_index] = x0[transfer_index]
+
+    return EffectiveSeed(
+        block_length=max(1, int(block_length)),
+        refinement_steps=max(1, int(nfe)),
+        source="adablock_first_block",
+    )
+
+
+def _effective_seed(
+    *,
+    args: argparse.Namespace,
+    model,
+    input_ids,
+) -> EffectiveSeed:
+    if not args.seed_from_adablock_first_block:
+        return EffectiveSeed(
+            block_length=max(1, int(args.seed_block_length)),
+            refinement_steps=max(1, int(args.seed_refinement_steps)),
+            source="explicit",
+        )
+    return _adablock_first_seed(args=args, model=model, prompt=input_ids)
+
+
+def _make_scheduler(
+    args: argparse.Namespace,
+    prompt_text: str,
+    *,
+    seed: EffectiveSeed,
+):
     scripted_tuples = parse_tuple_schedule(args.dummy_tuples)
     if scripted_tuples:
         dummy_api = DummyTupleAPI(
@@ -525,19 +634,19 @@ def _make_scheduler(args: argparse.Namespace, prompt_text: str):
             fallback_block_size=(
                 args.fallback_block_length
                 if args.fallback_block_length is not None
-                else args.seed_block_length
+                else seed.block_length
             ),
             fallback_refinement_steps=(
                 args.fallback_refinement_steps
                 if args.fallback_refinement_steps is not None
-                else args.seed_refinement_steps
+                else seed.refinement_steps
             ),
             verbose=not args.quiet_api,
         )
         return DummyAPIScheduler(
             prompt_text=prompt_text,
-            seed_block_length=args.seed_block_length,
-            seed_refinement_steps=args.seed_refinement_steps,
+            seed_block_length=seed.block_length,
+            seed_refinement_steps=seed.refinement_steps,
             api=dummy_api,
         )
 
@@ -551,8 +660,8 @@ def _make_scheduler(args: argparse.Namespace, prompt_text: str):
     return CheckpointTupleScheduler(
         prompt_text=prompt_text,
         predictor_ckpt=predictor_ckpt,
-        seed_block_length=args.seed_block_length,
-        seed_refinement_steps=args.seed_refinement_steps,
+        seed_block_length=seed.block_length,
+        seed_refinement_steps=seed.refinement_steps,
         predictor_device=args.predictor_device,
     )
 
@@ -573,7 +682,13 @@ def _run_one_prompt(
         tokenizer(user_input)["input_ids"],
         device=args.device,
     ).unsqueeze(0)
-    scheduler = _make_scheduler(args, prompt_record.prompt)
+    seed = _effective_seed(args=args, model=model, input_ids=input_ids)
+    if seed.source == "adablock_first_block":
+        print(
+            "  AdaBlock seed: "
+            f"block_length={seed.block_length} refinement_steps={seed.refinement_steps}"
+        )
+    scheduler = _make_scheduler(args, prompt_record.prompt, seed=seed)
 
     if args.use_cache and args.dual_cache:
         generator = generate_pag_dual_cache
@@ -631,8 +746,15 @@ def _run_one_prompt(
             "gen_length": args.gen_length,
             "steps": args.steps,
             "threshold": args.threshold,
-            "seed_block_length": args.seed_block_length,
-            "seed_refinement_steps": args.seed_refinement_steps,
+            "requested_seed_block_length": args.seed_block_length,
+            "requested_seed_refinement_steps": args.seed_refinement_steps,
+            "effective_seed_block_length": seed.block_length,
+            "effective_seed_refinement_steps": seed.refinement_steps,
+            "seed_source": seed.source,
+            "seed_from_adablock_first_block": args.seed_from_adablock_first_block,
+            "adablock_init_block_length": args.adablock_init_block_length,
+            "delimiter_ids": args.delimiter_ids,
+            "delimiter_threshold": args.delimiter_threshold,
             "predictor_device": args.predictor_device,
             "device": args.device,
             "dtype": args.dtype,
@@ -769,6 +891,34 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed-block-length", type=int, default=32)
     parser.add_argument("--seed-refinement-steps", type=int, default=4)
     parser.add_argument(
+        "--seed-from-adablock-first-block",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Run an AdaBlock-style first-block probe and use its realized "
+            "(block_size, nfe) as the PAG seed tuple. Pass "
+            "--no-seed-from-adablock-first-block to use explicit seed args."
+        ),
+    )
+    parser.add_argument(
+        "--adablock-init-block-length",
+        type=int,
+        default=32,
+        help="Default AdaBlock block length used by --seed-from-adablock-first-block.",
+    )
+    parser.add_argument(
+        "--delimiter-threshold",
+        type=float,
+        default=0.3,
+        help="AdaBlock delimiter confidence threshold used for the seed probe.",
+    )
+    parser.add_argument(
+        "--delimiter-ids",
+        type=lambda raw: [int(item.strip()) for item in raw.split(",") if item.strip()],
+        default=[198],
+        help="Comma-separated delimiter token ids used for the AdaBlock seed probe.",
+    )
+    parser.add_argument(
         "--predictor-ckpt",
         default=None,
         help=(
@@ -836,6 +986,13 @@ def _print_result(result: dict[str, object]) -> None:
         print(f"Category: {result['prompt_category']}")
     print(f"Predictor checkpoint: {result['predictor_checkpoint']}")
     print(f"Dummy schedule mode: {result['used_dummy_schedule']}")
+    config = result.get("config", {})
+    print(
+        "Seed tuple: "
+        f"source={config.get('seed_source')} "
+        f"effective=({config.get('effective_seed_block_length')}, "
+        f"{config.get('effective_seed_refinement_steps')})"
+    )
     print()
     print("Generated text:")
     print(result["generated_text"])

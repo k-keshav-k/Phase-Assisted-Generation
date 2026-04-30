@@ -86,6 +86,58 @@ def test_build_history_block_visualization_uses_token_block_boundaries() -> None
     assert blocks[1]["actual_nfe_used"] == 1
 
 
+def test_adablock_first_seed_uses_realized_first_tuple() -> None:
+    seed = run_eval._adablock_first_seed(
+        {
+            "block_history": [7, 5],
+            "nfe_history": [4, 2],
+        }
+    )
+
+    assert seed == (7, 4)
+
+
+def test_args_with_pag_seed_overrides_seed_only() -> None:
+    args = run_eval.build_arg_parser().parse_args(
+        [
+            "--model-path",
+            "dummy",
+            "--seed-block-length",
+            "32",
+            "--seed-refinement-steps",
+            "4",
+        ]
+    )
+
+    seeded = run_eval._args_with_pag_seed(
+        args,
+        seed_block_length=9,
+        seed_refinement_steps=3,
+    )
+
+    assert seeded.seed_block_length == 9
+    assert seeded.seed_refinement_steps == 3
+    assert args.seed_block_length == 32
+    assert args.seed_refinement_steps == 4
+    assert seeded.model_path == args.model_path
+
+
+def test_seed_from_adablock_flag_defaults_on_and_supports_aliases() -> None:
+    parser = run_eval.build_arg_parser()
+
+    default_args = parser.parse_args(["--model-path", "dummy"])
+    disabled_args = parser.parse_args(
+        ["--model-path", "dummy", "--no-seed-from-adablock-first-block"]
+    )
+    legacy_disabled_args = parser.parse_args(
+        ["--model-path", "dummy", "--no-match-adablock-initial-seed"]
+    )
+
+    assert default_args.seed_from_adablock_first_block
+    assert not disabled_args.seed_from_adablock_first_block
+    assert not legacy_disabled_args.seed_from_adablock_first_block
+
+
 def test_comparison_delta_reports_nfe_ratio() -> None:
     pag = {
         "metrics": {

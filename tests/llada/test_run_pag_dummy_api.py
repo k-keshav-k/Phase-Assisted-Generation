@@ -119,6 +119,73 @@ def test_dummy_scheduler_uses_seed_then_dummy_api_and_clamps() -> None:
     assert scheduler.prediction_trace[1]["source"] == "dummy_api"
 
 
+def test_effective_seed_uses_explicit_seed_when_adablock_probe_disabled() -> None:
+    args = run_pag_dummy_api.build_arg_parser().parse_args(
+        [
+            "--model-path",
+            "dummy",
+            "--prompt",
+            "hello",
+            "--seed-block-length",
+            "12",
+            "--seed-refinement-steps",
+            "5",
+            "--no-seed-from-adablock-first-block",
+        ]
+    )
+
+    seed = run_pag_dummy_api._effective_seed(args=args, model=None, input_ids=None)
+
+    assert seed == run_pag_dummy_api.EffectiveSeed(
+        block_length=12,
+        refinement_steps=5,
+        source="explicit",
+    )
+
+
+def test_make_scheduler_uses_effective_seed_for_block_zero() -> None:
+    args = run_pag_dummy_api.build_arg_parser().parse_args(
+        [
+            "--model-path",
+            "dummy",
+            "--prompt",
+            "hello",
+            "--dummy-tuples",
+            "3:1",
+        ]
+    )
+    seed = run_pag_dummy_api.EffectiveSeed(
+        block_length=9,
+        refinement_steps=4,
+        source="adablock_first_block",
+    )
+
+    scheduler = run_pag_dummy_api._make_scheduler(args, "hello", seed=seed)
+    first = scheduler.next_schedule(
+        remaining_tokens=32,
+        max_block_length=32,
+        max_refinement_steps=8,
+    )
+
+    assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(9, 4)
+
+
+def test_seed_from_adablock_first_block_defaults_on_and_can_be_disabled() -> None:
+    parser = run_pag_dummy_api.build_arg_parser()
+
+    default_args = parser.parse_args(["--model-path", "dummy", "--prompt", "hello"])
+    assert default_args.seed_from_adablock_first_block
+    assert not parser.parse_args(
+        [
+            "--model-path",
+            "dummy",
+            "--prompt",
+            "hello",
+            "--no-seed-from-adablock-first-block",
+        ]
+    ).seed_from_adablock_first_block
+
+
 def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
     predictor = FakePredictor([run_pag_dummy_api.BlockTuple(5, 3)])
     scheduler = run_pag_dummy_api.CheckpointTupleScheduler(
