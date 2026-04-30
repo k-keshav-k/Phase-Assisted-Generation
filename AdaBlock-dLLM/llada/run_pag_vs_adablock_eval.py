@@ -124,6 +124,53 @@ def _decode_generation(tokenizer, output_ids: torch.Tensor, input_ids: torch.Ten
     )
 
 
+def _build_history_block_visualization(
+    *,
+    tokenizer,
+    input_ids: torch.Tensor,
+    output_ids: torch.Tensor,
+    block_history: list[int],
+    nfe_history: list[int],
+) -> list[dict[str, object]]:
+    prompt_length = int(input_ids.shape[1])
+    generated_ids = output_ids[0][prompt_length:].tolist()
+    blocks: list[dict[str, object]] = []
+    cursor = 0
+
+    for index, block_size in enumerate(block_history):
+        rel_start = cursor
+        rel_end = min(cursor + int(block_size), len(generated_ids))
+        block_token_ids = generated_ids[rel_start:rel_end]
+        actual_nfe = int(nfe_history[index]) if index < len(nfe_history) else None
+        block_text = tokenizer.decode(block_token_ids, skip_special_tokens=True)
+        text_so_far = tokenizer.decode(generated_ids[:rel_end], skip_special_tokens=True)
+        blocks.append(
+            {
+                "block_index": index,
+                "predicted_tuple": {
+                    "block_size": int(block_size),
+                    "refinement_steps": actual_nfe,
+                },
+                "applied_block_size": int(block_size),
+                "budgeted_refinement_steps": actual_nfe,
+                "actual_nfe_used": actual_nfe,
+                "generated_span": {
+                    "start": int(rel_start),
+                    "end": int(rel_end),
+                },
+                "block_token_ids": block_token_ids,
+                "block_text": block_text,
+                "text_so_far": text_so_far,
+                "predictor_trace": None,
+            }
+        )
+        cursor = rel_end
+        if cursor >= len(generated_ids):
+            break
+
+    return blocks
+
+
 def _summarize_method(
     *,
     method: str,
@@ -239,14 +286,23 @@ def _run_adablock(args: argparse.Namespace, model, tokenizer, record: EvalPrompt
         delimiter_threshold=args.delimiter_threshold,
     )
     elapsed = time.perf_counter() - start
+    generated_text = _decode_generation(tokenizer, output_ids, input_ids)
+    block_visualization = _build_history_block_visualization(
+        tokenizer=tokenizer,
+        input_ids=input_ids,
+        output_ids=output_ids,
+        block_history=block_history,
+        nfe_history=nfe_history,
+    )
     return _summarize_method(
         method="adablock",
-        generated_text=_decode_generation(tokenizer, output_ids, input_ids),
+        generated_text=generated_text,
         nfe_history=nfe_history,
         block_history=block_history,
         elapsed_sec=elapsed,
         expected_contains=record.expected_contains,
         expected_answers=record.expected_answers,
+        block_visualization=block_visualization,
     )
 
 

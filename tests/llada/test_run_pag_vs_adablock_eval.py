@@ -4,12 +4,19 @@ import importlib
 import sys
 from pathlib import Path
 
+import torch
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
 if str(LLADA_DIR) not in sys.path:
     sys.path.insert(0, str(LLADA_DIR))
 
 run_eval = importlib.import_module("run_pag_vs_adablock_eval")
+
+
+class FakeTokenizer:
+    def decode(self, token_ids, skip_special_tokens=True) -> str:  # noqa: ARG002
+        return "".join(chr(96 + int(token_id)) for token_id in token_ids)
 
 
 def test_load_eval_prompts_reads_expected_substrings(tmp_path) -> None:
@@ -60,6 +67,23 @@ def test_answer_score_accepts_any_answer_variant() -> None:
     assert score["matched"] == ["97.20"]
     assert score["is_correct"] is True
     assert score["score"] == 1.0
+
+
+def test_build_history_block_visualization_uses_token_block_boundaries() -> None:
+    blocks = run_eval._build_history_block_visualization(
+        tokenizer=FakeTokenizer(),
+        input_ids=torch.tensor([[99, 98]]),
+        output_ids=torch.tensor([[99, 98, 1, 2, 3, 4, 5]]),
+        block_history=[2, 3],
+        nfe_history=[4, 1],
+    )
+
+    assert blocks[0]["block_text"] == "ab"
+    assert blocks[0]["applied_block_size"] == 2
+    assert blocks[0]["actual_nfe_used"] == 4
+    assert blocks[1]["block_text"] == "cde"
+    assert blocks[1]["applied_block_size"] == 3
+    assert blocks[1]["actual_nfe_used"] == 1
 
 
 def test_comparison_delta_reports_nfe_ratio() -> None:

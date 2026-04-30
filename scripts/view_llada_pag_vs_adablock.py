@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,8 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
 METHOD_COLORS = ["#0b7285", "#d9480f"]
+PAG_BLOCK_COLOR = "rgba(11, 114, 133, 0.12)"
+ADABLOCK_COLOR = "rgba(217, 72, 15, 0.11)"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -156,6 +159,97 @@ def flatten_pag_blocks(records: list[dict[str, Any]]) -> pd.DataFrame:
                 }
             )
     return pd.DataFrame(rows)
+
+
+def _block_badge(block: dict[str, Any]) -> str:
+    nfe = block.get("actual_nfe_used")
+    if nfe is None:
+        nfe = block.get("budgeted_refinement_steps")
+    return f"r{nfe}" if nfe is not None else "r?"
+
+
+def _block_title(block: dict[str, Any]) -> str:
+    return (
+        f"block {block.get('block_index')} | "
+        f"size {block.get('applied_block_size')} | "
+        f"refinement {block.get('actual_nfe_used')}"
+    )
+
+
+def _render_blocked_output(
+    *,
+    label: str,
+    output: dict[str, Any],
+    color: str,
+) -> None:
+    blocks = output.get("block_visualization") or []
+    generated_text = output.get("generated_text", "")
+    if not blocks:
+        st.write(generated_text)
+        st.caption("No block visualization found in this log. Re-run the comparison eval.")
+        return
+
+    pieces = []
+    for block in blocks:
+        block_text = html.escape(str(block.get("block_text", "")))
+        if not block_text:
+            continue
+        title = html.escape(_block_title(block), quote=True)
+        badge = html.escape(_block_badge(block))
+        pieces.append(
+            "<span class='pag-block' "
+            f"style='--block-color:{color}' "
+            f"title='{title}'>"
+            f"{block_text}<span class='pag-block-badge'>{badge}</span>"
+            "</span>"
+        )
+
+    if not pieces:
+        st.write(generated_text)
+        return
+
+    st.markdown(f"**{label} Output**")
+    st.markdown(
+        "<div class='blocked-output'>" + "".join(pieces) + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _render_block_css() -> None:
+    st.markdown(
+        """
+        <style>
+        .blocked-output {
+            white-space: pre-wrap;
+            font-size: 0.96rem;
+            line-height: 2.05;
+            color: #222;
+        }
+        .pag-block {
+            position: relative;
+            display: inline;
+            padding: 0.06rem 1.05rem 0.08rem 0.14rem;
+            margin: 0 0.06rem 0.12rem 0;
+            border: 1px solid rgba(42, 48, 55, 0.22);
+            border-radius: 0.34rem;
+            background: var(--block-color);
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+        .pag-block-badge {
+            position: absolute;
+            right: 0.18rem;
+            bottom: -0.48rem;
+            color: rgba(42, 48, 55, 0.72);
+            font-size: 0.56rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            pointer-events: none;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_metrics(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> None:
@@ -320,6 +414,7 @@ def render_prompt_detail(records: list[dict[str, Any]], method_df: pd.DataFrame)
     selected = st.selectbox("Prompt", labels)
     record_index = labels.index(selected)
     record = records[record_index]
+    _render_block_css()
 
     st.subheader(record.get("prompt_id") or f"record_{record_index}")
     st.caption(record.get("prompt_category") or "uncategorized")
@@ -346,13 +441,19 @@ def render_prompt_detail(records: list[dict[str, Any]], method_df: pd.DataFrame)
 
     col_pag, col_adablock = st.columns(2)
     with col_pag:
-        st.markdown("**PAG Output**")
         st.json(record.get("pag", {}).get("metrics", {}).get("answer_check", {}))
-        st.write(record.get("pag", {}).get("generated_text", ""))
+        _render_blocked_output(
+            label="PAG",
+            output=record.get("pag", {}),
+            color=PAG_BLOCK_COLOR,
+        )
     with col_adablock:
-        st.markdown("**AdaBlock Output**")
         st.json(record.get("adablock", {}).get("metrics", {}).get("answer_check", {}))
-        st.write(record.get("adablock", {}).get("generated_text", ""))
+        _render_blocked_output(
+            label="AdaBlock",
+            output=record.get("adablock", {}),
+            color=ADABLOCK_COLOR,
+        )
 
     pag_blocks = record.get("pag", {}).get("block_visualization", [])
     if pag_blocks:
