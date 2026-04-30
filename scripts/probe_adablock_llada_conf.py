@@ -125,14 +125,12 @@ def generate_adablock_conf_traced(
         x[transfer_index] = x0[transfer_index]
 
         # ── step 0 snapshots ────────────────────────────────────────────────
-        # step_snapshots      : what is in x (MASK_ID until token is unmasked)
-        # step_logit_snapshots: argmax of RAW logits (true model prediction, pre-threshold)
-        # step_logit_probs    : softmax prob of that argmax (model confidence)
-        raw0 = logits[0, block_start:block_end].float()
-        probs0 = torch.softmax(raw0, dim=-1)
-        step_snapshots:       list[torch.Tensor] = [x[0, block_start:block_end].clone()]
-        step_logit_snapshots: list[torch.Tensor] = [probs0.argmax(dim=-1).cpu().clone()]
-        step_logit_probs:     list[torch.Tensor] = [probs0.max(dim=-1).values.cpu().clone()]
+        # step_snapshots   : what is in x (MASK_ID until token is unmasked)
+        # step_raw_logits  : raw block logits at each step (CPU, float32) — used
+        #                    post-block to compute p(final_token) per step
+        raw0 = logits[0, block_start:block_end].float().cpu()
+        step_snapshots:  list[torch.Tensor] = [x[0, block_start:block_end].clone()]
+        step_raw_logits: list[torch.Tensor] = [raw0.clone()]
 
         # Inner refinement loop
         while True:
@@ -149,38 +147,42 @@ def generate_adablock_conf_traced(
                 block_logits, block_predicted_tokens, remasking, mask_index, x, None, threshold
             )
             x[transfer_index] = x0[transfer_index]
-
-            raw_block = block_logits[0, block_start:block_end].float()
-            probs_block = torch.softmax(raw_block, dim=-1)
             step_snapshots.append(x[0, block_start:block_end].clone())
-            step_logit_snapshots.append(probs_block.argmax(dim=-1).cpu().clone())
-            step_logit_probs.append(probs_block.max(dim=-1).values.cpu().clone())
+            step_raw_logits.append(block_logits[0, block_start:block_end].float().cpu().clone())
 
         nfe_history.append(nfe)
 
-        # Build per-token trace
+        # ── post-block: compute p(final_token) at every step ────────────────
+        # all_logits: (nfe, block_len, vocab)
+        # all_probs:  (nfe, block_len, vocab)  — softmax over vocab
         final_token_ids = x[0, block_start:block_end].tolist()
+        all_logits = torch.stack(step_raw_logits, dim=0)          # (nfe, block_len, vocab)
+        all_probs  = torch.softmax(all_logits, dim=-1)             # (nfe, block_len, vocab)
+        final_ids_t = torch.tensor(final_token_ids, dtype=torch.long)  # (block_len,)
+        # p_final[s, tok] = p(final_token_ids[tok]) at step s
+        p_final_mat = all_probs[:, torch.arange(block_length), final_ids_t]  # (nfe, block_len)
+        # argmax logits per step per token (for step_logit_ids)
+        argmax_mat  = all_logits.argmax(dim=-1)                    # (nfe, block_len)
+
         token_traces: list[dict[str, Any]] = []
 
         for tok_idx in range(block_length):
-            # x-based: shows MASK_ID until token is unmasked (unmask timing)
-            x_history     = [int(snap[tok_idx].item()) for snap in step_snapshots]
-            # logit-based: model's raw argmax at every step, before threshold gate
-            logit_history = [int(snap[tok_idx].item()) for snap in step_logit_snapshots]
-            prob_history  = [float(snap[tok_idx].item()) for snap in step_logit_probs]
-            final_id      = final_token_ids[tok_idx]
+            final_id    = final_token_ids[tok_idx]
+            x_history   = [int(snap[tok_idx].item()) for snap in step_snapshots]
+            logit_ids   = argmax_mat[:, tok_idx].tolist()
+            p_final     = p_final_mat[:, tok_idx].tolist()
 
-            # refinement_step: step when token was actually unmasked in x
+            # refinement_step: step token was actually unmasked in x
             refinement_step = len(x_history) - 1
             for s, tok_id in enumerate(x_history):
                 if tok_id == final_id and all(h == final_id for h in x_history[s:]):
                     refinement_step = s
                     break
 
-            # stabilizing_step: first step logit argmax == final (even transiently, pre-unmask)
-            stabilizing_step = len(logit_history) - 1
-            for s, tok_id in enumerate(logit_history):
-                if tok_id == final_id:
+            # stabilizing_step: first step p(final_token) >= unmask threshold
+            stabilizing_step = len(p_final) - 1
+            for s, p in enumerate(p_final):
+                if p >= threshold:
                     stabilizing_step = s
                     break
 
@@ -188,11 +190,11 @@ def generate_adablock_conf_traced(
                 "token_index":      tok_idx,
                 "token_id":         final_id,
                 "token_text":       tokenizer.decode([final_id], clean_up_tokenization_spaces=False),
-                "stabilizing_step": stabilizing_step,  # first logit argmax == final (pre-unmask)
-                "refinement_step":  refinement_step,   # step token was actually unmasked in x
-                "step_token_ids":   x_history,         # x contents per step
-                "step_logit_ids":   logit_history,     # raw logit argmax per step
-                "step_logit_probs": [round(p, 6) for p in prob_history],
+                "stabilizing_step": stabilizing_step,               # first step p(final_token) >= 0.9
+                "refinement_step":  refinement_step,                # step token was unmasked in x
+                "p_final_per_step": [round(p, 6) for p in p_final], # p(final_token) at each step
+                "step_token_ids":   x_history,                      # x contents per step
+                "step_logit_ids":   [int(i) for i in logit_ids],    # argmax logit per step
             })
 
         block_traces.append({

@@ -1,4 +1,4 @@
-.PHONY: install install-phase-cpd run-phase-cpd test test-baselines test-phases test-scheduler test-integration test-phase-cpd lint format probe-adablock-train make-phase-tuples make-stab-tuples probe-adablock-conf
+.PHONY: install install-phase-cpd run-phase-cpd test test-baselines test-phases test-scheduler test-integration test-phase-cpd lint format probe-adablock-train make-phase-tuples make-stab-tuples make-stab-tuples-conf probe-adablock-conf submit-conf-probe
 
 UV ?= uv
 PYTHON_VERSION ?= 3.11
@@ -78,7 +78,7 @@ probe-adablock-conf:
 		--gsm8k \
 		--gsm8k-split train \
 		--output-dir traces/adablock \
-		--gen-length 256 \
+		--gen-length 512 \
 		--init-block-length 16 \
 		--delimiter-threshold 0.3 \
 		--threshold 0.9 \
@@ -87,11 +87,22 @@ probe-adablock-conf:
 		--gsm8k \
 		--gsm8k-split test \
 		--output-dir traces/adablock \
-		--gen-length 256 \
+		--gen-length 512 \
 		--init-block-length 16 \
 		--delimiter-threshold 0.3 \
 		--threshold 0.9 \
 		--limit 200
+
+submit-conf-probe:
+	sbatch scripts/slurm/slurm_probe_adablock_conf.sh
+
+make-stab-tuples-conf:
+	python scripts/make_stab_tuples.py \
+		--traces traces/adablock/gsm8k_train_conf_traces.jsonl \
+		--output traces/adablock/stab_tuples_conf_train.jsonl
+	python scripts/make_stab_tuples.py \
+		--traces traces/adablock/gsm8k_test_conf_traces.jsonl \
+		--output traces/adablock/stab_tuples_conf_test.jsonl
 
 lint:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) $(UV) run ruff check src tests scripts phase_cpd phase_predict
