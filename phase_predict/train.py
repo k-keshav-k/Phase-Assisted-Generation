@@ -17,8 +17,9 @@ Usage example::
 
 from __future__ import annotations
 
+from contextlib import nullcontext
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 import torch
 import torch.nn as nn
@@ -46,6 +47,7 @@ def train_epoch(
     criterion: nn.Module,
     device: torch.device,
     config: TrainConfig | None = None,
+    scaler: Optional[torch.amp.GradScaler] = None,
 ) -> float:
     """Run one training epoch.
 
@@ -64,17 +66,29 @@ def train_epoch(
     model.train()
     total_loss = 0.0
     n_batches = 0
+    use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
         targets = targets.to(device)
         optimizer.zero_grad()
-        preds = model(inputs)
-        loss = criterion(preds, targets)
-        loss.backward()
-        # gradient clipping for stability (configurable via TrainConfig.max_grad_norm)
-        if config is not None and config.max_grad_norm > 0:
-            nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_grad_norm)
-        optimizer.step()
+        autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
+        with autocast_context:
+            preds = model(inputs)
+            loss = criterion(preds, targets)
+
+        if use_amp:
+            scaler.scale(loss).backward()
+            if config is not None and config.max_grad_norm > 0:
+                scaler.unscale_(optimizer)
+                nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_grad_norm)
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            if config is not None and config.max_grad_norm > 0:
+                nn.utils.clip_grad_norm_(model.parameters(), max_norm=config.max_grad_norm)
+            optimizer.step()
+
         total_loss += float(loss.item())
         n_batches += 1
     return total_loss / max(n_batches, 1)
@@ -86,6 +100,7 @@ def evaluate(
     loader: DataLoader,  # type: ignore[type-arg]
     criterion: nn.Module,
     device: torch.device,
+    scaler: Optional[torch.amp.GradScaler] = None,
 ) -> float:
     """Evaluate the model on a DataLoader without updating weights.
 
@@ -101,11 +116,14 @@ def evaluate(
     model.eval()
     total_loss = 0.0
     n_batches = 0
+    use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
         targets = targets.to(device)
-        preds = model(inputs)
-        loss = criterion(preds, targets)
+        autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
+        with autocast_context:
+            preds = model(inputs)
+            loss = criterion(preds, targets)
         total_loss += float(loss.item())
         n_batches += 1
     return total_loss / max(n_batches, 1)
@@ -126,11 +144,14 @@ class Trainer:
         self,
         model: PhaseTransformer,
         train_config: TrainConfig | None = None,
-        device: torch.device | None = None,
+        device: torch.device | str | None = None,
     ) -> None:
         self.model = model
         self.config = train_config or TrainConfig()
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = torch.device(device)
         self.model.to(self.device)
 
     def fit(
@@ -180,14 +201,20 @@ class Trainer:
             weight_decay=self.config.weight_decay,
         )
         criterion = nn.MSELoss()
+        # Mixed precision: create scaler if using CUDA
+        scaler: Optional[torch.amp.GradScaler]
+        if self.device.type == "cuda":
+            scaler = torch.amp.GradScaler("cuda")
+        else:
+            scaler = None
         history = TrainHistory()
         epochs_no_improve = 0
 
         for epoch in range(1, self.config.max_epochs + 1):
             train_loss = train_epoch(
-                self.model, train_loader, optimizer, criterion, self.device, self.config
+                self.model, train_loader, optimizer, criterion, self.device, self.config, scaler
             )
-            val_loss = evaluate(self.model, val_loader, criterion, self.device)
+            val_loss = evaluate(self.model, val_loader, criterion, self.device, scaler)
 
             history.train_losses.append(train_loss)
             history.val_losses.append(val_loss)

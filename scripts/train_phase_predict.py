@@ -13,9 +13,15 @@ Optional flags::
     --trace-dir PATH      path to trace JSON directory (default: phase_cpd default)
     --trace-jsonl PATH    path to trace JSONL file or directory of JSONL files
     --window-size N       context window size (default: 8)
+    --d-model N           transformer hidden size (default: 64)
+    --n-heads N           attention heads (default: 4)
+    --n-layers N          transformer encoder layers (default: 2)
+    --dropout P           dropout probability (default: 0.1)
     --whole-sequence      train on each full trace sequence instead of sliding windows
     --epochs N            max training epochs (default: 100)
-    --lr LR               learning rate (default: 1e-3)
+    --learning-rate LR    learning rate (default: 1e-3)
+    --lr LR               alias for --learning-rate
+    --device NAME         training device: auto, cpu, or cuda (default: auto)
     --output PATH         where to save the trained model checkpoint (default: phase_predict.pt)
     --per-token           use one tuple per token instead of one per CPD segment
 
@@ -227,10 +233,26 @@ def main(argv: list[str] | None = None) -> None:
                         help="Path to trace JSONL file or directory of JSONL files.")
     parser.add_argument("--window-size", type=int, default=8,
                         help="Context window size (number of past tuples).")
+    parser.add_argument("--d-model", type=int, default=64,
+                        help="Transformer hidden size.")
+    parser.add_argument("--n-heads", type=int, default=4,
+                        help="Number of attention heads.")
+    parser.add_argument("--n-layers", type=int, default=2,
+                        help="Number of Transformer encoder layers.")
+    parser.add_argument("--dropout", type=float, default=0.1,
+                        help="Dropout probability.")
     parser.add_argument("--whole-sequence", action="store_true",
                         help="Train on each full trace sequence instead of sliding windows.")
     parser.add_argument("--epochs", type=int, default=100, help="Max training epochs.")
-    parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate.")
+    parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=1e-3,
+                        help="Learning rate.")
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=["auto", "cpu", "cuda"],
+        help="Training device to use.",
+    )
     parser.add_argument("--output", type=str, default="phase_predict.pt",
                         help="Path to save the checkpoint.")
     parser.add_argument("--per-token", action="store_true",
@@ -357,7 +379,13 @@ def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    model_cfg = ModelConfig(window_size=effective_window_size)
+    model_cfg = ModelConfig(
+        window_size=effective_window_size,
+        d_model=args.d_model,
+        n_heads=args.n_heads,
+        n_layers=args.n_layers,
+        dropout=args.dropout,
+    )
     if use_sequence_mode:
         train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg)
         if val_sequences:
@@ -375,13 +403,18 @@ def main(argv: list[str] | None = None) -> None:
     model = PhaseTransformer(model_cfg)
     train_cfg = TrainConfig(
         max_epochs=args.epochs,
-        learning_rate=args.lr,
+        learning_rate=args.learning_rate,
         log_interval=10,
-        batch_size=1 if use_sequence_mode else 32,
+        batch_size=32 if use_sequence_mode else 32,
     )
 
     print(f"\nTraining PhaseTransformer for up to {args.epochs} epochs …")  # noqa: T201
-    trainer = Trainer(model, train_cfg)
+    if args.device == "auto":
+        trainer_device = None
+    else:
+        trainer_device = args.device
+    trainer = Trainer(model, train_cfg, device=trainer_device)
+    print(f"Using device: {trainer.device}")  # noqa: T201
     if use_sequence_mode and val_sequences:
         history = trainer.fit(dataset, val_dataset=val_dataset)
     else:
@@ -393,8 +426,13 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     predictor = Predictor(model, mean=dataset.mean, std=dataset.std)
-    predictor.save_checkpoint(args.output)
-    print(f"Checkpoint saved to: {args.output}")  # noqa: T201
+    # append best validation loss to checkpoint filename
+    out_path = Path(args.output)
+    metric_tag = f"bestval={history.best_val_loss:.6f}"
+    new_name = f"{out_path.stem}_{metric_tag}{out_path.suffix}"
+    out_path = out_path.with_name(new_name)
+    predictor.save_checkpoint(str(out_path))
+    print(f"Checkpoint saved to: {out_path}")  # noqa: T201
 
     # quick sanity-check prediction
     if use_sequence_mode and all_sequences:
