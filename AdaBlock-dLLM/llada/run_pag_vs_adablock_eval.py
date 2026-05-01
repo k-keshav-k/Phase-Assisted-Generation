@@ -126,6 +126,11 @@ def _decode_generation(tokenizer, output_ids: torch.Tensor, input_ids: torch.Ten
     )
 
 
+def _synchronize_if_cuda(device: str) -> None:
+    if str(device).startswith("cuda") and torch.cuda.is_available():
+        torch.cuda.synchronize()
+
+
 def _build_history_block_visualization(
     *,
     tokenizer,
@@ -183,7 +188,11 @@ def _summarize_method(
     expected_contains: list[str] | None,
     expected_answers: list[str] | None,
     block_visualization: list[dict[str, object]] | None = None,
+    scheduler_predict_time_sec: float = 0.0,
 ) -> dict[str, object]:
+    scheduler_predict_time_sec = max(0.0, float(scheduler_predict_time_sec))
+    total_elapsed_sec = max(0.0, float(elapsed_sec))
+    llada_decode_time_sec = max(0.0, total_elapsed_sec - scheduler_predict_time_sec)
     return {
         "method": method,
         "generated_text": generated_text,
@@ -191,7 +200,10 @@ def _summarize_method(
         "block_history": block_history,
         "block_visualization": block_visualization or [],
         "metrics": {
-            "elapsed_sec": elapsed_sec,
+            "elapsed_sec": total_elapsed_sec,
+            "total_elapsed_sec": total_elapsed_sec,
+            "scheduler_predict_time_sec": scheduler_predict_time_sec,
+            "llada_decode_time_sec": llada_decode_time_sec,
             "total_nfe": sum(nfe_history),
             "num_blocks": len(block_history),
             "avg_block_size": (sum(block_history) / len(block_history))
@@ -229,6 +241,7 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         else generate_pag
     )
 
+    _synchronize_if_cuda(args.device)
     start = time.perf_counter()
     output_ids, nfe_history, block_history, schedule_history = generator(
         model,
@@ -243,7 +256,9 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         max_block_length=args.max_block_length,
         max_refinement_steps=args.max_refinement_steps,
     )
+    _synchronize_if_cuda(args.device)
     elapsed = time.perf_counter() - start
+    scheduler_predict_time_sec = float(getattr(scheduler, "scheduler_predict_time_sec", 0.0))
     generated_text = _decode_generation(tokenizer, output_ids, input_ids)
     block_visualization = _build_block_visualization(
         tokenizer=tokenizer,
@@ -261,6 +276,7 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         expected_contains=record.expected_contains,
         expected_answers=record.expected_answers,
         block_visualization=block_visualization,
+        scheduler_predict_time_sec=scheduler_predict_time_sec,
     )
 
 
@@ -281,6 +297,7 @@ def _run_adablock(args: argparse.Namespace, model, tokenizer, record: EvalPrompt
         else generate_adablock
     )
 
+    _synchronize_if_cuda(args.device)
     start = time.perf_counter()
     output_ids, nfe_history, block_history = generator(
         model,
@@ -295,6 +312,7 @@ def _run_adablock(args: argparse.Namespace, model, tokenizer, record: EvalPrompt
         delimiter_ids=args.delimiter_ids,
         delimiter_threshold=args.delimiter_threshold,
     )
+    _synchronize_if_cuda(args.device)
     elapsed = time.perf_counter() - start
     generated_text = _decode_generation(tokenizer, output_ids, input_ids)
     block_visualization = _build_history_block_visualization(
@@ -319,6 +337,15 @@ def _run_adablock(args: argparse.Namespace, model, tokenizer, record: EvalPrompt
 def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> dict[str, object]:
     pag_metrics = pag["metrics"]
     adablock_metrics = adablock["metrics"]
+    pag_total_elapsed = pag_metrics.get("total_elapsed_sec", pag_metrics["elapsed_sec"])
+    adablock_total_elapsed = adablock_metrics.get(
+        "total_elapsed_sec",
+        adablock_metrics["elapsed_sec"],
+    )
+    pag_decode = pag_metrics.get("llada_decode_time_sec", pag_total_elapsed)
+    adablock_decode = adablock_metrics.get("llada_decode_time_sec", adablock_total_elapsed)
+    pag_predict = pag_metrics.get("scheduler_predict_time_sec", 0.0)
+    adablock_predict = adablock_metrics.get("scheduler_predict_time_sec", 0.0)
     return {
         "nfe_delta_pag_minus_adablock": pag_metrics["total_nfe"] - adablock_metrics["total_nfe"],
         "nfe_ratio_pag_over_adablock": (
@@ -328,6 +355,15 @@ def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> di
         ),
         "elapsed_delta_sec_pag_minus_adablock": (
             pag_metrics["elapsed_sec"] - adablock_metrics["elapsed_sec"]
+        ),
+        "total_elapsed_delta_sec_pag_minus_adablock": (
+            pag_total_elapsed - adablock_total_elapsed
+        ),
+        "llada_decode_delta_sec_pag_minus_adablock": (
+            pag_decode - adablock_decode
+        ),
+        "scheduler_predict_delta_sec_pag_minus_adablock": (
+            pag_predict - adablock_predict
         ),
         "block_count_delta_pag_minus_adablock": (
             pag_metrics["num_blocks"] - adablock_metrics["num_blocks"]

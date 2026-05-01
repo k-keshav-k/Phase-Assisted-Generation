@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -89,6 +90,25 @@ def test_build_history_block_visualization_uses_token_block_boundaries() -> None
     assert blocks[1]["block_text"] == "cde"
     assert blocks[1]["applied_block_size"] == 3
     assert blocks[1]["actual_nfe_used"] == 1
+
+
+def test_summarize_method_reports_split_timing_metrics() -> None:
+    summary = run_eval._summarize_method(
+        method="pag",
+        generated_text="answer",
+        nfe_history=[2, 3],
+        block_history=[4, 5],
+        elapsed_sec=1.25,
+        scheduler_predict_time_sec=0.05,
+        expected_contains=[],
+        expected_answers=[],
+    )
+
+    metrics = summary["metrics"]
+    assert metrics["elapsed_sec"] == 1.25
+    assert metrics["total_elapsed_sec"] == 1.25
+    assert metrics["scheduler_predict_time_sec"] == 0.05
+    assert metrics["llada_decode_time_sec"] == pytest.approx(1.2)
 
 
 def test_adablock_first_seed_uses_realized_first_tuple() -> None:

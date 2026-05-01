@@ -121,6 +121,7 @@ def flatten_methods(records: list[dict[str, Any]]) -> pd.DataFrame:
         for method in ("pag", "adablock"):
             payload = record.get(method, {})
             metrics = payload.get("metrics", {})
+            total_elapsed_sec = metrics.get("total_elapsed_sec", metrics.get("elapsed_sec"))
             rows.append(
                 {
                     "record_index": record_index,
@@ -139,6 +140,9 @@ def flatten_methods(records: list[dict[str, Any]]) -> pd.DataFrame:
                     "avg_block_size": metrics.get("avg_block_size"),
                     "avg_nfe_per_block": metrics.get("avg_nfe_per_block"),
                     "elapsed_sec": metrics.get("elapsed_sec"),
+                    "total_elapsed_sec": total_elapsed_sec,
+                    "scheduler_predict_time_sec": metrics.get("scheduler_predict_time_sec"),
+                    "llada_decode_time_sec": metrics.get("llada_decode_time_sec"),
                     "decoded_chars": metrics.get("decoded_chars"),
                     "substring_score": _score(metrics),
                     "answer_score": _answer_score(metrics),
@@ -170,6 +174,16 @@ def flatten_deltas(records: list[dict[str, Any]]) -> pd.DataFrame:
                 "nfe_ratio_pag_over_adablock": delta.get("nfe_ratio_pag_over_adablock"),
                 "elapsed_delta_sec_pag_minus_adablock": delta.get(
                     "elapsed_delta_sec_pag_minus_adablock"
+                ),
+                "total_elapsed_delta_sec_pag_minus_adablock": delta.get(
+                    "total_elapsed_delta_sec_pag_minus_adablock",
+                    delta.get("elapsed_delta_sec_pag_minus_adablock"),
+                ),
+                "llada_decode_delta_sec_pag_minus_adablock": delta.get(
+                    "llada_decode_delta_sec_pag_minus_adablock"
+                ),
+                "scheduler_predict_delta_sec_pag_minus_adablock": delta.get(
+                    "scheduler_predict_delta_sec_pag_minus_adablock"
                 ),
                 "block_count_delta_pag_minus_adablock": delta.get(
                     "block_count_delta_pag_minus_adablock"
@@ -444,11 +458,13 @@ def render_metrics(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> None:
     pag = method_df[method_df["method"] == "PAG"]
     adablock = method_df[method_df["method"] == "AdaBlock"]
     nfe_ratio = delta_df["nfe_ratio_pag_over_adablock"].dropna()
-    elapsed_delta = delta_df["elapsed_delta_sec_pag_minus_adablock"].dropna()
+    elapsed_delta = delta_df["total_elapsed_delta_sec_pag_minus_adablock"].dropna()
+    pag_predict_time = pag["scheduler_predict_time_sec"].dropna()
+    pag_decode_time = pag["llada_decode_time_sec"].dropna()
     pag_accuracy = pag["answer_score"].dropna()
     adablock_accuracy = adablock["answer_score"].dropna()
 
-    cols = st.columns(7)
+    cols = st.columns(9)
     cols[0].metric("Prompts", int(delta_df.shape[0]))
     cols[1].metric("PAG Avg NFE", f"{pag['total_nfe'].mean():.2f}")
     cols[2].metric("AdaBlock Avg NFE", f"{adablock['total_nfe'].mean():.2f}")
@@ -458,10 +474,18 @@ def render_metrics(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> None:
         f"{elapsed_delta.mean():.2f}s" if not elapsed_delta.empty else "n/a",
     )
     cols[5].metric(
+        "PAG Predictor Time",
+        f"{pag_predict_time.mean():.4f}s" if not pag_predict_time.empty else "n/a",
+    )
+    cols[6].metric(
+        "PAG Decode Time",
+        f"{pag_decode_time.mean():.2f}s" if not pag_decode_time.empty else "n/a",
+    )
+    cols[7].metric(
         "PAG Accuracy",
         f"{pag_accuracy.mean() * 100:.1f}%" if not pag_accuracy.empty else "n/a",
     )
-    cols[6].metric(
+    cols[8].metric(
         "AdaBlock Accuracy",
         f"{adablock_accuracy.mean() * 100:.1f}%" if not adablock_accuracy.empty else "n/a",
     )
@@ -562,7 +586,7 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
         alt.Chart(method_df)
         .mark_circle(size=90, opacity=0.8)
         .encode(
-            x=alt.X("elapsed_sec:Q", title="Runtime seconds"),
+            x=alt.X("total_elapsed_sec:Q", title="Total elapsed seconds"),
             y=alt.Y("total_nfe:Q", title="Total NFE"),
             color=_method_color(),
             shape=alt.Shape("category:N", title="Category"),
@@ -571,7 +595,9 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
                 "run_label:N",
                 "category:N",
                 "method:N",
-                "elapsed_sec:Q",
+                "total_elapsed_sec:Q",
+                "llada_decode_time_sec:Q",
+                "scheduler_predict_time_sec:Q",
                 "total_nfe:Q",
                 "answer_score:Q",
                 "substring_score:Q",
@@ -580,6 +606,53 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
         .properties(height=320)
     )
     st.altair_chart(_readable(runtime), use_container_width=True)
+
+    timing_columns = ["llada_decode_time_sec", "scheduler_predict_time_sec"]
+    timing_df = method_df.dropna(subset=timing_columns, how="all")
+    if not timing_df.empty:
+        timing_long = timing_df.melt(
+            id_vars=["prompt_label", "prompt_id", "method", "category"],
+            value_vars=timing_columns,
+            var_name="time_component",
+            value_name="seconds",
+        ).dropna(subset=["seconds"])
+        timing_long["time_component"] = timing_long["time_component"].map(
+            {
+                "llada_decode_time_sec": "LLaDA decode",
+                "scheduler_predict_time_sec": "PAG predictor",
+            }
+        )
+        timing_chart = (
+            alt.Chart(timing_long)
+            .mark_bar()
+            .encode(
+                x=alt.X(
+                    "prompt_label:N",
+                    title="Prompt",
+                    sort=None,
+                    axis=alt.Axis(labelAngle=-35, labelLimit=170),
+                ),
+                xOffset=_method_offset(),
+                y=alt.Y("seconds:Q", title="Seconds"),
+                color=alt.Color(
+                    "time_component:N",
+                    title="Time component",
+                    scale=alt.Scale(
+                        domain=["LLaDA decode", "PAG predictor"],
+                        range=["#4c78a8", "#f58518"],
+                    ),
+                ),
+                tooltip=[
+                    "prompt_id:N",
+                    "category:N",
+                    "method:N",
+                    "time_component:N",
+                    "seconds:Q",
+                ],
+            )
+            .properties(height=320)
+        )
+        st.altair_chart(_readable(timing_chart), use_container_width=True)
 
 
 def render_category_summary(method_df: pd.DataFrame) -> None:
@@ -628,6 +701,9 @@ def render_prompt_detail(records: list[dict[str, Any]], method_df: pd.DataFrame)
                 "avg_block_size",
                 "avg_nfe_per_block",
                 "elapsed_sec",
+                "total_elapsed_sec",
+                "llada_decode_time_sec",
+                "scheduler_predict_time_sec",
                 "answer_correct",
                 "answer_score",
                 "substring_score",

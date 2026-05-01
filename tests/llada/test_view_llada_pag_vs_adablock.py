@@ -79,6 +79,41 @@ def test_validate_graph_data_accepts_consistent_rows() -> None:
     assert ui.validate_graph_data(method_df, delta_df) == []
 
 
+def test_flatten_methods_exposes_split_timing_metrics() -> None:
+    records = [
+        {
+            "prompt_id": "p",
+            "pag": {
+                "metrics": {
+                    "elapsed_sec": 1.0,
+                    "total_elapsed_sec": 1.0,
+                    "scheduler_predict_time_sec": 0.1,
+                    "llada_decode_time_sec": 0.9,
+                    "substring_check": {},
+                    "answer_check": {},
+                }
+            },
+            "adablock": {
+                "metrics": {
+                    "elapsed_sec": 1.2,
+                    "total_elapsed_sec": 1.2,
+                    "scheduler_predict_time_sec": 0.0,
+                    "llada_decode_time_sec": 1.2,
+                    "substring_check": {},
+                    "answer_check": {},
+                }
+            },
+        }
+    ]
+
+    method_df = ui.flatten_methods(records)
+    pag_row = method_df[method_df["method"] == "PAG"].iloc[0]
+
+    assert pag_row["total_elapsed_sec"] == 1.0
+    assert pag_row["scheduler_predict_time_sec"] == 0.1
+    assert pag_row["llada_decode_time_sec"] == 0.9
+
+
 def test_validate_graph_data_flags_wrong_answer_delta() -> None:
     method_df = pd.DataFrame(
         [

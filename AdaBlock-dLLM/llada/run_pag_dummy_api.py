@@ -4,6 +4,7 @@ import argparse
 import importlib
 import json
 import sys
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -223,6 +224,7 @@ class DummyAPIScheduler:
         self._block_index = 0
         self.api.reset()
         self.prediction_trace: list[dict[str, object]] = []
+        self.scheduler_predict_time_sec = 0.0
 
     def next_schedule(
         self,
@@ -239,13 +241,17 @@ class DummyAPIScheduler:
             predicted_tuple = self.seed_tuple
             source = "seed"
             context: list[BlockTuple] = []
+            predict_time_sec = 0.0
         else:
+            predict_start = time.perf_counter()
             predicted_tuple = self.api.predict_tuple(
                 prompt_text=self.prompt_text,
                 block_index=self._block_index,
                 history=list(self._history),
                 remaining_tokens=remaining_tokens,
             )
+            predict_time_sec = time.perf_counter() - predict_start
+            self.scheduler_predict_time_sec += predict_time_sec
             source = "dummy_api"
             context = list(self._history)
 
@@ -271,6 +277,7 @@ class DummyAPIScheduler:
                 "remaining_tokens": int(remaining_tokens),
                 "applied_block_size": int(applied_block_size),
                 "budgeted_refinement_steps": int(budgeted_refinement_steps),
+                "predict_time_sec": float(predict_time_sec),
             }
         )
         return ScheduledBlock(
@@ -320,6 +327,7 @@ class CheckpointTupleScheduler:
         self._history: list[BlockTuple] = []
         self._block_index = 0
         self.prediction_trace: list[dict[str, object]] = []
+        self.scheduler_predict_time_sec = 0.0
 
     def _padded_context(self) -> list[BlockTuple]:
         window_size = int(self.predictor.config.window_size)
@@ -345,9 +353,13 @@ class CheckpointTupleScheduler:
                 metadata={"source": "seed", "window_size_used": 0},
             )
             context: list[BlockTuple] = []
+            predict_time_sec = 0.0
         else:
             context = self._padded_context()
+            predict_start = time.perf_counter()
             result = self.predictor.predict(context)
+            predict_time_sec = time.perf_counter() - predict_start
+            self.scheduler_predict_time_sec += predict_time_sec
             predicted_tuple = _normalize_tuple(
                 result.predicted_tuple.block_size,
                 result.predicted_tuple.refinement_steps,
@@ -381,6 +393,7 @@ class CheckpointTupleScheduler:
                 "budgeted_refinement_steps": int(budgeted_refinement_steps),
                 "raw_output": result.raw_output,
                 "metadata": dict(result.metadata),
+                "predict_time_sec": float(predict_time_sec),
             }
         )
         return ScheduledBlock(
