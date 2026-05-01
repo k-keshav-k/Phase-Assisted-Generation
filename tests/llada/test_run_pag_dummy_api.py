@@ -210,7 +210,7 @@ def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
     )
 
     assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(8, 2)
-    assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(5, 3)
+    assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(5, 4)
     assert predictor.calls == [
         [
             run_pag_dummy_api.BlockTuple(8, 2),
@@ -221,6 +221,7 @@ def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
     ]
     assert scheduler.prediction_trace[1]["source"] == "checkpoint"
     assert scheduler.prediction_trace[1]["raw_output"] == [5.0, 3.0]
+    assert scheduler.prediction_trace[1]["metadata"]["stabilizing_step_offset"] == 1
 
 
 def test_build_block_visualization_includes_block_text() -> None:

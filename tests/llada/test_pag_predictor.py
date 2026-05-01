@@ -75,7 +75,7 @@ def test_later_blocks_use_left_padded_realized_history() -> None:
             PhaseTuple(8, 4),
         ]
     ]
-    assert second.predicted_tuple == PhaseTuple(6, 5)
+    assert second.predicted_tuple == PhaseTuple(6, 6)
 
 
 def test_scheduler_clamps_block_size_and_refinement_budget() -> None:
@@ -99,6 +99,6 @@ def test_scheduler_clamps_block_size_and_refinement_budget() -> None:
         max_refinement_steps=7,
     )
 
-    assert scheduled.predicted_tuple == PhaseTuple(0, 0)
+    assert scheduled.predicted_tuple == PhaseTuple(0, 1)
     assert scheduled.applied_block_size == 1
     assert scheduled.budgeted_refinement_steps == 1

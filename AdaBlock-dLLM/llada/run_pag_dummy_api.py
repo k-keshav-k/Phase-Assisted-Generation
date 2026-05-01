@@ -360,13 +360,15 @@ class CheckpointTupleScheduler:
             result = self.predictor.predict(context)
             predict_time_sec = time.perf_counter() - predict_start
             self.scheduler_predict_time_sec += predict_time_sec
+            raw_predicted_tuple = result.predicted_tuple
             predicted_tuple = _normalize_tuple(
-                result.predicted_tuple.block_size,
-                result.predicted_tuple.refinement_steps,
+                raw_predicted_tuple.block_size,
+                int(raw_predicted_tuple.refinement_steps) + 1,
             )
             result.metadata = {
                 **dict(result.metadata),
                 "source": "checkpoint",
+                "stabilizing_step_offset": 1,
             }
 
         block_index = self._block_index

@@ -77,7 +77,11 @@ class PAGTupleScheduler:
         if self._block_index == 0:
             predicted_tuple = self.seed_tuple
         else:
-            predicted_tuple = self.predictor.predict(self._padded_context()).predicted_tuple
+            raw_predicted_tuple = self.predictor.predict(self._padded_context()).predicted_tuple
+            predicted_tuple = PhaseTuple(
+                block_size=int(raw_predicted_tuple.block_size),
+                refinement_steps=int(raw_predicted_tuple.refinement_steps) + 1,
+            )
 
         self._block_index += 1
         applied_block_size = max(
