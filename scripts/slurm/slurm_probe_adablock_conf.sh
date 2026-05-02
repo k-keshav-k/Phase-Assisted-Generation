@@ -9,16 +9,11 @@
 #SBATCH --error=%x_%j.err
 #SBATCH --open-mode=append
 
-# Can be submitted from any directory:
-#   sbatch scripts/slurm/slurm_probe_adablock_conf.sh
 # --requeue + file-based resume in the probe means preempted jobs restart safely.
 
 set -euo pipefail
 
-# Always cd to the repo root regardless of where sbatch was called from
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$REPO_ROOT"
-
+cd /scratch/$USER/Phase-Assisted-Generation
 mkdir -p traces/adablock
 
 echo "======================================================"
