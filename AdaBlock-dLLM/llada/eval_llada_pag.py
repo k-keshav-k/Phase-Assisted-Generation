@@ -43,6 +43,9 @@ class LLaDAEvalHarness(AdaBlockLLaDAEvalHarness):
         predictor_device: str | None = "cpu",
         max_block_length: int | None = None,
         max_refinement_steps: int | None = None,
+        min_refinement_steps: int | None = 3,
+        context_seed_block_length: int | None = None,
+        context_seed_stabilizing_steps: int | None = None,
         **kwargs,
     ) -> None:
         if predictor_ckpt is None:
@@ -85,11 +88,15 @@ class LLaDAEvalHarness(AdaBlockLLaDAEvalHarness):
         self.max_refinement_steps = int(
             steps if max_refinement_steps is None else max_refinement_steps
         )
+        self.min_refinement_steps = int(min_refinement_steps or 1)
         self.pag_scheduler = PAGTupleScheduler(
             predictor_ckpt=self.predictor_ckpt,
             seed_block_length=self.seed_block_length,
             seed_refinement_steps=self.seed_refinement_steps,
             predictor_device=self.predictor_device,
+            context_seed_block_length=context_seed_block_length,
+            context_seed_stabilizing_steps=context_seed_stabilizing_steps,
+            min_refinement_steps=self.min_refinement_steps,
         )
         self.schedule_histories: list[list[dict[str, object]]] = []
 

@@ -136,12 +136,17 @@ def test_args_with_pag_seed_overrides_seed_only() -> None:
 
     seeded = run_eval._args_with_pag_seed(
         args,
-        seed_block_length=9,
-        seed_refinement_steps=3,
+        seed=run_eval.EffectiveSeed(
+            block_length=9,
+            refinement_steps=3,
+            source="adablock_first_block",
+            context_stabilizing_steps=2,
+        ),
     )
 
     assert seeded.seed_block_length == 9
     assert seeded.seed_refinement_steps == 3
+    assert seeded.context_seed_stabilizing_steps == 2
     assert args.seed_block_length == 32
     assert args.seed_refinement_steps == 4
     assert seeded.model_path == args.model_path

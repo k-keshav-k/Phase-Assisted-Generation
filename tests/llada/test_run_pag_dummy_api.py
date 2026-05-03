@@ -119,6 +119,20 @@ def test_dummy_scheduler_uses_seed_then_dummy_api_and_clamps() -> None:
     assert scheduler.prediction_trace[1]["source"] == "dummy_api"
 
 
+def test_max_stabilizing_step_matches_trace_style_max() -> None:
+    predictions = [
+        torch.tensor([4, 9, 1]),
+        torch.tensor([4, 8, 1]),
+        torch.tensor([4, 8, 2]),
+        torch.tensor([4, 8, 2]),
+    ]
+
+    assert run_pag_dummy_api._max_stabilizing_step(
+        predictions,
+        torch.tensor([4, 8, 2]),
+    ) == 2
+
+
 def test_effective_seed_uses_explicit_seed_when_adablock_probe_disabled() -> None:
     args = run_pag_dummy_api.build_arg_parser().parse_args(
         [
@@ -140,6 +154,7 @@ def test_effective_seed_uses_explicit_seed_when_adablock_probe_disabled() -> Non
         block_length=12,
         refinement_steps=5,
         source="explicit",
+        context_stabilizing_steps=4,
     )
 
 
@@ -208,20 +223,29 @@ def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
         max_block_length=16,
         max_refinement_steps=12,
     )
+    scheduler.record_realized(second.applied_block_size, second.budgeted_refinement_steps)
 
     assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(8, 2)
     assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(5, 4)
     assert predictor.calls == [
         [
-            run_pag_dummy_api.BlockTuple(8, 2),
-            run_pag_dummy_api.BlockTuple(8, 2),
-            run_pag_dummy_api.BlockTuple(8, 2),
-            run_pag_dummy_api.BlockTuple(8, 4),
+            run_pag_dummy_api.BlockTuple(8, 1),
+            run_pag_dummy_api.BlockTuple(8, 1),
+            run_pag_dummy_api.BlockTuple(8, 1),
+            run_pag_dummy_api.BlockTuple(8, 3),
         ]
     ]
     assert scheduler.prediction_trace[1]["source"] == "checkpoint"
     assert scheduler.prediction_trace[1]["raw_output"] == [5.0, 3.0]
     assert scheduler.prediction_trace[1]["metadata"]["stabilizing_step_offset"] == 1
+    assert scheduler.prediction_trace[1]["realized_tuple"] == {
+        "block_size": 5,
+        "refinement_steps": 3,
+    }
+    assert scheduler.prediction_trace[1]["realized_decode_tuple"] == {
+        "block_size": 5,
+        "refinement_steps": 4,
+    }
 
 
 def test_build_block_visualization_includes_block_text() -> None:

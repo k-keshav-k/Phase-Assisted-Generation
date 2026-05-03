@@ -44,6 +44,7 @@ class EffectiveSeed:
     block_length: int
     refinement_steps: int
     source: str
+    context_stabilizing_steps: int | None = None
 
 
 def _tuple_to_dict(value: BlockTuple) -> dict[str, int]:
@@ -58,6 +59,44 @@ def _normalize_tuple(block_size: int, refinement_steps: int) -> BlockTuple:
         block_size=max(1, int(block_size)),
         refinement_steps=max(1, int(refinement_steps)),
     )
+
+
+def _normalize_stabilizing_tuple(block_size: int, stabilizing_steps: int) -> BlockTuple:
+    return BlockTuple(
+        block_size=max(1, int(block_size)),
+        refinement_steps=max(0, int(stabilizing_steps)),
+    )
+
+
+def _max_stabilizing_step(
+    predictions_by_step: list[object],
+    final_tokens: object,
+) -> int:
+    """Return max per-token stabilizing step over one decoded block.
+
+    Step indices match trace files: first refinement/model pass is step 0,
+    and the final possible step is ``nfe - 1``.
+    """
+    import torch
+
+    if not predictions_by_step:
+        return 0
+
+    stacked = torch.stack([step.detach().cpu().reshape(-1) for step in predictions_by_step])
+    final = final_tokens.detach().cpu().reshape(-1)
+    if final.numel() == 0:
+        return 0
+
+    max_stable_step = 0
+    for token_index in range(final.numel()):
+        final_id = final[token_index]
+        stable_step = int(stacked.shape[0] - 1)
+        for step_index in range(stacked.shape[0]):
+            if torch.all(stacked[step_index:, token_index] == final_id):
+                stable_step = int(step_index)
+                break
+        max_stable_step = max(max_stable_step, stable_step)
+    return max_stable_step
 
 
 def parse_tuple_schedule(raw: str | None) -> list[BlockTuple]:
@@ -308,12 +347,24 @@ class CheckpointTupleScheduler:
         seed_refinement_steps: int,
         predictor_device: str = "cpu",
         predictor: Predictor | None = None,
+        context_seed_block_length: int | None = None,
+        context_seed_stabilizing_steps: int | None = None,
+        min_refinement_steps: int = 3,
     ) -> None:
         self.prompt_text = prompt_text
         self.seed_tuple = _normalize_tuple(
             seed_block_length,
             seed_refinement_steps,
         )
+        self.context_seed_tuple = _normalize_stabilizing_tuple(
+            seed_block_length
+            if context_seed_block_length is None
+            else context_seed_block_length,
+            seed_refinement_steps - 1
+            if context_seed_stabilizing_steps is None
+            else context_seed_stabilizing_steps,
+        )
+        self.min_refinement_steps = max(1, int(min_refinement_steps))
 
         if predictor is None:
             predictor = Predictor.from_checkpoint(
@@ -333,7 +384,7 @@ class CheckpointTupleScheduler:
         window_size = int(self.predictor.config.window_size)
         history = self._history[-window_size:]
         pad_count = max(0, window_size - len(history))
-        return ([self.seed_tuple] * pad_count) + history
+        return ([self.context_seed_tuple] * pad_count) + history
 
     def next_schedule(
         self,
@@ -346,7 +397,8 @@ class CheckpointTupleScheduler:
             msg = "remaining_tokens must be positive"
             raise ValueError(msg)
 
-        if self._block_index == 0:
+        is_seed_block = self._block_index == 0
+        if is_seed_block:
             predicted_tuple = self.seed_tuple
             result = SimpleNamespace(
                 raw_output=None,
@@ -380,9 +432,14 @@ class CheckpointTupleScheduler:
                 min(int(max_block_length), int(remaining_tokens)),
             ),
         )
-        budgeted_refinement_steps = max(
-            1,
-            min(int(predicted_tuple.refinement_steps), int(max_refinement_steps)),
+        budget_floor = (
+            1
+            if is_seed_block
+            else min(self.min_refinement_steps, int(max_refinement_steps))
+        )
+        budgeted_refinement_steps = min(
+            int(max_refinement_steps),
+            max(budget_floor, int(predicted_tuple.refinement_steps)),
         )
         self.prediction_trace.append(
             {
@@ -396,6 +453,7 @@ class CheckpointTupleScheduler:
                 "raw_output": result.raw_output,
                 "metadata": dict(result.metadata),
                 "predict_time_sec": float(predict_time_sec),
+                "context_seed_tuple": _tuple_to_dict(self.context_seed_tuple),
             }
         )
         return ScheduledBlock(
@@ -405,9 +463,14 @@ class CheckpointTupleScheduler:
         )
 
     def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
-        realized_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
+        decode_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
+        realized_tuple = _normalize_stabilizing_tuple(
+            applied_block_size,
+            int(actual_nfe_used) - 1,
+        )
         self._history.append(realized_tuple)
         self.prediction_trace[-1]["realized_tuple"] = _tuple_to_dict(realized_tuple)
+        self.prediction_trace[-1]["realized_decode_tuple"] = _tuple_to_dict(decode_tuple)
 
     @property
     def history(self) -> list[BlockTuple]:
@@ -578,6 +641,7 @@ def _adablock_first_seed(
         )
         block_start = prompt.shape[1]
         block_end = block_start + int(block_length)
+        predictions_by_step = [predicted_tokens[0, block_start:block_end].detach().cpu()]
 
         mask_index = x == args.mask_id
         mask_index[:, block_end:] = 0
@@ -603,6 +667,9 @@ def _adablock_first_seed(
             )
             block_predicted_tokens = torch.argmax(block_logits_with_noise, dim=-1)
             nfe += 1
+            predictions_by_step.append(
+                block_predicted_tokens[0, block_start:block_end].detach().cpu()
+            )
             x0, transfer_index = get_transfer_index(
                 block_logits,
                 block_predicted_tokens,
@@ -614,10 +681,16 @@ def _adablock_first_seed(
             )
             x[transfer_index] = x0[transfer_index]
 
+        stabilizing_steps = _max_stabilizing_step(
+            predictions_by_step,
+            x[0, block_start:block_end],
+        )
+
     return EffectiveSeed(
         block_length=max(1, int(block_length)),
         refinement_steps=max(1, int(nfe)),
         source="adablock_first_block",
+        context_stabilizing_steps=max(0, int(stabilizing_steps)),
     )
 
 
@@ -632,6 +705,7 @@ def _effective_seed(
             block_length=max(1, int(args.seed_block_length)),
             refinement_steps=max(1, int(args.seed_refinement_steps)),
             source="explicit",
+            context_stabilizing_steps=max(0, int(args.seed_refinement_steps) - 1),
         )
     return _adablock_first_seed(args=args, model=model, prompt=input_ids)
 
@@ -672,12 +746,27 @@ def _make_scheduler(
             f"{predictor_ckpt}. Pass --predictor-ckpt or use --dummy-tuples."
         )
         raise FileNotFoundError(msg)
+    context_seed_block_length = (
+        args.context_seed_block_length
+        if args.context_seed_block_length is not None
+        else args.seed_block_length
+    )
+    context_seed_stabilizing_steps = (
+        args.context_seed_stabilizing_steps
+        if args.context_seed_stabilizing_steps is not None
+        else seed.context_stabilizing_steps
+        if seed.context_stabilizing_steps is not None
+        else max(0, int(args.seed_refinement_steps) - 1)
+    )
     return CheckpointTupleScheduler(
         prompt_text=prompt_text,
         predictor_ckpt=predictor_ckpt,
         seed_block_length=seed.block_length,
         seed_refinement_steps=seed.refinement_steps,
         predictor_device=args.predictor_device,
+        context_seed_block_length=context_seed_block_length,
+        context_seed_stabilizing_steps=context_seed_stabilizing_steps,
+        min_refinement_steps=args.min_refinement_steps,
     )
 
 
@@ -765,6 +854,7 @@ def _run_one_prompt(
             "requested_seed_refinement_steps": args.seed_refinement_steps,
             "effective_seed_block_length": seed.block_length,
             "effective_seed_refinement_steps": seed.refinement_steps,
+            "effective_context_seed_stabilizing_steps": seed.context_stabilizing_steps,
             "seed_source": seed.source,
             "seed_from_adablock_first_block": args.seed_from_adablock_first_block,
             "adablock_init_block_length": args.adablock_init_block_length,
@@ -778,6 +868,9 @@ def _run_one_prompt(
             "disable_torch_compile": args.disable_torch_compile,
             "max_block_length": args.max_block_length,
             "max_refinement_steps": args.max_refinement_steps,
+            "min_refinement_steps": args.min_refinement_steps,
+            "context_seed_block_length": args.context_seed_block_length,
+            "context_seed_stabilizing_steps": args.context_seed_stabilizing_steps,
         },
         "summary": {
             "num_blocks": len(block_history),
@@ -958,6 +1051,30 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fallback-refinement-steps", type=int, default=None)
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
+    parser.add_argument(
+        "--min-refinement-steps",
+        type=int,
+        default=3,
+        help="Minimum total PAG refinement budget for checkpoint-predicted blocks.",
+    )
+    parser.add_argument(
+        "--context-seed-block-length",
+        type=int,
+        default=None,
+        help=(
+            "Block size used for predictor context left-padding. Defaults to "
+            "--seed-block-length, not the AdaBlock-derived decode seed."
+        ),
+    )
+    parser.add_argument(
+        "--context-seed-stabilizing-steps",
+        type=int,
+        default=None,
+        help=(
+            "Stabilizing-step value used for predictor context left-padding. "
+            "Defaults to --seed-refinement-steps - 1."
+        ),
+    )
     parser.add_argument("--device", default="cuda")
     parser.add_argument(
         "--dtype",

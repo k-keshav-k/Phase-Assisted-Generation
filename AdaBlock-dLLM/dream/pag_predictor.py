@@ -33,11 +33,33 @@ class PAGTupleScheduler:
         seed_refinement_steps: int,
         predictor_device: str | torch.device = "cpu",
         predictor: Predictor | None = None,
+        context_seed_block_length: int | None = None,
+        context_seed_stabilizing_steps: int | None = None,
+        min_refinement_steps: int = 3,
     ) -> None:
         self.seed_tuple = PhaseTuple(
             block_size=max(1, int(seed_block_length)),
             refinement_steps=max(1, int(seed_refinement_steps)),
         )
+        self.context_seed_tuple = PhaseTuple(
+            block_size=max(
+                1,
+                int(
+                    seed_block_length
+                    if context_seed_block_length is None
+                    else context_seed_block_length
+                ),
+            ),
+            refinement_steps=max(
+                0,
+                int(
+                    seed_refinement_steps - 1
+                    if context_seed_stabilizing_steps is None
+                    else context_seed_stabilizing_steps
+                ),
+            ),
+        )
+        self.min_refinement_steps = max(1, int(min_refinement_steps))
 
         if predictor is None:
             if predictor_ckpt is None:
@@ -61,7 +83,7 @@ class PAGTupleScheduler:
         window_size = int(self.predictor.config.window_size)
         history = self._history[-window_size:]
         pad_count = max(0, window_size - len(history))
-        return ([self.seed_tuple] * pad_count) + history
+        return ([self.context_seed_tuple] * pad_count) + history
 
     def next_schedule(
         self,
@@ -74,10 +96,13 @@ class PAGTupleScheduler:
             msg = "remaining_tokens must be positive"
             raise ValueError(msg)
 
-        if self._block_index == 0:
+        is_seed_block = self._block_index == 0
+        if is_seed_block:
             predicted_tuple = self.seed_tuple
         else:
-            raw_predicted_tuple = self.predictor.predict(self._padded_context()).predicted_tuple
+            raw_predicted_tuple = (
+                self.predictor.predict(self._padded_context()).predicted_tuple
+            )
             predicted_tuple = PhaseTuple(
                 block_size=int(raw_predicted_tuple.block_size),
                 refinement_steps=int(raw_predicted_tuple.refinement_steps) + 1,
@@ -91,9 +116,14 @@ class PAGTupleScheduler:
                 min(int(max_block_length), int(remaining_tokens)),
             ),
         )
-        budgeted_refinement_steps = max(
-            1,
-            min(int(predicted_tuple.refinement_steps), int(max_refinement_steps)),
+        budget_floor = (
+            1
+            if is_seed_block
+            else min(self.min_refinement_steps, int(max_refinement_steps))
+        )
+        budgeted_refinement_steps = min(
+            int(max_refinement_steps),
+            max(budget_floor, int(predicted_tuple.refinement_steps)),
         )
         return ScheduledBlock(
             predicted_tuple=PhaseTuple(
@@ -108,7 +138,7 @@ class PAGTupleScheduler:
         self._history.append(
             PhaseTuple(
                 block_size=max(1, int(applied_block_size)),
-                refinement_steps=max(1, int(actual_nfe_used)),
+                refinement_steps=max(0, int(actual_nfe_used) - 1),
             )
         )
 

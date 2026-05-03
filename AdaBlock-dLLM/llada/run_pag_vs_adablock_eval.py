@@ -23,6 +23,9 @@ from run_pag_dummy_api import (
     _resolve_predictor_ckpt,
     write_log_record,
 )
+from run_pag_dummy_api import (
+    _adablock_first_seed as _probe_adablock_first_seed,
+)
 
 DEFAULT_PROMPT_FILE = ROOT / "AdaBlock-dLLM" / "llada" / "quick_eval_prompts.jsonl"
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
@@ -386,12 +389,16 @@ def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> di
 def _args_with_pag_seed(
     args: argparse.Namespace,
     *,
-    seed_block_length: int,
-    seed_refinement_steps: int,
+    seed: EffectiveSeed,
 ) -> argparse.Namespace:
     seeded_args = copy.copy(args)
-    seeded_args.seed_block_length = max(1, int(seed_block_length))
-    seeded_args.seed_refinement_steps = max(1, int(seed_refinement_steps))
+    seeded_args.seed_block_length = max(1, int(seed.block_length))
+    seeded_args.seed_refinement_steps = max(1, int(seed.refinement_steps))
+    if seed.context_stabilizing_steps is not None:
+        seeded_args.context_seed_stabilizing_steps = max(
+            0,
+            int(seed.context_stabilizing_steps),
+        )
     return seeded_args
 
 
@@ -422,6 +429,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--predictor-device", default="cpu")
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
+    parser.add_argument("--min-refinement-steps", type=int, default=3)
+    parser.add_argument("--context-seed-block-length", type=int, default=None)
+    parser.add_argument("--context-seed-stabilizing-steps", type=int, default=None)
     parser.add_argument("--adablock-init-block-length", type=int, default=32)
     parser.add_argument("--delimiter-threshold", type=float, default=0.3)
     parser.add_argument(
@@ -491,14 +501,21 @@ def main() -> None:
         adablock = _run_adablock(args, model, tokenizer, record)
         pag_args = args
         seed_source = "explicit"
+        context_seed_stabilizing_steps = None
         if args.seed_from_adablock_first_block:
-            seed_block_length, seed_refinement_steps = _adablock_first_seed(adablock)
-            pag_args = _args_with_pag_seed(
-                args,
-                seed_block_length=seed_block_length,
-                seed_refinement_steps=seed_refinement_steps,
+            user_input = _build_prompt(tokenizer, args.model_path, record.prompt)
+            input_ids = torch.tensor(
+                tokenizer(user_input)["input_ids"],
+                device=args.device,
+            ).unsqueeze(0)
+            seed = _probe_adablock_first_seed(
+                args=args,
+                model=model,
+                prompt=input_ids,
             )
+            pag_args = _args_with_pag_seed(args, seed=seed)
             seed_source = "adablock_first_block"
+            context_seed_stabilizing_steps = seed.context_stabilizing_steps
         pag = _run_pag(pag_args, model, tokenizer, record)
         result = {
             "schema_version": 1,
@@ -520,6 +537,9 @@ def main() -> None:
                 "requested_seed_refinement_steps": args.seed_refinement_steps,
                 "effective_seed_block_length": pag_args.seed_block_length,
                 "effective_seed_refinement_steps": pag_args.seed_refinement_steps,
+                "effective_context_seed_stabilizing_steps": (
+                    context_seed_stabilizing_steps
+                ),
                 "seed_source": seed_source,
                 "seed_from_adablock_first_block": args.seed_from_adablock_first_block,
                 "pag_seed_source": seed_source,
@@ -529,6 +549,11 @@ def main() -> None:
                 "delimiter_ids": args.delimiter_ids,
                 "use_cache": args.use_cache,
                 "dual_cache": args.dual_cache,
+                "max_block_length": args.max_block_length,
+                "max_refinement_steps": args.max_refinement_steps,
+                "min_refinement_steps": args.min_refinement_steps,
+                "context_seed_block_length": args.context_seed_block_length,
+                "context_seed_stabilizing_steps": args.context_seed_stabilizing_steps,
             },
             "pag": pag,
             "adablock": adablock,

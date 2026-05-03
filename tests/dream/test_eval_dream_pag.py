@@ -191,6 +191,9 @@ def test_eval_dream_pag_wires_predictor_args_into_generation(monkeypatch) -> Non
         "seed_block_length": 3,
         "seed_refinement_steps": 2,
         "predictor_device": "cpu",
+        "context_seed_block_length": None,
+        "context_seed_stabilizing_steps": None,
+        "min_refinement_steps": 3,
     }
     assert dream.pag_scheduler.reset_calls == 1
     assert dream.model.pag_scheduler is dream.pag_scheduler

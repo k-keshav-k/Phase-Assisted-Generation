@@ -69,10 +69,10 @@ def test_later_blocks_use_left_padded_realized_history() -> None:
 
     assert predictor.calls == [
         [
-            PhaseTuple(8, 2),
-            PhaseTuple(8, 2),
-            PhaseTuple(8, 2),
-            PhaseTuple(8, 4),
+            PhaseTuple(8, 1),
+            PhaseTuple(8, 1),
+            PhaseTuple(8, 1),
+            PhaseTuple(8, 3),
         ]
     ]
     assert second.predicted_tuple == PhaseTuple(6, 6)
@@ -101,4 +101,4 @@ def test_scheduler_clamps_block_size_and_refinement_budget() -> None:
 
     assert scheduled.predicted_tuple == PhaseTuple(0, 1)
     assert scheduled.applied_block_size == 1
-    assert scheduled.budgeted_refinement_steps == 1
+    assert scheduled.budgeted_refinement_steps == 3
