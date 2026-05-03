@@ -11,6 +11,8 @@ dist/
 artifacts/
 logs/
 outputs/
+output/
+traces/
 skills/
 AGENTS.md
 ## Core latex/pdflatex auxiliary files:
