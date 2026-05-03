@@ -70,7 +70,7 @@ class AblationResult:
 # Predefined ablation grids
 ABLATION_PRESETS = {
     "small": {
-        "window_size": [4, 8],
+        "window_size": [4],  # Placeholder, will be overridden to max sequence length
         "d_model": [32, 64],
         "n_heads": [2, 4],
         "n_layers": [1, 2],
@@ -78,24 +78,24 @@ ABLATION_PRESETS = {
         "learning_rate": [1e-3, 5e-4],
     },
     "medium": {
-        "window_size": [4, 8, 12],
-        "d_model": [32, 64, 128],
+        "window_size": [4], # Placeholder, will be overridden to max sequence length
+        "d_model": [64, 128],
         "n_heads": [2, 4],
         "n_layers": [1, 2, 3],
         "dropout": [0.0, 0.1, 0.2],
-        "learning_rate": [1e-3, 5e-4, 1e-4],
+        "learning_rate": [1e-3, 5e-4],
     },
     "large": {
-        "window_size": [4, 8, 12, 16],
-        "d_model": [32, 64, 128, 256],
+        "window_size": [4], # Placeholder, will be overridden to max sequence length
+        "d_model": [128, 256],
         "n_heads": [2, 4, 8],
         "n_layers": [1, 2, 3],
         "dropout": [0.0, 0.1, 0.2],
-        "learning_rate": [1e-3, 5e-4, 1e-4],
+        "learning_rate": [1e-3, 5e-4],
     },
     "xlarge": {
-        "window_size": [8, 16, 24],
-        "d_model": [128, 256, 512],
+        "window_size": [8], # Placeholder, will be overridden to max sequence length
+        "d_model": [256, 512],
         "n_heads": [4, 8, 16],
         "n_layers": [2, 4, 6],
         "dropout": [0.0, 0.1, 0.2],
@@ -110,7 +110,7 @@ def generate_ablation_configs(
     """Generate all combinations of hyperparameters from ablation grid.
 
     Args:
-        preset: one of 'small', 'medium', 'large'
+        preset: one of 'small', 'medium', 'large', 'xlarge'
 
     Returns:
         List of (ModelConfig, TrainConfig) tuples to test.
@@ -150,7 +150,11 @@ def generate_ablation_configs(
 
 
 def load_data(
-    train_jsonl: Path, test_jsonl: Path | None
+    train_jsonl: Path,
+    test_jsonl: Path | None,
+    *,
+    block_field: str = "block_size",
+    second_field: str = "nfe",
 ) -> tuple[list[list[Any]], list[list[Any]]]:
     """Load training and validation sequences.
 
@@ -166,11 +170,19 @@ def load_data(
         raise FileNotFoundError(msg)
 
     print(f"Loading training data from: {train_jsonl}")  # noqa: T201
-    train_sequences = tuple_sequences_from_phase_tuples_jsonl(train_jsonl)
+    train_sequences = tuple_sequences_from_phase_tuples_jsonl(
+        train_jsonl,
+        block_field=block_field,
+        second_field=second_field,
+    )
 
     if test_jsonl and test_jsonl.exists():
         print(f"Loading validation data from: {test_jsonl}")  # noqa: T201
-        val_sequences = tuple_sequences_from_phase_tuples_jsonl(test_jsonl)
+        val_sequences = tuple_sequences_from_phase_tuples_jsonl(
+            test_jsonl,
+            block_field=block_field,
+            second_field=second_field,
+        )
     else:
         # 80/20 split
         split_idx = max(1, int(len(train_sequences) * 0.8))
@@ -262,9 +274,11 @@ def run_ablation(
         history = trainer.fit(train_dataset, val_dataset=val_dataset)
         elapsed = time.time() - start_time
 
-        # Save checkpoint
+        # Save checkpoint (include best validation loss in filename)
         predictor = Predictor(model, mean=train_dataset.mean, std=train_dataset.std)
-        checkpoint_path = output_dir / f"{run_id}.pt"
+        metric_tag = f"bestval={history.best_val_loss:.6f}"
+        checkpoint_name = f"{run_id}_{metric_tag}.pt"
+        checkpoint_path = output_dir / checkpoint_name
         predictor.save_checkpoint(str(checkpoint_path))
 
         result = AblationResult(
@@ -303,7 +317,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--test-jsonl",
         type=Path,
-        default=Path("traces/phase_tuples_test.jsonl"),
+        default=None,
         help="Path to phase_tuples test JSONL (optional; else use 80/20 split).",
     )
     parser.add_argument(
@@ -330,13 +344,30 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Print ablation plan without training.",
     )
+    parser.add_argument(
+        "--tuple-second-field",
+        type=str,
+        default="nfe",
+        help="Field name to use as the second tuple component when reading phase_tuples JSONL (default: nfe).",
+    )
+    parser.add_argument(
+        "--tuple-block-field",
+        type=str,
+        default="block_size",
+        help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
+    )
     args = parser.parse_args(argv)
 
     # Generate configurations
     configs = generate_ablation_configs(args.preset)
 
     # Load data
-    train_sequences, val_sequences = load_data(args.train_jsonl, args.test_jsonl)
+    train_sequences, val_sequences = load_data(
+        args.train_jsonl,
+        args.test_jsonl,
+        block_field=args.tuple_block_field,
+        second_field=args.tuple_second_field,
+    )
     configs, inferred_window_size = align_configs_to_sequence_length(
         configs,
         train_sequences,
@@ -377,7 +408,7 @@ def main(argv: list[str] | None = None) -> None:
             f"h{model_cfg.n_heads}_"
             f"l{model_cfg.n_layers}_"
             f"dp{int(model_cfg.dropout*100)}_"
-            f"lr{train_cfg.learning_rate*1000}m"
+            f"lr{train_cfg.learning_rate*1000}"
         )
 
         # Override epochs from CLI

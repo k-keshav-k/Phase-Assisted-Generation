@@ -225,6 +225,9 @@ def tuples_from_phase_tuples_record(
 
 def tuple_sequences_from_phase_tuples_jsonl(
     jsonl_path: str | Path,
+    *,
+    block_field: str = "block_size",
+    second_field: str = "nfe",
 ) -> list[list[PhaseTuple]]:
     """Load PhaseTuple sequences from a phase_tuples JSONL file.
 
@@ -243,7 +246,9 @@ def tuple_sequences_from_phase_tuples_jsonl(
             if not isinstance(record, dict):
                 continue
 
-            seq = tuples_from_phase_tuples_record(record)
+            seq = tuples_from_phase_tuples_record(
+                record, block_field=block_field, second_field=second_field
+            )
             if seq:
                 sequences.append(seq)
 

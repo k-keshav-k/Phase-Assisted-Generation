@@ -194,8 +194,16 @@ def _extract_sequences_from_trace_jsonl(trace_path: Path) -> list[list[PhaseTupl
     return sequences
 
 
-def _extract_sequences_from_phase_tuples_jsonl(jsonl_path: Path) -> list[list[PhaseTuple]]:
-    """Load tuple sequences from phase_tuples JSONL file(s)."""
+def _extract_sequences_from_phase_tuples_jsonl(
+    jsonl_path: Path, *, block_field: str = "block_size", second_field: str = "nfe"
+) -> list[list[PhaseTuple]]:
+    """Load tuple sequences from phase_tuples JSONL file(s).
+
+    Args:
+        jsonl_path: path to file or directory.
+        block_field: field name for block size in each tuple dict.
+        second_field: field name for the second component (e.g. "nfe").
+    """
     jsonl_paths = [jsonl_path] if jsonl_path.is_file() else sorted(jsonl_path.glob("*.jsonl"))
     if not jsonl_paths:
         msg = f"No JSONL trace files were found in {jsonl_path}"
@@ -203,9 +211,13 @@ def _extract_sequences_from_phase_tuples_jsonl(jsonl_path: Path) -> list[list[Ph
 
     sequences: list[list[PhaseTuple]] = []
     for path in jsonl_paths:
-        file_sequences = tuple_sequences_from_phase_tuples_jsonl(path)
+        file_sequences = tuple_sequences_from_phase_tuples_jsonl(
+            path, block_field=block_field, second_field=second_field
+        )
         file_tuple_count = sum(len(sequence) for sequence in file_sequences)
-        print(f"  Loaded {path.name}: {file_tuple_count} tuples across {len(file_sequences)} sequences")  # noqa: T201
+        print(
+            f"  Loaded {path.name}: {file_tuple_count} tuples across {len(file_sequences)} sequences"
+        )  # noqa: T201
         sequences.extend(file_sequences)
 
     return sequences
@@ -213,8 +225,8 @@ def _extract_sequences_from_phase_tuples_jsonl(jsonl_path: Path) -> list[list[Ph
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Train PhaseTransformer on phase_cpd data.")
-    default_train_jsonl = Path("traces/phase_tuples_train.jsonl")
-    default_test_jsonl = Path("traces/phase_tuples_test.jsonl")
+    # default_train_jsonl = Path("traces/phase_tuples_train.jsonl")
+    # default_test_jsonl = Path("traces/phase_tuples_test.jsonl")
     parser.add_argument(
         "--train-jsonl",
         type=Path,
@@ -253,6 +265,18 @@ def main(argv: list[str] | None = None) -> None:
         choices=["auto", "cpu", "cuda"],
         help="Training device to use.",
     )
+    parser.add_argument(
+        "--tuple-second-field",
+        type=str,
+        default="nfe",
+        help="Field name to use as the second tuple component when reading phase_tuples JSONL (default: nfe).",
+    )
+    parser.add_argument(
+        "--tuple-block-field",
+        type=str,
+        default="block_size",
+        help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
+    )
     parser.add_argument("--output", type=str, default="phase_predict.pt",
                         help="Path to save the checkpoint.")
     parser.add_argument("--per-token", action="store_true",
@@ -272,11 +296,11 @@ def main(argv: list[str] | None = None) -> None:
     if args.trace_jsonl is not None and args.trace_dir is not None:
         parser.error("Provide only one of --trace-dir or --trace-jsonl")
 
-    if args.trace_dir is None and args.trace_jsonl is None:
-        if args.train_jsonl is None and default_train_jsonl.exists():
-            args.train_jsonl = default_train_jsonl
-        if args.test_jsonl is None and default_test_jsonl.exists():
-            args.test_jsonl = default_test_jsonl
+    # if args.trace_dir is None and args.trace_jsonl is None:
+    #     if args.train_jsonl is None and default_train_jsonl.exists():
+    #         args.train_jsonl = default_train_jsonl
+    #     if args.test_jsonl is None and default_test_jsonl.exists():
+    #         args.test_jsonl = default_test_jsonl
 
     use_phase_tuples_jsonl = args.train_jsonl is not None
     use_sequence_mode = use_phase_tuples_jsonl or args.whole_sequence
@@ -287,18 +311,24 @@ def main(argv: list[str] | None = None) -> None:
     inferred_window_size = args.window_size
 
     if use_phase_tuples_jsonl:
-        train_sequences = _extract_sequences_from_phase_tuples_jsonl(args.train_jsonl)
-        val_sequences = (
-            _extract_sequences_from_phase_tuples_jsonl(args.test_jsonl)
-            if args.test_jsonl is not None
-            else []
+        train_sequences = _extract_sequences_from_phase_tuples_jsonl(
+            args.train_jsonl,
+            block_field=args.tuple_block_field,
+            second_field=args.tuple_second_field,
         )
 
         if not train_sequences:
             print("ERROR: No training sequences were extracted.", file=sys.stderr)  # noqa: T201
             sys.exit(1)
 
-        if not val_sequences:
+        if args.test_jsonl is not None:
+            val_sequences = _extract_sequences_from_phase_tuples_jsonl(
+                args.test_jsonl,
+                block_field=args.tuple_block_field,
+                second_field=args.tuple_second_field,
+            )
+        else:
+            # 80/20 split of training sequences when no test JSONL provided
             if len(train_sequences) < 2:
                 print(  # noqa: T201
                     "ERROR: phase_tuples training needs at least two sequences "
@@ -310,6 +340,7 @@ def main(argv: list[str] | None = None) -> None:
             split_index = min(split_index, len(train_sequences) - 1)
             val_sequences = train_sequences[split_index:]
             train_sequences = train_sequences[:split_index]
+            print(f"Auto-split: {len(train_sequences)} train, {len(val_sequences)} val")  # noqa: T201
 
         all_sequences = train_sequences + val_sequences
         inferred_window_size = max(len(sequence) for sequence in all_sequences) - 1
