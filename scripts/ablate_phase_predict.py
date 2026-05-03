@@ -45,6 +45,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+# Force line-buffered stdout so print statements appear immediately in sbatch /
+# Singularity logs rather than being flushed only at script exit.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+
 from phase_predict.data_utils import tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.dataset import PhaseFullSequenceDataset
 from phase_predict.model import PhaseTransformer
