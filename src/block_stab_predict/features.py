@@ -85,8 +85,10 @@ def compute_features(
         # against future reconfiguration that might drop it.
         pad.setdefault("block_size", 0.0)
         window = [pad]
+        _num_distinct = 0
     else:
         window = list(past_tuples)
+        _num_distinct = len(window)
 
     # Left-pad to config.window_size by repeating the first element.
     if len(window) < config.window_size:
@@ -103,6 +105,7 @@ def compute_features(
         parts.extend(stats[s] for s in FIELD_STATS)
 
     ctx = _context_features(window)
+    ctx["num_past_blocks"] = float(_num_distinct)
     parts.extend(ctx.values())
 
     return np.array(parts, dtype=np.float32)

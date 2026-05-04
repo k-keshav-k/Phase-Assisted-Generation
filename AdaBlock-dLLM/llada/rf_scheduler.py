@@ -58,11 +58,10 @@ class RFTupleScheduler:
         # Pre-compute context-seed values so reset() can re-apply them.
         _cs_bl = context_seed_block_length
         self._context_seed_bl = seed_block_length if _cs_bl is None else int(_cs_bl)
-        _cs_nfe = context_seed_nfe
-        if _cs_nfe is None:
+        if context_seed_nfe is None:
             self._context_seed_nfe = max(0, int(seed_refinement_steps) - 1)
         else:
-            self._context_seed_nfe = int(_cs_nfe)
+            self._context_seed_nfe = int(context_seed_nfe)
         self.reset()
 
     # ── Interface expected by generate_pag ────────────────────────────

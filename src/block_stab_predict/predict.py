@@ -40,7 +40,9 @@ class InferencePredictor:
         self,
         model_or_path: BlockStabPredictor | str | Path,
         config: RFConfig | None = None,
+        fallback: tuple[int, int] = (16, 1),
     ) -> None:
+        self._fallback = fallback
         if isinstance(model_or_path, BlockStabPredictor):
             self._predictor = model_or_path
         else:
@@ -95,14 +97,14 @@ class InferencePredictor:
     def predict(self) -> tuple[int, int]:
         """Predict the next block's ``(block_size, max_stab_step)``.
 
-        If the buffer is empty or insufficiently populated, a sensible
-        default ``(16, 1)`` is returned.
+        If the buffer is empty or insufficiently populated, ``_fallback``
+        (``(16, 1)`` by default) is returned.
 
         Returns:
             ``(block_size, max_stab_step)`` as non-negative integers.
         """
         if not self._buffer:
-            return (16, 1)
+            return self._fallback
 
         # Use the most recent window_size entries (or fewer near the start).
         window = self._buffer[-self.config.window_size :]
