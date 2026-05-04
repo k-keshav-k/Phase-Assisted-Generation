@@ -18,7 +18,12 @@ from pathlib import Path
 
 import numpy as np
 
-from block_stab_predict.dataset import build_X_y, load_jsonl, train_test_split_by_sample
+from block_stab_predict.dataset import (
+    build_X_y,
+    filter_tuples,
+    load_jsonl,
+    train_test_split_by_sample,
+)
 from block_stab_predict.model import BlockStabPredictor
 from block_stab_predict.schema import RFConfig
 
@@ -59,6 +64,19 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Random seed (default: 42).")
     parser.add_argument("--n-jobs", type=int, default=-1,
                         help="Parallel jobs (default: -1 = all CPUs).")
+    # Data filtering
+    parser.add_argument(
+        "--filter-mode",
+        default="none",
+        choices=["none", "no-eog", "no-sentinel"],
+        help="Filter mode for training tuples (default: none).",
+    )
+    parser.add_argument(
+        "--tag",
+        default="v1",
+        type=str,
+        help="Model version tag (default: v1). Saved as rf_{tag}.joblib.",
+    )
     return parser.parse_args(argv)
 
 
@@ -158,11 +176,28 @@ def train(args: argparse.Namespace) -> dict:
     train_samples = load_jsonl(args.train_path)
     print(f"  {len(train_samples)} samples loaded.")
 
+    # 2b. Filter tuples
+    filter_mode = args.filter_mode
+    if filter_mode != "none":
+        before = sum(len(s["tuples"]) for s in train_samples)
+        train_samples = filter_tuples(train_samples, filter_mode)
+        after = sum(len(s["tuples"]) for s in train_samples)
+        print(f"  Filter mode '{filter_mode}': {before} tuples → {after} "
+              f"({after / max(before, 1) * 100:.1f}% retained) across "
+              f"{len(train_samples)} samples.")
+
     # 3. Split or load held-out test set
     if args.test_path:
         print(f"Loading held-out test data from {args.test_path} ...")
         test_samples = load_jsonl(args.test_path)
         print(f"  {len(test_samples)} samples loaded.")
+        if filter_mode != "none":
+            before_te = sum(len(s["tuples"]) for s in test_samples)
+            test_samples = filter_tuples(test_samples, filter_mode)
+            after_te = sum(len(s["tuples"]) for s in test_samples)
+            print(f"  Test filter '{filter_mode}': {before_te} tuples → {after_te} "
+                  f"({after_te / max(before_te, 1) * 100:.1f}% retained) across "
+                  f"{len(test_samples)} samples.")
         X_tr, Y_tr, names = build_X_y(train_samples, config)
         X_te, Y_te, _ = build_X_y(test_samples, config)
         split_type = "held-out"
@@ -204,7 +239,8 @@ def train(args: argparse.Namespace) -> dict:
 
     # 8. Save model
     output_dir = Path(args.output_dir)
-    model_path = output_dir / "rf_v1.joblib"
+    model_name = f"rf_{args.tag}.joblib"
+    model_path = output_dir / model_name
     predictor.save(str(model_path))
     print(f"\nModel saved to {model_path}")
 

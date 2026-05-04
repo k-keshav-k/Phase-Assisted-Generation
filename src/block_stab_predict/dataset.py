@@ -43,6 +43,61 @@ def load_jsonl(path: str | Path) -> list[dict]:
     return samples
 
 
+_FILTER_MODES: dict[str, object] = {}
+
+
+def _register_filter(name: str):
+    """Decorator that registers a filter function under *name*."""
+    def _inner(fn):
+        _FILTER_MODES[name] = fn
+        return fn
+    return _inner
+
+
+@_register_filter("none")
+def _filter_none(tuples: list[dict]) -> list[dict]:
+    return tuples
+
+
+@_register_filter("no-eog")
+def _filter_no_eog(tuples: list[dict]) -> list[dict]:
+    return [t for t in tuples if not (t.get("block_size") == 1 and t.get("nfe") == 1)]
+
+
+@_register_filter("no-sentinel")
+def _filter_no_sentinel(tuples: list[dict]) -> list[dict]:
+    return [
+        t for t in tuples
+        if not (t.get("block_size") == 1 and t.get("nfe") == 1)
+        and t.get("nfe", 0) >= 3
+    ]
+
+
+def filter_tuples(samples: list[dict], mode: str) -> list[dict]:
+    """Filter per-block tuples inside *samples* according to *mode*.
+
+    Args:
+        samples: List of per-sample dicts (each must have a ``"tuples"`` key).
+        mode:    One of ``"none"``, ``"no-eog"``, or ``"no-sentinel"``.
+
+    Returns:
+        A new list of samples with filtered tuples.  Samples whose
+        ``"tuples"`` list becomes empty are dropped.
+    """
+    if mode not in _FILTER_MODES:
+        allowed = sorted(_FILTER_MODES)
+        msg = f"Unknown filter mode {mode!r}; choose from {allowed}"
+        raise ValueError(msg)
+
+    fn = _FILTER_MODES[mode]
+    out: list[dict] = []
+    for sample in samples:
+        clean = fn(sample.get("tuples", []))
+        if clean:
+            out.append({**sample, "tuples": clean})
+    return out
+
+
 # ── Feature-matrix construction ───────────────────────────────────────
 
 
