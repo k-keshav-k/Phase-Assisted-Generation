@@ -427,6 +427,15 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed-refinement-steps", type=int, default=4)
     parser.add_argument("--predictor-ckpt", default=None)
     parser.add_argument("--predictor-device", default="cpu")
+    parser.add_argument(
+        "--rf-model-path",
+        default=None,
+        help=(
+            "Path to a block_stab_predict Random Forest checkpoint "
+            "(e.g. block_stab_predict/models/rf_v1.joblib). When set, the RF "
+            "scheduler is used instead of the PhaseTransformer checkpoint."
+        ),
+    )
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
     parser.add_argument("--min-refinement-steps", type=int, default=3)
