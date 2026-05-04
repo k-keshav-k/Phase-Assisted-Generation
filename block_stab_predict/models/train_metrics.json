@@ -1,0 +1,47 @@
+{
+  "config": {
+    "window_size": 20,
+    "n_estimators": 200,
+    "max_depth": 15,
+    "feature_fields": [
+      "nfe",
+      "block_size"
+    ],
+    "target_fields": [
+      "block_size",
+      "max_stab_step"
+    ]
+  },
+  "train_examples": 43037,
+  "test_examples": 1765,
+  "train_time_sec": 2.99,
+  "test_metrics": {
+    "block_size": {
+      "mae": 7.6224,
+      "rmse": 11.6763,
+      "r2": 0.1218
+    },
+    "max_stab_step": {
+      "mae": 1.5047,
+      "rmse": 2.6404,
+      "r2": 0.0933
+    }
+  },
+  "feature_importances": {
+    "block_size_last": 0.186,
+    "block_size_std": 0.1645,
+    "nfe_std": 0.1183,
+    "block_size_trend": 0.0947,
+    "block_size_max": 0.0807,
+    "nfe_last": 0.0781,
+    "nfe_trend": 0.0693,
+    "nfe_mean": 0.0614,
+    "block_size_mean": 0.0563,
+    "total_tokens_so_far": 0.0557,
+    "nfe_max": 0.035,
+    "block_size_min": 0.0001,
+    "num_past_blocks": 0.0,
+    "nfe_min": 0.0
+  },
+  "model_path": "block_stab_predict/models/rf_v1.joblib"
+}

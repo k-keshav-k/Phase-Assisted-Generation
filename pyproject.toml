@@ -32,6 +32,11 @@ phase_predict = [
   "numpy>=1.26",
   "torch>=2.0",
 ]
+block_stab_predict = [
+  "joblib>=1.5.3",
+  "numpy>=1.26",
+  "scikit-learn>=1.8.0",
+]
 phase_cpd_dream = [
   "accelerate>=0.33",
   "altair>=5.0",
