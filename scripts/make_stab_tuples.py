@@ -53,6 +53,7 @@ import json
 from pathlib import Path
 
 SPECIAL_TOKENS = {"<|endoftext|>", "<|eot_id|>"}
+DELIMITER_TEXTS = {"\n", "<|endoftext|>", "<|eot_id|>"}
 
 
 def _is_content_block(block: dict) -> bool:
@@ -60,22 +61,41 @@ def _is_content_block(block: dict) -> bool:
 
 
 def _block_tuple(block: dict) -> dict:
-    stab_steps = [t["stabilizing_step"] for t in block["tokens"]]
-    ref_steps  = [t["refinement_step"]  for t in block["tokens"]]
-    gaps = [r - s for r, s in zip(ref_steps, stab_steps)]
-    n = len(block["tokens"])
+    tokens     = block["tokens"]
+    n          = len(tokens)
+    stab_steps = [t["stabilizing_step"] for t in tokens]
+    ref_steps  = [t["refinement_step"]  for t in tokens]
+    gaps       = [r - s for r, s in zip(ref_steps, stab_steps)]
+
+    # confidence at unmask moment: p(final_token) at refinement_step
+    confidences = []
+    for t in tokens:
+        p = t.get("p_final_per_step", [])
+        r = t["refinement_step"]
+        if p and r < len(p):
+            confidences.append(p[r])
+
+    # digit fraction: tokens containing any digit character
+    digit_count = sum(1 for t in tokens if any(c.isdigit() for c in t["token_text"]))
+
+    # delimiter fraction: newline or special tokens
+    delim_count = sum(1 for t in tokens if t["token_text"] in DELIMITER_TEXTS)
+
     return {
-        "block_size":      block["block_size"],
-        "nfe":             block["nfe"],
-        # stabilizing step: first step argmax==final while still masked
-        "mean_stab_step":  round(sum(stab_steps) / n, 4) if n else 0.0,
-        "max_stab_step":   max(stab_steps) if stab_steps else 0,
-        # refinement step: step token was actually unmasked in x
-        "mean_ref_step":   round(sum(ref_steps) / n, 4) if n else 0.0,
-        "max_ref_step":    max(ref_steps) if ref_steps else 0,
-        # gap = refinement - stabilizing: steps between model deciding and committing
-        "mean_gap":        round(sum(gaps) / n, 4) if n else 0.0,
-        "max_gap":         max(gaps) if gaps else 0,
+        "block_size":           block["block_size"],
+        "nfe":                  block["nfe"],
+        "mean_stab_step":       round(sum(stab_steps) / n, 4) if n else 0.0,
+        "max_stab_step":        max(stab_steps) if stab_steps else 0,
+        "mean_ref_step":        round(sum(ref_steps) / n, 4) if n else 0.0,
+        "max_ref_step":         max(ref_steps) if ref_steps else 0,
+        "mean_gap":             round(sum(gaps) / n, 4) if n else 0.0,
+        "max_gap":              max(gaps) if gaps else 0,
+        # confidence features (require conf traces with p_final_per_step)
+        "mean_top1_confidence": round(sum(confidences) / len(confidences), 6) if confidences else 0.0,
+        "min_top1_confidence":  round(min(confidences), 6) if confidences else 0.0,
+        # token-type features
+        "digit_fraction":       round(digit_count / n, 4) if n else 0.0,
+        "delimiter_fraction":   round(delim_count / n, 4) if n else 0.0,
     }
 
 
