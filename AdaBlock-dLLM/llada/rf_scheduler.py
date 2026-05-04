@@ -99,9 +99,20 @@ class RFTupleScheduler:
             predict_time_sec = time.perf_counter() - predict_start
             self.scheduler_predict_time_sec += predict_time_sec
 
+            # Post-hoc scaling to counteract RF mean-regression bias.
+            # RF minimises MSE and predicts the conditional mean,
+            # smoothing out AdaBlock's long-tailed distribution
+            # (mostly NFE=1, occasional very high NFE).  Scaling
+            # pushes predictions toward AdaBlock's eval range.
+            _scale = 1.5
+            scaled_bs = max(16, int(round(rf_block_size * _scale)))
+            scaled_stab = max(
+                int(scaled_bs / 3), int(round(rf_stab * _scale))
+            )
+
             predicted_tuple = PhaseTuple(
-                block_size=int(rf_block_size),
-                refinement_steps=int(rf_stab) + 1,  # +1 for the commit step
+                block_size=scaled_bs,
+                refinement_steps=scaled_stab + 1,  # +1 for the commit step
             )
             source = "rf_checkpoint"
 
