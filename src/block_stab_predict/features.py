@@ -25,12 +25,9 @@ def _window_stats(tuples: Sequence[dict], field: str) -> dict[str, float]:
 
     Returns:
         ``{"last": …, "mean": …, "std": …, "min": …, "max": …, "trend": …}``
-        where *trend* = last − mean.
-
-    Raises:
-        KeyError: if *field* is missing from any dict.
+        where *trend* = last − mean.  Missing fields default to ``0.0``.
     """
-    vals = np.array([t[field] for t in tuples], dtype=np.float64)
+    vals = np.array([t.get(field, 0.0) for t in tuples], dtype=np.float64)
     last = float(vals[-1])
     mean = float(vals.mean())
     std = float(vals.std(ddof=0))  # population std

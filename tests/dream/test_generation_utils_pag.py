@@ -76,7 +76,7 @@ class FakeScheduler:
         self._index += 1
         return schedule
 
-    def record_realized(self, block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(self, block_size: int, actual_nfe_used: int, **kwargs: object) -> None:
         self.recorded.append((block_size, actual_nfe_used))
 
 

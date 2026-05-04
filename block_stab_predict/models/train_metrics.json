@@ -1,47 +1,75 @@
 {
   "config": {
-    "window_size": 20,
+    "window_size": 5,
     "n_estimators": 200,
     "max_depth": 15,
     "feature_fields": [
       "nfe",
-      "block_size"
+      "block_size",
+      "max_stab_step",
+      "mean_ref_step",
+      "mean_gap",
+      "max_gap"
     ],
     "target_fields": [
       "block_size",
       "max_stab_step"
     ]
   },
-  "train_examples": 43037,
-  "test_examples": 1765,
-  "train_time_sec": 2.99,
+  "train_examples": 113901,
+  "test_examples": 4588,
+  "train_time_sec": 31.73,
   "test_metrics": {
     "block_size": {
-      "mae": 7.6224,
-      "rmse": 11.6763,
-      "r2": 0.1218
+      "mae": 7.0749,
+      "rmse": 10.0698,
+      "r2": 0.1314
     },
     "max_stab_step": {
-      "mae": 1.5047,
-      "rmse": 2.6404,
-      "r2": 0.0933
+      "mae": 1.6872,
+      "rmse": 2.5005,
+      "r2": 0.0925
     }
   },
   "feature_importances": {
-    "block_size_last": 0.186,
-    "block_size_std": 0.1645,
-    "nfe_std": 0.1183,
-    "block_size_trend": 0.0947,
-    "block_size_max": 0.0807,
-    "nfe_last": 0.0781,
-    "nfe_trend": 0.0693,
-    "nfe_mean": 0.0614,
-    "block_size_mean": 0.0563,
-    "total_tokens_so_far": 0.0557,
-    "nfe_max": 0.035,
-    "block_size_min": 0.0001,
-    "num_past_blocks": 0.0,
-    "nfe_min": 0.0
+    "block_size_last": 0.2246,
+    "block_size_std": 0.0877,
+    "block_size_trend": 0.0458,
+    "mean_ref_step_trend": 0.0422,
+    "mean_gap_std": 0.0385,
+    "mean_gap_trend": 0.0366,
+    "mean_ref_step_mean": 0.0359,
+    "mean_ref_step_std": 0.035,
+    "mean_gap_mean": 0.0331,
+    "block_size_max": 0.0311,
+    "mean_gap_max": 0.0297,
+    "mean_ref_step_last": 0.0295,
+    "mean_ref_step_max": 0.0284,
+    "nfe_std": 0.0275,
+    "max_gap_std": 0.0256,
+    "block_size_mean": 0.0254,
+    "total_tokens_so_far": 0.0253,
+    "nfe_last": 0.0246,
+    "max_stab_step_std": 0.0212,
+    "max_gap_trend": 0.0205,
+    "mean_gap_last": 0.0201,
+    "block_size_min": 0.02,
+    "nfe_trend": 0.0165,
+    "max_stab_step_trend": 0.0146,
+    "nfe_mean": 0.0132,
+    "max_stab_step_mean": 0.0125,
+    "max_gap_mean": 0.0097,
+    "nfe_max": 0.0058,
+    "max_stab_step_max": 0.0055,
+    "max_gap_max": 0.0051,
+    "max_stab_step_last": 0.003,
+    "max_gap_last": 0.002,
+    "mean_gap_min": 0.0016,
+    "mean_ref_step_min": 0.0015,
+    "nfe_min": 0.0003,
+    "max_gap_min": 0.0001,
+    "max_stab_step_min": 0.0001,
+    "num_past_blocks": 0.0
   },
   "model_path": "block_stab_predict/models/rf_v1.joblib"
 }

@@ -134,7 +134,9 @@ class PAGTupleScheduler:
             budgeted_refinement_steps=budgeted_refinement_steps,
         )
 
-    def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(
+        self, applied_block_size: int, actual_nfe_used: int, **kwargs: object
+    ) -> None:
         self._history.append(
             PhaseTuple(
                 block_size=max(1, int(applied_block_size)),

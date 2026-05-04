@@ -81,7 +81,7 @@ def build_X_y(
                     f"Sample {sidx} ({sample.get('sample_id', '?')}), "
                     f"tuple {tidx} is missing fields: {sorted(missing)}"
                 )
-                raise KeyError(msg)
+                raise ValueError(msg)
 
     for sample in samples:
         tuples = sample["tuples"]

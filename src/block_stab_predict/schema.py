@@ -23,9 +23,17 @@ TUPLE_FIELDS: tuple[str, ...] = (
 )
 
 # Past-tuple fields used as regression features.
-# Phase 1: only nfe and block_size (both available online without instrumentation).
-# Phase 2 (future): add mean_stab_step, mean_ref_step, max_ref_step, mean_gap, max_gap.
-FEATURE_FIELDS: tuple[str, ...] = ("nfe", "block_size")
+# Phase 2: all fields available in trace data.
+# During online inference the generation loop computes these via per-block
+# tracking and passes them to ``InferencePredictor.record()`` as extra fields.
+FEATURE_FIELDS: tuple[str, ...] = (
+    "nfe",
+    "block_size",
+    "max_stab_step",
+    "mean_ref_step",
+    "mean_gap",
+    "max_gap",
+)
 
 # Target fields for multi-output regression.
 TARGET_FIELDS: tuple[str, ...] = ("block_size", "max_stab_step")

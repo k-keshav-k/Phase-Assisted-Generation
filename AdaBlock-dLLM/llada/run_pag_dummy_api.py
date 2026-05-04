@@ -325,7 +325,9 @@ class DummyAPIScheduler:
             budgeted_refinement_steps=budgeted_refinement_steps,
         )
 
-    def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(
+        self, applied_block_size: int, actual_nfe_used: int, **kwargs: object
+    ) -> None:
         realized_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
         self._history.append(realized_tuple)
         self.prediction_trace[-1]["realized_tuple"] = _tuple_to_dict(realized_tuple)
@@ -462,7 +464,9 @@ class CheckpointTupleScheduler:
             budgeted_refinement_steps=budgeted_refinement_steps,
         )
 
-    def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(
+        self, applied_block_size: int, actual_nfe_used: int, **kwargs: object
+    ) -> None:
         decode_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
         realized_tuple = _normalize_stabilizing_tuple(
             applied_block_size,
@@ -710,6 +714,37 @@ def _effective_seed(
     return _adablock_first_seed(args=args, model=model, prompt=input_ids)
 
 
+def _make_rf_scheduler(args: argparse.Namespace, seed: EffectiveSeed):
+    """Construct a :class:`rf_scheduler.RFTupleScheduler` from CLI args."""
+    rf_model_path = Path(args.rf_model_path)
+    if not rf_model_path.exists():
+        msg = (
+            f"RF model checkpoint not found at "
+            f"{rf_model_path}. Pass --rf-model-path."
+        )
+        raise FileNotFoundError(msg)
+    from rf_scheduler import RFTupleScheduler
+
+    return RFTupleScheduler(
+        rf_model_path=rf_model_path,
+        seed_block_length=seed.block_length,
+        seed_refinement_steps=seed.refinement_steps,
+        min_refinement_steps=args.min_refinement_steps,
+        context_seed_block_length=(
+            args.context_seed_block_length
+            if args.context_seed_block_length is not None
+            else args.seed_block_length
+        ),
+        context_seed_nfe=(
+            args.context_seed_stabilizing_steps
+            if args.context_seed_stabilizing_steps is not None
+            else seed.context_stabilizing_steps
+            if seed.context_stabilizing_steps is not None
+            else max(0, int(args.seed_refinement_steps) - 1)
+        ),
+    )
+
+
 def _make_scheduler(
     args: argparse.Namespace,
     prompt_text: str,
@@ -738,6 +773,9 @@ def _make_scheduler(
             seed_refinement_steps=seed.refinement_steps,
             api=dummy_api,
         )
+
+    if getattr(args, "rf_model_path", None):
+        return _make_rf_scheduler(args, seed)
 
     predictor_ckpt = _resolve_predictor_ckpt(args.predictor_ckpt)
     if not predictor_ckpt.exists():
@@ -1032,6 +1070,15 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help=(
             "Path to the phase_predict checkpoint. Defaults to "
             "output/phase_predict_model_checkpoint.pt relative to the repo root."
+        ),
+    )
+    parser.add_argument(
+        "--rf-model-path",
+        default=None,
+        help=(
+            "Path to a block_stab_predict Random Forest checkpoint "
+            "(e.g. block_stab_predict/models/rf_v1.joblib). When set, the RF "
+            "scheduler is used instead of the PhaseTransformer checkpoint."
         ),
     )
     parser.add_argument(

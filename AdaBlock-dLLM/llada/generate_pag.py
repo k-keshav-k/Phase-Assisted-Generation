@@ -104,6 +104,38 @@ def _record_schedule(
     )
 
 
+# ── Phase 2 per-token tracking helpers ────────────────────────────────
+
+
+def _update_token_stab(
+    token_stab: list[int | None],
+    x: torch.Tensor,
+    block_start: int,
+    block_size: int,
+    mask_id: int,
+    nfe: int,
+) -> None:
+    """Record the step at which each block position first gets committed."""
+    for t in range(block_size):
+        if token_stab[t] is None and x[0, block_start + t] != mask_id:
+            token_stab[t] = nfe
+
+
+def _phase2_fields(
+    token_stab: list[int | None],
+    nfe: int,
+) -> dict[str, float]:
+    """Compute Phase 2 extra fields from per-token stabilization tracking."""
+    stab = [s if s is not None else nfe for s in token_stab]
+    gaps = [max(0, nfe - s) for s in stab]
+    return {
+        "max_stab_step": float(max(stab)),
+        "mean_ref_step": float(sum(stab) / len(stab)),
+        "mean_gap": float(sum(gaps) / len(gaps)),
+        "max_gap": float(max(gaps)),
+    }
+
+
 @torch.no_grad()
 def generate_pag(
     model,
@@ -151,6 +183,8 @@ def generate_pag(
         block_end = block_start + schedule.applied_block_size
         generated_length += schedule.applied_block_size
         nfe = 0
+        block_size = schedule.applied_block_size
+        token_stab: list[int | None] = [None] * block_size
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
@@ -177,11 +211,13 @@ def generate_pag(
                     threshold,
                 )
             x[transfer_index] = x0[transfer_index]
+            _update_token_stab(token_stab, x, block_start, block_size, mask_id, nfe)
 
             if nfe >= schedule.budgeted_refinement_steps:
                 break
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        extra = _phase2_fields(token_stab, nfe)
+        scheduler.record_realized(schedule.applied_block_size, nfe, **extra)
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(
@@ -241,6 +277,8 @@ def generate_pag_prefix_cache(
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + schedule.applied_block_size
         generated_length += schedule.applied_block_size
+        block_size = schedule.applied_block_size
+        token_stab: list[int | None] = [None] * block_size
 
         output = model(x, use_cache=True)
         full_cache = output.past_key_values
@@ -264,6 +302,7 @@ def generate_pag_prefix_cache(
                 threshold,
             )
         x[transfer_index] = x0[transfer_index]
+        _update_token_stab(token_stab, x, block_start, block_size, mask_id, nfe)
 
         prefix_cache = []
         for cache_layer in full_cache:
@@ -302,8 +341,10 @@ def generate_pag_prefix_cache(
                     threshold,
                 )
             x[:, block_start:][transfer_index] = x0[transfer_index]
+            _update_token_stab(token_stab, x, block_start, block_size, mask_id, nfe)
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        extra = _phase2_fields(token_stab, nfe)
+        scheduler.record_realized(schedule.applied_block_size, nfe, **extra)
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(
@@ -363,6 +404,8 @@ def generate_pag_dual_cache(
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + schedule.applied_block_size
         generated_length += schedule.applied_block_size
+        block_size = schedule.applied_block_size
+        token_stab: list[int | None] = [None] * block_size
 
         output = model(x, use_cache=True)
         full_cache = output.past_key_values
@@ -386,6 +429,7 @@ def generate_pag_dual_cache(
                 threshold,
             )
         x[transfer_index] = x0[transfer_index]
+        _update_token_stab(token_stab, x, block_start, block_size, mask_id, nfe)
 
         replace_position = torch.zeros_like(x, dtype=torch.bool)
         replace_position[:, block_start:block_end] = 1
@@ -424,8 +468,10 @@ def generate_pag_dual_cache(
                     threshold,
                 )
             x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+            _update_token_stab(token_stab, x, block_start, block_size, mask_id, nfe)
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        extra = _phase2_fields(token_stab, nfe)
+        scheduler.record_realized(schedule.applied_block_size, nfe, **extra)
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(

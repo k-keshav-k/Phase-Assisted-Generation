@@ -48,18 +48,22 @@ class InferencePredictor:
 
         # Use the loaded model's config unless overridden.
         if config is not None:
-            if config.feature_fields != self._predictor.config.feature_fields:
-                msg = (
+            _c = self._predictor.config
+            if config.feature_fields != _c.feature_fields:
+                raise ValueError(
                     f"Config feature_fields {config.feature_fields} does not match "
-                    f"training config {self._predictor.config.feature_fields}"
+                    f"training config {_c.feature_fields}"
                 )
-                raise ValueError(msg)
-            if config.window_size != self._predictor.config.window_size:
-                msg = (
+            if config.target_fields != _c.target_fields:
+                raise ValueError(
+                    f"Config target_fields {config.target_fields} does not match "
+                    f"training config {_c.target_fields}"
+                )
+            if config.window_size != _c.window_size:
+                raise ValueError(
                     f"Config window_size {config.window_size} does not match "
-                    f"training config {self._predictor.config.window_size}"
+                    f"training config {_c.window_size}"
                 )
-                raise ValueError(msg)
             self.config = config
         else:
             self.config = self._predictor.config
@@ -82,9 +86,9 @@ class InferencePredictor:
                 ``max_stab_step``, ``mean_ref_step``).  Ignored in
                 Phase 1; used in Phase 2 when features are richer.
         """
-        record: dict[str, float] = {"block_size": float(block_size), "nfe": float(nfe)}
-        record.update(extra_fields)
-        self._buffer.append(record)
+        entry: dict[str, float] = {"block_size": float(block_size), "nfe": float(nfe)}
+        entry.update(extra_fields)
+        self._buffer.append(entry)
 
     # ── Prediction ────────────────────────────────────────────────────
 

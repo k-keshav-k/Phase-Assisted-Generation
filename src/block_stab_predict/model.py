@@ -62,8 +62,16 @@ class BlockStabPredictor:
             self (fitted estimator).
         """
         self._model.fit(X, Y)
-        if feature_names is not None and len(feature_names) == X.shape[1]:
-            self._feature_names = list(feature_names)
+        if feature_names is not None:
+            if len(feature_names) == X.shape[1]:
+                self._feature_names = list(feature_names)
+            else:
+                import warnings
+                warnings.warn(
+                    f"feature_names length ({len(feature_names)}) does not match "
+                    f"X.shape[1] ({X.shape[1]}). Feature names ignored.",
+                    stacklevel=2,
+                )
         return self
 
     # ── Inference ──────────────────────────────────────────────────────
