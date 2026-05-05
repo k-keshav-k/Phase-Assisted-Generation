@@ -52,6 +52,7 @@ class Predictor:
         std: torch.Tensor | None = None,
         input_mean: torch.Tensor | None = None,
         input_std: torch.Tensor | None = None,
+        input_fields: list[str] | None = None,
         device: torch.device | None = None,
     ) -> None:
         self.model = model
@@ -78,6 +79,9 @@ class Predictor:
         self.input_std = (
             input_std if input_std is not None else torch.ones(in_ts)
         ).to(self.device)
+        # optional ordered list of input field names (used when coercing
+        # ExtendedPhaseTuple objects during inference)
+        self.input_fields = input_fields
         self.model.eval()
 
     @staticmethod
@@ -147,7 +151,11 @@ class Predictor:
             offset = window_size - len(effective)
             # ExtendedPhaseTuple preferred: try to extract full input feature vector
             if isinstance(t, ExtendedPhaseTuple):
-                vals = list(t.values.values())
+                if self.input_fields is not None:
+                    vals = t.as_list(self.input_fields)
+                else:
+                    # fallback to dict value order (insertion order)
+                    vals = list(t.values.values())
                 for j in range(min(len(vals), in_tuple_size)):
                     raw_in[offset + i, j] = float(vals[j])
             else:
@@ -221,8 +229,17 @@ class Predictor:
         std = torch.tensor(checkpoint.get("std", []), dtype=torch.float32)
         in_mean = torch.tensor(checkpoint.get("input_mean", []), dtype=torch.float32)
         in_std = torch.tensor(checkpoint.get("input_std", []), dtype=torch.float32)
+        input_fields = checkpoint.get("input_fields", None)
 
-        return cls(model, mean=mean, std=std, input_mean=in_mean, input_std=in_std, device=target)
+        return cls(
+            model,
+            mean=mean,
+            std=std,
+            input_mean=in_mean,
+            input_std=in_std,
+            input_fields=input_fields,
+            device=target,
+        )
 
     def save_checkpoint(self, path: str) -> None:
         """Persist model weights and normalisation statistics to *path*.
@@ -239,5 +256,6 @@ class Predictor:
             "std": self.std.cpu().tolist(),
             "input_mean": getattr(self, "input_mean", torch.zeros(self.config.input_tuple_size)).cpu().tolist(),
             "input_std": getattr(self, "input_std", torch.ones(self.config.input_tuple_size)).cpu().tolist(),
+            "input_fields": getattr(self, "input_fields", None),
         }
         torch.save(checkpoint, path)

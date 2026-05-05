@@ -293,13 +293,14 @@ def run_ablation(
             val_sequences,
             model_cfg,
             stats=(train_dataset.mean, train_dataset.std),
+            input_stats=(train_dataset.input_mean, train_dataset.input_std),
             feature_fields=input_feature_fields,
             output_fields=output_fields,
         )
 
         # Train
         model = PhaseTransformer(model_cfg)
-        trainer = Trainer(model, train_cfg)
+        trainer = Trainer(model, train_cfg, device=None)
 
         start_time = time.time()
         history = trainer.fit(train_dataset, val_dataset=val_dataset)
@@ -312,6 +313,7 @@ def run_ablation(
             std=train_dataset.std,
             input_mean=getattr(train_dataset, "input_mean", None),
             input_std=getattr(train_dataset, "input_std", None),
+            input_fields=getattr(train_dataset, "feature_fields", None),
         )
         metric_tag = f"bestval={history.best_val_loss:.6f}"
         checkpoint_name = f"{run_id}_{metric_tag}.pt"

@@ -460,6 +460,7 @@ def main(argv: list[str] | None = None) -> None:
                 val_sequences,
                 model_cfg,
                 stats=(train_dataset.mean, train_dataset.std),
+                input_stats=(train_dataset.input_mean, train_dataset.input_std),
                 feature_fields=ff,
                 output_fields=of,
             )
@@ -500,6 +501,7 @@ def main(argv: list[str] | None = None) -> None:
         std=dataset.std,
         input_mean=getattr(dataset, "input_mean", None),
         input_std=getattr(dataset, "input_std", None),
+        input_fields=getattr(dataset, "feature_fields", None),
     )
     # append best validation loss to checkpoint filename
     out_path = Path(args.output)

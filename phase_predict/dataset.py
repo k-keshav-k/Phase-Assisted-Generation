@@ -148,6 +148,10 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.tuple_size = self.output_tuple_size
 
         # If feature_fields provided, sequence items are expected to be ExtendedPhaseTuple
+        # remember feature/output field names for downstream use
+        self.feature_fields = feature_fields
+        self.output_fields = output_fields
+
         if feature_fields is not None:
             # build separate input and output raw tensors
             input_raw = _extended_sequence_tensor(sequence, feature_fields)  # (N, input_tuple_size)
@@ -239,6 +243,7 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         *,
         normalize: bool = True,
         stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+        input_stats: tuple[torch.Tensor, torch.Tensor] | None = None,
         feature_fields: list[str] | None = None,
         output_fields: list[str] | None = None,
     ) -> None:
@@ -257,6 +262,10 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
             raise ValueError(msg)
 
         self.window_size = max(lengths) - 1
+
+        # remember feature/output field names for downstream use
+        self.feature_fields = feature_fields
+        self.output_fields = output_fields
 
         # Build raw input and output sequences depending on feature_fields
         if feature_fields is not None:
@@ -278,9 +287,12 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
                 self.mean = raw_all_outputs.mean(dim=0)
                 self.std = raw_all_outputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             # input stats
-            all_inputs = torch.cat(input_seqs, dim=0)
-            self.input_mean = all_inputs.mean(dim=0)
-            self.input_std = all_inputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
+            if input_stats is not None:
+                self.input_mean, self.input_std = input_stats
+            else:
+                all_inputs = torch.cat(input_seqs, dim=0)
+                self.input_mean = all_inputs.mean(dim=0)
+                self.input_std = all_inputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             norm_input_seqs = [(raw - self.input_mean) / self.input_std for raw in input_seqs]
             norm_output_seqs = [(raw - self.mean) / self.std for raw in output_seqs]
         else:
