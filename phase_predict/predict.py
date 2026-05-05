@@ -20,7 +20,7 @@ from collections.abc import Sequence
 import torch
 
 from phase_predict.model import PhaseTransformer
-from phase_predict.schema import ModelConfig, PhaseTuple, PredictionResult
+from phase_predict.schema import ExtendedPhaseTuple, ModelConfig, PhaseTuple, PredictionResult
 
 TupleLike = PhaseTuple | Sequence[int]
 
@@ -50,6 +50,8 @@ class Predictor:
         *,
         mean: torch.Tensor | None = None,
         std: torch.Tensor | None = None,
+        input_mean: torch.Tensor | None = None,
+        input_std: torch.Tensor | None = None,
         device: torch.device | None = None,
     ) -> None:
         self.model = model
@@ -63,9 +65,19 @@ class Predictor:
             except StopIteration:
                 self.device = torch.device("cpu")
 
-        ts = self.config.tuple_size
-        self.mean = (mean if mean is not None else torch.zeros(ts)).to(self.device)
-        self.std = (std if std is not None else torch.ones(ts)).to(self.device)
+        # output stats (mean/std) are for the model outputs (output_tuple_size)
+        out_ts = self.config.output_tuple_size
+        self.mean = (mean if mean is not None else torch.zeros(out_ts)).to(self.device)
+        self.std = (std if std is not None else torch.ones(out_ts)).to(self.device)
+
+        # input stats are used to normalise inputs before feeding the model
+        in_ts = self.config.input_tuple_size
+        self.input_mean = (
+            input_mean if input_mean is not None else torch.zeros(in_ts)
+        ).to(self.device)
+        self.input_std = (
+            input_std if input_std is not None else torch.ones(in_ts)
+        ).to(self.device)
         self.model.eval()
 
     @staticmethod
@@ -84,6 +96,16 @@ class Predictor:
         """
         if isinstance(value, PhaseTuple):
             return value.block_size, value.refinement_steps
+
+        # support ExtendedPhaseTuple-like objects with a mapping of values
+        try:
+            from phase_predict.schema import ExtendedPhaseTuple
+
+            if isinstance(value, ExtendedPhaseTuple):
+                return int(value.values.get("block_size", 0)), int(value.values.get("refinement_steps", 0))
+        except Exception:
+            # if import fails or value is not ExtendedPhaseTuple, continue
+            pass
 
         if len(value) < 2:
             msg = "Each input tuple must contain at least 2 values"
@@ -115,28 +137,43 @@ class Predictor:
             predicted tuple and raw regression output.
         """
         window_size = self.config.window_size
-        tuple_size = self.config.tuple_size
+        out_tuple_size = self.config.output_tuple_size
+        in_tuple_size = self.config.input_tuple_size
 
-        # build (1, window_size, tuple_size) tensor
-        raw = torch.zeros(window_size, tuple_size, dtype=torch.float32)
-        # use the last window_size entries from context
+        # build input tensor of shape (window_size, in_tuple_size)
+        raw_in = torch.zeros(window_size, in_tuple_size, dtype=torch.float32)
         effective = context[-window_size:]
         for i, t in enumerate(effective):
             offset = window_size - len(effective)
-            block_size, refinement_steps = self._coerce_tuple(t)
-            raw[offset + i] = torch.tensor(
-                [block_size, refinement_steps][:tuple_size],
-                dtype=torch.float32,
-            )
+            # ExtendedPhaseTuple preferred: try to extract full input feature vector
+            if isinstance(t, ExtendedPhaseTuple):
+                vals = list(t.values.values())
+                for j in range(min(len(vals), in_tuple_size)):
+                    raw_in[offset + i, j] = float(vals[j])
+            else:
+                # fallback: sequence-like inputs or PhaseTuple — coerce first fields
+                try:
+                    seq = list(t)
+                    for j in range(min(len(seq), in_tuple_size)):
+                        raw_in[offset + i, j] = float(seq[j])
+                except Exception:
+                    # last-resort: use coerced (block, refinement) into first two positions
+                    try:
+                        b, r = self._coerce_tuple(t)
+                        raw_in[offset + i, 0] = float(b)
+                        if in_tuple_size > 1:
+                            raw_in[offset + i, 1] = float(r)
+                    except Exception:
+                        pass
 
-        # normalise
-        normed = (raw - self.mean.cpu()) / self.std.cpu()
-        normed = normed.unsqueeze(0).to(self.device)  # (1, W, T)
+        # normalise inputs using input stats
+        normed = (raw_in - self.input_mean.cpu()) / self.input_std.cpu()
+        normed = normed.unsqueeze(0).to(self.device)  # (1, W, in_T)
 
-        raw_pred = self.model(normed).squeeze(0)  # (T,)
+        raw_pred = self.model(normed).squeeze(0)  # (out_T,)
 
-        # denormalise
-        denormed = raw_pred * self.std + self.mean  # (T,)
+        # denormalise outputs
+        denormed = raw_pred * self.std + self.mean  # (out_T,)
 
         # round to nearest non-negative integer for each field
         ints = [max(0, round(float(v))) for v in denormed.cpu().tolist()]
@@ -180,10 +217,12 @@ class Predictor:
         model.load_state_dict(checkpoint["model_state"])
         model.to(target)
 
-        mean = torch.tensor(checkpoint["mean"], dtype=torch.float32)
-        std = torch.tensor(checkpoint["std"], dtype=torch.float32)
+        mean = torch.tensor(checkpoint.get("mean", []), dtype=torch.float32)
+        std = torch.tensor(checkpoint.get("std", []), dtype=torch.float32)
+        in_mean = torch.tensor(checkpoint.get("input_mean", []), dtype=torch.float32)
+        in_std = torch.tensor(checkpoint.get("input_std", []), dtype=torch.float32)
 
-        return cls(model, mean=mean, std=std, device=target)
+        return cls(model, mean=mean, std=std, input_mean=in_mean, input_std=in_std, device=target)
 
     def save_checkpoint(self, path: str) -> None:
         """Persist model weights and normalisation statistics to *path*.
@@ -198,5 +237,7 @@ class Predictor:
             "model_state": {k: v.cpu() for k, v in self.model.state_dict().items()},
             "mean": self.mean.cpu().tolist(),
             "std": self.std.cpu().tolist(),
+            "input_mean": getattr(self, "input_mean", torch.zeros(self.config.input_tuple_size)).cpu().tolist(),
+            "input_std": getattr(self, "input_std", torch.ones(self.config.input_tuple_size)).cpu().tolist(),
         }
         torch.save(checkpoint, path)

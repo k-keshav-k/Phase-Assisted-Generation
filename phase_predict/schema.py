@@ -11,7 +11,7 @@ from typing import Any, NamedTuple
 
 
 class PhaseTuple(NamedTuple):
-    """One generation-block's adaptive parameters.
+    """One generation-block's adaptive parameters (OUTPUT format).
 
     Fields map directly to the scheduling decisions produced by the PAG
     scheduler:
@@ -21,11 +21,45 @@ class PhaseTuple(NamedTuple):
 
     The NamedTuple representation keeps the API extensible: additional fields
     (e.g. stabilizing_steps, temperature) can be appended here and the model
-    will pick them up automatically once ``ModelConfig.tuple_size`` is updated.
+    will pick them up automatically once ``ModelConfig.output_tuple_size`` is updated.
     """
 
     block_size: int
     refinement_steps: int
+
+
+@dataclass(slots=True)
+class ExtendedPhaseTuple:
+    """Extended phase tuple with multiple input features for training.
+
+    This structure holds all available input features that can be used to
+    predict the output (block_size, refinement_steps). The model trains on
+    all these input fields but outputs only the standard 2-field PhaseTuple.
+
+    To add new features in the future, simply add them as new fields here
+    and pass them during data loading via ``feature_fields`` parameter.
+
+    Example fields:
+      - block_size: number of tokens in the block
+      - nfe: number of function evaluations
+      - max_stab_step: maximum stabilization step
+      - stabilizing_entropy: entropy during stabilization
+      - (add more as needed)
+    """
+
+    values: dict[str, int]  # field_name -> integer value
+
+    def __getitem__(self, field_name: str) -> int:
+        """Get a feature value by field name."""
+        return self.values.get(field_name, 0)
+
+    def __len__(self) -> int:
+        """Return number of features."""
+        return len(self.values)
+
+    def as_list(self, field_names: list[str]) -> list[int]:
+        """Convert to ordered list of feature values by field names."""
+        return [self.values.get(name, 0) for name in field_names]
 
 
 @dataclass(slots=True)
@@ -34,6 +68,15 @@ class ModelConfig:
 
     Keeping all architecture choices in one place makes it easy to run
     ablations or extend the model for different tuple types.
+
+    The model now supports multi-feature input training:
+      - input_tuple_size:  number of input features (e.g. block_size, nfe,
+                          max_stab_step, etc.)
+      - output_tuple_size: number of output fields (always 2 for
+                          block_size and refinement_steps)
+
+    To add more input features, simply update ``input_tuple_size`` and pass
+    the corresponding field names during data loading.
     """
 
     # number of previous tuples used as context when predicting the next one
@@ -46,11 +89,20 @@ class ModelConfig:
     n_layers: int = 2
     # dropout probability applied in embedding and attention sublayers
     dropout: float = 0.1
-    # number of integer fields in each input tuple; update when the tuple
-    # structure changes (e.g. adding a third field such as stabilizing_steps)
-    tuple_size: int = 2
+    # number of input features in each input tuple (e.g. block_size, nfe,
+    # max_stab_step, etc.). Update when adding new input features.
+    input_tuple_size: int = 2
+    # number of output fields in each output tuple (always 2: block_size and
+    # refinement_steps). This is kept for clarity and future extension.
+    output_tuple_size: int = 2
+    # [DEPRECATED] kept for backward compatibility; use input_tuple_size instead
+    tuple_size: int | None = None
 
     def __post_init__(self) -> None:
+        # Handle backward compatibility: if tuple_size is set, use it for input_tuple_size
+        if self.tuple_size is not None and self.input_tuple_size == 2:
+            self.input_tuple_size = self.tuple_size
+
         if self.d_model % self.n_heads != 0:
             msg = (
                 f"ModelConfig.d_model ({self.d_model}) must be divisible by "
@@ -60,8 +112,11 @@ class ModelConfig:
         if self.window_size < 1:
             msg = "ModelConfig.window_size must be >= 1"
             raise ValueError(msg)
-        if self.tuple_size < 1:
-            msg = "ModelConfig.tuple_size must be >= 1"
+        if self.input_tuple_size < 1:
+            msg = "ModelConfig.input_tuple_size must be >= 1"
+            raise ValueError(msg)
+        if self.output_tuple_size < 1:
+            msg = "ModelConfig.output_tuple_size must be >= 1"
             raise ValueError(msg)
 
 

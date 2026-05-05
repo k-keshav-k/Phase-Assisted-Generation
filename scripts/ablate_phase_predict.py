@@ -48,8 +48,9 @@ if str(ROOT) not in sys.path:
 # Force line-buffered stdout so print statements appear immediately in sbatch /
 # Singularity logs rather than being flushed only at script exit.
 if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(line_buffering=True)
+    sys.stdout.reconfigure(line_buffering=True)  # type: ignore[attr-defined]
 
+from phase_predict.data_utils import extended_tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.data_utils import tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.dataset import PhaseFullSequenceDataset
 from phase_predict.model import PhaseTransformer
@@ -160,6 +161,7 @@ def load_data(
     *,
     block_field: str = "block_size",
     second_field: str = "nfe",
+    input_feature_fields: list[str] | None = None,
 ) -> tuple[list[list[Any]], list[list[Any]]]:
     """Load training and validation sequences.
 
@@ -175,19 +177,33 @@ def load_data(
         raise FileNotFoundError(msg)
 
     print(f"Loading training data from: {train_jsonl}")  # noqa: T201
-    train_sequences = tuple_sequences_from_phase_tuples_jsonl(
-        train_jsonl,
-        block_field=block_field,
-        second_field=second_field,
-    )
-
-    if test_jsonl and test_jsonl.exists():
-        print(f"Loading validation data from: {test_jsonl}")  # noqa: T201
-        val_sequences = tuple_sequences_from_phase_tuples_jsonl(
-            test_jsonl,
+    if input_feature_fields is not None:
+        train_sequences = extended_tuple_sequences_from_phase_tuples_jsonl(
+            train_jsonl,
+            output_fields=(block_field, second_field),
+            input_feature_fields=input_feature_fields,
+        )
+    else:
+        train_sequences = tuple_sequences_from_phase_tuples_jsonl(
+            train_jsonl,
             block_field=block_field,
             second_field=second_field,
         )
+
+    if test_jsonl and test_jsonl.exists():
+        print(f"Loading validation data from: {test_jsonl}")  # noqa: T201
+        if input_feature_fields is not None:
+            val_sequences = extended_tuple_sequences_from_phase_tuples_jsonl(
+                test_jsonl,
+                output_fields=(block_field, second_field),
+                input_feature_fields=input_feature_fields,
+            )
+        else:
+            val_sequences = tuple_sequences_from_phase_tuples_jsonl(
+                test_jsonl,
+                block_field=block_field,
+                second_field=second_field,
+            )
     else:
         # 80/20 split
         split_idx = max(1, int(len(train_sequences) * 0.8))
@@ -240,6 +256,9 @@ def run_ablation(
     val_sequences: list[list[Any]],
     run_id: str,
     output_dir: Path,
+    *,
+    input_feature_fields: list[str] | None = None,
+    output_fields: list[str] | None = None,
 ) -> AblationResult | None:
     """Train one model configuration.
 
@@ -264,11 +283,18 @@ def run_ablation(
               f"epochs={train_cfg.max_epochs}, batch_size={train_cfg.batch_size}")  # noqa: T201
 
         # Create datasets
-        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg)
+        train_dataset = PhaseFullSequenceDataset(
+            train_sequences,
+            model_cfg,
+            feature_fields=input_feature_fields,
+            output_fields=output_fields,
+        )
         val_dataset = PhaseFullSequenceDataset(
             val_sequences,
             model_cfg,
             stats=(train_dataset.mean, train_dataset.std),
+            feature_fields=input_feature_fields,
+            output_fields=output_fields,
         )
 
         # Train
@@ -280,7 +306,13 @@ def run_ablation(
         elapsed = time.time() - start_time
 
         # Save checkpoint (include best validation loss in filename)
-        predictor = Predictor(model, mean=train_dataset.mean, std=train_dataset.std)
+        predictor = Predictor(
+            model,
+            mean=train_dataset.mean,
+            std=train_dataset.std,
+            input_mean=getattr(train_dataset, "input_mean", None),
+            input_std=getattr(train_dataset, "input_std", None),
+        )
         metric_tag = f"bestval={history.best_val_loss:.6f}"
         checkpoint_name = f"{run_id}_{metric_tag}.pt"
         checkpoint_path = output_dir / checkpoint_name
@@ -361,6 +393,13 @@ def main(argv: list[str] | None = None) -> None:
         default="block_size",
         help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
     )
+    parser.add_argument(
+        "--input-features",
+        type=str,
+        nargs="+",
+        default=None,
+        help="List of field names to use as input features (e.g. 'block_size nfe max_stab_step').",
+    )
     args = parser.parse_args(argv)
 
     # Generate configurations
@@ -372,7 +411,17 @@ def main(argv: list[str] | None = None) -> None:
         args.test_jsonl,
         block_field=args.tuple_block_field,
         second_field=args.tuple_second_field,
+        input_feature_fields=args.input_features,
     )
+
+    if args.input_features is not None:
+        configs = [
+            (
+                replace(model_cfg, input_tuple_size=len(args.input_features), output_tuple_size=2),
+                train_cfg,
+            )
+            for model_cfg, train_cfg in configs
+        ]
     configs, inferred_window_size = align_configs_to_sequence_length(
         configs,
         train_sequences,
@@ -427,6 +476,8 @@ def main(argv: list[str] | None = None) -> None:
             val_sequences,
             run_id,
             args.output_dir,
+            input_feature_fields=args.input_features,
+            output_fields=[args.tuple_block_field, args.tuple_second_field],
         )
 
         if result:

@@ -58,6 +58,7 @@ from phase_cpd.io import load_trace
 from phase_predict.data_utils import tuples_from_trace
 from phase_predict.data_utils import tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.data_utils import tuple_sequences_from_trace_jsonl
+from phase_predict.data_utils import extended_tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.dataset import PhaseFullSequenceDataset
 from phase_predict.dataset import PhaseSequenceDataset
 from phase_predict.model import PhaseTransformer
@@ -277,6 +278,15 @@ def main(argv: list[str] | None = None) -> None:
         default="block_size",
         help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
     )
+    parser.add_argument(
+        "--input-features",
+        type=str,
+        nargs="+",
+        default=None,
+        help="List of field names to use as input features (e.g., 'block_size nfe max_stab_step'). "
+        "If not specified, uses output fields (block_size and second_field). "
+        "This enables multi-feature training while still outputting only 2 fields.",
+    )
     parser.add_argument("--output", type=str, default="phase_predict.pt",
                         help="Path to save the checkpoint.")
     parser.add_argument("--per-token", action="store_true",
@@ -311,22 +321,36 @@ def main(argv: list[str] | None = None) -> None:
     inferred_window_size = args.window_size
 
     if use_phase_tuples_jsonl:
-        train_sequences = _extract_sequences_from_phase_tuples_jsonl(
-            args.train_jsonl,
-            block_field=args.tuple_block_field,
-            second_field=args.tuple_second_field,
-        )
+        if args.input_features is not None:
+            train_sequences = extended_tuple_sequences_from_phase_tuples_jsonl(
+                args.train_jsonl,
+                output_fields=(args.tuple_block_field, args.tuple_second_field),
+                input_feature_fields=args.input_features,
+            )
+        else:
+            train_sequences = _extract_sequences_from_phase_tuples_jsonl(
+                args.train_jsonl,
+                block_field=args.tuple_block_field,
+                second_field=args.tuple_second_field,
+            )
 
         if not train_sequences:
             print("ERROR: No training sequences were extracted.", file=sys.stderr)  # noqa: T201
             sys.exit(1)
 
         if args.test_jsonl is not None:
-            val_sequences = _extract_sequences_from_phase_tuples_jsonl(
-                args.test_jsonl,
-                block_field=args.tuple_block_field,
-                second_field=args.tuple_second_field,
-            )
+            if args.input_features is not None:
+                val_sequences = extended_tuple_sequences_from_phase_tuples_jsonl(
+                    args.test_jsonl,
+                    output_fields=(args.tuple_block_field, args.tuple_second_field),
+                    input_feature_fields=args.input_features,
+                )
+            else:
+                val_sequences = _extract_sequences_from_phase_tuples_jsonl(
+                    args.test_jsonl,
+                    block_field=args.tuple_block_field,
+                    second_field=args.tuple_second_field,
+                )
         else:
             # 80/20 split of training sequences when no test JSONL provided
             if len(train_sequences) < 2:
@@ -410,26 +434,40 @@ def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
+    # Determine input tuple size based on specified input features
+    # Default: 2 (block_size and second_field)
+    input_tuple_size = 2
+    if args.input_features is not None:
+        input_tuple_size = len(args.input_features)
+        print(f"Using {input_tuple_size} input features: {args.input_features}")  # noqa: T201
+
     model_cfg = ModelConfig(
         window_size=effective_window_size,
         d_model=args.d_model,
         n_heads=args.n_heads,
         n_layers=args.n_layers,
         dropout=args.dropout,
+        input_tuple_size=input_tuple_size,
+        output_tuple_size=2,  # Always output 2: block_size and refinement_steps
     )
     if use_sequence_mode:
-        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg)
+        # pass feature/output field names to datasets when using extended tuples
+        ff = args.input_features
+        of = [args.tuple_block_field, args.tuple_second_field]
+        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff, output_fields=of)
         if val_sequences:
             val_dataset = PhaseFullSequenceDataset(
                 val_sequences,
                 model_cfg,
                 stats=(train_dataset.mean, train_dataset.std),
+                feature_fields=ff,
+                output_fields=of,
             )
         else:
             val_dataset = None
         dataset = train_dataset
     else:
-        dataset = PhaseSequenceDataset(all_tuples, model_cfg)
+        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features, output_fields=[args.tuple_block_field, args.tuple_second_field])
 
     model = PhaseTransformer(model_cfg)
     train_cfg = TrainConfig(
@@ -456,7 +494,13 @@ def main(argv: list[str] | None = None) -> None:
         f"Best val loss = {history.best_val_loss:.6f} at epoch {history.best_epoch}."
     )
 
-    predictor = Predictor(model, mean=dataset.mean, std=dataset.std)
+    predictor = Predictor(
+        model,
+        mean=dataset.mean,
+        std=dataset.std,
+        input_mean=getattr(dataset, "input_mean", None),
+        input_std=getattr(dataset, "input_std", None),
+    )
     # append best validation loss to checkpoint filename
     out_path = Path(args.output)
     metric_tag = f"bestval={history.best_val_loss:.6f}"
@@ -474,6 +518,7 @@ def main(argv: list[str] | None = None) -> None:
         context = []
 
     if context:
+        print(f"\nMaking a sample prediction using the context: {context} tuples as context …")
         result = predictor.predict(context)
         print(f"\nSample prediction (last {effective_window_size} tuples → next):")  # noqa: T201
         print(f"  predicted: {result.predicted_tuple}")  # noqa: T201

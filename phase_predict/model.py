@@ -101,7 +101,8 @@ class PhaseTransformer(nn.Module):
         self.config = config
 
         # project each raw integer tuple to the model hidden dimension
-        self.input_projection = nn.Linear(config.tuple_size, config.d_model)
+        # Uses input_tuple_size for the embedding layer (supports multi-feature input)
+        self.input_projection = nn.Linear(config.input_tuple_size, config.d_model)
 
         self.pos_encoding = _SinusoidalPositionalEncoding(
             d_model=config.d_model,
@@ -119,8 +120,8 @@ class PhaseTransformer(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.n_layers)
 
-        # regression head: one output per tuple field
-        self.output_head = nn.Linear(config.d_model, config.tuple_size)
+        # regression head: one output per tuple field (uses output_tuple_size)
+        self.output_head = nn.Linear(config.d_model, config.output_tuple_size)
 
         self._init_weights()
 
@@ -132,14 +133,15 @@ class PhaseTransformer(nn.Module):
         """Predict the next tuple given a context window.
 
         Args:
-            x: float tensor of shape ``(batch, window_size, tuple_size)``
-               containing normalised past tuple values.
+            x: float tensor of shape ``(batch, window_size, input_tuple_size)``
+               containing normalised past tuple values. input_tuple_size can be
+               greater than output_tuple_size to support multi-feature training.
 
         Returns:
-            Float tensor of shape ``(batch, tuple_size)`` – one regression
-            value per tuple field for the next step.
+            Float tensor of shape ``(batch, output_tuple_size)`` – one regression
+            value per output tuple field for the next step.
         """
-        # (batch, seq, tuple_size) → (batch, seq, d_model)
+        # (batch, seq, input_tuple_size) → (batch, seq, d_model)
         emb = self.input_projection(x)
         emb = self.pos_encoding(emb)
 
