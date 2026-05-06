@@ -22,7 +22,6 @@ ExtendedPhaseTuple = importlib.import_module("phase_predict.schema").ExtendedPha
 # Populated by run_pag_vs_adablock_eval.py or eval_dream_pag.py before generation.
 DIGIT_IDS_TENSOR: torch.Tensor | None = None
 DELIM_IDS_TENSOR: torch.Tensor | None = None
-ExtendedPhaseTuple = importlib.import_module("phase_predict.schema").ExtendedPhaseTuple
 
 DEFAULT_PREDICTOR_CKPT = ROOT / "output" / "phase_predict_model_checkpoint.pt"
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_inference.jsonl"

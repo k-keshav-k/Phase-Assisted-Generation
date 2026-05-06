@@ -247,9 +247,9 @@ class Trainer:
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
-        criterion = nn.MSELoss()
+        criterion: nn.Module | None = None
         if self._stab_pos_weight is None:
-            self._stab_pos_weight = self._compute_stab_pos_weight(dataset)
+            self._stab_pos_weight = self._compute_stab_pos_weight(train_set)
         # Mixed precision: create scaler if using CUDA
         scaler: Optional[torch.amp.GradScaler]
         if self.device.type == "cuda":
