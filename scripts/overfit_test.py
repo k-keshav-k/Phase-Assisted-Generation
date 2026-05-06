@@ -5,7 +5,6 @@ Run from repo root:
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -65,7 +64,6 @@ dataset = PhaseFullSequenceDataset(
     train_seqs,
     cfg,
     feature_fields=INPUT_FEATURES,
-    output_fields=["block_size", "max_stab_step"],
 )
 
 model = PhaseTransformer(cfg)

@@ -348,3 +348,6 @@ TSWLatexianTemp*
 #*Notes.bib
 
 .DS_Store
+.pi/
+.superpowers/
+docs/superpowers/plans/*.pdf

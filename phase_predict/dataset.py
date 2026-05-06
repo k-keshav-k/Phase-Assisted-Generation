@@ -87,49 +87,19 @@ def _extended_sequence_tensor(
     )
 
 
-def _extended_output_tensor_from_extended(
-    sequence: Sequence[Any],
-    output_fields: list[str],
-) -> torch.Tensor:
-    """Extract output (block, refinement) tensor from ExtendedPhaseTuple seq.
-
-    Args:
-        sequence: list of ExtendedPhaseTuple
-        output_fields: list of two field names [block_field, second_field]
-
-    Returns:
-        Tensor of shape (len(sequence), 2)
-    """
-    return torch.tensor(
-        [
-            [getattr(t, "values", {}).get(output_fields[0], 0), getattr(t, "values", {}).get(output_fields[1], 0)]
-            for t in sequence
-        ],
-        dtype=torch.float32,
-    )
-
-
 class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
     """PyTorch Dataset of windowed phase-tuple sequences.
 
-    Converts integer tuples to float tensors internally so the model can
-    directly consume the output. Supports both standard PhaseTuple sequences
-    and multi-feature extended sequences.
+    Produces ``(input, (block_target, stab_target))`` pairs where
+    input is a normalized float tensor and targets are a
+    (class index, ordinal binary vector) tuple.
 
     Args:
-        sequence:    full ordered sequence of
-                     :class:`~phase_predict.schema.PhaseTuple` values.
-        model_config: :class:`~phase_predict.schema.ModelConfig` whose
-                     ``window_size``, ``input_tuple_size``, and
-                     ``output_tuple_size`` are used when building tensors.
-        normalize:   when *True* (default) each tuple field is standardised
-                     using the per-field mean and standard deviation computed
-                     from *sequence*.  Set to *False* to skip normalisation
-                     (e.g. when using pre-fitted statistics from training).
-        stats:       optional ``(mean, std)`` tensors of shape
-                     ``(input_tuple_size,)`` to use instead of computing them from
-                     *sequence* (useful for applying training statistics to a
-                     held-out set).
+        sequence:    full ordered sequence of PhaseTuple / ExtendedPhaseTuple.
+        model_config: :class:`~phase_predict.schema.ModelConfig`.
+        normalize:   standardise input fields to zero-mean unit-variance.
+        feature_fields: field names for input tensor columns.
+        output_fields: field names for output targets.
     """
 
     def __init__(
@@ -138,39 +108,24 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         model_config: ModelConfig,
         *,
         normalize: bool = True,
-        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
         feature_fields: list[str] | None = None,
-        output_fields: list[str] | None = None,
     ) -> None:
         self.window_size = model_config.window_size
         self.input_tuple_size = model_config.input_tuple_size
-        self.output_tuple_size = model_config.output_tuple_size
-        self.tuple_size = self.output_tuple_size
         self.model_config = model_config
 
         self.feature_fields = feature_fields
-        self.output_fields = output_fields
 
         if feature_fields is not None:
             input_raw = _extended_sequence_tensor(sequence, feature_fields)
-            out_fields = output_fields or feature_fields[: self.output_tuple_size]
-            output_raw = _extended_output_tensor_from_extended(sequence, out_fields)
         else:
             input_raw = _sequence_tensor(sequence)
-            output_raw = input_raw
 
         if normalize:
-            if stats is not None:
-                self.mean, self.std = stats
-            else:
-                self.mean = output_raw.mean(dim=0)
-                self.std = output_raw.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             self.input_mean = input_raw.mean(dim=0)
             self.input_std = input_raw.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             input_norm = (input_raw - self.input_mean) / self.input_std
         else:
-            self.mean = torch.zeros(self.output_tuple_size)
-            self.std = torch.ones(self.output_tuple_size)
             self.input_mean = torch.zeros(self.input_tuple_size)
             self.input_std = torch.ones(self.input_tuple_size)
             input_norm = input_raw
@@ -203,17 +158,6 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         context, target = self._windows[idx]
         return context, target
 
-    def denormalize(self, tensor: torch.Tensor) -> torch.Tensor:
-        """Map normalised float values back to the original integer scale.
-
-        Args:
-            tensor: float tensor of shape ``(..., output_tuple_size)``.
-
-        Returns:
-            Tensor in the original (un-normalised) scale.
-        """
-        return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
-
 
 class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
     """PyTorch Dataset of one full context/target pair per sequence.
@@ -222,18 +166,15 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
     final tuple as the target. Contexts are left-padded to a shared
     ``window_size`` so batches can be stacked by the default DataLoader.
 
-    Supports both standard PhaseTuple and multi-feature extended sequences.
+    Produces ``(input, (block_target, stab_target))`` pairs.
 
     Args:
-        sequences:   ordered list of PhaseTuple sequences, one per trace.
-        model_config: :class:`~phase_predict.schema.ModelConfig` whose
-                     ``output_tuple_size`` and ``input_tuple_size`` are used.
-        normalize:   when *True* (default) each tuple field is standardised
-                 using the per-field mean and standard deviation computed
-                 from all tuples across *sequences*.
-        stats:       optional ``(mean, std)`` tensors of shape
-                     ``(output_tuple_size,)`` to use instead of computing from
-                     *sequences*.
+        sequences:   ordered list of PhaseTuple / ExtendedPhaseTuple seqs.
+        model_config: :class:`~phase_predict.schema.ModelConfig`.
+        normalize:   standardise input fields.
+        input_stats: optional ``(mean, std)`` for input normalization.
+        feature_fields: field names for input tensor columns.
+        output_fields: field names for output targets.
     """
 
     def __init__(
@@ -242,14 +183,10 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         model_config: ModelConfig,
         *,
         normalize: bool = True,
-        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
         input_stats: tuple[torch.Tensor, torch.Tensor] | None = None,
         feature_fields: list[str] | None = None,
-        output_fields: list[str] | None = None,
     ) -> None:
-        self.output_tuple_size = model_config.output_tuple_size
         self.input_tuple_size = model_config.input_tuple_size
-        self.tuple_size = self.output_tuple_size
         self.model_config = model_config
 
         if not sequences:
@@ -264,26 +201,13 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.window_size = max(lengths) - 1
 
         self.feature_fields = feature_fields
-        self.output_fields = output_fields
 
         if feature_fields is not None:
             input_seqs = [_extended_sequence_tensor(sequence, feature_fields) for sequence in sequences]
-            out_fields = output_fields or feature_fields[: self.output_tuple_size]
-            output_seqs = [
-                _extended_output_tensor_from_extended(sequence, out_fields) for sequence in sequences
-            ]
         else:
             input_seqs = [_sequence_tensor(sequence) for sequence in sequences]
-            output_seqs = input_seqs
-
-        raw_all_outputs = torch.cat(output_seqs, dim=0)
 
         if normalize:
-            if stats is not None:
-                self.mean, self.std = stats
-            else:
-                self.mean = raw_all_outputs.mean(dim=0)
-                self.std = raw_all_outputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             if input_stats is not None:
                 self.input_mean, self.input_std = input_stats
             else:
@@ -292,8 +216,6 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
                 self.input_std = all_inputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             norm_input_seqs = [(raw - self.input_mean) / self.input_std for raw in input_seqs]
         else:
-            self.mean = torch.zeros(self.output_tuple_size)
-            self.std = torch.ones(self.output_tuple_size)
             self.input_mean = torch.zeros(self.input_tuple_size)
             self.input_std = torch.ones(self.input_tuple_size)
             norm_input_seqs = input_seqs
@@ -328,10 +250,6 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         return self._samples[idx]
-
-    def denormalize(self, tensor: torch.Tensor) -> torch.Tensor:
-        """Map normalised float values back to the original integer scale."""
-        return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
 
 
 def split_dataset(

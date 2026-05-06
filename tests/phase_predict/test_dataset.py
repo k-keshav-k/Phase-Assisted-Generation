@@ -100,14 +100,14 @@ class TestPhaseSequenceDataset:
         inp, _ = ds[0]
         assert inp[0, 0].item() == pytest.approx(1.0)
 
-    def test_external_stats_applied(self) -> None:
+    def test_input_stats_stored(self) -> None:
         seq = _make_sequence(20)
         cfg = ModelConfig(window_size=4)
-        ds_ref = PhaseSequenceDataset(seq, cfg)
-        ds2 = PhaseSequenceDataset(seq, cfg, stats=(ds_ref.mean, ds_ref.std))
-        inp_ref, _ = ds_ref[0]
-        inp2, _ = ds2[0]
-        assert torch.allclose(inp_ref, inp2)
+        ds = PhaseSequenceDataset(seq, cfg)
+        assert ds.input_mean is not None
+        assert ds.input_std is not None
+        assert ds.input_mean.shape == (cfg.input_tuple_size,)
+        assert ds.input_std.shape == (cfg.input_tuple_size,)
 
 
 class TestSplitDataset:

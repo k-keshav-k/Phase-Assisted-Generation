@@ -24,8 +24,6 @@ def _make_predictor() -> tuple[Predictor, PhaseSequenceDataset]:
     model = PhaseTransformer(cfg)
     predictor = Predictor(
         model,
-        mean=ds.mean,
-        std=ds.std,
         input_mean=ds.input_mean,
         input_std=ds.input_std,
     )
