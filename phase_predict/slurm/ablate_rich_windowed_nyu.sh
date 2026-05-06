@@ -7,8 +7,8 @@
 #SBATCH --mem=32GB
 #SBATCH --time=04:00:00
 #SBATCH --requeue
-#SBATCH --output=./logs/pp_ablate_%j.out
-#SBATCH --error=./logs/pp_ablate_%j.err
+#SBATCH --output=/scratch/%u/Phase-Assisted-Generation/logs/pp_ablate_%j.out
+#SBATCH --error=/scratch/%u/Phase-Assisted-Generation/logs/pp_ablate_%j.err
 
 module purge
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
