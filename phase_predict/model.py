@@ -85,11 +85,14 @@ class _SinusoidalPositionalEncoding(nn.Module):
 
 
 class PhaseTransformer(nn.Module):
-    """Compact Transformer encoder for next-tuple regression.
+    """Transformer encoder with classification + ordinal heads.
 
-    Given a window of ``window_size`` past phase tuples the model produces
-    one float per tuple field as the prediction for the next step.  The
-    integer prediction is obtained by rounding outside this module.
+    Given a window of ``window_size`` past phase tuples the model produces:
+      - block_logits:  logits over ``num_block_classes`` for block size
+      - stab_logits:   ordinal logits over ``num_stab_thresholds`` for
+                       max stabilizing step
+
+    The stab head is conditioned on block logits via concatenation.
 
     Args:
         config: :class:`~phase_predict.schema.ModelConfig` with all
@@ -100,8 +103,6 @@ class PhaseTransformer(nn.Module):
         super().__init__()
         self.config = config
 
-        # project each raw integer tuple to the model hidden dimension
-        # Uses input_tuple_size for the embedding layer (supports multi-feature input)
         self.input_projection = nn.Linear(config.input_tuple_size, config.d_model)
 
         self.pos_encoding = _SinusoidalPositionalEncoding(
@@ -115,44 +116,39 @@ class PhaseTransformer(nn.Module):
             nhead=config.n_heads,
             dim_feedforward=config.d_model * 4,
             dropout=config.dropout,
-            batch_first=True,  # (batch, seq, feature) convention
-            norm_first=True,  # pre-norm for more stable training
+            batch_first=True,
+            norm_first=True,
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.n_layers)
 
-        # regression head: one output per tuple field (uses output_tuple_size)
-        self.output_head = nn.Linear(config.d_model, config.output_tuple_size)
+        self.block_head = nn.Linear(config.d_model, config.num_block_classes)
+        stab_input_dim = config.d_model + config.num_block_classes
+        self.stab_head = nn.Linear(stab_input_dim, config.num_stab_thresholds)
 
         self._init_weights()
 
-    # ------------------------------------------------------------------
-    # Forward pass
-    # ------------------------------------------------------------------
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Predict the next tuple given a context window.
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Predict next block size and max stabilising step.
 
         Args:
-            x: float tensor of shape ``(batch, window_size, input_tuple_size)``
-               containing normalised past tuple values. input_tuple_size can be
-               greater than output_tuple_size to support multi-feature training.
+            x: float tensor of shape
+               ``(batch, window_size, input_tuple_size)``.
 
         Returns:
-            Float tensor of shape ``(batch, output_tuple_size)`` – one regression
-            value per output tuple field for the next step.
+            ``(block_logits, stab_logits)`` where
+              - block_logits: ``(batch, num_block_classes)``
+              - stab_logits:  ``(batch, num_stab_thresholds)``
         """
-        # (batch, seq, input_tuple_size) → (batch, seq, d_model)
         emb = self.input_projection(x)
         emb = self.pos_encoding(emb)
+        encoded = self.encoder(emb)
+        last = encoded[:, -1, :]
 
-        # all positions attend to all others; no causal mask needed because
-        # we always condition on the complete context window
-        encoded = self.encoder(emb)  # (batch, seq, d_model)
+        block_logits = self.block_head(last)
+        stab_features = torch.cat([last, block_logits], dim=-1)
+        stab_logits = self.stab_head(stab_features)
 
-        # use the representation of the last (most recent) position
-        last = encoded[:, -1, :]  # (batch, d_model)
-
-        return self.output_head(last)  # (batch, tuple_size)
+        return block_logits, stab_logits
 
     # ------------------------------------------------------------------
     # Helpers
