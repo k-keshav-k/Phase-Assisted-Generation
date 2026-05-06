@@ -23,6 +23,7 @@ from typing import Any, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from phase_predict.dataset import PhaseSequenceDataset, split_dataset
@@ -53,9 +54,9 @@ def train_epoch(
 
     Args:
         model:     the :class:`~phase_predict.model.PhaseTransformer`.
-        loader:    DataLoader yielding ``(input, target)`` batches.
+        loader:    DataLoader yielding ``(input, (block_target, stab_target))``.
         optimizer: PyTorch optimiser.
-        criterion: loss function (MSELoss).
+        criterion: unused (kept for backward compat).
         device:    compute device.
         config:    optional :class:`~phase_predict.schema.TrainConfig` used for
                    gradient clipping (``max_grad_norm``).
@@ -69,12 +70,16 @@ def train_epoch(
     use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        block_targets, stab_targets = targets
+        block_targets = block_targets.to(device)
+        stab_targets = stab_targets.to(device)
         optimizer.zero_grad()
         autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
         with autocast_context:
-            preds = model(inputs)
-            loss = criterion(preds, targets)
+            block_logits, stab_logits = model(inputs)
+            loss_block = F.cross_entropy(block_logits, block_targets)
+            loss_stab = F.binary_cross_entropy_with_logits(stab_logits, stab_targets, reduction="mean")
+            loss = loss_block + loss_stab
 
         if use_amp:
             scaler.scale(loss).backward()
@@ -106,8 +111,8 @@ def evaluate(
 
     Args:
         model:     the :class:`~phase_predict.model.PhaseTransformer`.
-        loader:    DataLoader yielding ``(input, target)`` batches.
-        criterion: loss function.
+        loader:    DataLoader yielding ``(input, (block_target, stab_target))``.
+        criterion: unused (kept for backward compat).
         device:    compute device.
 
     Returns:
@@ -119,11 +124,15 @@ def evaluate(
     use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        block_targets, stab_targets = targets
+        block_targets = block_targets.to(device)
+        stab_targets = stab_targets.to(device)
         autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
         with autocast_context:
-            preds = model(inputs)
-            loss = criterion(preds, targets)
+            block_logits, stab_logits = model(inputs)
+            loss_block = F.cross_entropy(block_logits, block_targets)
+            loss_stab = F.binary_cross_entropy_with_logits(stab_logits, stab_targets, reduction="mean")
+            loss = loss_block + loss_stab
         total_loss += float(loss.item())
         n_batches += 1
     return total_loss / max(n_batches, 1)
