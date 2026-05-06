@@ -52,7 +52,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from phase_predict.data_utils import extended_tuple_sequences_from_phase_tuples_jsonl
 from phase_predict.data_utils import tuple_sequences_from_phase_tuples_jsonl
-from phase_predict.dataset import PhaseFullSequenceDataset
+from phase_predict.dataset import PhaseFullSequenceDataset, PhaseWindowedSequencesDataset
 from phase_predict.model import PhaseTransformer
 from phase_predict.predict import Predictor
 from phase_predict.schema import ModelConfig, TrainConfig
@@ -259,6 +259,9 @@ def run_ablation(
     *,
     input_feature_fields: list[str] | None = None,
     output_fields: list[str] | None = None,
+    dataset_mode: str = "full",
+    window_size_override: int | None = None,
+    min_history: int = 1,
 ) -> AblationResult | None:
     """Train one model configuration.
 
@@ -283,20 +286,40 @@ def run_ablation(
               f"epochs={train_cfg.max_epochs}, batch_size={train_cfg.batch_size}")  # noqa: T201
 
         # Create datasets
-        train_dataset = PhaseFullSequenceDataset(
-            train_sequences,
-            model_cfg,
-            feature_fields=input_feature_fields,
-            output_fields=output_fields,
-        )
-        val_dataset = PhaseFullSequenceDataset(
-            val_sequences,
-            model_cfg,
-            stats=(train_dataset.mean, train_dataset.std),
-            input_stats=(train_dataset.input_mean, train_dataset.input_std),
-            feature_fields=input_feature_fields,
-            output_fields=output_fields,
-        )
+        if dataset_mode == "windowed":
+            if window_size_override is not None:
+                model_cfg = replace(model_cfg, window_size=window_size_override)
+            train_dataset = PhaseWindowedSequencesDataset(
+                train_sequences,
+                model_cfg,
+                feature_fields=input_feature_fields,
+                output_fields=output_fields,
+                min_history=min_history,
+            )
+            val_dataset = PhaseWindowedSequencesDataset(
+                val_sequences,
+                model_cfg,
+                stats=(train_dataset.mean, train_dataset.std),
+                input_stats=(train_dataset.input_mean, train_dataset.input_std),
+                feature_fields=input_feature_fields,
+                output_fields=output_fields,
+                min_history=min_history,
+            )
+        else:
+            train_dataset = PhaseFullSequenceDataset(
+                train_sequences,
+                model_cfg,
+                feature_fields=input_feature_fields,
+                output_fields=output_fields,
+            )
+            val_dataset = PhaseFullSequenceDataset(
+                val_sequences,
+                model_cfg,
+                stats=(train_dataset.mean, train_dataset.std),
+                input_stats=(train_dataset.input_mean, train_dataset.input_std),
+                feature_fields=input_feature_fields,
+                output_fields=output_fields,
+            )
 
         # Train
         model = PhaseTransformer(model_cfg)
@@ -402,6 +425,35 @@ def main(argv: list[str] | None = None) -> None:
         default=None,
         help="List of field names to use as input features (e.g. 'block_size nfe max_stab_step').",
     )
+    parser.add_argument(
+        "--dataset-mode",
+        choices=("full", "windowed"),
+        default="full",
+        help=(
+            "'full' = one (whole_history, last_block) sample per problem (legacy). "
+            "'windowed' = per-problem sliding windows; emits ~10-20x more samples."
+        ),
+    )
+    parser.add_argument(
+        "--window-size",
+        type=int,
+        default=None,
+        help=(
+            "When --dataset-mode windowed, fix the context window size to this value "
+            "(default: keep the per-problem max length). Smaller windows train faster "
+            "and produce more samples per problem."
+        ),
+    )
+    parser.add_argument(
+        "--min-history",
+        type=int,
+        default=1,
+        help=(
+            "When --dataset-mode windowed, the minimum history length (in blocks) "
+            "for which to emit a sample. Default: 1 (predict the very first content "
+            "block from a padded context)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     # Generate configurations
@@ -424,11 +476,18 @@ def main(argv: list[str] | None = None) -> None:
             )
             for model_cfg, train_cfg in configs
         ]
-    configs, inferred_window_size = align_configs_to_sequence_length(
-        configs,
-        train_sequences,
-        val_sequences,
-    )
+    if args.dataset_mode == "windowed" and args.window_size is not None:
+        configs = [
+            (replace(model_cfg, window_size=args.window_size), train_cfg)
+            for model_cfg, train_cfg in configs
+        ]
+        inferred_window_size = args.window_size
+    else:
+        configs, inferred_window_size = align_configs_to_sequence_length(
+            configs,
+            train_sequences,
+            val_sequences,
+        )
 
     # Create output directory
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -456,9 +515,10 @@ def main(argv: list[str] | None = None) -> None:
     results: list[AblationResult] = []
     start_time = time.time()
 
+    mode_tag = "win" if args.dataset_mode == "windowed" else "full"
     for i, (model_cfg, train_cfg) in enumerate(configs, 1):
         run_id = (
-            f"{args.preset}_"
+            f"{args.preset}_{mode_tag}_"
             f"ws{model_cfg.window_size}_"
             f"d{model_cfg.d_model}_"
             f"h{model_cfg.n_heads}_"
@@ -480,6 +540,9 @@ def main(argv: list[str] | None = None) -> None:
             args.output_dir,
             input_feature_fields=args.input_features,
             output_fields=[args.tuple_block_field, args.tuple_second_field],
+            dataset_mode=args.dataset_mode,
+            window_size_override=args.window_size,
+            min_history=args.min_history,
         )
 
         if result:

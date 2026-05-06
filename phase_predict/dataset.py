@@ -323,6 +323,127 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
 
 
+class PhaseWindowedSequencesDataset(Dataset):  # type: ignore[type-arg]
+    """Sliding-window dataset over a list of per-problem sequences.
+
+    Unlike :class:`PhaseFullSequenceDataset` which emits exactly one
+    ``(history, last)`` sample per problem, this dataset emits every valid
+    ``(window_size, target)`` pair within each problem and never crosses
+    problem boundaries. With ~5k problems × ~28 blocks this multiplies the
+    supervision signal ~10–20x.
+
+    Padding behaviour matches :class:`PhaseFullSequenceDataset` so short
+    histories at the start of a problem can still be used as training samples
+    (left-padded with zeros in the *normalised* space).
+
+    Args:
+        sequences:    list of per-problem sequences (each item is a list of
+                      :class:`PhaseTuple` or :class:`ExtendedPhaseTuple`).
+        model_config: :class:`ModelConfig` whose ``window_size`` is used as
+                      the maximum context length. ``input_tuple_size`` /
+                      ``output_tuple_size`` describe the tensor shapes.
+        normalize:    if True, standardise inputs and outputs using statistics
+                      computed across all blocks in *sequences* (or the
+                      provided ``stats`` / ``input_stats``).
+        stats:        optional ``(output_mean, output_std)``.
+        input_stats:  optional ``(input_mean, input_std)``.
+        feature_fields:  for ExtendedPhaseTuple inputs, the list of field
+                      names to use as input features.
+        output_fields:   for ExtendedPhaseTuple inputs, the two field names
+                      to use as the prediction target.
+        min_history:  minimum history length (in blocks) to emit a sample.
+                      Defaults to 1 — the very first block of a problem will
+                      be predicted from a single padded context position.
+    """
+
+    def __init__(
+        self,
+        sequences: Sequence[Sequence[Any]],
+        model_config: ModelConfig,
+        *,
+        normalize: bool = True,
+        stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+        input_stats: tuple[torch.Tensor, torch.Tensor] | None = None,
+        feature_fields: list[str] | None = None,
+        output_fields: list[str] | None = None,
+        min_history: int = 1,
+    ) -> None:
+        if not sequences:
+            msg = "PhaseWindowedSequencesDataset requires at least one sequence"
+            raise ValueError(msg)
+        if min_history < 1:
+            msg = "min_history must be >= 1"
+            raise ValueError(msg)
+
+        self.window_size = model_config.window_size
+        self.input_tuple_size = model_config.input_tuple_size
+        self.output_tuple_size = model_config.output_tuple_size
+        self.tuple_size = self.output_tuple_size
+        self.feature_fields = feature_fields
+        self.output_fields = output_fields
+
+        if feature_fields is not None:
+            input_seqs = [
+                _extended_sequence_tensor(seq, feature_fields) for seq in sequences
+            ]
+            out_fields = output_fields or feature_fields[: self.output_tuple_size]
+            output_seqs = [
+                _extended_output_tensor_from_extended(seq, out_fields)
+                for seq in sequences
+            ]
+        else:
+            input_seqs = [_sequence_tensor(seq) for seq in sequences]
+            output_seqs = input_seqs
+
+        if normalize:
+            if stats is not None:
+                self.mean, self.std = stats
+            else:
+                all_outputs = torch.cat(output_seqs, dim=0)
+                self.mean = all_outputs.mean(dim=0)
+                self.std = all_outputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
+            if input_stats is not None:
+                self.input_mean, self.input_std = input_stats
+            else:
+                all_inputs = torch.cat(input_seqs, dim=0)
+                self.input_mean = all_inputs.mean(dim=0)
+                self.input_std = all_inputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
+            norm_input_seqs = [(t - self.input_mean) / self.input_std for t in input_seqs]
+            norm_output_seqs = [(t - self.mean) / self.std for t in output_seqs]
+        else:
+            self.mean = torch.zeros(self.output_tuple_size)
+            self.std = torch.ones(self.output_tuple_size)
+            self.input_mean = torch.zeros(self.input_tuple_size)
+            self.input_std = torch.ones(self.input_tuple_size)
+            norm_input_seqs = input_seqs
+            norm_output_seqs = output_seqs
+
+        # Emit one sample per (problem, target_position) where target_position
+        # ranges over [min_history, len(seq)-1]. Context is the (up to
+        # window_size) blocks immediately before target_position, left-padded
+        # with zeros if shorter.
+        self._samples: list[tuple[torch.Tensor, torch.Tensor]] = []
+        for in_norm, out_norm in zip(norm_input_seqs, norm_output_seqs):
+            n = in_norm.size(0)
+            for tgt in range(min_history, n):
+                start = max(0, tgt - self.window_size)
+                ctx = in_norm[start:tgt]
+                if ctx.size(0) < self.window_size:
+                    pad_len = self.window_size - ctx.size(0)
+                    ctx = F.pad(ctx, (0, 0, pad_len, 0))
+                target = out_norm[tgt]
+                self._samples.append((ctx, target))
+
+    def __len__(self) -> int:
+        return len(self._samples)
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self._samples[idx]
+
+    def denormalize(self, tensor: torch.Tensor) -> torch.Tensor:
+        return tensor * self.std.to(tensor.device) + self.mean.to(tensor.device)
+
+
 def split_dataset(
     dataset: PhaseSequenceDataset,
     val_fraction: float = 0.2,

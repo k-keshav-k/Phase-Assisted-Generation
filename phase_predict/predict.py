@@ -227,8 +227,18 @@ class Predictor:
 
         mean = torch.tensor(checkpoint.get("mean", []), dtype=torch.float32)
         std = torch.tensor(checkpoint.get("std", []), dtype=torch.float32)
-        in_mean = torch.tensor(checkpoint.get("input_mean", []), dtype=torch.float32)
-        in_std = torch.tensor(checkpoint.get("input_std", []), dtype=torch.float32)
+        # Legacy checkpoints (before multi-feature support) only stored mean/std.
+        # In that case input stats are the same as output stats (input==output).
+        legacy_input_mean = checkpoint.get("input_mean")
+        legacy_input_std = checkpoint.get("input_std")
+        if legacy_input_mean is None or len(legacy_input_mean) == 0:
+            in_mean = mean.clone()
+        else:
+            in_mean = torch.tensor(legacy_input_mean, dtype=torch.float32)
+        if legacy_input_std is None or len(legacy_input_std) == 0:
+            in_std = std.clone()
+        else:
+            in_std = torch.tensor(legacy_input_std, dtype=torch.float32)
         input_fields = checkpoint.get("input_fields", None)
 
         return cls(
