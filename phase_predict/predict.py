@@ -129,43 +129,32 @@ class Predictor:
         """Predict the next phase tuple from a context window.
 
         Args:
-            context: sequence of tuple-like values. Each item can be either
-                     :class:`~phase_predict.schema.PhaseTuple` or a plain
-                     tuple/list with at least two integer-like values.
-                     Shorter windows are left-padded with zeros; longer
-                     windows are truncated to the most recent
-                     ``window_size`` tuples.
+            context: sequence of tuple-like values.
 
         Returns:
             :class:`~phase_predict.schema.PredictionResult` with the
-            predicted tuple and raw regression output.
+            predicted tuple and raw logits.
         """
         window_size = self.config.window_size
-        out_tuple_size = self.config.output_tuple_size
         in_tuple_size = self.config.input_tuple_size
 
-        # build input tensor of shape (window_size, in_tuple_size)
         raw_in = torch.zeros(window_size, in_tuple_size, dtype=torch.float32)
         effective = context[-window_size:]
         for i, t in enumerate(effective):
             offset = window_size - len(effective)
-            # ExtendedPhaseTuple preferred: try to extract full input feature vector
             if isinstance(t, ExtendedPhaseTuple):
                 if self.input_fields is not None:
                     vals = t.as_list(self.input_fields)
                 else:
-                    # fallback to dict value order (insertion order)
                     vals = list(t.values.values())
                 for j in range(min(len(vals), in_tuple_size)):
                     raw_in[offset + i, j] = float(vals[j])
             else:
-                # fallback: sequence-like inputs or PhaseTuple — coerce first fields
                 try:
                     seq = list(t)
                     for j in range(min(len(seq), in_tuple_size)):
                         raw_in[offset + i, j] = float(seq[j])
                 except Exception:
-                    # last-resort: use coerced (block, refinement) into first two positions
                     try:
                         b, r = self._coerce_tuple(t)
                         raw_in[offset + i, 0] = float(b)
@@ -174,30 +163,26 @@ class Predictor:
                     except Exception:
                         pass
 
-        # normalise inputs using input stats
         normed = (raw_in - self.input_mean.cpu()) / self.input_std.cpu()
-        normed = normed.unsqueeze(0).to(self.device)  # (1, W, in_T)
+        normed = normed.unsqueeze(0).to(self.device)
 
-        raw_pred = self.model(normed).squeeze(0)  # (out_T,)
+        block_logits, stab_logits = self.model(normed)
+        block_logits = block_logits.squeeze(0)
+        stab_logits = stab_logits.squeeze(0)
 
-        # denormalise outputs
-        denormed = raw_pred * self.std + self.mean  # (out_T,)
-
-        # round to nearest non-negative integer for each field
-        ints = [max(0, round(float(v))) for v in denormed.cpu().tolist()]
-
-        # pad or truncate to exactly 2 fields for PhaseTuple
-        while len(ints) < 2:
-            ints.append(0)
-        block_size, ref_steps = ints[0], ints[1]
+        block_pred = max(1, int(block_logits.argmax(dim=-1).item()) + 1)
+        stab_pred = int((torch.sigmoid(stab_logits) > 0.5).sum().item())
 
         return PredictionResult(
             predicted_tuple=PhaseTuple(
-                block_size=block_size,
-                refinement_steps=ref_steps,
+                block_size=block_pred,
+                refinement_steps=stab_pred,
             ),
-            raw_output=denormed.cpu().tolist(),
-            metadata={"window_size_used": len(effective)},
+            raw_output=[float(v) for v in block_logits],
+            metadata={
+                "window_size_used": len(effective),
+                "num_stab_thresholds_active": stab_pred,
+            },
         )
 
     @classmethod
