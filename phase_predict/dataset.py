@@ -146,60 +146,60 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.input_tuple_size = model_config.input_tuple_size
         self.output_tuple_size = model_config.output_tuple_size
         self.tuple_size = self.output_tuple_size
+        self.model_config = model_config
 
-        # If feature_fields provided, sequence items are expected to be ExtendedPhaseTuple
-        # remember feature/output field names for downstream use
         self.feature_fields = feature_fields
         self.output_fields = output_fields
 
         if feature_fields is not None:
-            # build separate input and output raw tensors
-            input_raw = _extended_sequence_tensor(sequence, feature_fields)  # (N, input_tuple_size)
+            input_raw = _extended_sequence_tensor(sequence, feature_fields)
             out_fields = output_fields or feature_fields[: self.output_tuple_size]
-            output_raw = _extended_output_tensor_from_extended(sequence, out_fields)  # (N, output_tuple_size)
+            output_raw = _extended_output_tensor_from_extended(sequence, out_fields)
         else:
-            # legacy behavior: sequence of PhaseTuple, input==output
-            input_raw = _sequence_tensor(sequence)  # (N, output_tuple_size)
+            input_raw = _sequence_tensor(sequence)
             output_raw = input_raw
 
-        # compute normalization separately for inputs and outputs
         if normalize:
             if stats is not None:
-                # stats expected for outputs only (backward compat)
                 self.mean, self.std = stats
             else:
                 self.mean = output_raw.mean(dim=0)
                 self.std = output_raw.std(dim=0).clamp(min=_MIN_STD_EPSILON)
-            # input normalization stats
             self.input_mean = input_raw.mean(dim=0)
             self.input_std = input_raw.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             input_norm = (input_raw - self.input_mean) / self.input_std
-            output_norm = (output_raw - self.mean) / self.std
         else:
             self.mean = torch.zeros(self.output_tuple_size)
             self.std = torch.ones(self.output_tuple_size)
             self.input_mean = torch.zeros(self.input_tuple_size)
             self.input_std = torch.ones(self.input_tuple_size)
             input_norm = input_raw
-            output_norm = output_raw
 
-        # build windows using the original sequence order but using normalized tensors
-        self._windows: list[tuple[torch.Tensor, torch.Tensor]] = []
+        self._windows: list[tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]] = []
         for i in range(len(sequence) - self.window_size):
             context_input = input_norm[i : i + self.window_size]
-            target_output = output_norm[i + self.window_size]
-            self._windows.append((context_input, target_output))
+            raw_next = sequence[i + self.window_size]
+
+            if hasattr(raw_next, "values"):
+                block_val = raw_next.values.get("block_size", 0)
+                stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
+            else:
+                block_val = raw_next.block_size
+                stab_val = raw_next.refinement_steps
+
+            block_target = torch.tensor(max(0, int(block_val) - 1), dtype=torch.long)
+            n_thresh = model_config.num_stab_thresholds
+            stab_target = torch.zeros(n_thresh, dtype=torch.float32)
+            clamped = min(max(0, int(stab_val)), n_thresh)
+            if clamped > 0:
+                stab_target[:clamped] = 1.0
+
+            self._windows.append((context_input, (block_target, stab_target)))
 
     def __len__(self) -> int:
         return len(self._windows)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return ``(input_tensor, target_tensor)`` for sample *idx*.
-
-        Returns:
-            input_tensor:  float32 tensor of shape ``(window_size, input_tuple_size)``
-            target_tensor: float32 tensor of shape ``(output_tuple_size,)``
-        """
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         context, target = self._windows[idx]
         return context, target
 
@@ -249,8 +249,8 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
     ) -> None:
         self.output_tuple_size = model_config.output_tuple_size
         self.input_tuple_size = model_config.input_tuple_size
-        # For backward compat, also set tuple_size
         self.tuple_size = self.output_tuple_size
+        self.model_config = model_config
 
         if not sequences:
             msg = "PhaseFullSequenceDataset requires at least one sequence"
@@ -263,11 +263,9 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
 
         self.window_size = max(lengths) - 1
 
-        # remember feature/output field names for downstream use
         self.feature_fields = feature_fields
         self.output_fields = output_fields
 
-        # Build raw input and output sequences depending on feature_fields
         if feature_fields is not None:
             input_seqs = [_extended_sequence_tensor(sequence, feature_fields) for sequence in sequences]
             out_fields = output_fields or feature_fields[: self.output_tuple_size]
@@ -286,7 +284,6 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
             else:
                 self.mean = raw_all_outputs.mean(dim=0)
                 self.std = raw_all_outputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
-            # input stats
             if input_stats is not None:
                 self.input_mean, self.input_std = input_stats
             else:
@@ -294,28 +291,42 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
                 self.input_mean = all_inputs.mean(dim=0)
                 self.input_std = all_inputs.std(dim=0).clamp(min=_MIN_STD_EPSILON)
             norm_input_seqs = [(raw - self.input_mean) / self.input_std for raw in input_seqs]
-            norm_output_seqs = [(raw - self.mean) / self.std for raw in output_seqs]
         else:
             self.mean = torch.zeros(self.output_tuple_size)
             self.std = torch.ones(self.output_tuple_size)
             self.input_mean = torch.zeros(self.input_tuple_size)
             self.input_std = torch.ones(self.input_tuple_size)
             norm_input_seqs = input_seqs
-            norm_output_seqs = output_seqs
 
-        self._samples: list[tuple[torch.Tensor, torch.Tensor]] = []
-        for in_raw, out_raw in zip(norm_input_seqs, norm_output_seqs):
-            context = in_raw[:-1]
-            target = out_raw[-1]
+        self._samples: list[tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]] = []
+        for seq_idx in range(len(sequences)):
+            raw_seq = sequences[seq_idx]
+            context = norm_input_seqs[seq_idx][:-1]
             if context.size(0) < self.window_size:
                 pad_len = self.window_size - context.size(0)
                 context = F.pad(context, (0, 0, pad_len, 0))
-            self._samples.append((context, target))
+
+            raw_next = raw_seq[-1]
+            if hasattr(raw_next, "values"):
+                block_val = raw_next.values.get("block_size", 0)
+                stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
+            else:
+                block_val = raw_next.block_size
+                stab_val = raw_next.refinement_steps
+
+            block_target = torch.tensor(max(0, int(block_val) - 1), dtype=torch.long)
+            n_thresh = model_config.num_stab_thresholds
+            stab_target = torch.zeros(n_thresh, dtype=torch.float32)
+            clamped = min(max(0, int(stab_val)), n_thresh)
+            if clamped > 0:
+                stab_target[:clamped] = 1.0
+
+            self._samples.append((context, (block_target, stab_target)))
 
     def __len__(self) -> int:
         return len(self._samples)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
         return self._samples[idx]
 
     def denormalize(self, tensor: torch.Tensor) -> torch.Tensor:
