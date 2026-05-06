@@ -305,7 +305,7 @@ def extended_tuples_from_phase_tuples_record(
     *,
     output_fields: tuple[str, str] = ("block_size", "nfe"),
     input_feature_fields: list[str] | None = None,
-    default_value: int = 0,
+    default_value: int | float = 0,
 ) -> list[ExtendedPhaseTuple]:
     """Convert a phase_tuples JSON record into ExtendedPhaseTuple values.
 
@@ -335,12 +335,14 @@ def extended_tuples_from_phase_tuples_record(
         if not isinstance(item, dict):
             continue
 
-        # Extract all input features
-        values: dict[str, int] = {}
+        values: dict[str, float] = {}
         for field_name in input_feature_fields:
             raw_value = item.get(field_name, default_value)
-            value = default_value if raw_value is None else int(raw_value)
-            values[field_name] = max(0, value)
+            if raw_value is None:
+                value = float(default_value)
+            else:
+                value = float(raw_value)
+            values[field_name] = max(0.0, value)
 
         extended_tuples.append(ExtendedPhaseTuple(values=values))
 

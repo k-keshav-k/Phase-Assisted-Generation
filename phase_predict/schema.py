@@ -47,19 +47,16 @@ class ExtendedPhaseTuple:
       - (add more as needed)
     """
 
-    values: dict[str, int]  # field_name -> integer value
+    values: dict[str, float]
 
-    def __getitem__(self, field_name: str) -> int:
-        """Get a feature value by field name."""
-        return self.values.get(field_name, 0)
+    def __getitem__(self, field_name: str) -> float:
+        return self.values.get(field_name, 0.0)
 
     def __len__(self) -> int:
-        """Return number of features."""
         return len(self.values)
 
-    def as_list(self, field_names: list[str]) -> list[int]:
-        """Convert to ordered list of feature values by field names."""
-        return [self.values.get(name, 0) for name in field_names]
+    def as_list(self, field_names: list[str]) -> list[float]:
+        return [self.values.get(name, 0.0) for name in field_names]
 
 
 @dataclass(slots=True)
