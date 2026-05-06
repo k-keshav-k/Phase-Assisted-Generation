@@ -231,11 +231,15 @@ class Trainer:
             train_set,
             batch_size=self.config.batch_size,
             shuffle=True,
+            num_workers=self.config.num_workers,
+            persistent_workers=self.config.num_workers > 0,
         )
         val_loader = DataLoader(
             val_set,
             batch_size=self.config.batch_size,
             shuffle=False,
+            num_workers=self.config.num_workers,
+            persistent_workers=self.config.num_workers > 0,
         )
 
         optimizer = torch.optim.AdamW(

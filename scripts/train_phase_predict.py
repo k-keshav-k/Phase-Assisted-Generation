@@ -255,6 +255,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--whole-sequence", action="store_true",
                         help="Train on each full trace sequence instead of sliding windows.")
     parser.add_argument("--epochs", type=int, default=100, help="Max training epochs.")
+    parser.add_argument("--batch-size", type=int, default=2048,
+                        help="Batch size for training and validation.")
+    parser.add_argument("--num-workers", type=int, default=4,
+                        help="DataLoader worker processes (0 = main process only).")
     parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=1e-3,
                         help="Learning rate.")
     parser.add_argument(
@@ -478,7 +482,8 @@ def main(argv: list[str] | None = None) -> None:
         max_epochs=args.epochs,
         learning_rate=args.learning_rate,
         log_interval=10,
-        batch_size=32 if use_sequence_mode else 32,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
     )
 
     print(f"\nTraining PhaseTransformer for up to {args.epochs} epochs …")  # noqa: T201

@@ -149,6 +149,8 @@ class TrainConfig:
     max_grad_norm: float = 1.0
     # print training metrics every N epochs (0 to suppress)
     log_interval: int = 10
+    # number of DataLoader worker processes (0 = main process only)
+    num_workers: int = 4
 
     def __post_init__(self) -> None:
         if not 0.0 < self.val_fraction < 1.0:
