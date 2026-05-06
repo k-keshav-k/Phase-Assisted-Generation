@@ -1,0 +1,57 @@
+<h2>Data Patterns Found in GSM8K Trace Tuples</h2>
+<p class="subtitle">94,911 tuples · 5,000 training sequences · Key patterns your current model doesn't capture</p>
+
+<div class="section">
+  <h3>1. Block Size is Trimodal, Not Normally Distributed</h3>
+  <p>MSE regression predicts the conditional mean. But the true distribution has three distinct regimes:</p>
+  <div class="mockup">
+    <div class="mockup-body">
+      <p><code>block_size=1</code> ████████████████████████████████████████ <strong>19.4%</strong></p>
+      <p style="color:var(--text-secondary);margin-top:-0.25rem">(phase boundary marker — always max_stab_step=0)</p>
+      <p><code>block_size=16</code> ████████████████████████████████████████████████████████████████ <strong>28.2%</strong></p>
+      <p style="color:var(--text-secondary);margin-top:-0.25rem">(AdaBlock default — most common content block)</p>
+      <p><code>block_size=2-15, 17-64</code> ≈ remaining 52%</p>
+      <p style="color:var(--text-secondary);margin-top:-0.25rem">(other content blocks, roughly geometric tail)</p>
+    </div>
+  </div>
+  <p><strong>Consequence:</strong> MSE regression predicts ~8-9, which is <em>never correct</em> for either the boundary (1) or default (16) regime.</p>
+</div>
+
+<div class="section">
+  <h3>2. Stabilizing Steps are Nearly Determined by Block Size</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <p><code>block_size=1</code> → max_stab_step=0 (100% of cases)</p>
+      <p><code>block_size=2</code> → max_stab_step=0 (74.7%), mean=0.25</p>
+      <p><code>block_size=8</code> → max_stab_step=0 (41.7%), mean=1.56</p>
+      <p><code>block_size=16</code> → max_stab_step=0 (6.1%), mean=5.72, median=6</p>
+      <p><code>block_size=27</code> → max_stab_step=0 (12.8%), mean=3.81</p>
+    </div>
+  </div>
+  <p>Monotonic relationship: larger blocks → more stabilisation steps. <strong>Predicting stab_steps without knowing block_size is pointless</strong> — the conditional structure is strong.</p>
+</div>
+
+<div class="section">
+  <h3>3. Sequential Structure: Alternating Boundary-Content</h3>
+  <div class="mockup">
+    <div class="mockup-body">
+      <p>tokens: [content block (size 23)] → [BOUNDARY (size 1)] → [content block (size 16)] → ...</p>
+      <p>&nbsp;</p>
+      <p>Top-3 transitions:</p>
+      <p><code>1 → 16</code>: 8,114 occurrences (boundary → default block)</p>
+      <p><code>16 → 16</code>: 6,645 (consecutive default blocks)</p>
+      <p><code>16 → 1</code>: 1,860 (content → boundary)</p>
+    </div>
+  </div>
+  <p><strong>93.9% of block_size=1 occurrences are preceded by a block > 1.</strong> The model should learn this structural pattern.</p>
+</div>
+
+<div class="section">
+  <h3>Core Question</h3>
+  <p>Given these patterns, the current regression approach is fundamentally mismatched. The likely solution combines:</p>
+  <ul>
+    <li><strong>Classification</strong> for block_size (discrete choice among 64 values)</li>
+    <li><strong>Conditional prediction</strong> of stab_steps given block_size</li>
+    <li>Leveraging the <strong>alternating sequence structure</strong> (boundary ↔ content)</li>
+  </ul>
+</div>

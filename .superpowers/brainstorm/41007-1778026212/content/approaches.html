@@ -1,0 +1,47 @@
+<h2>Three Modeling Approaches</h2>
+<p class="subtitle">You said: downstream quality matters, clamping is good, GPU forward pass is OK</p>
+
+<div class="section">
+  <div class="options">
+    <div class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Classification Transformer <span style="color:var(--accent)">★ Recommended</span></h3>
+        <p>Replace regression heads with classification. Block size → 64-class cross-entropy. Stab steps → ordinal regression (ordered 0-43). Shares one Transformer encoder. Captures multimodal distributions naturally.</p>
+        <div class="pros-cons" style="margin-top:0.5rem">
+          <div class="pros"><h4>Pros</h4><ul><li>Handles trimodal block_size directly</li><li>Ordinal loss respects 0 < 1 < 2 < ... without assuming equal spacing</li><li>Simple architecture change</li></ul></div>
+          <div class="cons"><h4>Cons</h4><ul><li>64 output classes may be sparse for tail values</li><li>No explicit boundary-awareness</li></ul></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Two-Stage Boundary-Aware Model</h3>
+        <p>Stage 1: Binary classifier (boundary marker block_size=1 vs content block). Stage 2: Content blocks get bucketed classification (2-64). Stab steps predicted conditioned on block size bucket.</p>
+        <div class="pros-cons" style="margin-top:0.5rem">
+          <div class="pros"><h4>Pros</h4><ul><li>Explicitly models the 1→16→... alternation</li><li>Boundary detection is high-leverage (100% stab_step=0)</li></ul></div>
+          <div class="cons"><h4>Cons</h4><ul><li>Error propagates from stage 1 to stage 2</li><li>More complex training loop</li></ul></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="option" data-choice="c" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Bucketed + Ordinal (Simplest Entry)</h3>
+        <p>Reduce output space. Bucket block_size into 9 natural groups: [1], [2-4], [5-8], [9-12], [13-15], [16], [17-20], [21-32], [33-64]. Treat stab_steps as ordinal. Same encoder, smaller heads.</p>
+        <div class="pros-cons" style="margin-top:0.5rem">
+          <div class="pros"><h4>Pros</h4><ul><li>Aligns with clamping consumption</li><li>9 classes = less data-hungry</li><li>Tiny model change</li></ul></div>
+          <div class="cons"><h4>Cons</h4><ul><li>Bucket boundaries are arbitrary</li><li>Cannot predict exact values if needed later</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>My Recommendation: Approach A</h3>
+  <p>Why: the data distribution (peaks at 1, 16, geometric tail) is what classification was designed for. Ordinal loss for stab_steps naturally handles "mostly 0-6, occasionally up to 43." Adding bucketing (like treating block_size=1 as its own class, 16 as its own class, and grouping the tail) is a refinement we can add if 64-way classification underperforms for rare sizes.</p>
+</div>
