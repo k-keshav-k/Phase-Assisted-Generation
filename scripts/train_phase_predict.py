@@ -316,7 +316,7 @@ def main(argv: list[str] | None = None) -> None:
     #         args.test_jsonl = default_test_jsonl
 
     use_phase_tuples_jsonl = args.train_jsonl is not None
-    use_sequence_mode = use_phase_tuples_jsonl or args.whole_sequence
+    use_sequence_mode = args.whole_sequence
 
     train_sequences: list[list[PhaseTuple]] = []
     val_sequences: list[list[PhaseTuple]] = []
@@ -338,7 +338,7 @@ def main(argv: list[str] | None = None) -> None:
             )
 
         if not train_sequences:
-            print("ERROR: No training sequences were extracted.", file=sys.stderr)  # noqa: T201
+            print("ERROR: No training sequences were extracted.", file=sys.stderr)
             sys.exit(1)
 
         if args.test_jsonl is not None:
@@ -355,24 +355,26 @@ def main(argv: list[str] | None = None) -> None:
                     second_field=args.tuple_second_field,
                 )
         else:
-            # 80/20 split of training sequences when no test JSONL provided
             if len(train_sequences) < 2:
-                print(  # noqa: T201
-                    "ERROR: phase_tuples training needs at least two sequences "
-                    "when no --test-jsonl is provided.",
-                    file=sys.stderr,
-                )
+                print("ERROR: phase_tuples training needs at least two sequences "
+                      "when no --test-jsonl is provided.", file=sys.stderr)
                 sys.exit(1)
             split_index = max(1, int(len(train_sequences) * 0.8))
             split_index = min(split_index, len(train_sequences) - 1)
             val_sequences = train_sequences[split_index:]
             train_sequences = train_sequences[:split_index]
-            print(f"Auto-split: {len(train_sequences)} train, {len(val_sequences)} val")  # noqa: T201
+            print(f"Auto-split: {len(train_sequences)} train, {len(val_sequences)} val")
 
-        all_sequences = train_sequences + val_sequences
-        inferred_window_size = max(len(sequence) for sequence in all_sequences) - 1
-        print(f"Inferred whole-sequence window size: {inferred_window_size}")  # noqa: T201
-        all_tuples = [tuple_value for sequence in all_sequences for tuple_value in sequence]
+        if use_sequence_mode:
+            # Whole-sequence mode: each sequence is one sample, target is last tuple
+            all_sequences = train_sequences + val_sequences
+            inferred_window_size = max(len(s) for s in all_sequences) - 1
+            print(f"Inferred whole-sequence window size: {inferred_window_size}")
+            all_tuples = [t for seq in all_sequences for t in seq]
+        else:
+            # Sliding window mode: flatten all tuples, split_dataset handles train/val
+            all_tuples = [t for seq in (train_sequences + val_sequences) for t in seq]
+            print(f"Sliding window mode: {len(all_tuples)} tuples, window_size={args.window_size}")
     elif args.whole_sequence:
         if args.trace_jsonl is not None:
             trace_source = args.trace_jsonl
@@ -456,24 +458,20 @@ def main(argv: list[str] | None = None) -> None:
         num_stab_thresholds=args.num_stab_thresholds,
     )
     if use_sequence_mode:
-        # pass feature/output field names to datasets when using extended tuples
         ff = args.input_features
-        of = [args.tuple_block_field, args.tuple_second_field]
-        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff, output_fields=of)
+        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff)
         if val_sequences:
             val_dataset = PhaseFullSequenceDataset(
                 val_sequences,
                 model_cfg,
-                stats=(train_dataset.mean, train_dataset.std),
                 input_stats=(train_dataset.input_mean, train_dataset.input_std),
                 feature_fields=ff,
-                output_fields=of,
             )
         else:
             val_dataset = None
         dataset = train_dataset
     else:
-        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features, output_fields=[args.tuple_block_field, args.tuple_second_field])
+        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features)
 
     model = PhaseTransformer(model_cfg)
     train_cfg = TrainConfig(
@@ -502,8 +500,6 @@ def main(argv: list[str] | None = None) -> None:
 
     predictor = Predictor(
         model,
-        mean=dataset.mean,
-        std=dataset.std,
         input_mean=getattr(dataset, "input_mean", None),
         input_std=getattr(dataset, "input_std", None),
         input_fields=getattr(dataset, "feature_fields", None),
