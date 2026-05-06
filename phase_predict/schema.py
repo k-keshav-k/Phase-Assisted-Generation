@@ -97,6 +97,10 @@ class ModelConfig:
     output_tuple_size: int = 2
     # [DEPRECATED] kept for backward compatibility; use input_tuple_size instead
     tuple_size: int | None = None
+    # number of block size classes for classification head (values 1..num_block_classes)
+    num_block_classes: int = 128
+    # number of ordinal thresholds for max_stab_step prediction (P(>k) for k=0..num_stab_thresholds-1)
+    num_stab_thresholds: int = 83
 
     def __post_init__(self) -> None:
         # Handle backward compatibility: if tuple_size is set, use it for input_tuple_size
@@ -117,6 +121,12 @@ class ModelConfig:
             raise ValueError(msg)
         if self.output_tuple_size < 1:
             msg = "ModelConfig.output_tuple_size must be >= 1"
+            raise ValueError(msg)
+        if self.num_block_classes < 1:
+            msg = "ModelConfig.num_block_classes must be >= 1"
+            raise ValueError(msg)
+        if self.num_stab_thresholds < 1:
+            msg = "ModelConfig.num_stab_thresholds must be >= 1"
             raise ValueError(msg)
 
 
