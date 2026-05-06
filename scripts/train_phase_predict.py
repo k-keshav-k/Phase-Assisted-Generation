@@ -226,18 +226,16 @@ def _extract_sequences_from_phase_tuples_jsonl(
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Train PhaseTransformer on phase_cpd data.")
-    # default_train_jsonl = Path("traces/phase_tuples_train.jsonl")
-    # default_test_jsonl = Path("traces/phase_tuples_test.jsonl")
     parser.add_argument(
         "--train-jsonl",
         type=Path,
-        default=None,
+        default=Path("traces/rich/stab_tuples_conf_train_rich.jsonl"),
         help="Path to phase_tuples training JSONL file or directory.",
     )
     parser.add_argument(
         "--test-jsonl",
         type=Path,
-        default=None,
+        default=Path("traces/rich/stab_tuples_conf_test_rich.jsonl"),
         help="Path to phase_tuples test JSONL file or directory.",
     )
     parser.add_argument("--trace-dir", type=Path, default=None,
@@ -269,23 +267,24 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--tuple-second-field",
         type=str,
-        default="nfe",
-        help="Field name to use as the second tuple component when reading phase_tuples JSONL (default: nfe).",
+        default="max_stab_step",
+        help="Field name to use as the second tuple component.",
     )
     parser.add_argument(
         "--tuple-block-field",
         type=str,
         default="block_size",
-        help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
+        help="Field name to use as the block size field.",
     )
     parser.add_argument(
         "--input-features",
         type=str,
         nargs="+",
-        default=None,
-        help="List of field names to use as input features (e.g., 'block_size nfe max_stab_step'). "
-        "If not specified, uses output fields (block_size and second_field). "
-        "This enables multi-feature training while still outputting only 2 fields.",
+        default=["block_size", "nfe", "mean_stab_step", "max_stab_step",
+                 "mean_ref_step", "max_ref_step", "mean_gap", "max_gap",
+                 "mean_top1_confidence", "min_top1_confidence",
+                 "digit_fraction", "delimiter_fraction"],
+        help="List of field names to use as input features.",
     )
     parser.add_argument("--output", type=str, default="phase_predict.pt",
                         help="Path to save the checkpoint.")
@@ -296,7 +295,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--cpd-min-segment", type=int, default=2,
                         help="CPD minimum segment length in tokens (default: 2).")
     parser.add_argument("--cpd-smoothing", type=int, default=3,
-                        help="CPD smoothing window size (default: 3).")
+                         help="CPD smoothing window size (default: 3).")
+    parser.add_argument("--num-block-classes", type=int, default=128,
+                        help="Number of block size classes for classification head.")
+    parser.add_argument("--num-stab-thresholds", type=int, default=83,
+                        help="Number of ordinal thresholds for stab step head.")
     args = parser.parse_args(argv)
 
     if args.train_jsonl is not None and not args.train_jsonl.exists():
@@ -448,7 +451,9 @@ def main(argv: list[str] | None = None) -> None:
         n_layers=args.n_layers,
         dropout=args.dropout,
         input_tuple_size=input_tuple_size,
-        output_tuple_size=2,  # Always output 2: block_size and refinement_steps
+        output_tuple_size=2,
+        num_block_classes=args.num_block_classes,
+        num_stab_thresholds=args.num_stab_thresholds,
     )
     if use_sequence_mode:
         # pass feature/output field names to datasets when using extended tuples
