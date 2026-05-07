@@ -450,13 +450,22 @@ class CheckpointTupleScheduler:
 
         block_index = self._block_index
         self._block_index += 1
-        applied_block_size = max(
-            16,
-            min(
-                int(predicted_tuple.block_size),
-                min(int(max_block_length), int(remaining_tokens)),
-            ),
+
+        # Detect death spiral: 3+ consecutive blocks with size <= 4
+        recent = self._history[-3:]
+        in_spiral = len(recent) >= 3 and all(
+            h.values.get("block_size", 0) <= 4 for h in recent
         )
+        if in_spiral and int(predicted_tuple.block_size) <= 4:
+            applied_block_size = min(int(max_block_length), int(remaining_tokens))
+        else:
+            applied_block_size = max(
+                1,
+                min(
+                    int(predicted_tuple.block_size),
+                    min(int(max_block_length), int(remaining_tokens)),
+                ),
+            )
         budget_floor = (
             1
             if is_seed_block
