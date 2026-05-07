@@ -108,7 +108,7 @@ class PAGTupleScheduler:
             )
             predicted_tuple = PhaseTuple(
                 block_size=int(raw_predicted_tuple.block_size),
-                refinement_steps=int(raw_predicted_tuple.refinement_steps),
+                refinement_steps=int(raw_predicted_tuple.refinement_steps) + 1,
             )
 
         self._block_index += 1
