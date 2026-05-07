@@ -45,11 +45,11 @@ def train_epoch(
     model: PhaseTransformer,
     loader: DataLoader,  # type: ignore[type-arg]
     optimizer: torch.optim.Optimizer,
-    criterion: nn.Module,
     device: torch.device,
     config: TrainConfig | None = None,
     scaler: Optional[torch.amp.GradScaler] = None,
     stab_pos_weight: torch.Tensor | None = None,
+    criterion: nn.Module | None = None,
 ) -> float:
     """Run one training epoch.
 
@@ -109,10 +109,10 @@ def train_epoch(
 def evaluate(
     model: PhaseTransformer,
     loader: DataLoader,  # type: ignore[type-arg]
-    criterion: nn.Module,
     device: torch.device,
     scaler: Optional[torch.amp.GradScaler] = None,
     stab_pos_weight: torch.Tensor | None = None,
+    criterion: nn.Module | None = None,
 ) -> float:
     """Evaluate the model on a DataLoader without updating weights.
 
@@ -247,7 +247,6 @@ class Trainer:
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
-        criterion: nn.Module | None = None
         if self._stab_pos_weight is None:
             self._stab_pos_weight = self._compute_stab_pos_weight(train_set)
         # Mixed precision: create scaler if using CUDA
@@ -261,11 +260,11 @@ class Trainer:
 
         for epoch in range(1, self.config.max_epochs + 1):
             train_loss = train_epoch(
-                self.model, train_loader, optimizer, criterion, self.device, self.config, scaler,
+                self.model, train_loader, optimizer, self.device, self.config, scaler,
                 stab_pos_weight=self._stab_pos_weight,
             )
             val_loss = evaluate(
-                self.model, val_loader, criterion, self.device, scaler,
+                self.model, val_loader, self.device, scaler,
                 stab_pos_weight=self._stab_pos_weight,
             )
 
