@@ -362,7 +362,7 @@ class CheckpointTupleScheduler:
         predictor: Predictor | None = None,
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
-        min_refinement_steps: int = 3,
+        min_refinement_steps: int = 1,
         seed: EffectiveSeed | None = None,
     ) -> None:
         self.prompt_text = prompt_text

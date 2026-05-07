@@ -37,7 +37,7 @@ class PAGTupleScheduler:
         predictor: Predictor | None = None,
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
-        min_refinement_steps: int = 3,
+        min_refinement_steps: int = 1,
         context_mean_confidence: float = 1.0,
         context_min_confidence: float = 1.0,
         context_digit_fraction: float = 0.0,

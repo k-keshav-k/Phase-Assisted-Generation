@@ -43,7 +43,7 @@ class LLaDAEvalHarness(AdaBlockLLaDAEvalHarness):
         predictor_device: str | None = "cpu",
         max_block_length: int | None = None,
         max_refinement_steps: int | None = None,
-        min_refinement_steps: int | None = 3,
+        min_refinement_steps: int | None = 1,
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
         **kwargs,

@@ -450,7 +450,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--predictor-device", default="cpu")
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
-    parser.add_argument("--min-refinement-steps", type=int, default=3)
+    parser.add_argument("--min-refinement-steps", type=int, default=1)
     parser.add_argument("--context-seed-block-length", type=int, default=None)
     parser.add_argument("--context-seed-stabilizing-steps", type=int, default=None)
     parser.add_argument("--adablock-init-block-length", type=int, default=32)
