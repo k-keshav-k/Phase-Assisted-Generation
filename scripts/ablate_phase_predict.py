@@ -94,18 +94,18 @@ class AblationResult:
 # Predefined ablation grids
 ABLATION_PRESETS = {
     "small": {
-        "window_size": [4],  # Placeholder, will be overridden to max sequence length
-        "d_model": [32, 64],
+        "window_size": [4, 8],  # Placeholder, will be overridden to max sequence length
+        "d_model": [32],
         "n_heads": [2, 4],
-        "n_layers": [1, 2],
-        "dropout": [0.0, 0.1],
+        "n_layers": [2, 4],
+        "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [1e-3, 5e-4],
     },
     "medium": {
         "window_size": [4, 8], # Placeholder, will be overridden to max sequence length
         "d_model": [64, 128],
         "n_heads": [2, 4],
-        "n_layers": [1, 2, 3],
+        "n_layers": [2, 3],
         "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [1e-3, 5e-4],
     },
@@ -113,7 +113,7 @@ ABLATION_PRESETS = {
         "window_size": [4, 8, 16], # Placeholder, will be overridden to max sequence length
         "d_model": [128, 256],
         "n_heads": [2, 4, 8],
-        "n_layers": [1, 2, 3],
+        "n_layers": [2, 4],
         "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [1e-3, 5e-4],
     },
