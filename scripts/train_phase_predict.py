@@ -325,6 +325,7 @@ def main(argv: list[str] | None = None) -> None:
     train_sequences: list[list[PhaseTuple]] = []
     val_sequences: list[list[PhaseTuple]] = []
     all_tuples: list[PhaseTuple] = []
+    all_sequences: list[list[PhaseTuple]] = []
     inferred_window_size = args.window_size
 
     if use_phase_tuples_jsonl:

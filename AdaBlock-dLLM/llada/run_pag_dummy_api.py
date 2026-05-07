@@ -451,7 +451,7 @@ class CheckpointTupleScheduler:
         block_index = self._block_index
         self._block_index += 1
         applied_block_size = max(
-            1,
+            4,
             min(
                 int(predicted_tuple.block_size),
                 min(int(max_block_length), int(remaining_tokens)),
@@ -499,7 +499,7 @@ class CheckpointTupleScheduler:
         decode_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
         realized_et = ExtendedPhaseTuple(values={
             "block_size": max(1, int(applied_block_size)),
-            "nfe": max(0, int(actual_nfe_used)),
+            "nfe": max(3, max(0, int(actual_nfe_used))) if int(applied_block_size) > 1 else max(0, int(actual_nfe_used)),
             "mean_top1_confidence": float(mean_confidence),
             "min_top1_confidence": float(min_confidence),
             "digit_fraction": float(digit_fraction),
