@@ -113,7 +113,7 @@ class PAGTupleScheduler:
 
         self._block_index += 1
         applied_block_size = max(
-            4,
+            16,
             min(
                 int(predicted_tuple.block_size),
                 min(int(max_block_length), int(remaining_tokens)),
