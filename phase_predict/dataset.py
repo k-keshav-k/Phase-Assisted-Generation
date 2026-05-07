@@ -109,10 +109,12 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         *,
         normalize: bool = True,
         feature_fields: list[str] | None = None,
+        stab_field: str = "max_stab_step",
     ) -> None:
         self.window_size = model_config.window_size
         self.input_tuple_size = model_config.input_tuple_size
         self.model_config = model_config
+        self.stab_field = stab_field
 
         self.feature_fields = feature_fields
 
@@ -140,7 +142,7 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
 
             if hasattr(raw_next, "values"):
                 block_val = raw_next.values.get("block_size", 0)
-                stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
+                stab_val = raw_next.values.get(self.stab_field, raw_next.values.get("nfe", 0))
             else:
                 block_val = raw_next.block_size
                 stab_val = raw_next.refinement_steps
@@ -188,9 +190,11 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         normalize: bool = True,
         input_stats: tuple[torch.Tensor, torch.Tensor] | None = None,
         feature_fields: list[str] | None = None,
+        stab_field: str = "max_stab_step",
     ) -> None:
         self.input_tuple_size = model_config.input_tuple_size
         self.model_config = model_config
+        self.stab_field = stab_field
 
         if not sequences:
             msg = "PhaseFullSequenceDataset requires at least one sequence"
@@ -237,7 +241,7 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
             raw_next = raw_seq[-1]
             if hasattr(raw_next, "values"):
                 block_val = raw_next.values.get("block_size", 0)
-                stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
+                stab_val = raw_next.values.get(self.stab_field, raw_next.values.get("nfe", 0))
             else:
                 block_val = raw_next.block_size
                 stab_val = raw_next.refinement_steps

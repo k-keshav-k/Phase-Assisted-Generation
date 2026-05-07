@@ -464,19 +464,22 @@ def main(argv: list[str] | None = None) -> None:
     )
     if use_sequence_mode:
         ff = args.input_features
-        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff)
+        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff,
+                                                  stab_field=args.tuple_second_field)
         if val_sequences:
             val_dataset = PhaseFullSequenceDataset(
                 val_sequences,
                 model_cfg,
                 input_stats=(train_dataset.input_mean, train_dataset.input_std),
                 feature_fields=ff,
+                stab_field=args.tuple_second_field,
             )
         else:
             val_dataset = None
         dataset = train_dataset
     else:
-        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features)
+        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features,
+                                        stab_field=args.tuple_second_field)
 
     model = PhaseTransformer(model_cfg)
     train_cfg = TrainConfig(

@@ -440,7 +440,7 @@ class CheckpointTupleScheduler:
             raw_predicted_tuple = result.predicted_tuple
             predicted_tuple = _normalize_tuple(
                 raw_predicted_tuple.block_size,
-                int(raw_predicted_tuple.refinement_steps) + 1,
+                int(raw_predicted_tuple.refinement_steps),
             )
             result.metadata = {
                 **dict(result.metadata),
