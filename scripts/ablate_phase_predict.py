@@ -102,25 +102,25 @@ ABLATION_PRESETS = {
         "learning_rate": [1e-3, 5e-4],
     },
     "medium": {
-        "window_size": [4, 8], # Placeholder, will be overridden to max sequence length
-        "d_model": [64, 128],
+        "window_size": [8], # Placeholder, will be overridden to max sequence length
+        "d_model": [64],
         "n_heads": [2, 4],
-        "n_layers": [2, 3],
+        "n_layers": [2, 4],
         "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [1e-3, 5e-4],
     },
     "large": {
-        "window_size": [4, 8, 16], # Placeholder, will be overridden to max sequence length
-        "d_model": [128, 256],
+        "window_size": [8, 16], # Placeholder, will be overridden to max sequence length
+        "d_model": [128],
         "n_heads": [2, 4, 8],
         "n_layers": [2, 4],
         "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [1e-3, 5e-4],
     },
     "xlarge": {
-        "window_size": [4, 8, 16, 32], # Placeholder, will be overridden to max sequence length
+        "window_size": [8, 16], # Placeholder, will be overridden to max sequence length
         "d_model": [256, 512],
-        "n_heads": [4, 8, 16],
+        "n_heads": [2, 4, 8],
         "n_layers": [2, 4, 6],
         "dropout": [0.0, 0.1, 0.2],
         "learning_rate": [5e-4, 1e-4],
