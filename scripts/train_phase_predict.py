@@ -226,18 +226,16 @@ def _extract_sequences_from_phase_tuples_jsonl(
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Train PhaseTransformer on phase_cpd data.")
-    # default_train_jsonl = Path("traces/phase_tuples_train.jsonl")
-    # default_test_jsonl = Path("traces/phase_tuples_test.jsonl")
     parser.add_argument(
         "--train-jsonl",
         type=Path,
-        default=None,
+        default=Path("traces/rich/stab_tuples_conf_train_rich.jsonl"),
         help="Path to phase_tuples training JSONL file or directory.",
     )
     parser.add_argument(
         "--test-jsonl",
         type=Path,
-        default=None,
+        default=Path("traces/rich/stab_tuples_conf_test_rich.jsonl"),
         help="Path to phase_tuples test JSONL file or directory.",
     )
     parser.add_argument("--trace-dir", type=Path, default=None,
@@ -257,6 +255,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--whole-sequence", action="store_true",
                         help="Train on each full trace sequence instead of sliding windows.")
     parser.add_argument("--epochs", type=int, default=100, help="Max training epochs.")
+    parser.add_argument("--batch-size", type=int, default=2048,
+                        help="Batch size for training and validation.")
+    parser.add_argument("--num-workers", type=int, default=4,
+                        help="DataLoader worker processes (0 = main process only).")
     parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=1e-3,
                         help="Learning rate.")
     parser.add_argument(
@@ -269,23 +271,24 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--tuple-second-field",
         type=str,
-        default="nfe",
-        help="Field name to use as the second tuple component when reading phase_tuples JSONL (default: nfe).",
+        default="max_stab_step",
+        help="Field name to use as the second tuple component.",
     )
     parser.add_argument(
         "--tuple-block-field",
         type=str,
         default="block_size",
-        help="Field name to use as the block size field when reading phase_tuples JSONL (default: block_size).",
+        help="Field name to use as the block size field.",
     )
     parser.add_argument(
         "--input-features",
         type=str,
         nargs="+",
-        default=None,
-        help="List of field names to use as input features (e.g., 'block_size nfe max_stab_step'). "
-        "If not specified, uses output fields (block_size and second_field). "
-        "This enables multi-feature training while still outputting only 2 fields.",
+        default=["block_size", "nfe", "mean_stab_step", "max_stab_step",
+                 "mean_ref_step", "max_ref_step", "mean_gap", "max_gap",
+                 "mean_top1_confidence", "min_top1_confidence",
+                 "digit_fraction", "delimiter_fraction"],
+        help="List of field names to use as input features.",
     )
     parser.add_argument("--output", type=str, default="phase_predict.pt",
                         help="Path to save the checkpoint.")
@@ -296,7 +299,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--cpd-min-segment", type=int, default=2,
                         help="CPD minimum segment length in tokens (default: 2).")
     parser.add_argument("--cpd-smoothing", type=int, default=3,
-                        help="CPD smoothing window size (default: 3).")
+                         help="CPD smoothing window size (default: 3).")
+    parser.add_argument("--num-block-classes", type=int, default=128,
+                        help="Number of block size classes for classification head.")
+    parser.add_argument("--num-stab-thresholds", type=int, default=83,
+                        help="Number of ordinal thresholds for stab step head.")
     args = parser.parse_args(argv)
 
     if args.train_jsonl is not None and not args.train_jsonl.exists():
@@ -313,7 +320,7 @@ def main(argv: list[str] | None = None) -> None:
     #         args.test_jsonl = default_test_jsonl
 
     use_phase_tuples_jsonl = args.train_jsonl is not None
-    use_sequence_mode = use_phase_tuples_jsonl or args.whole_sequence
+    use_sequence_mode = args.whole_sequence
 
     train_sequences: list[list[PhaseTuple]] = []
     val_sequences: list[list[PhaseTuple]] = []
@@ -335,7 +342,7 @@ def main(argv: list[str] | None = None) -> None:
             )
 
         if not train_sequences:
-            print("ERROR: No training sequences were extracted.", file=sys.stderr)  # noqa: T201
+            print("ERROR: No training sequences were extracted.", file=sys.stderr)
             sys.exit(1)
 
         if args.test_jsonl is not None:
@@ -352,24 +359,26 @@ def main(argv: list[str] | None = None) -> None:
                     second_field=args.tuple_second_field,
                 )
         else:
-            # 80/20 split of training sequences when no test JSONL provided
             if len(train_sequences) < 2:
-                print(  # noqa: T201
-                    "ERROR: phase_tuples training needs at least two sequences "
-                    "when no --test-jsonl is provided.",
-                    file=sys.stderr,
-                )
+                print("ERROR: phase_tuples training needs at least two sequences "
+                      "when no --test-jsonl is provided.", file=sys.stderr)
                 sys.exit(1)
             split_index = max(1, int(len(train_sequences) * 0.8))
             split_index = min(split_index, len(train_sequences) - 1)
             val_sequences = train_sequences[split_index:]
             train_sequences = train_sequences[:split_index]
-            print(f"Auto-split: {len(train_sequences)} train, {len(val_sequences)} val")  # noqa: T201
+            print(f"Auto-split: {len(train_sequences)} train, {len(val_sequences)} val")
 
-        all_sequences = train_sequences + val_sequences
-        inferred_window_size = max(len(sequence) for sequence in all_sequences) - 1
-        print(f"Inferred whole-sequence window size: {inferred_window_size}")  # noqa: T201
-        all_tuples = [tuple_value for sequence in all_sequences for tuple_value in sequence]
+        if use_sequence_mode:
+            # Whole-sequence mode: each sequence is one sample, target is last tuple
+            all_sequences = train_sequences + val_sequences
+            inferred_window_size = max(len(s) for s in all_sequences) - 1
+            print(f"Inferred whole-sequence window size: {inferred_window_size}")
+            all_tuples = [t for seq in all_sequences for t in seq]
+        else:
+            # Sliding window mode: flatten all tuples, split_dataset handles train/val
+            all_tuples = [t for seq in (train_sequences + val_sequences) for t in seq]
+            print(f"Sliding window mode: {len(all_tuples)} tuples, window_size={args.window_size}")
     elif args.whole_sequence:
         if args.trace_jsonl is not None:
             trace_source = args.trace_jsonl
@@ -448,34 +457,33 @@ def main(argv: list[str] | None = None) -> None:
         n_layers=args.n_layers,
         dropout=args.dropout,
         input_tuple_size=input_tuple_size,
-        output_tuple_size=2,  # Always output 2: block_size and refinement_steps
+        output_tuple_size=2,
+        num_block_classes=args.num_block_classes,
+        num_stab_thresholds=args.num_stab_thresholds,
     )
     if use_sequence_mode:
-        # pass feature/output field names to datasets when using extended tuples
         ff = args.input_features
-        of = [args.tuple_block_field, args.tuple_second_field]
-        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff, output_fields=of)
+        train_dataset = PhaseFullSequenceDataset(train_sequences, model_cfg, feature_fields=ff)
         if val_sequences:
             val_dataset = PhaseFullSequenceDataset(
                 val_sequences,
                 model_cfg,
-                stats=(train_dataset.mean, train_dataset.std),
                 input_stats=(train_dataset.input_mean, train_dataset.input_std),
                 feature_fields=ff,
-                output_fields=of,
             )
         else:
             val_dataset = None
         dataset = train_dataset
     else:
-        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features, output_fields=[args.tuple_block_field, args.tuple_second_field])
+        dataset = PhaseSequenceDataset(all_tuples, model_cfg, feature_fields=args.input_features)
 
     model = PhaseTransformer(model_cfg)
     train_cfg = TrainConfig(
         max_epochs=args.epochs,
         learning_rate=args.learning_rate,
         log_interval=10,
-        batch_size=32 if use_sequence_mode else 32,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
     )
 
     print(f"\nTraining PhaseTransformer for up to {args.epochs} epochs …")  # noqa: T201
@@ -497,8 +505,6 @@ def main(argv: list[str] | None = None) -> None:
 
     predictor = Predictor(
         model,
-        mean=dataset.mean,
-        std=dataset.std,
         input_mean=getattr(dataset, "input_mean", None),
         input_std=getattr(dataset, "input_std", None),
         input_fields=getattr(dataset, "feature_fields", None),

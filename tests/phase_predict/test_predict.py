@@ -22,7 +22,11 @@ def _make_predictor() -> tuple[Predictor, PhaseSequenceDataset]:
     seq = _make_sequence(20)
     ds = PhaseSequenceDataset(seq, cfg)
     model = PhaseTransformer(cfg)
-    predictor = Predictor(model, mean=ds.mean, std=ds.std)
+    predictor = Predictor(
+        model,
+        input_mean=ds.input_mean,
+        input_std=ds.input_std,
+    )
     return predictor, ds
 
 
@@ -45,7 +49,7 @@ class TestPredictor:
         predictor, ds = _make_predictor()
         seq = _make_sequence(20)
         result = predictor.predict(seq[-4:])
-        assert len(result.raw_output) == 2
+        assert len(result.raw_output) == 128
 
     def test_short_context_window_padded(self) -> None:
         """Predict should accept context shorter than window_size."""

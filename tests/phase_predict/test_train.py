@@ -54,11 +54,7 @@ class TestTrainer:
         # val set with a very different scale – model cannot improve on it
         val_seq = [PhaseTuple(100 + i, 300) for i in range(10)]
         train_ds = PhaseSequenceDataset(train_seq, cfg)
-        val_ds = PhaseSequenceDataset(
-            val_seq,
-            cfg,
-            stats=(train_ds.mean, train_ds.std),  # normalised using train stats
-        )
+        val_ds = PhaseSequenceDataset(val_seq, cfg)
         model = PhaseTransformer(cfg)
         # high lr → quickly overfits train, val loss degrades → early stopping
         train_cfg = TrainConfig(

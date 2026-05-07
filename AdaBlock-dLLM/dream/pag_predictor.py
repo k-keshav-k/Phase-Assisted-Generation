@@ -4,6 +4,7 @@ import importlib
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import torch
 
@@ -13,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 Predictor = importlib.import_module("phase_predict.predict").Predictor
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
+ExtendedPhaseTuple = importlib.import_module("phase_predict.schema").ExtendedPhaseTuple
 
 
 @dataclass(slots=True)
@@ -36,29 +38,30 @@ class PAGTupleScheduler:
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
         min_refinement_steps: int = 3,
+        context_mean_confidence: float = 1.0,
+        context_min_confidence: float = 1.0,
+        context_digit_fraction: float = 0.0,
+        context_delimiter_fraction: float = 0.0,
     ) -> None:
         self.seed_tuple = PhaseTuple(
             block_size=max(1, int(seed_block_length)),
             refinement_steps=max(1, int(seed_refinement_steps)),
         )
-        self.context_seed_tuple = PhaseTuple(
-            block_size=max(
-                1,
-                int(
-                    seed_block_length
-                    if context_seed_block_length is None
-                    else context_seed_block_length
-                ),
-            ),
-            refinement_steps=max(
-                0,
-                int(
-                    seed_refinement_steps - 1
-                    if context_seed_stabilizing_steps is None
-                    else context_seed_stabilizing_steps
-                ),
-            ),
-        )
+        self.context_seed_tuple = ExtendedPhaseTuple(values={
+            "block_size": max(1, int(
+                seed_block_length if context_seed_block_length is None
+                else context_seed_block_length
+            )),
+            "nfe": max(0, int(
+                seed_refinement_steps - 1
+                if context_seed_stabilizing_steps is None
+                else context_seed_stabilizing_steps
+            )),
+            "mean_top1_confidence": float(context_mean_confidence),
+            "min_top1_confidence": float(context_min_confidence),
+            "digit_fraction": float(context_digit_fraction),
+            "delimiter_fraction": float(context_delimiter_fraction),
+        })
         self.min_refinement_steps = max(1, int(min_refinement_steps))
 
         if predictor is None:
@@ -76,10 +79,10 @@ class PAGTupleScheduler:
         self.reset()
 
     def reset(self) -> None:
-        self._history: list[PhaseTuple] = []
+        self._history: list[ExtendedPhaseTuple] = []
         self._block_index = 0
 
-    def _padded_context(self) -> list[PhaseTuple]:
+    def _padded_context(self) -> list[ExtendedPhaseTuple]:
         window_size = int(self.predictor.config.window_size)
         history = self._history[-window_size:]
         pad_count = max(0, window_size - len(history))
@@ -134,14 +137,26 @@ class PAGTupleScheduler:
             budgeted_refinement_steps=budgeted_refinement_steps,
         )
 
-    def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(
+        self,
+        applied_block_size: int,
+        actual_nfe_used: int,
+        mean_confidence: float = 1.0,
+        min_confidence: float = 1.0,
+        digit_fraction: float = 0.0,
+        delimiter_fraction: float = 0.0,
+    ) -> None:
         self._history.append(
-            PhaseTuple(
-                block_size=max(1, int(applied_block_size)),
-                refinement_steps=max(0, int(actual_nfe_used) - 1),
-            )
+            ExtendedPhaseTuple(values={
+                "block_size": max(1, int(applied_block_size)),
+                "nfe": max(0, int(actual_nfe_used)),
+                "mean_top1_confidence": float(mean_confidence),
+                "min_top1_confidence": float(min_confidence),
+                "digit_fraction": float(digit_fraction),
+                "delimiter_fraction": float(delimiter_fraction),
+            })
         )
 
     @property
-    def history(self) -> list[PhaseTuple]:
+    def history(self) -> list[ExtendedPhaseTuple]:
         return list(self._history)

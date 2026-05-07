@@ -17,6 +17,11 @@ if str(ROOT) not in sys.path:
 
 Predictor = importlib.import_module("phase_predict.predict").Predictor
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
+ExtendedPhaseTuple = importlib.import_module("phase_predict.schema").ExtendedPhaseTuple
+
+# Populated by run_pag_vs_adablock_eval.py or eval_dream_pag.py before generation.
+DIGIT_IDS_TENSOR: torch.Tensor | None = None
+DELIM_IDS_TENSOR: torch.Tensor | None = None
 
 DEFAULT_PREDICTOR_CKPT = ROOT / "output" / "phase_predict_model_checkpoint.pt"
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_inference.jsonl"
@@ -45,6 +50,10 @@ class EffectiveSeed:
     refinement_steps: int
     source: str
     context_stabilizing_steps: int | None = None
+    context_mean_confidence: float = 1.0
+    context_min_confidence: float = 1.0
+    context_digit_fraction: float = 0.0
+    context_delimiter_fraction: float = 0.0
 
 
 def _tuple_to_dict(value: BlockTuple) -> dict[str, int]:
@@ -52,6 +61,10 @@ def _tuple_to_dict(value: BlockTuple) -> dict[str, int]:
         "block_size": int(value.block_size),
         "refinement_steps": int(value.refinement_steps),
     }
+
+
+def _extended_tuple_to_dict(et: ExtendedPhaseTuple) -> dict[str, float]:
+    return dict(et.values)
 
 
 def _normalize_tuple(block_size: int, refinement_steps: int) -> BlockTuple:
@@ -350,20 +363,32 @@ class CheckpointTupleScheduler:
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
         min_refinement_steps: int = 3,
+        seed: EffectiveSeed | None = None,
     ) -> None:
         self.prompt_text = prompt_text
         self.seed_tuple = _normalize_tuple(
             seed_block_length,
             seed_refinement_steps,
         )
-        self.context_seed_tuple = _normalize_stabilizing_tuple(
-            seed_block_length
-            if context_seed_block_length is None
-            else context_seed_block_length,
-            seed_refinement_steps - 1
-            if context_seed_stabilizing_steps is None
-            else context_seed_stabilizing_steps,
-        )
+
+        if seed is not None:
+            self.context_seed_tuple = ExtendedPhaseTuple(values={
+                "block_size": seed.block_length,
+                "nfe": seed.refinement_steps,
+                "mean_top1_confidence": seed.context_mean_confidence,
+                "min_top1_confidence": seed.context_min_confidence,
+                "digit_fraction": seed.context_digit_fraction,
+                "delimiter_fraction": seed.context_delimiter_fraction,
+            })
+        else:
+            self.context_seed_tuple = _normalize_stabilizing_tuple(
+                seed_block_length
+                if context_seed_block_length is None
+                else context_seed_block_length,
+                seed_refinement_steps - 1
+                if context_seed_stabilizing_steps is None
+                else context_seed_stabilizing_steps,
+            )
         self.min_refinement_steps = max(1, int(min_refinement_steps))
 
         if predictor is None:
@@ -375,12 +400,12 @@ class CheckpointTupleScheduler:
         self.reset()
 
     def reset(self) -> None:
-        self._history: list[BlockTuple] = []
+        self._history: list[ExtendedPhaseTuple] = []
         self._block_index = 0
         self.prediction_trace: list[dict[str, object]] = []
         self.scheduler_predict_time_sec = 0.0
 
-    def _padded_context(self) -> list[BlockTuple]:
+    def _padded_context(self) -> list[ExtendedPhaseTuple]:
         window_size = int(self.predictor.config.window_size)
         history = self._history[-window_size:]
         pad_count = max(0, window_size - len(history))
@@ -404,7 +429,7 @@ class CheckpointTupleScheduler:
                 raw_output=None,
                 metadata={"source": "seed", "window_size_used": 0},
             )
-            context: list[BlockTuple] = []
+            context: list[ExtendedPhaseTuple] = []
             predict_time_sec = 0.0
         else:
             context = self._padded_context()
@@ -446,14 +471,14 @@ class CheckpointTupleScheduler:
                 "block_index": int(block_index),
                 "source": str(result.metadata.get("source", "checkpoint")),
                 "predicted_tuple": _tuple_to_dict(predicted_tuple),
-                "context": [_tuple_to_dict(item) for item in context],
+                "context": [_extended_tuple_to_dict(item) for item in context],
                 "remaining_tokens": int(remaining_tokens),
                 "applied_block_size": int(applied_block_size),
                 "budgeted_refinement_steps": int(budgeted_refinement_steps),
                 "raw_output": result.raw_output,
                 "metadata": dict(result.metadata),
                 "predict_time_sec": float(predict_time_sec),
-                "context_seed_tuple": _tuple_to_dict(self.context_seed_tuple),
+                "context_seed_tuple": _extended_tuple_to_dict(self.context_seed_tuple),
             }
         )
         return ScheduledBlock(
@@ -462,18 +487,30 @@ class CheckpointTupleScheduler:
             budgeted_refinement_steps=budgeted_refinement_steps,
         )
 
-    def record_realized(self, applied_block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(
+        self,
+        applied_block_size: int,
+        actual_nfe_used: int,
+        mean_confidence: float = 1.0,
+        min_confidence: float = 1.0,
+        digit_fraction: float = 0.0,
+        delimiter_fraction: float = 0.0,
+    ) -> None:
         decode_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
-        realized_tuple = _normalize_stabilizing_tuple(
-            applied_block_size,
-            int(actual_nfe_used) - 1,
-        )
-        self._history.append(realized_tuple)
-        self.prediction_trace[-1]["realized_tuple"] = _tuple_to_dict(realized_tuple)
+        realized_et = ExtendedPhaseTuple(values={
+            "block_size": max(1, int(applied_block_size)),
+            "nfe": max(0, int(actual_nfe_used)),
+            "mean_top1_confidence": float(mean_confidence),
+            "min_top1_confidence": float(min_confidence),
+            "digit_fraction": float(digit_fraction),
+            "delimiter_fraction": float(delimiter_fraction),
+        })
+        self._history.append(realized_et)
+        self.prediction_trace[-1]["realized_tuple"] = realized_et.values
         self.prediction_trace[-1]["realized_decode_tuple"] = _tuple_to_dict(decode_tuple)
 
     @property
-    def history(self) -> list[BlockTuple]:
+    def history(self) -> list[ExtendedPhaseTuple]:
         return list(self._history)
 
 
@@ -686,11 +723,34 @@ def _adablock_first_seed(
             x[0, block_start:block_end],
         )
 
+        # Compute confidence from final forward pass logits
+        probs = torch.softmax(block_logits[:, block_start:block_end, :], dim=-1)
+        max_probs = probs.max(dim=-1).values
+        mean_conf = max_probs.mean().item()
+        min_conf = max_probs.min().item()
+
+        # Token-type fractions from decoded token IDs
+        final_tokens = x[0, block_start:block_end]
+        digit_ids = DIGIT_IDS_TENSOR
+        delim_ids = DELIM_IDS_TENSOR
+        if digit_ids is not None:
+            digit_frac = torch.isin(final_tokens, digit_ids.to(x.device)).float().mean().item()
+        else:
+            digit_frac = 0.0
+        if delim_ids is not None:
+            delim_frac = torch.isin(final_tokens, delim_ids.to(x.device)).float().mean().item()
+        else:
+            delim_frac = 0.0
+
     return EffectiveSeed(
         block_length=max(1, int(block_length)),
         refinement_steps=max(1, int(nfe)),
         source="adablock_first_block",
         context_stabilizing_steps=max(0, int(stabilizing_steps)),
+        context_mean_confidence=float(mean_conf),
+        context_min_confidence=float(min_conf),
+        context_digit_fraction=float(digit_frac),
+        context_delimiter_fraction=float(delim_frac),
     )
 
 
@@ -767,6 +827,7 @@ def _make_scheduler(
         context_seed_block_length=context_seed_block_length,
         context_seed_stabilizing_steps=context_seed_stabilizing_steps,
         min_refinement_steps=args.min_refinement_steps,
+        seed=seed,
     )
 
 

@@ -224,9 +224,28 @@ def _summarize_method(
 
 def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecord):
     from generate_pag import generate_pag, generate_pag_dual_cache, generate_pag_prefix_cache
+    from run_pag_dummy_api import DIGIT_IDS_TENSOR, DELIM_IDS_TENSOR
 
     user_input = _build_prompt(tokenizer, args.model_path, record.prompt)
     input_ids = torch.tensor(tokenizer(user_input)["input_ids"], device=args.device).unsqueeze(0)
+
+    # Precompute digit and delimiter token ID sets for this tokenizer
+    digit_ids = set()
+    for tid in range(tokenizer.vocab_size):
+        text = tokenizer.decode([tid]).strip()
+        if text and all(c.isdigit() for c in text):
+            digit_ids.add(tid)
+    delimiter_ids = set(args.delimiter_ids or [198])
+    for tid in range(tokenizer.vocab_size):
+        text = tokenizer.decode([tid]).strip()
+        if text in {"\n", "<|endoftext|>", "<|eot_id|>"}:
+            delimiter_ids.add(tid)
+    # Assign to module-level globals for the probe function
+    import run_pag_dummy_api as rpda
+    rpda.DIGIT_IDS_TENSOR = torch.tensor(list(digit_ids), dtype=torch.long)
+    rpda.DELIM_IDS_TENSOR = torch.tensor(list(delimiter_ids), dtype=torch.long)
+    digit_cache = rpda.DIGIT_IDS_TENSOR.to(args.device)
+    delim_cache = rpda.DELIM_IDS_TENSOR.to(args.device)
     scheduler = _make_scheduler(
         args,
         record.prompt,
@@ -258,6 +277,8 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         threshold=args.threshold,
         max_block_length=args.max_block_length,
         max_refinement_steps=args.max_refinement_steps,
+        digit_ids_tensor=digit_cache,
+        delimiter_ids_tensor=delim_cache,
     )
     _synchronize_if_cuda(args.device)
     elapsed = time.perf_counter() - start

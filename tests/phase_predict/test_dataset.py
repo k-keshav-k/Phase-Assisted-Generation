@@ -50,31 +50,46 @@ class TestPhaseSequenceDataset:
         seq = _make_sequence(20)
         cfg = ModelConfig(window_size=4)
         ds = PhaseSequenceDataset(seq, cfg)
-        assert len(ds) == 20 - 4  # 16 samples
+        assert len(ds) == 20 - 4
 
     def test_item_shapes(self) -> None:
         seq = _make_sequence(20)
-        cfg = ModelConfig(window_size=4, tuple_size=2)
+        cfg = ModelConfig(window_size=4, input_tuple_size=2)
         ds = PhaseSequenceDataset(seq, cfg)
-        inp, tgt = ds[0]
+        inp, target = ds[0]
         assert inp.shape == (4, 2)
-        assert tgt.shape == (2,)
+        block_target, stab_target = target
+        assert block_target.shape == ()
+        assert block_target.dtype == torch.long
+        assert stab_target.shape == (cfg.num_stab_thresholds,)
+        assert stab_target.dtype == torch.float32
 
-    def test_item_dtype(self) -> None:
+    def test_block_target_is_correct_class(self) -> None:
         seq = _make_sequence(20)
         cfg = ModelConfig(window_size=4)
-        ds = PhaseSequenceDataset(seq, cfg)
-        inp, tgt = ds[0]
-        assert inp.dtype == torch.float32
-        assert tgt.dtype == torch.float32
+        ds = PhaseSequenceDataset(seq, cfg, normalize=False)
+        _, target = ds[0]
+        block_target, _ = target
+        # window 0: seq[0:4] -> target seq[4] = PhaseTuple(5, 4)
+        # block_size=5 -> class_id=4
+        assert block_target.item() == 4
+
+    def test_stab_target_first_elements_are_one(self) -> None:
+        seq = _make_sequence(20)
+        cfg = ModelConfig(window_size=4)
+        ds = PhaseSequenceDataset(seq, cfg, normalize=False)
+        _, target = ds[0]
+        _, stab_target = target
+        # window 0: target seq[4] = PhaseTuple(5, 4) -> stab_steps=4
+        # first 4 elements should be 1, rest 0
+        assert stab_target[:4].sum().item() == 4.0
+        assert stab_target[4:].sum().item() == 0.0
 
     def test_normalisation_mean_near_zero(self) -> None:
-        """After normalisation the dataset mean should be close to zero."""
         seq = _make_sequence(50)
         cfg = ModelConfig(window_size=4)
         ds = PhaseSequenceDataset(seq, cfg)
         all_inputs = torch.stack([ds[i][0] for i in range(len(ds))])
-        # mean across batch and time dimensions
         col_means = all_inputs.mean(dim=(0, 1))
         assert col_means.abs().max().item() < 1.5
 
@@ -83,28 +98,16 @@ class TestPhaseSequenceDataset:
         cfg = ModelConfig(window_size=4)
         ds = PhaseSequenceDataset(seq, cfg, normalize=False)
         inp, _ = ds[0]
-        # first item of first window should equal block_size=1 (raw int)
         assert inp[0, 0].item() == pytest.approx(1.0)
 
-    def test_denormalize_roundtrip(self) -> None:
+    def test_input_stats_stored(self) -> None:
         seq = _make_sequence(20)
         cfg = ModelConfig(window_size=4)
         ds = PhaseSequenceDataset(seq, cfg)
-        _, tgt_normed = ds[0]
-        recovered = ds.denormalize(tgt_normed)
-        expected = torch.tensor(list(seq[4]), dtype=torch.float32)
-        assert torch.allclose(recovered, expected, atol=1e-3)
-
-    def test_external_stats_applied(self) -> None:
-        seq = _make_sequence(20)
-        cfg = ModelConfig(window_size=4)
-        ds_ref = PhaseSequenceDataset(seq, cfg)
-        # pass stats from reference dataset explicitly
-        ds2 = PhaseSequenceDataset(seq, cfg, stats=(ds_ref.mean, ds_ref.std))
-        inp_ref, tgt_ref = ds_ref[0]
-        inp2, tgt2 = ds2[0]
-        assert torch.allclose(inp_ref, inp2)
-        assert torch.allclose(tgt_ref, tgt2)
+        assert ds.input_mean is not None
+        assert ds.input_std is not None
+        assert ds.input_mean.shape == (cfg.input_tuple_size,)
+        assert ds.input_std.shape == (cfg.input_tuple_size,)
 
 
 class TestSplitDataset:

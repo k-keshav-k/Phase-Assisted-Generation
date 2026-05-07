@@ -47,19 +47,16 @@ class ExtendedPhaseTuple:
       - (add more as needed)
     """
 
-    values: dict[str, int]  # field_name -> integer value
+    values: dict[str, float]
 
-    def __getitem__(self, field_name: str) -> int:
-        """Get a feature value by field name."""
-        return self.values.get(field_name, 0)
+    def __getitem__(self, field_name: str) -> float:
+        return self.values.get(field_name, 0.0)
 
     def __len__(self) -> int:
-        """Return number of features."""
         return len(self.values)
 
-    def as_list(self, field_names: list[str]) -> list[int]:
-        """Convert to ordered list of feature values by field names."""
-        return [self.values.get(name, 0) for name in field_names]
+    def as_list(self, field_names: list[str]) -> list[float]:
+        return [self.values.get(name, 0.0) for name in field_names]
 
 
 @dataclass(slots=True)
@@ -97,6 +94,10 @@ class ModelConfig:
     output_tuple_size: int = 2
     # [DEPRECATED] kept for backward compatibility; use input_tuple_size instead
     tuple_size: int | None = None
+    # number of block size classes for classification head (values 1..num_block_classes)
+    num_block_classes: int = 128
+    # number of ordinal thresholds for max_stab_step prediction (P(>k) for k=0..num_stab_thresholds-1)
+    num_stab_thresholds: int = 83
 
     def __post_init__(self) -> None:
         # Handle backward compatibility: if tuple_size is set, use it for input_tuple_size
@@ -117,6 +118,12 @@ class ModelConfig:
             raise ValueError(msg)
         if self.output_tuple_size < 1:
             msg = "ModelConfig.output_tuple_size must be >= 1"
+            raise ValueError(msg)
+        if self.num_block_classes < 1:
+            msg = "ModelConfig.num_block_classes must be >= 1"
+            raise ValueError(msg)
+        if self.num_stab_thresholds < 1:
+            msg = "ModelConfig.num_stab_thresholds must be >= 1"
             raise ValueError(msg)
 
 
@@ -142,6 +149,8 @@ class TrainConfig:
     max_grad_norm: float = 1.0
     # print training metrics every N epochs (0 to suppress)
     log_interval: int = 10
+    # number of DataLoader worker processes (0 = main process only)
+    num_workers: int = 4
 
     def __post_init__(self) -> None:
         if not 0.0 < self.val_fraction < 1.0:

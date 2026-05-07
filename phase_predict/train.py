@@ -23,6 +23,7 @@ from typing import Any, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from phase_predict.dataset import PhaseSequenceDataset, split_dataset
@@ -48,17 +49,19 @@ def train_epoch(
     device: torch.device,
     config: TrainConfig | None = None,
     scaler: Optional[torch.amp.GradScaler] = None,
+    stab_pos_weight: torch.Tensor | None = None,
 ) -> float:
     """Run one training epoch.
 
     Args:
         model:     the :class:`~phase_predict.model.PhaseTransformer`.
-        loader:    DataLoader yielding ``(input, target)`` batches.
+        loader:    DataLoader yielding ``(input, (block_target, stab_target))``.
         optimizer: PyTorch optimiser.
-        criterion: loss function (MSELoss).
+        criterion: unused (kept for backward compat).
         device:    compute device.
         config:    optional :class:`~phase_predict.schema.TrainConfig` used for
                    gradient clipping (``max_grad_norm``).
+        stab_pos_weight: per-threshold positive weights for BCE loss.
 
     Returns:
         Mean loss over all batches in this epoch.
@@ -69,12 +72,20 @@ def train_epoch(
     use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        block_targets, stab_targets = targets
+        block_targets = block_targets.to(device)
+        stab_targets = stab_targets.to(device)
         optimizer.zero_grad()
         autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
         with autocast_context:
-            preds = model(inputs)
-            loss = criterion(preds, targets)
+            block_logits, stab_logits = model(inputs)
+            loss_block = F.cross_entropy(block_logits, block_targets)
+            loss_stab = F.binary_cross_entropy_with_logits(
+                stab_logits, stab_targets,
+                pos_weight=stab_pos_weight,
+                reduction="mean",
+            )
+            loss = loss_block + loss_stab
 
         if use_amp:
             scaler.scale(loss).backward()
@@ -101,14 +112,16 @@ def evaluate(
     criterion: nn.Module,
     device: torch.device,
     scaler: Optional[torch.amp.GradScaler] = None,
+    stab_pos_weight: torch.Tensor | None = None,
 ) -> float:
     """Evaluate the model on a DataLoader without updating weights.
 
     Args:
         model:     the :class:`~phase_predict.model.PhaseTransformer`.
-        loader:    DataLoader yielding ``(input, target)`` batches.
-        criterion: loss function.
+        loader:    DataLoader yielding ``(input, (block_target, stab_target))``.
+        criterion: unused (kept for backward compat).
         device:    compute device.
+        stab_pos_weight: per-threshold positive weights for BCE loss.
 
     Returns:
         Mean loss over all batches.
@@ -119,11 +132,19 @@ def evaluate(
     use_amp = scaler is not None
     for inputs, targets in loader:
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        block_targets, stab_targets = targets
+        block_targets = block_targets.to(device)
+        stab_targets = stab_targets.to(device)
         autocast_context = torch.amp.autocast("cuda", enabled=use_amp) if use_amp else nullcontext()
         with autocast_context:
-            preds = model(inputs)
-            loss = criterion(preds, targets)
+            block_logits, stab_logits = model(inputs)
+            loss_block = F.cross_entropy(block_logits, block_targets)
+            loss_stab = F.binary_cross_entropy_with_logits(
+                stab_logits, stab_targets,
+                pos_weight=stab_pos_weight,
+                reduction="mean",
+            )
+            loss = loss_block + loss_stab
         total_loss += float(loss.item())
         n_batches += 1
     return total_loss / max(n_batches, 1)
@@ -153,6 +174,28 @@ class Trainer:
         else:
             self.device = torch.device(device)
         self.model.to(self.device)
+        self._stab_pos_weight: torch.Tensor | None = None
+
+    def _compute_stab_pos_weight(
+        self,
+        dataset: PhaseSequenceDataset,
+    ) -> torch.Tensor | None:
+        """Compute per-threshold positive weights from training targets."""
+        n_thresh = self.model.config.num_stab_thresholds
+        if n_thresh == 0:
+            return None
+        pos_counts = torch.zeros(n_thresh, dtype=torch.float64)
+        total = 0
+        for i in range(len(dataset)):
+            _, targets = dataset[i]
+            _, stab_target = targets
+            pos_counts += stab_target.to(dtype=torch.float64)
+            total += 1
+        if total == 0:
+            return None
+        pos_frac = pos_counts / total
+        pos_weight = (1.0 / (pos_frac + 0.01)).clamp(max=10.0)
+        return pos_weight.to(self.device)
 
     def fit(
         self,
@@ -188,11 +231,15 @@ class Trainer:
             train_set,
             batch_size=self.config.batch_size,
             shuffle=True,
+            num_workers=self.config.num_workers,
+            persistent_workers=self.config.num_workers > 0,
         )
         val_loader = DataLoader(
             val_set,
             batch_size=self.config.batch_size,
             shuffle=False,
+            num_workers=self.config.num_workers,
+            persistent_workers=self.config.num_workers > 0,
         )
 
         optimizer = torch.optim.AdamW(
@@ -200,7 +247,9 @@ class Trainer:
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
-        criterion = nn.MSELoss()
+        criterion: nn.Module | None = None
+        if self._stab_pos_weight is None:
+            self._stab_pos_weight = self._compute_stab_pos_weight(train_set)
         # Mixed precision: create scaler if using CUDA
         scaler: Optional[torch.amp.GradScaler]
         if self.device.type == "cuda":
@@ -212,9 +261,13 @@ class Trainer:
 
         for epoch in range(1, self.config.max_epochs + 1):
             train_loss = train_epoch(
-                self.model, train_loader, optimizer, criterion, self.device, self.config, scaler
+                self.model, train_loader, optimizer, criterion, self.device, self.config, scaler,
+                stab_pos_weight=self._stab_pos_weight,
             )
-            val_loss = evaluate(self.model, val_loader, criterion, self.device, scaler)
+            val_loss = evaluate(
+                self.model, val_loader, criterion, self.device, scaler,
+                stab_pos_weight=self._stab_pos_weight,
+            )
 
             history.train_losses.append(train_loss)
             history.val_losses.append(val_loss)

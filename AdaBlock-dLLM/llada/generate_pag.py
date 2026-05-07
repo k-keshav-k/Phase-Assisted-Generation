@@ -118,6 +118,8 @@ def generate_pag(
     threshold: float | None = None,
     max_block_length: int | None = None,
     max_refinement_steps: int | None = None,
+    digit_ids_tensor: torch.Tensor | None = None,
+    delimiter_ids_tensor: torch.Tensor | None = None,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None, (
@@ -151,6 +153,7 @@ def generate_pag(
         block_end = block_start + schedule.applied_block_size
         generated_length += schedule.applied_block_size
         nfe = 0
+        unmask_confs = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
@@ -176,12 +179,44 @@ def generate_pag(
                     None,
                     threshold,
                 )
+
+            # Record confidence for tokens being unmasked this step
+            block_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
+            block_max_probs = block_probs.max(dim=-1).values
+            newly_unmasked = transfer_index[:, block_start:block_end]
+            if newly_unmasked.any():
+                unmask_confs.append(block_max_probs[newly_unmasked])
+
             x[transfer_index] = x0[transfer_index]
 
             if nfe >= schedule.budgeted_refinement_steps:
                 break
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        # Aggregate confidences
+        if unmask_confs:
+            all_confs = torch.cat(unmask_confs)
+            mean_conf = all_confs.mean().item()
+            min_conf = all_confs.min().item()
+        else:
+            mean_conf = min_conf = 1.0
+
+        # Token-type fractions
+        block_tokens = x[0, block_start:block_end]
+        digit_ids = digit_ids_tensor
+        delim_ids = delimiter_ids_tensor
+        if digit_ids is not None:
+            digit_frac = torch.isin(block_tokens, digit_ids.to(x.device)).float().mean().item()
+        else:
+            digit_frac = 0.0
+        if delim_ids is not None:
+            delim_frac = torch.isin(block_tokens, delim_ids.to(x.device)).float().mean().item()
+        else:
+            delim_frac = 0.0
+
+        scheduler.record_realized(
+            schedule.applied_block_size, nfe,
+            mean_conf, min_conf, digit_frac, delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(
@@ -209,6 +244,8 @@ def generate_pag_prefix_cache(
     threshold: float | None = None,
     max_block_length: int | None = None,
     max_refinement_steps: int | None = None,
+    digit_ids_tensor: torch.Tensor | None = None,
+    delimiter_ids_tensor: torch.Tensor | None = None,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None, (
@@ -249,6 +286,7 @@ def generate_pag_prefix_cache(
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
         nfe = 1
+        unmask_confs = []
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
         if nfe >= schedule.budgeted_refinement_steps:
@@ -263,6 +301,12 @@ def generate_pag_prefix_cache(
                 None,
                 threshold,
             )
+        # Record first-NFE unmask confidences
+        block_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
+        block_max_probs = block_probs.max(dim=-1).values
+        newly_unmasked = transfer_index[:, block_start:block_end]
+        if newly_unmasked.any():
+            unmask_confs.append(block_max_probs[newly_unmasked])
         x[transfer_index] = x0[transfer_index]
 
         prefix_cache = []
@@ -301,9 +345,33 @@ def generate_pag_prefix_cache(
                     None,
                     threshold,
                 )
+            # Record subsequent-NFE unmask confidences
+            block_probs = F.softmax(block_logits[:, :block_end-block_start, :], dim=-1)
+            block_max_probs = block_probs.max(dim=-1).values
+            newly_unmasked = transfer_index[:, :block_end-block_start]
+            if newly_unmasked.any():
+                unmask_confs.append(block_max_probs[newly_unmasked])
             x[:, block_start:][transfer_index] = x0[transfer_index]
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        if unmask_confs:
+            all_confs = torch.cat(unmask_confs)
+            mean_conf = all_confs.mean().item()
+            min_conf = all_confs.min().item()
+        else:
+            mean_conf = min_conf = 1.0
+        block_tokens = x[0, block_start:block_end]
+        if digit_ids_tensor is not None:
+            digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+        else:
+            digit_frac = 0.0
+        if delimiter_ids_tensor is not None:
+            delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+        else:
+            delim_frac = 0.0
+        scheduler.record_realized(
+            schedule.applied_block_size, nfe,
+            mean_conf, min_conf, digit_frac, delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(
@@ -331,6 +399,8 @@ def generate_pag_dual_cache(
     threshold: float | None = None,
     max_block_length: int | None = None,
     max_refinement_steps: int | None = None,
+    digit_ids_tensor: torch.Tensor | None = None,
+    delimiter_ids_tensor: torch.Tensor | None = None,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None, (
@@ -371,6 +441,7 @@ def generate_pag_dual_cache(
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
         nfe = 1
+        unmask_confs = []
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
         if nfe >= schedule.budgeted_refinement_steps:
@@ -385,6 +456,11 @@ def generate_pag_dual_cache(
                 None,
                 threshold,
             )
+        block_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
+        block_max_probs = block_probs.max(dim=-1).values
+        newly_unmasked = transfer_index[:, block_start:block_end]
+        if newly_unmasked.any():
+            unmask_confs.append(block_max_probs[newly_unmasked])
         x[transfer_index] = x0[transfer_index]
 
         replace_position = torch.zeros_like(x, dtype=torch.bool)
@@ -423,9 +499,32 @@ def generate_pag_dual_cache(
                     None,
                     threshold,
                 )
+            block_probs = F.softmax(block_logits, dim=-1)
+            block_max_probs = block_probs.max(dim=-1).values
+            newly_unmasked = transfer_index
+            if newly_unmasked.any():
+                unmask_confs.append(block_max_probs[newly_unmasked])
             x[:, block_start:block_end][transfer_index] = x0[transfer_index]
 
-        scheduler.record_realized(schedule.applied_block_size, nfe)
+        if unmask_confs:
+            all_confs = torch.cat(unmask_confs)
+            mean_conf = all_confs.mean().item()
+            min_conf = all_confs.min().item()
+        else:
+            mean_conf = min_conf = 1.0
+        block_tokens = x[0, block_start:block_end]
+        if digit_ids_tensor is not None:
+            digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+        else:
+            digit_frac = 0.0
+        if delimiter_ids_tensor is not None:
+            delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+        else:
+            delim_frac = 0.0
+        scheduler.record_realized(
+            schedule.applied_block_size, nfe,
+            mean_conf, min_conf, digit_frac, delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(schedule.applied_block_size)
         _record_schedule(
