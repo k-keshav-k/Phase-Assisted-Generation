@@ -451,6 +451,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
     parser.add_argument("--min-refinement-steps", type=int, default=3)
+    parser.add_argument("--min-block-length", type=int, default=4,
+                        help="Minimum block size (default: 4). Set 1 for no floor.")
+    parser.add_argument("--refinement-step-offset", type=int, default=1,
+                        help="Offset added to predicted refinement steps (default: 1). Set 0 for no offset.")
     parser.add_argument("--context-seed-block-length", type=int, default=None)
     parser.add_argument("--context-seed-stabilizing-steps", type=int, default=None)
     parser.add_argument("--adablock-init-block-length", type=int, default=32)
@@ -573,6 +577,8 @@ def main() -> None:
                 "max_block_length": args.max_block_length,
                 "max_refinement_steps": args.max_refinement_steps,
                 "min_refinement_steps": args.min_refinement_steps,
+                "min_block_length": args.min_block_length,
+                "refinement_step_offset": args.refinement_step_offset,
                 "context_seed_block_length": args.context_seed_block_length,
                 "context_seed_stabilizing_steps": args.context_seed_stabilizing_steps,
             },

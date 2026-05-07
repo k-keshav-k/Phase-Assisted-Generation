@@ -46,6 +46,8 @@ class LLaDAEvalHarness(AdaBlockLLaDAEvalHarness):
         min_refinement_steps: int | None = 3,
         context_seed_block_length: int | None = None,
         context_seed_stabilizing_steps: int | None = None,
+        min_block_length: int = 4,
+        refinement_step_offset: int = 1,
         **kwargs,
     ) -> None:
         if predictor_ckpt is None:
@@ -97,6 +99,8 @@ class LLaDAEvalHarness(AdaBlockLLaDAEvalHarness):
             context_seed_block_length=context_seed_block_length,
             context_seed_stabilizing_steps=context_seed_stabilizing_steps,
             min_refinement_steps=self.min_refinement_steps,
+            min_block_length=min_block_length,
+            refinement_step_offset=refinement_step_offset,
         )
         self.schedule_histories: list[list[dict[str, object]]] = []
 

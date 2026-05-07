@@ -364,12 +364,16 @@ class CheckpointTupleScheduler:
         context_seed_stabilizing_steps: int | None = None,
         min_refinement_steps: int = 3,
         seed: EffectiveSeed | None = None,
+        min_block_length: int = 4,
+        refinement_step_offset: int = 1,
     ) -> None:
         self.prompt_text = prompt_text
         self.seed_tuple = _normalize_tuple(
             seed_block_length,
             seed_refinement_steps,
         )
+        self.min_block_length = max(1, int(min_block_length))
+        self.refinement_step_offset = int(refinement_step_offset)
 
         if seed is not None:
             self.context_seed_tuple = ExtendedPhaseTuple(values={
@@ -440,18 +444,18 @@ class CheckpointTupleScheduler:
             raw_predicted_tuple = result.predicted_tuple
             predicted_tuple = _normalize_tuple(
                 raw_predicted_tuple.block_size,
-                int(raw_predicted_tuple.refinement_steps) + 1,
+                int(raw_predicted_tuple.refinement_steps) + self.refinement_step_offset,
             )
             result.metadata = {
                 **dict(result.metadata),
                 "source": "checkpoint",
-                "stabilizing_step_offset": 1,
+                "stabilizing_step_offset": self.refinement_step_offset,
             }
 
         block_index = self._block_index
         self._block_index += 1
         applied_block_size = max(
-            4,
+            self.min_block_length,
             min(
                 int(predicted_tuple.block_size),
                 min(int(max_block_length), int(remaining_tokens)),
@@ -827,6 +831,8 @@ def _make_scheduler(
         context_seed_block_length=context_seed_block_length,
         context_seed_stabilizing_steps=context_seed_stabilizing_steps,
         min_refinement_steps=args.min_refinement_steps,
+        min_block_length=args.min_block_length,
+        refinement_step_offset=args.refinement_step_offset,
         seed=seed,
     )
 

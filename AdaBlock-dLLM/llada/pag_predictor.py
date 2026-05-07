@@ -42,11 +42,15 @@ class PAGTupleScheduler:
         context_min_confidence: float = 1.0,
         context_digit_fraction: float = 0.0,
         context_delimiter_fraction: float = 0.0,
+        min_block_length: int = 4,
+        refinement_step_offset: int = 1,
     ) -> None:
         self.seed_tuple = PhaseTuple(
             block_size=max(1, int(seed_block_length)),
             refinement_steps=max(1, int(seed_refinement_steps)),
         )
+        self.min_block_length = max(1, int(min_block_length))
+        self.refinement_step_offset = int(refinement_step_offset)
         self.context_seed_tuple = ExtendedPhaseTuple(values={
             "block_size": max(1, int(
                 seed_block_length if context_seed_block_length is None
@@ -108,12 +112,12 @@ class PAGTupleScheduler:
             )
             predicted_tuple = PhaseTuple(
                 block_size=int(raw_predicted_tuple.block_size),
-                refinement_steps=int(raw_predicted_tuple.refinement_steps) + 1,
+                refinement_steps=int(raw_predicted_tuple.refinement_steps) + self.refinement_step_offset,
             )
 
         self._block_index += 1
         applied_block_size = max(
-            4,
+            self.min_block_length,
             min(
                 int(predicted_tuple.block_size),
                 min(int(max_block_length), int(remaining_tokens)),

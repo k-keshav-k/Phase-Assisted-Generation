@@ -62,6 +62,8 @@ class Dream(AdaBlockDream):
         context_seed_stabilizing_steps: int | None = None,
         delimiter_threshold: float | None = None,
         save_dir: str | None = None,
+        min_block_length: int = 4,
+        refinement_step_offset: int = 1,
         **kwargs,
     ) -> None:
         del delimiter_threshold
@@ -125,6 +127,8 @@ class Dream(AdaBlockDream):
             context_seed_block_length=context_seed_block_length,
             context_seed_stabilizing_steps=context_seed_stabilizing_steps,
             min_refinement_steps=self.min_refinement_steps,
+            min_block_length=min_block_length,
+            refinement_step_offset=refinement_step_offset,
         )
         self.model.pag_scheduler = self.pag_scheduler
 
