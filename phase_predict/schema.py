@@ -144,7 +144,7 @@ class TrainConfig:
     # fraction of the sequence used for validation (0 < val_fraction < 1)
     val_fraction: float = 0.2
     # stop early after this many epochs without validation improvement
-    patience: int = 10
+    patience: int = 20
     # maximum gradient norm for gradient clipping (0 disables clipping)
     max_grad_norm: float = 1.0
     # print training metrics every N epochs (0 to suppress)
