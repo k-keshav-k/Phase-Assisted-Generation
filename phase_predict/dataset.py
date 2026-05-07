@@ -119,6 +119,9 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
         if feature_fields is not None:
             input_raw = _extended_sequence_tensor(sequence, feature_fields)
         else:
+            if sequence and hasattr(sequence[0], "values"):
+                msg = "feature_fields required when data contains ExtendedPhaseTuple"
+                raise ValueError(msg)
             input_raw = _sequence_tensor(sequence)
 
         if normalize:
@@ -205,6 +208,9 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         if feature_fields is not None:
             input_seqs = [_extended_sequence_tensor(sequence, feature_fields) for sequence in sequences]
         else:
+            if sequences and sequences[0] and hasattr(sequences[0][0], "values"):
+                msg = "feature_fields required when data contains ExtendedPhaseTuple"
+                raise ValueError(msg)
             input_seqs = [_sequence_tensor(sequence) for sequence in sequences]
 
         if normalize:

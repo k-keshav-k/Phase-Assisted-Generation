@@ -454,7 +454,8 @@ class CheckpointTupleScheduler:
         # Detect death spiral: 3+ consecutive blocks with size <= 4
         recent = self._history[-3:]
         in_spiral = len(recent) >= 3 and all(
-            h.values.get("block_size", 0) <= 4 for h in recent
+            hasattr(h, "values") and h.values.get("block_size", 0) <= 4
+            for h in recent
         )
         if in_spiral and int(predicted_tuple.block_size) <= 4:
             applied_block_size = min(int(max_block_length), int(remaining_tokens))

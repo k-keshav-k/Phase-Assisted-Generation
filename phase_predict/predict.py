@@ -199,8 +199,16 @@ class Predictor:
         model.load_state_dict(checkpoint["model_state"])
         model.to(target)
 
-        in_mean = torch.tensor(checkpoint.get("input_mean", []), dtype=torch.float32)
-        in_std = torch.tensor(checkpoint.get("input_std", []), dtype=torch.float32)
+        in_mean = (
+            torch.tensor(checkpoint["input_mean"], dtype=torch.float32)
+            if "input_mean" in checkpoint
+            else None
+        )
+        in_std = (
+            torch.tensor(checkpoint["input_std"], dtype=torch.float32)
+            if "input_std" in checkpoint
+            else None
+        )
         input_fields = checkpoint.get("input_fields", None)
 
         return cls(
