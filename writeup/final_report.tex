@@ -4,6 +4,7 @@
 \usepackage{times}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{hyperref}
 \usepackage{natbib}
 \usepackage{booktabs}
@@ -75,13 +76,53 @@ Here,
 
 At inference time, the predicted tuple should drive adaptive unmasking: block size determines how many tokens are committed together, while the refinement/stabilization component determines how much compute is spent before the block is accepted. The intended evaluation compares adaptive decoding against fixed decoding on quality, latency, number of function evaluations (NFE), and stability.
 
-\section{Related Work}
+\section{Background}
 
 \textbf{Diffusion language models.} Dream and LLaDA show that diffusion-style generation can be applied to language modeling and reasoning. Their iterative refinement traces provide the token-level trajectories used in the first phase of this project.
 
 \textbf{Semi-autoregressive and block decoding.} Block diffusion and related semi-autoregressive methods interpolate between fully autoregressive decoding and fully parallel generation. These methods motivate block-level scheduling as a useful control surface.
 
 \textbf{Adaptive block inference.} AdaBlock-dLLM is the closest prior to the final direction of this project because it adapts block size using semantic or confidence-based signals. Our contribution is to frame the schedule as a learned next-control prediction problem over trace-derived tuples rather than only a reactive heuristic.
+
+\textbf{AdaBlock Trace Analysis}
+
+The traces analyzed in this section are the per-block records produced when AdaBlock-dLLM decodes GSM8K with LLaDA-8B-Instruct. Each line of the resulting JSONL file is a single sample (\texttt{sample\_id}, \texttt{dataset}, \texttt{split}) together with an ordered list of \texttt{tuples}, one entry per decoded block. A tuple captures four orthogonal views of that block: its compute footprint (\texttt{block\_size}, \texttt{nfe}), its confidence under the model (\texttt{mean\_top1\_confidence}, \texttt{min\_top1\_confidence}), its refinement dynamics (\texttt{mean\_stab\_step} / \texttt{max\_stab\_step}, \texttt{mean\_ref\_step} / \texttt{max\_ref\_step}, \texttt{mean\_gap} / \texttt{max\_gap}), and the lexical content of the decoded tokens (\texttt{digit\_fraction}, \texttt{delimiter\_fraction}). Together these fields form the input space that the downstream next-tuple predictor consumes during adaptive scheduling.
+
+Concretely, the dataset is collected by running the AdaBlock-dLLM scheduler (LLaDA-8B variant) over the full GSM8K training split (5{,}000 problems) and a 200-problem subset of the public test split, plus an additional disjoint 200-problem subset of the GSM8K test split that is held out purely as an evaluation set for the downstream scheduler. At every block boundary the scheduler emits the applied block size and the number of forward evaluations actually consumed; in addition, the diffusion loop is instrumented so that for each masked position we record the step at which its argmax first matches the eventual decoded token (\texttt{stab\_step}) and the step of its final flip (\texttt{ref\_step}). Block-level features are then computed by aggregating these per-token quantities together with the softmax top-1 probabilities of the committed tokens and a tokenizer-based classification of decoded surface forms into digits and structural delimiters. The resulting corpus contains 138{,}901 training blocks and 5{,}543 test blocks (144{,}444 total) and is the input to every plot in this section as well as to the trained predictor evaluated later in the report.
+
+\subsection*{Block structure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figs/block_structure.png}
+  \caption{Top: number of blocks AdaBlock-dLLM emits per GSM8K sample, train (left) vs.\ test (right). Bottom: distribution of \texttt{block\_size} across all decoded blocks, truncated at the 99th percentile.}
+  \label{fig:block-structure}
+\end{figure}
+
+Figure~\ref{fig:block-structure} shows the decoding granularity AdaBlock-dLLM produces on GSM8K. Blocks per sample (top row) is unimodal around 25--30 with a tail to $\sim$55--60, and the train/test shapes match closely, so the 200-problem evaluation set is representative of the training pool. The \texttt{block\_size} distribution (bottom row) is sharply bimodal: $\sim$21\% of blocks are size 1 (almost always a delimiter the confidence scheduler accepts immediately) and another $\sim$29\% sit at the AdaBlock content cap of 16, with sizes 2--15 forming a low decaying ridge. Only $\sim$1\% of blocks exceed 47 tokens (max 128), so a discrete classifier capped at 48 classes loses negligible coverage, though it must still handle the heavy point-mass mixture at 1 and 16 rather than a smooth scale.
+
+\subsection*{Compute (NFE) per block}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figs/nfe.png}
+  \caption{Top: distribution of \texttt{nfe} per block, train (left) vs.\ test (right), truncated at the 99th percentile. Bottom: mean \texttt{nfe} as a function of \texttt{block\_size} with the inter-quartile band, train (left) vs.\ test (right).}
+  \label{fig:nfe}
+\end{figure}
+
+Figure~\ref{fig:nfe} shows the per-block compute spend. About 42\% of blocks finish in a single forward pass (the size-1 delimiter blocks), and only $\sim$1\% need more than 13 NFE. Conditioning on \texttt{block\_size} (bottom row), mean NFE grows roughly linearly to $\sim$4 at the AdaBlock cap of 16, where a clear spike marks the full-content block, and then plateaus around 4--6. The IQR band is wide at every block size, so \texttt{block\_size} alone underdetermines compute and a useful predictor must combine it with confidence and refinement signals.
+
+\subsection*{Confidence vs.\ compute}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{figs/confidence_vs_nfe.png}
+  \caption{Mean top-1 confidence per block, bucketed by the NFE actually spent on the block, train (left) vs.\ test (right). Boxes show median and IQR; whiskers extend to $1.5\times$IQR.}
+  \label{fig:conf-vs-nfe}
+\end{figure}
+
+Figure~\ref{fig:conf-vs-nfe} confirms that NFE is allocated where the model is least sure. Single-NFE blocks sit tightly at confidence $\approx 1.0$ (the easy delimiter and high-certainty content blocks the scheduler commits immediately), and median confidence falls monotonically as the NFE bucket grows: $\sim$0.97 at 2 NFE, $\sim$0.95 at 5--6, $\sim$0.92 at 7--9, and $\sim$0.88 in the 10+ bucket. The spread also widens with NFE, so high-compute blocks are not just lower confidence on average but also more variable. The train and test panels are visually indistinguishable, supporting the use of confidence statistics as inputs to the next-tuple predictor.
+
 
 % \section{Repository Architecture}
 
