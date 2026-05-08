@@ -281,6 +281,7 @@ class DummyAPIScheduler:
     def next_schedule(
         self,
         *,
+        block_size: int | None = None,
         remaining_tokens: int,
         max_block_length: int,
         max_refinement_steps: int,
