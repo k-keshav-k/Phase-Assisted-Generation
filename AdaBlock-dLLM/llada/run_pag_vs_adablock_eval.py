@@ -23,9 +23,6 @@ from run_pag_dummy_api import (
     _resolve_predictor_ckpt,
     write_log_record,
 )
-from run_pag_dummy_api import (
-    _adablock_first_seed as _probe_adablock_first_seed,
-)
 
 DEFAULT_PROMPT_FILE = ROOT / "AdaBlock-dLLM" / "llada" / "quick_eval_prompts.jsonl"
 DEFAULT_LOG_FILE = ROOT / "logs" / "llada_pag_vs_adablock_eval.jsonl"
@@ -537,19 +534,16 @@ def main() -> None:
         seed_source = "explicit"
         context_seed_stabilizing_steps = None
         if args.seed_from_adablock_first_block:
-            user_input = _build_prompt(tokenizer, args.model_path, record.prompt)
-            input_ids = torch.tensor(
-                tokenizer(user_input)["input_ids"],
-                device=args.device,
-            ).unsqueeze(0)
-            seed = _probe_adablock_first_seed(
-                args=args,
-                model=model,
-                prompt=input_ids,
+            block_size, nfe = _adablock_first_seed(adablock)
+            seed = EffectiveSeed(
+                block_length=block_size,
+                refinement_steps=nfe,
+                source="adablock_first_block",
+                context_stabilizing_steps=max(0, nfe - 1),
             )
             pag_args = _args_with_pag_seed(args, seed=seed)
             seed_source = "adablock_first_block"
-            context_seed_stabilizing_steps = seed.context_stabilizing_steps
+            context_seed_stabilizing_steps = max(0, nfe - 1)
         pag = _run_pag(pag_args, model, tokenizer, record)
         result = {
             "schema_version": 1,
