@@ -95,6 +95,7 @@ class PAGTupleScheduler:
     def next_schedule(
         self,
         *,
+        block_size: int | None = None,
         remaining_tokens: int,
         max_block_length: int,
         max_refinement_steps: int,
@@ -110,8 +111,9 @@ class PAGTupleScheduler:
             raw_predicted_tuple = (
                 self.predictor.predict(self._padded_context()).predicted_tuple
             )
+            bs = int(block_size) if block_size is not None else int(raw_predicted_tuple.block_size)
             predicted_tuple = PhaseTuple(
-                block_size=int(raw_predicted_tuple.block_size),
+                block_size=bs,
                 refinement_steps=int(raw_predicted_tuple.refinement_steps) + self.refinement_step_offset,
             )
 
