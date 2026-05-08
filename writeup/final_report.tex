@@ -509,7 +509,8 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
 	      \begin{axis}[
 	        ybar, width=\linewidth, height=4.6cm,
         ylabel={avg. total \nfe{}}, symbolic x coords={PAG,AdaBlock},
-        xtick=data, ymin=0, bar width=22pt, nodes near coords,
+        xtick=data, ymin=0, ymax=120, bar width=22pt,
+        nodes near coords, every node near coord/.style={yshift=5pt},
       ]
         \addplot[fill=blue!35] coordinates {(PAG,\PagAvgNfe) (AdaBlock,\AdaAvgNfe)};
       \end{axis}
@@ -523,7 +524,8 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
       \begin{axis}[
         ybar, width=\linewidth, height=4.6cm,
         ylabel={answer accuracy (\%)}, symbolic x coords={PAG,AdaBlock},
-        xtick=data, ymin=80, ymax=95, bar width=22pt, nodes near coords,
+        xtick=data, ymin=80, ymax=110, bar width=22pt,
+        nodes near coords, every node near coord/.style={yshift=8pt},
       ]
         \addplot[fill=green!35] coordinates {(PAG,\PagAccPct) (AdaBlock,\AdaAccPct)};
       \end{axis}
