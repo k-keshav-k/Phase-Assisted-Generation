@@ -450,11 +450,15 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
       \While{$pos < gen\_length$}
         \Comment{Block boundary via AdaBlock delimiter scan}
         \State $logits,\ tokens \gets model(x)$
-        \State $b \gets \textsc{Clamp}(\textsc{AdaBlockBoundary}(logits,\ tokens))$
+        \State $b \gets \textsc{AdaBlockBoundary}(logits,\ tokens,\ delim\_thresh,\ default\_b)$
+        \State $b \gets \max(\min\_block,\ \min(b,\ remaining,\ max\_block))$
 
-        \Comment{Predict refinement budget from history}
-        \If{$H = \varnothing$} \State $r \gets r_{\text{seed}}$
-        \Else \State $r \gets predictor(\textsc{Pad}(H)) + offset$ \EndIf
+        \Comment{Refinement budget: seed for block 0, predictor thereafter}
+        \If{$H = \varnothing$}
+          \State $r \gets \textsc{AdaBlockRefine}(x,\ block)$ \Comment{run block 0, record NFE}
+        \Else
+          \State $r \gets predictor(\textsc{Pad}(H)) + offset$
+        \EndIf
         \State $r \gets \textsc{Clamp}(r,\ min\_ref,\ max\_ref)$
 
         \Comment{Block refinement with soft-cap gates}
