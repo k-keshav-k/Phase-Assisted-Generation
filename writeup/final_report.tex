@@ -1,0 +1,258 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.85in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{setspace}
+\usepackage{titlesec}
+
+\setstretch{0.96}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\titlespacing*{\section}{0pt}{0.8em}{0.35em}
+\titlespacing*{\subsection}{0pt}{0.65em}{0.3em}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\newcommand{\projectname}{Phase-Assisted Generation}
+\newcommand{\pag}{PAG}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Phase-Assisted Generation: Final Report}\\[0.4em]
+{\large Keshav Krishna \quad Prajesh Kumar \quad Siva Satvik Mandapati}\\[0.2em]
+{\normalsize New York University, Building LLM Reasoners --- Spring 2026}\\
+{\normalsize \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
+\end{center}
+
+\begin{abstract}
+\projectname{} (\pag{}) studies adaptive decoding for diffusion language models. The project began with a trace-analysis pipeline around Dream and LLaDA: collect token-level refinement trajectories, extract stabilization features, run change-point detection (CPD), convert segments into block/phase tuples, and train a next-tuple predictor. The main design lesson from this stage was that CPD is useful for interpreting confidence and stabilization dynamics, but it is an awkward permanent label-construction step when the final scheduler needs block-level controls. The codebase therefore evolved toward an AdaBlock-style, block-native pipeline in which traces directly expose block size and stabilization/refinement behavior. This report template summarizes the project motivation, methodology, implemented experiments, preliminary findings, evaluations and limitations.
+\end{abstract}
+
+\section{Introduction}
+
+Autoregressive language models decode one token at a time, which makes long reasoning traces expensive. Diffusion language models (dLLMs), including Dream and LLaDA, instead generate or refine multiple tokens through iterative denoising. This creates a natural scheduling question: should every region of an answer receive the same block size and refinement budget, or can the decoder adapt based on local difficulty?
+
+The central hypothesis of \pag{} is that generation traces contain reusable phase structure. Easy spans should stabilize quickly and can be decoded in larger or cheaper blocks, while hard reasoning spans should receive smaller blocks or more refinement. The goal is not only to detect phases after the fact, but to learn a lightweight predictor that can forecast the next block-level control tuple during generation.
+
+The current repository implements this idea as a staged research system:
+\begin{center}
+\texttt{baseline decoding} $\rightarrow$
+\texttt{trace/signals} $\rightarrow$
+\texttt{phase analysis} $\rightarrow$
+\texttt{phase prediction} $\rightarrow$
+\texttt{adaptive scheduling} $\rightarrow$
+\texttt{evaluation}.
+\end{center}
+
+\section{Problem Statement}
+
+Given a partially generated dLLM trace, \pag{} aims to predict the next decoding control tuple. In the current implementation, the core tuple is
+\[
+  y_t = (\text{block\_size}_t, \text{refinement\_steps}_t),
+\]
+with newer data paths also supporting richer fields such as NFE, top-1 confidence statistics, digit fraction, delimiter fraction, and stabilization summaries.
+
+\textbf{----CHECK IF THE FOLLOWING FIELDS DEFINITIONS ARE CORRECT----}
+
+Here,
+\begin{itemize}
+\item \texttt{nfe}: number of forward evaluations in the block which is essentially the number of refintement steps + 1 (initial forward pass)
+\item \texttt{mean\_top1\_confidence}: mean of the top-1 token confidence across the block
+\item \texttt{min\_top1\_confidence}: minimum top-1 token confidence across the block
+\item \texttt{digit\_fraction}: fraction of tokens in the block that are digits
+\item \texttt{delimiter\_fraction}: fraction of tokens in the block that are delimiters (e.g., parentheses, commas)
+\end{itemize}
+
+At inference time, the predicted tuple should drive adaptive unmasking: block size determines how many tokens are committed together, while the refinement/stabilization component determines how much compute is spent before the block is accepted. The intended evaluation compares adaptive decoding against fixed decoding on quality, latency, number of function evaluations (NFE), and stability.
+
+\section{Related Work}
+
+\textbf{Diffusion language models.} Dream and LLaDA show that diffusion-style generation can be applied to language modeling and reasoning. Their iterative refinement traces provide the token-level trajectories used in the first phase of this project.
+
+\textbf{Semi-autoregressive and block decoding.} Block diffusion and related semi-autoregressive methods interpolate between fully autoregressive decoding and fully parallel generation. These methods motivate block-level scheduling as a useful control surface.
+
+\textbf{Adaptive block inference.} AdaBlock-dLLM is the closest prior to the final direction of this project because it adapts block size using semantic or confidence-based signals. Our contribution is to frame the schedule as a learned next-control prediction problem over trace-derived tuples rather than only a reactive heuristic.
+
+% \section{Repository Architecture}
+
+% The codebase is organized around explicit stage boundaries. The public stage entrypoints are:
+% \begin{itemize}[leftmargin=1.5em]
+%   \item \texttt{pag.baselines.run\_baseline(...)}
+%   \item \texttt{pag.phases.run\_phase\_analysis(...)}
+%   \item \texttt{pag.scheduler.run\_adaptive\_decoding(...)}
+%   \item \texttt{pag.evaluation.evaluate\_runs(...)}
+% \end{itemize}
+
+% The main implementation packages and experimental folders are:
+% \begin{itemize}[leftmargin=1.5em]
+%   \item \texttt{src/pag/contracts}: shared dataclasses and artifact contracts.
+%   \item \texttt{src/pag/baselines}: baseline fixed decoding stage.
+%   \item \texttt{src/pag/phases}: phase analysis stage and predictor-ready artifacts.
+%   \item \texttt{src/pag/scheduler}: adaptive scheduling and decode decisions.
+%   \item \texttt{src/pag/evaluation}: baseline/adaptive comparison records.
+%   \item \texttt{phase\_cpd}: offline trace loading, stabilization-feature extraction, CPD, and visualization.
+%   \item \texttt{phase\_predict}: tuple-sequence datasets, Transformer models, training, inference, and checkpointing.
+%   \item \texttt{traces/}: curated training and test JSONL files, including richer stabilization/confidence tuples.
+%   \item \texttt{output/}: saved ablation summaries and model checkpoints.
+% \end{itemize}
+
+\section{Method}
+
+\subsection{Initial CPD-Based Pipeline}
+
+The first pipeline was:
+\[
+\begin{aligned}
+&\text{Dream/LLaDA trace collection}
+\rightarrow \text{token-level feature extraction}
+\rightarrow \text{CPD segmentation}\\
+&\rightarrow \text{segment tuple construction}
+\rightarrow \text{next-tuple prediction}.
+\end{aligned}
+\]
+The token-level features included stabilizing probability, stabilizing margin, stabilizing entropy, and stabilizing refinement step. CPD was run with PELT or kernel CPD using configurable cost, penalty, minimum segment length, and smoothing window.
+
+Change-point detection (CPD) is the task of finding positions in a sequence where the underlying behavior changes. In our setting, the sequence is not the text itself but a token-level feature curve, such as stabilizing entropy or stabilizing probability across the generated output. A detected change point marks a candidate boundary between two decoding phases: for example, a high-confidence span followed by a lower-confidence reasoning span.
+
+PELT (Pruned Exact Linear Time) is a dynamic-programming CPD algorithm that searches for segment boundaries by minimizing a total objective: the within-segment fit cost plus a penalty for adding more segments. The penalty controls how aggressively the algorithm splits the trace. A low penalty produces many short phases, while a high penalty keeps only the strongest regime changes. In our experiments, PELT with L2 or normal costs was useful for quick scalar-feature analysis.
+
+Kernel CPD is a more flexible CPD variant that compares segments in an implicit feature space defined by a kernel, such as RBF, linear, or cosine. Instead of assuming that a simple mean or variance shift explains the boundary, kernel CPD can detect broader distributional changes in the feature trajectory. This makes it useful when phase shifts are nonlinear or subtle, though it can also be more sensitive to kernel choice and hyperparameters.
+
+This pipeline was useful for analysis because it showed that token trajectories often contain visible regime changes. However, it also introduced a label-construction dependency: CPD boundaries changed with feature choice and penalty, while the downstream scheduler ultimately needed block-level controls.
+
+\subsection{Revised Block-Native Pipeline}
+
+The revised direction is:
+\[
+\begin{aligned}
+&\text{AdaBlock/block-native traces}
+\rightarrow \text{block tuple sequence construction}\\
+&\rightarrow \text{next-tuple prediction}
+\rightarrow \text{tuple-conditioned unmasking}.
+\end{aligned}
+\]
+This design keeps the training labels aligned with the scheduler. Instead of inferring block boundaries from token-level curves, the trace itself provides block size and stabilization/refinement behavior. CPD remains valuable as an analysis tool, but it is no longer the preferred production training path.
+
+This revision moved the project toward a predictor trained on explicit block-level supervision rather than CPD-derived pseudo-boundaries.
+
+\subsection{Phase Predictor}
+
+\subsubsection{Regression-Based Predictor}
+
+The first version of the phase predictor treated next-tuple prediction as a regression problem. Given a context window of previous tuples, the model predicted continuous values for the next control tuple, typically $(\texttt{block\_size}, \texttt{refinement\_steps})$. Inputs were normalized using training-set statistics, the model produced one real-valued output per tuple field, and inference rounded the outputs back to non-negative integer scheduler controls.
+
+This regression framing was simple and flexible: adding a new output field only required changing the tuple size, and mean-squared error gave a direct training objective. However, due to the mean-squared error, the model tended to produce outputs that were not well-aligned with the discrete nature of the controls. This motivated the current implementation, which keeps the Transformer encoder but changes the output heads and losses.
+
+\textbf{ADD A PICTURE IF POSSIBLE}
+
+\subsubsection{Current Classification/Ordinal Transformer}
+
+The currently implemented \texttt{phase\_predict.model.PhaseTransformer} is a compact Transformer encoder with two task-specific heads. Each input item is a window of previous phase tuples or extended feature tuples with shape
+\[
+  (\texttt{batch}, \texttt{window\_size}, \texttt{input\_tuple\_size}).
+\]
+The model first projects each input tuple into a hidden dimension, adds fixed sinusoidal positional encodings, and passes the sequence through a stack of Transformer encoder layers. The implementation uses batch-first tensors, pre-normalized encoder layers, a feed-forward width of $4d$, and the final context position as the pooled representation.
+
+From this final representation, the model predicts two outputs:
+\begin{itemize}[leftmargin=1.5em]
+  \item a block-size classification head that maps the final hidden state to logits over block sizes $1,\ldots,K_b$;
+  \item a stabilization ordinal head that maps the final hidden state concatenated with block logits to $K_s$ threshold logits for the maximum stabilization step.
+\end{itemize}
+
+The stabilization head is conditioned on the block prediction by concatenating the final hidden state with the block logits before predicting ordinal thresholds. Training uses cross-entropy loss for the block-size class and binary cross-entropy-with-logits for the ordinal stabilization vector, then sums the two losses. The dataset encodes the block target as \texttt{block\_size - 1} and encodes the stabilization target as a prefix vector: if the target stabilization step is $s$, the first $s$ thresholds are set to one.
+
+At inference time, the predictor applies \texttt{argmax} to the block logits and adds one to recover the block size. It converts stabilization logits with a sigmoid and counts thresholds above 0.5 to recover the predicted stabilization/refinement count. The current schema defaults to 128 block classes and 83 stabilization thresholds, based on observed trace ranges. It still supports multi-feature inputs through extended tuples and configurable fields such as block size, NFE, maximum stabilization step, confidence statistics, digit fraction, and delimiter fraction.
+
+\textbf{ADD A PICTURE IF POSSIBLE}
+
+\subsection{Tuple-Conditioned Diffusion Unmasking}
+
+The tuple-conditioned unmasking loop is implemented using LLaDA model. We keep a history of realized block outcomes as extended tuples, use a seed tuple for the first block, and then queries the trained phase predictor using the recent padded history. The predicted tuple is converted into a concrete scheduled block: the block-size component determines the active span to decode, and the refinement/stabilization component determines the maximum number of LLaDA forward passes allowed for that span. The scheduler clips these values by the remaining generation length, maximum block length, global step budget, and a minimum refinement floor. In this way, the phase predictor becomes a direct controller for diffusion unmasking rather than just an offline trace model.
+
+Inside each scheduled block, LLaDA repeatedly predicts token IDs for masked positions and transfers tokens according to a confidence-threshold policy. Under low-confidence remasking, only masked positions whose predicted token confidence exceeds the threshold are unmasked, while at least one token is forced to transfer so generation cannot stall. If the block reaches its budgeted refinement step before all positions are confidently unmasked, the implementation force-commits the remaining masked positions to keep decoding bounded. After the block finishes, the scheduler records the realized block size, actual NFE, mean and minimum confidence, digit fraction, and delimiter fraction, so the next prediction is conditioned on what actually happened during decoding. Prefix-cache and dual-cache variants preserve the same tuple-conditioned scheduling semantics while reducing repeated computation.
+
+\section{Experiments}
+
+\subsection{Trace and CPD Analysis}
+
+The \texttt{phase\_cpd} experiments used curated Dream/LLaDA-style traces from the local real-trace directory. The CPD UI and scripts support stabilizing entropy, margin, probability, and refinement-step features.
+
+\textbf{Finding.} Stabilizing probability and entropy often reveal interpretable blocks: high-confidence spans tend to correspond to easy copied or syntactically predictable regions, while lower-confidence/noisier spans tend to align with reasoning or code-construction regions. Stabilizing refinement step was less informative in several traces because it often behaved monotonically, although spikes sometimes marked harder reasoning transitions.
+
+\textbf{Design consequence.} CPD is useful for diagnosing phase-like behavior, but its sensitivity to smoothing and penalty settings made it less attractive as the sole source of training labels.
+
+\textbf{ADD PICTURES}
+
+% \subsection{Tuple Predictor Training}
+
+% The predictor training scripts support both legacy trace extraction and direct JSONL tuple loading. The current default training data paths point to:
+% \begin{itemize}[leftmargin=1.5em]
+%   \item \texttt{traces/rich/stab\_tuples\_conf\_train\_rich.jsonl}
+%   \item \texttt{traces/rich/stab\_tuples\_conf\_test\_rich.jsonl}
+% \end{itemize}
+% These rich tuples are intended to support multi-feature conditioning while keeping the target as a compact block/refinement control.
+
+\subsection{Ablation Results}
+
+
+
+\section{Preliminary Findings}
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item dLLM traces do show useful stabilization structure. CPD plots over stabilizing probability and entropy reveal plausible phase boundaries in algebra and coding examples.
+  \item CPD is better as an analysis instrument than as a mandatory training-label generator. Hyperparameters can move boundaries, and block-native traces avoid that ambiguity.
+  \item The learned predictor path is viable. The codebase supports Transformer training, checkpointing, inference, and hyperparameter ablation over tuple sequences.
+  \item Richer tuple features are likely important. The project moved from two-field tuples toward multi-feature inputs that include NFE, stabilization statistics, confidence statistics, digit fraction, and delimiter fraction.
+\end{enumerate}
+
+\section{Evaluation}
+
+
+\section{Limitations}
+
+
+
+\section{Conclusion}
+
+\pag{} frames adaptive dLLM decoding as a learned next-control prediction problem. The project began with token-level trace analysis and CPD segmentation, then shifted toward block-native AdaBlock-style traces after observing that CPD adds avoidable ambiguity to label construction. The codebase now contains a working staged architecture, trace analysis tools, tuple extraction, Transformer predictor training, multi-feature support, and saved ablation outputs. The remaining work for the final report is to consolidate experiments under one evaluation protocol and document the end-to-end scheduler results.
+
+
+\bibliographystyle{plainnat}
+
+\begin{thebibliography}{6}
+\bibitem[Ye et al.(2025)]{ye2025dream}
+J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
+Dream 7B: Diffusion large language models. \textit{arXiv:2508.15487}, 2025.
+
+\bibitem[Nie et al.(2025)]{nie2025llada}
+S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
+Large language diffusion models. \textit{arXiv:2502.09992}, 2025.
+
+\bibitem[Lu et al.(2025)]{lu2025adablock}
+G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
+AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size. \textit{ICLR}, 2026.
+
+\bibitem[Arriola et al.(2025)]{arriola2025block}
+M.~Arriola, A.~Gokaslan, J.~T.~Chiu, Z.~Yang, Z.~Qi, J.~Han, S.~S.~Sahoo, and V.~Kuleshov.
+Block diffusion: Interpolating between autoregressive and diffusion language models. \textit{ICLR (Oral)}, 2025.
+
+\bibitem[Wu et al.(2025)]{wu2025fastdllm}
+C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
+Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding. \textit{ICLR}, 2026.
+
+\bibitem[Gong et al.(2025)]{gong2025diffullama}
+S.~Gong, S.~Agarwal, Y.~Zhang, J.~Ye, L.~Zheng, M.~Li, C.~An, P.~Zhao, W.~Bi, J.~Han, H.~Peng, and L.~Kong.
+Scaling diffusion language models via adaptation from autoregressive models. \textit{ICLR}, 2025.
+\end{thebibliography}
+
+\end{document}
