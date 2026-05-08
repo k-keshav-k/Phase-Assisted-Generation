@@ -303,7 +303,112 @@ def generate_pag_prefix_cache(
         )
         block_length = min(int(block_length), max_block_length, gen_length - generated_length)
 
+        schedule = scheduler.next_schedule(
+            block_size=block_length,
+            remaining_tokens=gen_length - generated_length,
+            max_block_length=max_block_length,
+            max_refinement_steps=max_refinement_steps,
+        )
+        block_start = prompt.shape[1] + generated_length
+        block_end = block_start + block_length
+        generated_length += block_length
 
+        unmask_confs: list[torch.Tensor] = []
+        mask_index = x == mask_id
+        mask_index[:, block_end:] = 0
+        x0, transfer_index = get_transfer_index(
+            logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+        )
+        initial_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
+        initial_max_probs = initial_probs.max(dim=-1).values
+        newly_unmasked = transfer_index[:, block_start:block_end]
+        if newly_unmasked.any():
+            unmask_confs.append(initial_max_probs[newly_unmasked])
+        x[transfer_index] = x0[transfer_index]
+
+        prefix_cache = []
+        for cache_layer in full_cache:
+            prefix_cache.append(())
+            for cache_entry in cache_layer:
+                prefix_cache[-1] += (cache_entry[:, :, :block_start],)
+
+        nfe = 0
+        prev_predictions: list[torch.Tensor] = []
+
+        while True:
+            if (x[:, block_start:block_end] == mask_id).sum() == 0:
+                break
+            if nfe >= max_refinement_steps:
+                break
+
+            mask_index = x[:, block_start:] == mask_id
+            mask_index[:, block_length:] = 0
+            block_output = model(x[:, block_start:], past_key_values=prefix_cache, use_cache=True)
+            block_logits = block_output.logits
+            block_logits_with_noise = add_gumbel_noise(block_logits, temperature=temperature)
+            block_predicted_tokens = torch.argmax(block_logits_with_noise, dim=-1)
+            nfe += 1
+
+            block_probs = F.softmax(block_logits, dim=-1)
+            block_max_probs = block_probs.max(dim=-1).values
+
+            if nfe >= schedule.budgeted_refinement_steps:
+                block_mask = x[:, block_start:block_end] == mask_id
+                remaining_count = block_mask.sum().item()
+                few_remaining = remaining_count <= max(1, math.ceil(0.10 * block_length))
+                confident = False
+                if remaining_count > 0:
+                    local_conf = block_max_probs[0, :block_length][block_mask[0, :block_length]]
+                    confident = local_conf.min().item() >= tau_commit if local_conf.numel() > 0 else True
+                else:
+                    confident = True
+                stable = False
+                if remaining_count > 0 and len(prev_predictions) >= tau_stable_steps:
+                    current_for_remaining = block_predicted_tokens[0, :block_length][block_mask[0, :block_length]]
+                    stable = all(
+                        torch.all(current_for_remaining == p[block_mask[0, :block_length]])
+                        for p in prev_predictions[-tau_stable_steps:]
+                    )
+                elif remaining_count == 0:
+                    stable = True
+                if few_remaining or confident or stable:
+                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
+                    x[:, block_start:][transfer_index] = x0[transfer_index]
+                    break
+                if nfe >= max_refinement_steps:
+                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
+                    x[:, block_start:][transfer_index] = x0[transfer_index]
+                    break
+                x0, transfer_index = get_transfer_index(
+                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:], None, threshold,
+                )
+            else:
+                x0, transfer_index = get_transfer_index(
+                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:], None, threshold,
+                )
+
+            newly_unmasked = transfer_index[:, :block_length]
+            if newly_unmasked.any():
+                unmask_confs.append(block_max_probs[0, :block_length][newly_unmasked[0]])
+            x[:, block_start:][transfer_index] = x0[transfer_index]
+            prev_predictions.append(block_predicted_tokens[0, :block_length].clone())
+            prev_predictions = prev_predictions[-tau_stable_steps:]
+
+        if unmask_confs:
+            all_confs = torch.cat(unmask_confs)
+            mean_conf = all_confs.mean().item()
+            min_conf = all_confs.min().item()
+        else:
+            mean_conf = min_conf = 1.0
+        block_tokens = x[0, block_start:block_end]
+        digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item() if digit_ids_tensor is not None else 0.0
+        delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item() if delimiter_ids_tensor is not None else 0.0
+        scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
+        nfe_history.append(nfe)
+        block_history.append(block_length)
+        _record_schedule(schedule_history, schedule=schedule, nfe=nfe, block_start=block_start, block_end=block_end)
+
+    return x, nfe_history, block_history, schedule_history
 @torch.no_grad()
 def generate_pag_dual_cache(
     model,
