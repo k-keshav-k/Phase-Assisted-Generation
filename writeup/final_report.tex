@@ -489,15 +489,143 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
-
 \section{Evaluation}
 
-\subsection{Setup}
-
-We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_test\_0399}, using LLaDA-8B-Instruct with generation length 256, 64 diffusion steps, confidence threshold 0.9, delimiter threshold 0.3, prefix+dual cache, minimum block length 1, minimum refinement budget 1, and no refinement offset. The final log file contains multiple runs; the reported numbers use the latest complete 200-prompt run, \code{\FinalRunId}. The answer metric is exact presence of the accepted numeric answer in the generated text after normalization, matching the repository evaluator.
+We conducted a systematic hyperparameter search to optimize the Transformer predictor. The script implements a grid-based ablation study that trains multiple model configurations. We tested four ablation presets (small, medium, large and xlarge) spanning different model capacities and parameter ranges.
 
 \begin{table}[!htbp]
   \centering
+  \caption{Transformer ablation hyperparameter search space. Window size (WS) is the context length in number of past tuples; $d_{\text{model}}$ is the hidden dimension; $H$ is the number of attention heads; $N$ is the number of Transformer encoder layers; dropout (DP) is applied during training; learning rate (LR) is for the AdamW optimizer.}
+  \label{tab:ablation-params}
+  \footnotesize
+  \begin{tabular}{@{}lcccccc@{}}
+    \toprule
+    Preset & WS & $d_{\text{model}}$ & Heads & Layers & Dropout & Learning Rate \\
+    \midrule
+    Small & 4, 8 & 32 & 2, 4 & 2, 4 & 0.0, 0.1, 0.2 & 1e-3, 5e-4 \\
+    Medium & 8 & 64 & 2, 4 & 2, 4 & 0.0, 0.1, 0.2 & 1e-3, 5e-4 \\
+    Large & 8, 16 & 128 & 2, 4, 8 & 2, 4 & 0.0, 0.1, 0.2 & 1e-3, 5e-4 \\
+    Xlarge & 8, 16 & 256, 512 & 2, 4, 8 & 2, 4, 6 & 0.0, 0.1, 0.2 & 1e-3, 5e-4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The ablation study generated hundreds of model checkpoints across different hyperparameter combinations. Each configuration was trained for up to 300 epochs with early stopping based on validation loss. We tracked training loss, validation loss, best epoch, and the corresponding checkpoint for each run. The best-performing model was selected based on the lowest validation loss, which correlated well with downstream evaluation performance.
+
+Figure~\ref{fig:transformer-ablation-grid} summarizes the checkpoint names from the full ablation sweep. The strongest run was the medium checkpoint with \(\text{ws}=8\), \(d=64\), \(h=4\), \(l=4\), \(\text{dp}=10\), \(\text{lr}=0.5\), and best validation loss \(2.216957\). The sweep shows a clear capacity sweet spot: adding depth helped up to four layers, but larger \(d_{\text{model}}\) values did not improve validation loss on this dataset. A small amount of dropout was consistently helpful, while zero dropout overfit and 20\% dropout slightly underperformed the 10\% setting. We used the best medium checkpoint for the online scheduler because it achieved the best validation loss and the strongest downstream inference behavior on held-out GSM8K prompts.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.55\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=\linewidth, height=5.2cm,
+        xlabel={model dimension \(d_{\text{model}}\)},
+        ylabel={best validation loss},
+        grid=major,
+        legend style={font=\scriptsize, at={(0.98,0.98)}, anchor=north east},
+        yticklabel style={font=\scriptsize},
+        xtick={32,64,128,256,512},
+        ymin=2.20, ymax=2.37,
+      ]
+        \addplot[blue, mark=*] table[x=d,y=val_loss, restrict expr to domain={\thisrow{layers}}{2:2}] {figs/ablation_dim_layer.tsv};
+        \addlegendentry{2 layers}
+        \addplot[red, mark=square*] table[x=d,y=val_loss, restrict expr to domain={\thisrow{layers}}{4:4}] {figs/ablation_dim_layer.tsv};
+        \addlegendentry{4 layers}
+        \addplot[green!55!black, mark=triangle*] table[x=d,y=val_loss, restrict expr to domain={\thisrow{layers}}{6:6}] {figs/ablation_dim_layer.tsv};
+        \addlegendentry{6 layers}
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Best loss by width and depth.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.40\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=\linewidth, height=5.2cm,
+        xlabel={dropout (\%)},
+        ylabel={best validation loss},
+        grid=major,
+        xtick={0,10,20},
+        ymin=2.20, ymax=2.36,
+        yticklabel style={font=\scriptsize},
+      ]
+        \addplot[purple, mark=diamond*, thick] table[x=dropout,y=val_loss] {figs/ablation_dropout.tsv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Best loss by dropout rate.}
+  \end{subfigure}
+
+  \vspace{0.35cm}
+  \begin{subfigure}{0.46\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar, width=\linewidth, height=4.6cm,
+        ylabel={best validation loss},
+        symbolic x coords={2,4,8},
+        xtick=data,
+        ymin=2.20, ymax=2.31,
+        bar width=18pt,
+        nodes near coords,
+        nodes near coords style={font=\tiny, rotate=90, anchor=west},
+        yticklabel style={font=\scriptsize},
+      ]
+        \addplot[fill=cyan!35] coordinates {(2,2.230735) (4,2.216957) (8,2.249530)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Best loss by attention heads.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.46\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar, width=\linewidth, height=4.6cm,
+        ylabel={best validation loss},
+        symbolic x coords={1e-4,5e-4,1e-3},
+        xtick=data,
+        ymin=2.20, ymax=2.31,
+        bar width=18pt,
+        nodes near coords,
+        nodes near coords style={font=\tiny, rotate=90, anchor=west},
+        yticklabel style={font=\scriptsize},
+      ]
+        \addplot[fill=orange!45] coordinates {(1e-4,2.289876) (5e-4,2.216957) (1e-3,2.230735)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Best loss by learning rate.}
+  \end{subfigure}
+  \caption{Transformer predictor ablations. Each point or bar reports the minimum validation loss among runs sharing that hyperparameter value, with all other hyperparameters marginalized out.}
+  \label{fig:transformer-ablation-grid}
+\end{figure}
+
+\begin{table}[!htbp]
+  \centering
+  \caption{Top Transformer ablation checkpoints by validation loss.}
+  \label{tab:top-ablation-runs}
+  \footnotesize
+  \begin{tabular}{@{}clc@{}}
+    \toprule
+    Rank & Checkpoint configuration & Best validation loss \\
+    \midrule
+    1 & medium, ws8, d64, h4, l4, dp10, lr0.5 & 2.216957 \\
+    2 & medium, ws8, d64, h2, l4, dp10, lr1.0 & 2.230735 \\
+    3 & medium, ws8, d64, h2, l4, dp10, lr0.5 & 2.231665 \\
+    4 & small, ws8, d32, h4, l4, dp10, lr1.0 & 2.232907 \\
+    5 & small, ws8, d32, h2, l4, dp10, lr1.0 & 2.234650 \\
+    6 & large, ws8, d128, h4, l4, dp20, lr1.0 & 2.238085 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+We evaluated the selected predictor checkpoint on 200 unseen GSM8K test prompts using LLaDA-8B-Instruct with generation length 256 and 64 diffusion steps. We saw the results summarized in Table~\ref{tab:final-eval} and Figure~\ref{fig:final-eval-summary}.
+
+\begin{table}[!htbp]
+  \centering
+  \caption{Final 200-prompt GSM8K evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
   \begin{tabular}{lrrrr}
     \toprule
     Method & Accuracy & Correct & Avg. total \nfe{} & Avg. blocks \\
@@ -506,7 +634,6 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
     AdaBlock & \AdaAccPct\% & \AdaCorrect/\FinalNumPrompts & \AdaAvgNfe & \AdaAvgBlocks \\
     \bottomrule
   \end{tabular}
-  \caption{Final 200-prompt GSM8K evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
   \label{tab:final-eval}
 \end{table}
 
@@ -583,7 +710,7 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
 	  \caption{Per-prompt final evaluation plots. PAG reduced \nfe{} on \NfeWinCount{} of \FinalNumPrompts{} prompts, tied on \NfeTieCount{}, and used more \nfe{} on \NfeLossCount{}.}
 	  \label{fig:final-eval}
 \end{figure}
-
+\FloatBarrier
 The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased.
 
 \begin{figure}[t!]
@@ -645,6 +772,9 @@ The predictor is trained from AdaBlock traces, so it learns to imitate and impro
 
 \pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
 
+\section{Code}
+Our code is available at \url{https://github.com/k-keshav-k/Phase-Assisted-Generation}.
+
 \bibliographystyle{plainnat}
 \small
 \begin{thebibliography}{9}
@@ -691,5 +821,32 @@ J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
 \newblock \emph{arXiv:2508.15487}, 2025.
 
 \end{thebibliography}
+
+\newpage
+
+\FloatBarrier
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figs/Siva - LLMR Course Feedback Complete.png}
+  \caption{Course feedback Completion 1}
+  \label{fig:course-feedback-complete}
+\end{figure}
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figs/Keshav - LLMR Course Feedback Complete.png}
+  \caption{Course feedback Completion 2}
+  \label{fig:course-feedback-complete}
+\end{figure}
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figs/prajesh_feedback.png}
+  \caption{Course feedback Completion 3}
+  \label{fig:course-feedback-complete}
+\end{figure}
+
+\FloatBarrier
 
 \end{document}
