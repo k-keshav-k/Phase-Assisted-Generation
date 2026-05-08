@@ -197,7 +197,7 @@ Figure~\ref{fig:cpd} shows these features for two representative Dream traces: a
 
 A critical methodological observation tempered this analysis. CPD boundaries shift with the choice of feature, smoothing window, penalty value, and detector type---the same trace can produce anywhere from two to eight segments depending on configuration. This sensitivity makes CPD a valuable interpretability tool but an unreliable label generator for a scheduler whose control space is block-native. It motivated the shift to directly observed block-level traces, described next.
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
   \begin{subfigure}{0.30\linewidth}
     \centering
@@ -270,7 +270,7 @@ The final training path uses AdaBlock-style LLaDA traces. We ran AdaBlock-dLLM w
 
 Table~\ref{tab:sample-trace} shows a contiguous 12-block slice from one prompt. The pattern is immediately visible: a size-1 block with confidence near 1.0 and NFE~1 marks each delimiter, while content blocks range from size~8 to~22 with NFE varying from 2 to 11. Blocks with nonzero digit fraction---those containing arithmetic---systematically require more forward evaluations and exhibit lower minimum confidence, sometimes falling below~0.5. This is the signal the predictor must learn: the same block size can demand very different compute depending on the token types inside it.
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
   \includegraphics[width=0.88\linewidth]{figs/block_structure.png}
   \caption{AdaBlock block structure on GSM8K. Block sizes have strong point masses at size~1 (delimiter-only blocks) and size~16 (AdaBlock's default content cap), with a long tail to larger sizes. Blocks per sample are roughly Gaussian centered at~22.}
@@ -281,7 +281,7 @@ Figure~\ref{fig:block-structure} confirms that the block-size distribution is fu
 
 Figure~\ref{fig:nfe} examines the per-block compute-accuracy trade-off. While \nfe{} correlates positively with block size, the conditional variance is enormous---blocks of size~16 consume anywhere from 3 to 15 forward passes. High-\nfe{} blocks cluster at low minimum confidence, confirming that the model's uncertainty drives the need for additional refinement.
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
   \begin{tabular}{@{}ccc@{}}
     \includegraphics[width=0.31\linewidth, trim=0 376 651 0, clip]{figs/nfe.png} &
@@ -392,7 +392,7 @@ We also explored two non-Transformer baselines.
 
 \textbf{Random forest.} A multi-output random forest (window size 5, 200 trees, max depth 15) trained on rolling-window statistics of past tuple features: \{ \nfe{}, block size, max stabilization step, mean refinement step, mean gap, max gap \}. With 90{,}994 training examples and 22{,}907 test examples, it achieved held-out MAE of 7.24 for block size and 1.66 for max stabilization step. Figure~\ref{fig:rf-ablation} shows that the most predictive feature was the last observed block size, followed by window variability and trend features. This importance ranking directly informed the design of the Transformer's input feature set and context window length, but the RF's lack of sequential structure made it a poor fit for the deployment loop.
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
   \begin{subfigure}{0.47\linewidth}
     \centering
@@ -481,6 +481,8 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
   \end{algorithmic}
 \end{algorithm}
 
+\FloatBarrier
+
 \section{Evaluation}
 
 \subsection{Setup}
@@ -501,7 +503,7 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
   \label{tab:final-eval}
 \end{table}
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
 	  \begin{subfigure}{0.46\linewidth}
 	    \centering
@@ -534,7 +536,7 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
 	  \label{fig:final-eval-summary}
 	\end{figure}
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
 	  \begin{subfigure}{0.46\linewidth}
 	    \centering
@@ -575,7 +577,7 @@ We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_te
 
 The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased.
 
-\begin{figure}[!htbp]
+\begin{figure}[t!]
   \centering
   \begin{subfigure}{0.49\linewidth}
     \centering
