@@ -281,6 +281,7 @@ class DummyAPIScheduler:
     def next_schedule(
         self,
         *,
+        block_size: int | None = None,
         remaining_tokens: int,
         max_block_length: int,
         max_refinement_steps: int,
@@ -418,6 +419,7 @@ class CheckpointTupleScheduler:
     def next_schedule(
         self,
         *,
+        block_size: int | None = None,
         remaining_tokens: int,
         max_block_length: int,
         max_refinement_steps: int,
@@ -442,8 +444,10 @@ class CheckpointTupleScheduler:
             predict_time_sec = time.perf_counter() - predict_start
             self.scheduler_predict_time_sec += predict_time_sec
             raw_predicted_tuple = result.predicted_tuple
+            # block_size comes from caller (AdaBlock compute_block_length)
+            bs = int(block_size) if block_size is not None else int(raw_predicted_tuple.block_size)
             predicted_tuple = _normalize_tuple(
-                raw_predicted_tuple.block_size,
+                bs,
                 int(raw_predicted_tuple.refinement_steps) + self.refinement_step_offset,
             )
             result.metadata = {

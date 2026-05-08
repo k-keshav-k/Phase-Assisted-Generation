@@ -279,6 +279,11 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         max_refinement_steps=args.max_refinement_steps,
         digit_ids_tensor=digit_cache,
         delimiter_ids_tensor=delim_cache,
+        delimiter_ids=args.delimiter_ids,
+        delimiter_threshold=args.delimiter_threshold,
+        tau_commit=args.tau_commit,
+        tau_stable_steps=args.tau_stable_steps,
+        default_block_length=args.adablock_init_block_length,
     )
     _synchronize_if_cuda(args.device)
     elapsed = time.perf_counter() - start
@@ -455,6 +460,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         help="Minimum block size (default: 4). Set 1 for no floor.")
     parser.add_argument("--refinement-step-offset", type=int, default=1,
                         help="Offset added to predicted refinement steps (default: 1). Set 0 for no offset.")
+    parser.add_argument("--tau-commit", type=float, default=0.80,
+                        help="Min confidence for soft-cap exit (default: 0.80)")
+    parser.add_argument("--tau-stable-steps", type=int, default=2,
+                        help="Steps of stable predictions required for exit (default: 2)")
     parser.add_argument("--context-seed-block-length", type=int, default=None)
     parser.add_argument("--context-seed-stabilizing-steps", type=int, default=None)
     parser.add_argument("--adablock-init-block-length", type=int, default=32)
