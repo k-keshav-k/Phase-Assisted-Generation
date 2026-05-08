@@ -660,8 +660,8 @@ We evaluated the selected predictor checkpoint on 200 unseen GSM8K test prompts 
       \begin{axis}[
         ybar, width=\linewidth, height=4.6cm,
         ylabel={answer accuracy (\%)}, symbolic x coords={PAG,AdaBlock},
-        xtick=data, ymin=80, ymax=110, bar width=22pt,
-        nodes near coords, every node near coord/.style={yshift=8pt},
+        xtick=data, ymin=80, ymax=100, bar width=22pt,
+        nodes near coords, every node near coord/.style={yshift=2pt, font=\scriptsize},
       ]
         \addplot[fill=green!35] coordinates {(PAG,\PagAccPct) (AdaBlock,\AdaAccPct)};
       \end{axis}
