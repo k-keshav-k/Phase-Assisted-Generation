@@ -239,16 +239,45 @@ A critical methodological observation tempered this analysis. CPD boundaries shi
 
 \subsection{Block-Native AdaBlock Traces}
 
-The final training path uses AdaBlock-style LLaDA traces. We ran LLaDA-8B-Instruct on GSM8K and recorded one tuple per decoded block. Each tuple contains the applied block size, actual \nfe{}, token stabilization/refinement summaries, top-1 confidence statistics, digit fraction, delimiter fraction, and gap statistics. The training corpus contains 5{,}000 GSM8K training problems with 138{,}901 blocks and 200 validation/test problems with 5{,}543 blocks. A separate 200-prompt test slice (GSM8K test indices 200--399) is used for downstream scheduler evaluation.
+The final training path uses AdaBlock-style LLaDA traces. We ran AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems. AdaBlock selects each block boundary adaptively: it identifies the highest-confidence delimiter token in a forward-looking window and positions the boundary there, defaulting to a fixed cap of 16 tokens when no delimiter exceeds the threshold. Within each block, LLaDA unmasking proceeds via threshold-based confidence sampling until the block's tokens stabilize. After every block we record a 12-field control tuple: the applied block size, the actual number of forward evaluations (NFE), per-token stabilization and refinement step statistics, mean and minimum top-1 softmax confidence, the fraction of digit tokens, and the fraction of delimiter tokens. The resulting corpus contains 138{,}901 tuples across training prompts and 5{,}543 tuples across 200 validation prompts. A separate 200-prompt test slice (GSM8K test indices 200--399) is held out for downstream scheduler evaluation.
+
+\begin{table}[!htbp]
+  \centering
+  \caption{First 12 block tuples from a single GSM8K prompt. Delimiter blocks (size~1, NFE~1, confidence~1) alternate with content blocks. Blocks with nonzero digit fraction consume more NFE and exhibit lower minimum confidence.}
+  \label{tab:sample-trace}
+  \footnotesize
+  \begin{tabular}{@{}crrrrr@{}}
+    \toprule
+    Index & Block size & NFE & Min.\ $p_{\text{top-1}}$ & Digit frac. & Delim frac. \\
+    \midrule
+     0 & 22 &  4 & 0.903 & 0.000 & 0.045 \\
+     1 &  1 &  1 & 1.000 & 0.000 & 1.000 \\
+     2 & 16 &  9 & 0.675 & 0.062 & 0.000 \\
+     3 &  1 &  1 & 1.000 & 0.000 & 1.000 \\
+     4 & 16 &  9 & 0.418 & 0.062 & 0.000 \\
+     5 & 16 & 11 & 0.618 & 0.062 & 0.062 \\
+     6 & 16 &  9 & 0.445 & 0.062 & 0.062 \\
+     7 &  8 &  5 & 0.897 & 0.000 & 0.250 \\
+     8 & 10 &  5 & 0.581 & 0.000 & 0.100 \\
+     9 &  1 &  1 & 1.000 & 0.000 & 1.000 \\
+    10 & 20 &  2 & 0.845 & 0.050 & 0.050 \\
+    11 & 13 &  3 & 0.803 & 0.154 & 0.154 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:sample-trace} shows a contiguous 12-block slice from one prompt. The pattern is immediately visible: a size-1 block with confidence near 1.0 and NFE~1 marks each delimiter, while content blocks range from size~8 to~22 with NFE varying from 2 to 11. Blocks with nonzero digit fraction---those containing arithmetic---systematically require more forward evaluations and exhibit lower minimum confidence, sometimes falling below~0.5. This is the signal the predictor must learn: the same block size can demand very different compute depending on the token types inside it.
 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.88\linewidth]{figs/block_structure.png}
-  \caption{AdaBlock block structure on GSM8K. Blocks per sample are similar between train and test, while block sizes have strong point masses at size 1 and 16.}
+  \caption{AdaBlock block structure on GSM8K. Block sizes have strong point masses at size~1 (delimiter-only blocks) and size~16 (AdaBlock's default content cap), with a long tail to larger sizes. Blocks per sample are roughly Gaussian centered at~22.}
   \label{fig:block-structure}
 \end{figure}
 
-Figure~\ref{fig:block-structure} shows why the prediction problem is not a smooth regression problem. The schedule has a heavy point mass at delimiter-size blocks and a large mass at the content cap. A predictor that averages targets can be numerically close under MSE while producing poor discrete controls.
+Figure~\ref{fig:block-structure} confirms that the block-size distribution is fundamentally discrete and multimodal. The point mass at size~1 corresponds to isolated delimiters---newlines and commas that AdaBlock commits independently. The mass at size~16 is AdaBlock's default cap, applied when no delimiter meets the confidence threshold within the window. A tail extends to larger sizes~($>16$) when consecutive low-confidence delimiters cause AdaBlock to merge spans. A regression model minimizing MSE would predict the conditional mean of these modes---for example,~8.5 for a prompt with equal numbers of size-1 and size-16 blocks---which corresponds to no feasible decoding outcome. This averaging failure, which we examine in~$\S$5.1, motivates the discrete classification and ordinal heads used in the final predictor.
+
+Figure~\ref{fig:nfe} examines the per-block compute-accuracy trade-off. While \nfe{} correlates positively with block size, the conditional variance is enormous---blocks of size~16 consume anywhere from 3 to 15 forward passes. High-\nfe{} blocks cluster at low minimum confidence, confirming that the model's uncertainty drives the need for additional refinement.
 
 \begin{figure}[!htbp]
   \centering
@@ -260,7 +289,7 @@ Figure~\ref{fig:block-structure} shows why the prediction problem is not a smoot
     \includegraphics[width=0.31\linewidth, trim=651 0 0 376, clip]{figs/nfe.png} &
     \includegraphics[width=0.31\linewidth, trim=760 0 0 0, clip]{figs/confidence_vs_nfe.png}
   \end{tabular}
-  \caption{Per-block compute and confidence. \nfe{} grows with block size but has wide conditional variance, while high-compute blocks are lower-confidence and more variable.}
+  \caption{Per-block compute and confidence. \nfe{} correlates positively with block size but exhibits enormous conditional variance---blocks of size~16 consume 3--15 forward passes. High-\nfe{} blocks tend toward lower minimum confidence, confirming that the model's uncertainty drives the need for additional refinement.}
   \label{fig:nfe}
   \label{fig:conf-vs-nfe}
 \end{figure}
@@ -269,49 +298,97 @@ Figure~\ref{fig:block-structure} shows why the prediction problem is not a smoot
 
 \subsection{Regression Transformer}
 
-The first learned predictor treated the next tuple as a continuous regression target. A compact Transformer encoder consumed a sliding window of previous tuples, projected them to a hidden dimension, added sinusoidal position encodings, pooled the final context position, and produced real-valued outputs. Inference rounded outputs back to integer controls. This model was easy to extend from two features to rich tuples, and several checkpoints reached validation losses near \(0.096\) on normalized tuple targets. The failure mode was deployment-oriented: MSE encouraged averaged predictions in a discrete, multimodal target space.
+The first learned predictor treated the next control tuple as a continuous regression target. A compact Transformer encoder consumed a sliding window of previous tuples, projected them to a hidden dimension, added sinusoidal position encodings, pooled the final context position, and produced real-valued outputs that were rounded to integers at inference time. Validation loss reached \(0.096\) on normalized targets, suggesting the model had learned the training distribution well.
+
+This offline metric was misleading. When deployed inside the LLaDA decoding loop, the regression model produced block-size predictions that fell between the discrete modes of the empirical distribution---for example,~8 for a prompt with equal numbers of size-1 delimiter blocks and size-16 content blocks. These interpolated sizes have no training support: no real decoding block in the training corpus was created with those boundaries. LLaDA partially unmasked the requested span and left the remainder in the masked state, producing garbled output with truncated, repeated, or overlapping token spans. The resulting text exhibited what we term \emph{degenerate English}: short windows of local fluency---a few correctly decoded words---embedded within broken sentences that carried no coherent meaning. The best checkpoint we obtained under this approach reached only 73\% answer accuracy on 30 held-out multi-step arithmetic prompts---compared to 93\% for the unmodified AdaBlock baseline---while averaging just 8.1 blocks per prompt against AdaBlock's 12.3. The reduced block count indicates that the model merged semantically distinct spans into single oversized blocks. A representative output from the evaluation log shows clear degeneration:
+```
+Number of bags: 3 bags bags - Number Number apples
+```
+The text preserves isolated correct phrases but degrades into word repetitions, losing all coherent sentence structure.
+
+Two root causes explain this collapse. First, MSE's Bayes-optimal prediction for a multimodal target is the conditional mean of the modes, which falls in a region of the control space with zero training density. The regression head has no inductive bias toward valid block sizes; it is equally happy to predict size~8 or size~16 if the squared error is similar. Second, the model was trained on rich tuples that include realized confidence and token-type fractions from past blocks. During deployment the \emph{current} block's confidence is unknown until decoding completes, creating a distribution shift between the features seen at training time and those available at inference time.
+
+This failure directly motivated the design described next. A classification head over block-size classes sidesteps this problem by construction: the softmax layer assigns a probability to each valid integer size (1 through~128), and argmax selects exactly one. There is no output unit for fractional sizes, so every prediction corresponds to a real decoding boundary. An ordinal head over refinement-budget thresholds respects the monotonic structure of NFE---more steps are always permissible, but the question is how many. After switching to this architecture, the same evaluation setting reached 87\% answer accuracy with 23.4\% total \nfe{} savings---results that the regression model could not approach.
 
 \subsection{Classification/Ordinal Transformer}
 
-The final predictor keeps the Transformer encoder but changes the heads. The block-size head is a classifier over possible block sizes. The stabilization/\nfe{} head is ordinal: it predicts threshold logits and recovers the budget by counting thresholds whose sigmoid exceeds 0.5. The stabilization head is conditioned on block logits, so the model can represent that larger blocks often require different refinement budgets.
+The final predictor keeps the Transformer encoder but replaces the output heads. The block-size head is a classifier over the set of possible block sizes. The refinement-budget head is ordinal: it predicts logits over binary thresholds and recovers the integer budget by counting thresholds whose sigmoid exceeds 0.5. The budget head is conditioned on block-size logits via concatenation, so the model can represent that larger blocks often need different refinement budgets. The complete training pipeline is shown in Figure~\ref{fig:model-arch}.
 
-\begin{figure}[!htbp]
+Training optimizes a composite objective. Block-size prediction uses standard cross-entropy over \(C = 128\) classes:
+
+\[
+\mathcal{L}_{\text{block}} = -\sum_{c=1}^{C} \mathbf{1}_{(y_b = c)} \log \frac{\exp(z_{b,c})}{\sum_j \exp(z_{b,j})}
+\]
+
+where \(z_b\) are the block-size logits. Refinement-budget prediction uses binary cross-entropy with logits over \(T = 83\) ordinal thresholds:
+
+\[
+\mathcal{L}_{\text{budget}} = -\frac{1}{T}\sum_{k=1}^{T} \big[ w_k \cdot y_{r,k} \log\sigma(z_{r,k}) + (1 - y_{r,k})\log(1 - \sigma(z_{r,k})) \big]
+\]
+
+where \(\sigma\) is the logistic sigmoid and \(w_k\) are per-threshold positive weights computed from inverse class frequency, clamped to \([1, 10]\). At inference the budget is recovered as the number of thresholds whose sigmoid exceeds 0.5. The total loss is \(\mathcal{L} = \mathcal{L}_{\text{block}} + \mathcal{L}_{\text{budget}}\).
+
+\begin{figure}[t!]
   \centering
-  \resizebox{0.94\linewidth}{!}{%
-  \begin{tikzpicture}[node distance=0.58cm and 0.5cm]
-    \node[data] (inp) {Past block tuples\\\(w \times d\)};
-    \node[modelbox, right=of inp] (proj) {Linear\\projection};
-    \node[modelbox, right=of proj] (pos) {Sinusoidal\\positions};
-    \node[modelbox, right=of pos] (enc) {Transformer\\encoder};
-    \node[modelbox, right=of enc] (pool) {Last-position\\state};
-    \node[modelbox, above right=0.15cm and 0.56cm of pool] (block) {Block-size\\softmax};
-    \node[modelbox, below right=0.15cm and 0.56cm of pool] (stab) {Ordinal\\budget head};
-    \node[data, right=0.56cm of block] (bout) {\(\hat b_t\)};
-    \node[data, right=0.56cm of stab] (sout) {\(\hat r_t\)};
-    \draw[arrow] (inp) -- (proj);
-    \draw[arrow] (proj) -- (pos);
-    \draw[arrow] (pos) -- (enc);
+  \resizebox{0.75\linewidth}{!}{%
+  \begin{tikzpicture}[node distance=0.3cm and 0.35cm]
+    % Data preparation
+    \node[data] (adablock) {AdaBlock traces (JSONL)};
+    \node[data, below=of adablock] (tuples) {Tuple sequences};
+    \node[data, below=of tuples] (windows) {Sliding windows [w=8]};
+    \node[data, below=of windows] (norm) {Z-score normalization};
+
+    % Encoder
+    \node[modelbox, below=0.35cm of norm] (proj) {Linear projection\\+ pos encoding};
+    \node[modelbox, below=of proj] (enc) {Transformer encoder\\\(N\) layers \(\times\) \(H\) heads};
+    \node[modelbox, below=of enc] (pool) {Last-position\\pooling};
+
+    % Dual heads
+    \node[modelbox, below left=0.4cm and 0.3cm of pool] (bs_head) {Block-size classifier\\128 classes};
+    \node[modelbox, below right=0.4cm and 0.3cm of pool] (ord_head) {Ordinal budget\\83 thresholds};
+
+    % Loss
+    \node[data, below=0.3cm of bs_head] (bs_loss) {CrossEntropy};
+    \node[data, below=0.3cm of ord_head] (ord_loss) {BCEWithLogits};
+    \node[data, below=0.3cm of bs_loss] (total_loss) {\(\mathcal{L} = \mathcal{L}_{\text{block}} + \mathcal{L}_{\text{budget}}\)};
+
+    % Data prep arrows
+    \draw[arrow] (adablock) -- (tuples);
+    \draw[arrow] (tuples) -- (windows);
+    \draw[arrow] (windows) -- (norm);
+
+    % Encoder arrows
+    \draw[arrow] (norm) -- (proj);
+    \draw[arrow] (proj) -- (enc);
     \draw[arrow] (enc) -- (pool);
-    \draw[arrow] (pool) -- (block);
-    \draw[arrow] (pool) -- (stab);
-    \draw[arrow] (block) -- (bout);
-    \draw[arrow] (stab) -- (sout);
-    \draw[arrow] (block.south) to[bend left=8] node[midway, right, font=\scriptsize]{logits} (stab.north);
+
+    % Split arrows
+    \draw[arrow] (pool.south) -- ++(0,-0.1) -| (bs_head.north);
+    \draw[arrow] (pool.south) -- ++(0,-0.1) -| (ord_head.north);
+
+    % Conditioning
+    \draw[arrow] (bs_head.east) -- ++(0.2,0) |- (ord_head.west);
+
+    % Loss arrows
+    \draw[arrow] (bs_head) -- (bs_loss);
+    \draw[arrow] (ord_head) -- (ord_loss);
+    \draw[arrow] (bs_loss.south) -- ++(0,-0.05) -| (total_loss.north);
+    \draw[arrow] (ord_loss.south) -- ++(0,-0.05) -| (total_loss.north);
   \end{tikzpicture}
   }
-  \caption{Classification/ordinal Transformer architecture. The block-size logits condition the refinement-budget head.}
+  \caption{Comprehensive predictor training architecture. Data preparation (top) converts raw AdaBlock traces into normalized sliding-window sequences. The Transformer encoder (center) uses \(N\) layers, \(H\) attention heads, hidden dimension \(d_{\text{model}}=64\), and feed-forward dimension 256 with pre-norm. Hyperparameters \(N\), \(H\), context window size, dropout, and learning rate were ablated (see Fig.~\ref{fig:rf-ablation}). The block-size head (bottom-left) is a 128-way classifier; the ordinal budget head (bottom-right) predicts 83 thresholds conditioned on block logits.}
   \label{fig:model-arch}
 \end{figure}
 
-Training uses cross-entropy for block size and binary cross-entropy for ordinal budget thresholds. The implementation supports a 6-feature and 12-feature input mode. The final scheduler checkpoint used the rich-feature classifier path and was integrated through \code{AdaBlock-dLLM/llada/pag\_predictor.py}.
+The implementation supports a 6-feature and 12-feature input mode. The final scheduler checkpoint used the rich-feature classifier path and was integrated into the LLaDA decoding loop through the PAG tuple scheduler described in~$\S$6.
 
 \subsection{Other Predictor Experiments}
 
 We also explored two non-Transformer baselines.
 
-\textbf{Variable-order Markov model.} The VOMM predictor memorizes recent tuple contexts and backs off when a context is unseen. It is useful as a sanity check because it is cheap and interpretable, but it cannot generalize well to continuous confidence features or unseen block patterns.
+\textbf{Variable-order Markov model.} The VOMM predictor memorizes recent tuple contexts and backs off when a context is unseen. It is useful as a sanity check because it is cheap and interpretable, but it cannot generalize well to continuous confidence features or unseen block patterns. We used it on early trace collections, and its accuracy was comparable to predicting the empirical mode from the training set---confirming that deterministic sequence matching alone was insufficient for this task.
 
-\textbf{Random forest.} The \code{rf-block-stab-predict} branch trained a multi-output random forest on rolling-window statistics. With window size 5, 200 trees, max depth 15, and features \(\{\) \nfe{}, block size, max stabilization step, mean refinement step, mean gap, max gap \(\}\), it trained on 90{,}994 examples and tested on 22{,}907 examples. Its held-out MAE was 7.24 for block size and 1.66 for max stabilization step. Figure~\ref{fig:rf-ablation} shows that the most predictive feature was the last observed block size, followed by window variability and trend features. This baseline supported the decision to keep history statistics in the learned setting, but the Transformer remained better matched to sequential deployment.
+\textbf{Random forest.} A multi-output random forest (window size 5, 200 trees, max depth 15) trained on rolling-window statistics of past tuple features: \{ \nfe{}, block size, max stabilization step, mean refinement step, mean gap, max gap \}. With 90{,}994 training examples and 22{,}907 test examples, it achieved held-out MAE of 7.24 for block size and 1.66 for max stabilization step. Figure~\ref{fig:rf-ablation} shows that the most predictive feature was the last observed block size, followed by window variability and trend features. This importance ranking directly informed the design of the Transformer's input feature set and context window length, but the RF's lack of sequential structure made it a poor fit for the deployment loop.
 
 \begin{figure}[!htbp]
   \centering
