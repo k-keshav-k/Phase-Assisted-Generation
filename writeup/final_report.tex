@@ -378,7 +378,7 @@ where \(\sigma\) is the logistic sigmoid and \(w_k\) are per-threshold positive 
     \draw[arrow] (ord_loss.south) -- ++(0,-0.05) -| (total_loss.north);
   \end{tikzpicture}
   }
-  \caption{Comprehensive predictor training architecture. Data preparation (top) converts raw AdaBlock traces into normalized sliding-window sequences. The Transformer encoder (center) uses \(N\) layers, \(H\) attention heads, hidden dimension \(d_{\text{model}}=64\), and feed-forward dimension 256 with pre-norm. Hyperparameters \(N\), \(H\), context window size, dropout, and learning rate were ablated (see Fig.~\ref{fig:rf-ablation}). The block-size head (bottom-left) is a 128-way classifier; the ordinal budget head (bottom-right) predicts 83 thresholds conditioned on block logits.}
+  \caption{Comprehensive predictor training architecture. Data preparation (top) converts raw AdaBlock traces into normalized sliding-window sequences. The Transformer encoder (center) uses \(N\) layers, \(H\) attention heads, hidden dimension \(d_{\text{model}}=64\), and feed-forward dimension 256 with pre-norm. Hyperparameters \(N\), \(H\), context window size, dropout, and learning rate were ablated (see Fig.~\ref{fig:transformer-ablation-grid}). The block-size head (bottom-left) is a 128-way classifier; the ordinal budget head (bottom-right) predicts 83 thresholds conditioned on block logits.}
   \label{fig:model-arch}
 \end{figure}
 
