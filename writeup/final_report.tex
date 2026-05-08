@@ -754,20 +754,6 @@ The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewe
 
 \FloatBarrier
 
-\section{Discussion}
-
-\textbf{What worked.} The strongest empirical result is that learned tuple scheduling can preserve AdaBlock-level GSM8K answer accuracy while reducing compute. The result is not just an offline predictor metric: it holds inside the LLaDA decoding loop, with predicted tuples controlling actual unmasking. The trace analysis also produced a useful interpretability story: confidence and stabilization dynamics line up with intuitive easy and hard regions.
-
-\textbf{What did not fully work.} Regression losses were misleading because the scheduler controls are discrete and multimodal. CPD also became less central than originally planned; it was valuable for understanding traces, but too sensitive for permanent label construction. The random forest baseline was interpretable but less natural for rollout because it depends on hand-designed rolling statistics and does not model sequence context as directly.
-
-\textbf{Why the final gains are plausible.} AdaBlock reacts to current confidence. PAG inherits an AdaBlock-compatible seed and then uses learned history to choose later blocks and budgets. The final run shows that many prompts need systematically less refinement than AdaBlock allocates, while accuracy disagreements are rare: PAG loses 2 prompts that AdaBlock solves and gains 2 prompts that AdaBlock misses across the complete final run.
-
-\section{Limitations}
-
-Our answer metric is a normalized numeric substring check, so it can miss reasoning quality differences that do not change the final answer. We evaluate one model family, LLaDA-8B-Instruct, and one benchmark slice, GSM8K test[200:400]. HumanEval, MBPP, MATH, and Dream integration remain natural follow-up evaluations. Runtime results should also be interpreted carefully: Python-side scheduler overhead is not optimized, and a fused implementation could change the wall-clock tradeoff.
-
-The predictor is trained from AdaBlock traces, so it learns to imitate and improve around AdaBlock's operating regime rather than discovering schedules from first principles. Finally, we do not yet have a full learned model for future confidence/digit/delimiter features under rollout; during real decoding those features are observed after each block, but offline cost-aware evaluation must partially teacher-force non-control fields.
-
 \section{Conclusion}
 
 \pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
@@ -828,22 +814,22 @@ J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
 
 \begin{figure}[t!]
   \centering
-  \includegraphics[width=0.7\linewidth]{figs/Siva - LLMR Course Feedback Complete.png}
-  \caption{Course feedback Completion 1}
-  \label{fig:course-feedback-complete}
-\end{figure}
-
-\begin{figure}[t!]
-  \centering
   \includegraphics[width=0.7\linewidth]{figs/Keshav - LLMR Course Feedback Complete.png}
-  \caption{Course feedback Completion 2}
+  \caption{Course feedback Completion - Keshav Krishna}
   \label{fig:course-feedback-complete}
 \end{figure}
 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.7\linewidth]{figs/prajesh_feedback.png}
-  \caption{Course feedback Completion 3}
+  \caption{Course feedback Completion - Prajesh Kumar}
+  \label{fig:course-feedback-complete}
+\end{figure}
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figs/Siva - LLMR Course Feedback Complete.png}
+  \caption{Course feedback Completion - Siva Satvik Mandapati}
   \label{fig:course-feedback-complete}
 \end{figure}
 
