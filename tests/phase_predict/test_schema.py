@@ -34,7 +34,7 @@ class TestModelConfig:
         assert cfg.d_model == 64
         assert cfg.n_heads == 4
         assert cfg.n_layers == 2
-        assert cfg.tuple_size == 2
+        assert cfg.tuple_size is None
 
     def test_custom_values(self) -> None:
         cfg = ModelConfig(window_size=4, d_model=32, n_heads=2, n_layers=1, tuple_size=2)

@@ -31,7 +31,7 @@ class Predictor:
     The predictor handles:
     - normalising the input context using training-set statistics,
     - running the forward pass,
-    - rounding block logits (argmax) and stab logits (threshold count).
+    - decoding stab logits (threshold count).
 
     Args:
         model:      a trained :class:`~phase_predict.model.PhaseTransformer`.
@@ -155,19 +155,17 @@ class Predictor:
         normed = (raw_in.to(self.device) - self.input_mean) / self.input_std
         normed = normed.unsqueeze(0)
 
-        block_logits, stab_logits = self.model(normed)
-        block_logits = block_logits.squeeze(0)
+        stab_logits = self.model(normed)
         stab_logits = stab_logits.squeeze(0)
 
-        block_pred = max(1, int(block_logits.argmax(dim=-1).item()) + 1)
         stab_pred = int((torch.sigmoid(stab_logits) > 0.5).sum().item())
 
         return PredictionResult(
             predicted_tuple=PhaseTuple(
-                block_size=block_pred,
+                block_size=0,
                 refinement_steps=stab_pred,
             ),
-            raw_output=[float(v) for v in block_logits],
+            raw_output=[float(v) for v in stab_logits],
             metadata={
                 "window_size_used": len(effective),
                 "num_stab_thresholds_active": stab_pred,

@@ -5,7 +5,7 @@ from __future__ import annotations
 from phase_predict.dataset import PhaseSequenceDataset
 from phase_predict.model import PhaseTransformer
 from phase_predict.schema import ModelConfig, PhaseTuple, TrainConfig
-from phase_predict.train import Trainer, evaluate, train_epoch
+from phase_predict.train import Trainer
 
 
 def _make_sequence(n: int = 40) -> list[PhaseTuple]:

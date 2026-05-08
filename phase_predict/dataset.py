@@ -21,7 +21,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
-from phase_predict.schema import ExtendedPhaseTuple, ModelConfig, PhaseTuple
+from phase_predict.schema import ModelConfig, PhaseTuple
 
 # Minimum standard deviation used in normalisation to avoid division by zero.
 _MIN_STD_EPSILON: float = 1e-6
@@ -90,9 +90,8 @@ def _extended_sequence_tensor(
 class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
     """PyTorch Dataset of windowed phase-tuple sequences.
 
-    Produces ``(input, (block_target, stab_target))`` pairs where
-    input is a normalized float tensor and targets are a
-    (class index, ordinal binary vector) tuple.
+    Produces ``(input, stab_target)`` pairs where input is a normalized
+    float tensor and targets are an ordinal binary vector.
 
     Args:
         sequence:    full ordered sequence of PhaseTuple / ExtendedPhaseTuple.
@@ -130,31 +129,28 @@ class PhaseSequenceDataset(Dataset):  # type: ignore[type-arg]
             self.input_std = torch.ones(self.input_tuple_size)
             input_norm = input_raw
 
-        self._windows: list[tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]] = []
+        self._windows: list[tuple[torch.Tensor, torch.Tensor]] = []
         for i in range(len(sequence) - self.window_size):
             context_input = input_norm[i : i + self.window_size]
             raw_next = sequence[i + self.window_size]
 
             if hasattr(raw_next, "values"):
-                block_val = raw_next.values.get("block_size", 0)
                 stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
             else:
-                block_val = raw_next.block_size
                 stab_val = raw_next.refinement_steps
 
-            block_target = torch.tensor(max(0, int(block_val) - 1), dtype=torch.long)
             n_thresh = model_config.num_stab_thresholds
             stab_target = torch.zeros(n_thresh, dtype=torch.float32)
             clamped = min(max(0, int(stab_val)), n_thresh)
             if clamped > 0:
                 stab_target[:clamped] = 1.0
 
-            self._windows.append((context_input, (block_target, stab_target)))
+            self._windows.append((context_input, stab_target))
 
     def __len__(self) -> int:
         return len(self._windows)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         context, target = self._windows[idx]
         return context, target
 
@@ -166,7 +162,7 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
     final tuple as the target. Contexts are left-padded to a shared
     ``window_size`` so batches can be stacked by the default DataLoader.
 
-    Produces ``(input, (block_target, stab_target))`` pairs.
+    Produces ``(input, stab_target)`` pairs.
 
     Args:
         sequences:   ordered list of PhaseTuple / ExtendedPhaseTuple seqs.
@@ -220,7 +216,7 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
             self.input_std = torch.ones(self.input_tuple_size)
             norm_input_seqs = input_seqs
 
-        self._samples: list[tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]] = []
+        self._samples: list[tuple[torch.Tensor, torch.Tensor]] = []
         for seq_idx in range(len(sequences)):
             raw_seq = sequences[seq_idx]
             context = norm_input_seqs[seq_idx][:-1]
@@ -230,25 +226,22 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
 
             raw_next = raw_seq[-1]
             if hasattr(raw_next, "values"):
-                block_val = raw_next.values.get("block_size", 0)
                 stab_val = raw_next.values.get("max_stab_step", raw_next.values.get("nfe", 0))
             else:
-                block_val = raw_next.block_size
                 stab_val = raw_next.refinement_steps
 
-            block_target = torch.tensor(max(0, int(block_val) - 1), dtype=torch.long)
             n_thresh = model_config.num_stab_thresholds
             stab_target = torch.zeros(n_thresh, dtype=torch.float32)
             clamped = min(max(0, int(stab_val)), n_thresh)
             if clamped > 0:
                 stab_target[:clamped] = 1.0
 
-            self._samples.append((context, (block_target, stab_target)))
+            self._samples.append((context, stab_target))
 
     def __len__(self) -> int:
         return len(self._samples)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         return self._samples[idx]
 
 

@@ -300,8 +300,6 @@ def main(argv: list[str] | None = None) -> None:
                         help="CPD minimum segment length in tokens (default: 2).")
     parser.add_argument("--cpd-smoothing", type=int, default=3,
                          help="CPD smoothing window size (default: 3).")
-    parser.add_argument("--num-block-classes", type=int, default=128,
-                        help="Number of block size classes for classification head.")
     parser.add_argument("--num-stab-thresholds", type=int, default=83,
                         help="Number of ordinal thresholds for stab step head.")
     args = parser.parse_args(argv)
@@ -458,8 +456,6 @@ def main(argv: list[str] | None = None) -> None:
         n_layers=args.n_layers,
         dropout=args.dropout,
         input_tuple_size=input_tuple_size,
-        output_tuple_size=2,
-        num_block_classes=args.num_block_classes,
         num_stab_thresholds=args.num_stab_thresholds,
     )
     if use_sequence_mode:

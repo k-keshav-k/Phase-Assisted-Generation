@@ -20,8 +20,8 @@ class PhaseTuple(NamedTuple):
                            (integer, >= 0)
 
     The NamedTuple representation keeps the API extensible: additional fields
-    (e.g. stabilizing_steps, temperature) can be appended here and the model
-    will pick them up automatically once ``ModelConfig.output_tuple_size`` is updated.
+    (e.g. stabilizing_steps, temperature) can be appended here and picked up
+    by downstream consumers.
     """
 
     block_size: int
@@ -66,11 +66,9 @@ class ModelConfig:
     Keeping all architecture choices in one place makes it easy to run
     ablations or extend the model for different tuple types.
 
-    The model now supports multi-feature input training:
+    The model supports multi-feature input training:
       - input_tuple_size:  number of input features (e.g. block_size, nfe,
                           max_stab_step, etc.)
-      - output_tuple_size: number of output fields (always 2 for
-                          block_size and refinement_steps)
 
     To add more input features, simply update ``input_tuple_size`` and pass
     the corresponding field names during data loading.
@@ -89,13 +87,8 @@ class ModelConfig:
     # number of input features in each input tuple (e.g. block_size, nfe,
     # max_stab_step, etc.). Update when adding new input features.
     input_tuple_size: int = 2
-    # number of output fields in each output tuple (always 2: block_size and
-    # refinement_steps). This is kept for clarity and future extension.
-    output_tuple_size: int = 2
     # [DEPRECATED] kept for backward compatibility; use input_tuple_size instead
     tuple_size: int | None = None
-    # number of block size classes for classification head (values 1..num_block_classes)
-    num_block_classes: int = 128
     # number of ordinal thresholds for max_stab_step prediction (P(>k) for k=0..num_stab_thresholds-1)
     num_stab_thresholds: int = 83
 
@@ -115,12 +108,6 @@ class ModelConfig:
             raise ValueError(msg)
         if self.input_tuple_size < 1:
             msg = "ModelConfig.input_tuple_size must be >= 1"
-            raise ValueError(msg)
-        if self.output_tuple_size < 1:
-            msg = "ModelConfig.output_tuple_size must be >= 1"
-            raise ValueError(msg)
-        if self.num_block_classes < 1:
-            msg = "ModelConfig.num_block_classes must be >= 1"
             raise ValueError(msg)
         if self.num_stab_thresholds < 1:
             msg = "ModelConfig.num_stab_thresholds must be >= 1"

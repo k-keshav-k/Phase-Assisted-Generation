@@ -58,30 +58,14 @@ class TestPhaseSequenceDataset:
         ds = PhaseSequenceDataset(seq, cfg)
         inp, target = ds[0]
         assert inp.shape == (4, 2)
-        block_target, stab_target = target
-        assert block_target.shape == ()
-        assert block_target.dtype == torch.long
-        assert stab_target.shape == (cfg.num_stab_thresholds,)
-        assert stab_target.dtype == torch.float32
-
-    def test_block_target_is_correct_class(self) -> None:
-        seq = _make_sequence(20)
-        cfg = ModelConfig(window_size=4)
-        ds = PhaseSequenceDataset(seq, cfg, normalize=False)
-        _, target = ds[0]
-        block_target, _ = target
-        # window 0: seq[0:4] -> target seq[4] = PhaseTuple(5, 4)
-        # block_size=5 -> class_id=4
-        assert block_target.item() == 4
+        assert target.shape == (cfg.num_stab_thresholds,)
+        assert target.dtype == torch.float32
 
     def test_stab_target_first_elements_are_one(self) -> None:
         seq = _make_sequence(20)
         cfg = ModelConfig(window_size=4)
         ds = PhaseSequenceDataset(seq, cfg, normalize=False)
-        _, target = ds[0]
-        _, stab_target = target
-        # window 0: target seq[4] = PhaseTuple(5, 4) -> stab_steps=4
-        # first 4 elements should be 1, rest 0
+        _, stab_target = ds[0]
         assert stab_target[:4].sum().item() == 4.0
         assert stab_target[4:].sum().item() == 0.0
 

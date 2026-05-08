@@ -55,8 +55,6 @@ cfg = ModelConfig(
     n_layers=2,
     dropout=0.0,
     input_tuple_size=len(INPUT_FEATURES),
-    output_tuple_size=2,
-    num_block_classes=128,
     num_stab_thresholds=83,
 )
 
@@ -94,14 +92,12 @@ model.eval()
 with torch.no_grad():
     for i in range(len(dataset)):
         inp, targets = dataset[i]
-        block_target, stab_target = targets
+        stab_target = targets
         inp = inp.unsqueeze(0)
-        block_logits, stab_logits = model(inp)
-        block_pred = max(1, int(block_logits.argmax(dim=-1).item()) + 1)
+        stab_logits = model(inp)
         stab_pred = int((torch.sigmoid(stab_logits) > 0.5).sum().item())
-        block_actual = int(block_target.item()) + 1
         stab_actual = int(stab_target.sum().item())  # sum of 1s = the actual value
-        match = block_pred == block_actual and stab_pred == stab_actual
-        print(f"  Sample {i}: pred=({block_pred:>3d}, {stab_pred:>2d}) actual=({block_actual:>3d}, {stab_actual:>2d}) {'✓' if match else '✗'}")
+        match = stab_pred == stab_actual
+        print(f"  Sample {i}: stab_pred={stab_pred:>2d} stab_actual={stab_actual:>2d} {'✓' if match else '✗'}")
 
 print(f"\nOverfit test: {'PASSED' if loss_ok else 'FAILED'} (best loss = {best_loss:.6f})")

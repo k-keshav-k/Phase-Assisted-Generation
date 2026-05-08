@@ -5,8 +5,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import torch
-
 from phase_predict.dataset import PhaseSequenceDataset
 from phase_predict.model import PhaseTransformer
 from phase_predict.predict import Predictor
@@ -18,7 +16,9 @@ def _make_sequence(n: int = 20) -> list[PhaseTuple]:
 
 
 def _make_predictor() -> tuple[Predictor, PhaseSequenceDataset]:
-    cfg = ModelConfig(window_size=4, d_model=16, n_heads=2, n_layers=1, dropout=0.0)
+    cfg = ModelConfig(
+        window_size=4, d_model=16, n_heads=2, n_layers=1, num_stab_thresholds=10, dropout=0.0,
+    )
     seq = _make_sequence(20)
     ds = PhaseSequenceDataset(seq, cfg)
     model = PhaseTransformer(cfg)
@@ -42,14 +42,13 @@ class TestPredictor:
         seq = _make_sequence(20)
         result = predictor.predict(seq[-4:])
         t = result.predicted_tuple
-        assert t.block_size >= 0
         assert t.refinement_steps >= 0
 
     def test_raw_output_length(self) -> None:
         predictor, ds = _make_predictor()
         seq = _make_sequence(20)
         result = predictor.predict(seq[-4:])
-        assert len(result.raw_output) == 128
+        assert len(result.raw_output) == 10
 
     def test_short_context_window_padded(self) -> None:
         """Predict should accept context shorter than window_size."""

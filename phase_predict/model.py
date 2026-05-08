@@ -38,10 +38,11 @@
 #   Embed  : Linear(tuple_size → d_model)  +  sinusoidal positional encoding
 #   Encode : N × TransformerEncoderLayer(d_model, n_heads, dim_feedforward)
 #   Pool   : last-position token (the most recent context step)
-#   Output : Linear(d_model → tuple_size)  – one float per tuple field
+#   Output : Linear(d_model → num_stab_thresholds)  – ordinal logits for
+#            stabilising steps
 #
-# Targets are float (original integer values) and loss is MSE.  Predictions
-# are rounded to the nearest non-negative integer at inference time.
+# Targets are ordinal binary vectors and loss is BCE (one per threshold).
+# Predictions are decoded by counting thresholds with sigmoid > 0.5.
 """
 
 from __future__ import annotations
@@ -85,14 +86,11 @@ class _SinusoidalPositionalEncoding(nn.Module):
 
 
 class PhaseTransformer(nn.Module):
-    """Transformer encoder with classification + ordinal heads.
+    """Transformer encoder with ordinal regression head.
 
-    Given a window of ``window_size`` past phase tuples the model produces:
-      - block_logits:  logits over ``num_block_classes`` for block size
-      - stab_logits:   ordinal logits over ``num_stab_thresholds`` for
-                       max stabilizing step
-
-    The stab head is conditioned on block logits via concatenation.
+    Given a window of ``window_size`` past phase tuples the model produces
+    ``stab_logits``: ordinal logits over ``num_stab_thresholds`` for the
+    max stabilizing step of the next tuple.
 
     Args:
         config: :class:`~phase_predict.schema.ModelConfig` with all
@@ -121,34 +119,18 @@ class PhaseTransformer(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=config.n_layers)
 
-        self.block_head = nn.Linear(config.d_model, config.num_block_classes)
-        stab_input_dim = config.d_model + config.num_block_classes
-        self.stab_head = nn.Linear(stab_input_dim, config.num_stab_thresholds)
+        self.stab_head = nn.Linear(config.d_model, config.num_stab_thresholds)
 
         self._init_weights()
 
-    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """Predict next block size and max stabilising step.
-
-        Args:
-            x: float tensor of shape
-               ``(batch, window_size, input_tuple_size)``.
-
-        Returns:
-            ``(block_logits, stab_logits)`` where
-              - block_logits: ``(batch, num_block_classes)``
-              - stab_logits:  ``(batch, num_stab_thresholds)``
-        """
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         emb = self.input_projection(x)
         emb = self.pos_encoding(emb)
         encoded = self.encoder(emb)
         last = encoded[:, -1, :]
 
-        block_logits = self.block_head(last)
-        stab_features = torch.cat([last, block_logits], dim=-1)
-        stab_logits = self.stab_head(stab_features)
-
-        return block_logits, stab_logits
+        stab_logits = self.stab_head(last)
+        return stab_logits
 
     # ------------------------------------------------------------------
     # Helpers

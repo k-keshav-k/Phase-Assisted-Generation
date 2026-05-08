@@ -476,12 +476,6 @@ def main(argv: list[str] | None = None) -> None:
         help="List of field names to use as input features.",
     )
     parser.add_argument(
-        "--num-block-classes",
-        type=int,
-        default=128,
-        help="Number of block size classes for classification head.",
-    )
-    parser.add_argument(
         "--num-stab-thresholds",
         type=int,
         default=83,
@@ -518,8 +512,6 @@ def main(argv: list[str] | None = None) -> None:
                 replace(
                     model_cfg,
                     input_tuple_size=len(args.input_features),
-                    output_tuple_size=2,
-                    num_block_classes=args.num_block_classes,
                     num_stab_thresholds=args.num_stab_thresholds,
                 ),
                 train_cfg,
@@ -532,8 +524,6 @@ def main(argv: list[str] | None = None) -> None:
                 replace(
                     model_cfg,
                     input_tuple_size=2,
-                    output_tuple_size=2,
-                    num_block_classes=args.num_block_classes,
                     num_stab_thresholds=args.num_stab_thresholds,
                 ),
                 train_cfg,
