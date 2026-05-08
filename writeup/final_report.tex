@@ -88,9 +88,9 @@ The project evolved in two phases. We first treated phase discovery as an interp
 
 \section{Related Work}
 
-\textbf{Diffusion language models.} Dream and LLaDA demonstrate that diffusion-style language generation can support reasoning, planning, and instruction following without left-to-right token generation~\citep{ye2025dream,nie2025llada}. Block Diffusion formalizes semi-autoregressive diffusion decoding as an interpolation between fully autoregressive and fully parallel generation~\citep{arriola2025block}. DiffuLLaMA and related adaptation work show that diffusion LMs can inherit strong language-model priors from autoregressive models~\citep{gong2025diffullama}.
+\textbf{Diffusion language models.} Dream and LLaDA demonstrate that diffusion-style language generation can support reasoning, planning, and instruction following without left-to-right token generation~\citep{ye2025dream,nie2025llada}. Earlier discrete and masked diffusion work such as SEDD and MDLM established strong language-modeling objectives for non-autoregressive text generation~\citep{lou2024sedd,sahoo2024mdlm}. Block Diffusion formalizes semi-autoregressive diffusion decoding as an interpolation between fully autoregressive and fully parallel generation~\citep{arriola2025block}. DiffuLLaMA and related adaptation work show that diffusion LMs can inherit strong language-model priors from autoregressive models~\citep{gong2025diffullama}.
 
-\textbf{Efficient \dllm{} inference.} Fast-dLLM studies KV caching and parallel decoding for training-free acceleration~\citep{wu2025fastdllm}. AdaBlock-dLLM is the closest prior system to our final implementation: it adapts block length using confidence and semantic boundary heuristics~\citep{lu2025adablock}. Our contribution is complementary. Instead of only reacting to the current confidence band, we train predictors over realized block histories and feed their next-control predictions into the decoding loop.
+\textbf{Efficient \dllm{} inference.} Fast-dLLM studies KV caching and parallel decoding for training-free acceleration, with related cache-budget and adaptive-cache approaches in Dynamic-dLLM and d\textsuperscript{2}Cache~\citep{wu2025fastdllm,wu2026dynamicdllm,jiang2026d2cache}. AdaBlock-dLLM is the closest prior system to our final implementation: it adapts block length using confidence and semantic boundary heuristics~\citep{lu2025adablock}. Our contribution is complementary. Instead of only reacting to the current confidence band, we train predictors over realized block histories and feed their next-control predictions into the decoding loop.
 
 \textbf{Sequence modeling and change-point detection.} Our predictor variants use compact Transformer encoders with sinusoidal positional encodings~\citep{vaswani2017attention}. Our early analysis used PELT-style CPD, which optimizes a penalized segmentation objective and prunes dynamic-programming states for efficiency~\citep{killick2012optimal}. In this project, CPD is an analysis and data-understanding tool rather than the final source of scheduler labels.
 
@@ -99,12 +99,12 @@ The project evolved in two phases. We first treated phase discovery as an interp
 PAG comprises two subsystems: an offline predictor-training pipeline that extracts block-level control tuples from AdaBlock LLaDA generation traces and trains a Transformer-based next-tuple predictor, and an online scheduler that loads the trained checkpoint and governs per-block refinement with a learned budget and soft-cap early exit.
 Figure~\ref{fig:architecture} shows this overview.
 
-\textbf{Predictor training.} We run AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems, recording one control tuple per decoded block. 
+\textbf{Predictor training.} We run AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems~\citep{cobbe2021gsm8k}, recording one control tuple per decoded block. 
 Each tuple captures the realized block size, the number of model forward evaluations (NFE), the mean and minimum top-1 softmax confidence across unmasked positions, the fraction of digit tokens in the block, and the fraction of delimiter tokens. 
 The resulting corpus contains 138{,}901 tuples. For training, we construct sliding-window sequences of length eight: each window of past tuples predicts the next (\textit{block\_size}, \textit{refinement\_budget}) pair. 
 Features are z-score normalized per field using corpus statistics. The predictor is a Transformer encoder (ablations over layers, heads, learning rate, pre-norm) with two output heads: a softmax classifier over 128 block-size classes and an ordinal regression head over 83 binary refinement-budget thresholds. 
 The budget head receives the block-size logits as conditioning, allowing the model to capture that larger blocks often need different budgets. 
-Training uses cross-entropy for block size and binary cross-entropy for ordinal thresholds with an AdamW optimizer and early stopping. 
+Training uses cross-entropy for block size and binary cross-entropy for ordinal thresholds with an AdamW optimizer~\citep{loshchilov2019adamw} and early stopping. 
 The final checkpoint bundles model weights, normalization statistics, and the ordered feature-field list.
 
 \textbf{Online scheduling.} At decode time, the checkpoint is loaded by a scheduler that maintains a rolling context of realized tuples. 
@@ -241,7 +241,7 @@ A critical methodological observation tempered this analysis. CPD boundaries shi
 
 \subsection{Block-Native AdaBlock Traces}
 
-The final training path uses AdaBlock-style LLaDA traces. We ran AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems. AdaBlock selects each block boundary adaptively: it identifies the highest-confidence delimiter token in a forward-looking window and positions the boundary there, defaulting to a fixed cap of 16 tokens when no delimiter exceeds the threshold. Within each block, LLaDA unmasking proceeds via threshold-based confidence sampling until the block's tokens stabilize. After every block we record a 12-field control tuple: the applied block size, the actual number of forward evaluations (NFE), per-token stabilization and refinement step statistics, mean and minimum top-1 softmax confidence, the fraction of digit tokens, and the fraction of delimiter tokens. The resulting corpus contains 138{,}901 tuples across training prompts and 5{,}543 tuples across 200 validation prompts. A separate 200-prompt test slice (GSM8K test indices 200--399) is held out for downstream scheduler evaluation.
+The final training path uses AdaBlock-style LLaDA traces. We ran AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems~\citep{cobbe2021gsm8k}. AdaBlock selects each block boundary adaptively: it identifies the highest-confidence delimiter token in a forward-looking window and positions the boundary there, defaulting to a fixed cap of 16 tokens when no delimiter exceeds the threshold. Within each block, LLaDA unmasking proceeds via threshold-based confidence sampling until the block's tokens stabilize. After every block we record a 12-field control tuple: the applied block size, the actual number of forward evaluations (NFE), per-token stabilization and refinement step statistics, mean and minimum top-1 softmax confidence, the fraction of digit tokens, and the fraction of delimiter tokens. The resulting corpus contains 138{,}901 tuples across training prompts and 5{,}543 tuples across 200 validation prompts. A separate 200-prompt test slice (GSM8K test indices 200--399) is held out for downstream scheduler evaluation.
 
 \begin{table}[!htbp]
   \centering
@@ -754,8 +754,19 @@ The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewe
 
 \FloatBarrier
 
-\section{Conclusion}
+\section{Discussion}
 
+Our central result is that learned tuple scheduling preserves AdaBlock-level answer accuracy (both 89.5\% on 200 GSM8K prompts) while reducing average NFE by 21.4\% (72.1 vs.\ 90.8). This savings is consistent across the evaluation set: PAG used fewer forward evaluations on 199 of 200 prompts, and the median NFE delta of \(-18.0\) confirms the mean is not driven by outliers. The single prompt where PAG used more NFE involved a multi-phase rate calculation that required additional refinement beyond AdaBlock's allocation, suggesting the predictor can sometimes identify under-refined spans that AdaBlock terminates too early.
+
+The separation of concerns between boundary detection and budget prediction is the key architectural insight. AdaBlock's delimiter-based boundary detection uses a reactive signal---the current logit confidence at candidate delimiter positions---which is inherently reliable for finding semantic breakpoints. The predictor, by contrast, uses historical context to forecast future computational effort, a fundamentally different and complementary capability. Our initial integration, which let the predictor control both dimensions, collapsed into a death spiral of size-1 blocks and out-of-distribution context features. The hybrid architecture---AdaBlock for boundaries, predictor for budget, soft gates for graceful degradation---solved all three failure modes simultaneously.
+
+The predictor's overhead is modest. Each inference costs approximately 64~ms per prompt (dominated by the small Transformer forward pass on CPU), contributing about 13~s total across the 200-prompt evaluation. Runtime savings (\(\approx 0.05\)~s per prompt) are smaller than NFE savings (\(\approx 21\%\)) because Python-level control logic---history padding, clamping, budget checks, gate evaluation---adds fixed overhead per block that is independent of model compute. A fused implementation in a lower-level runtime would close this gap, but even in the current form the predictor overhead is dwarfed by LLaDA's decoding time.
+
+The hyperparameter ablations reveal that validation loss clusters tightly around 2.2--2.3 across all configurations. Model capacity (hidden dimension, number of layers) has surprisingly little impact beyond a modest floor---the worst configuration is only about 0.07 worse than the best. This suggests the prediction problem is inherently bounded: the maximum achievable budget-forecast accuracy is limited by the stochasticity of LLaDA's unmasking process rather than by model capacity.
+
+These results come with important caveats. The evaluation uses one model (LLaDA-8B-Instruct) and one benchmark (GSM8K~\citep{cobbe2021gsm8k}). HumanEval, MBPP, MATH, and Dream integration remain as natural extensions~\citep{chen2021humaneval,austin2021mbpp,hendrycks2021math}. The predictor is trained on AdaBlock traces and thus inherits AdaBlock's operating regime---it learns to imitate and improve around AdaBlock's schedule rather than discovering schedules from first principles. The answer-matching metric (normalized substring check) may also miss qualitative differences in reasoning quality that do not change the final numeric answer. Future work should investigate whether the classifier-plus-ordinal design generalizes across model scales, whether schedule discovery from scratch is feasible, and whether the soft-gate thresholds can themselves be learned rather than hand-tuned.
+
+\section{Conclusion}
 \pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
 
 \section{Code}
@@ -771,35 +782,80 @@ M.~Arriola, A.~Gokaslan, J.~T.~Chiu, Z.~Yang, Z.~Qi, J.~Han, S.~S.~Sahoo, and V.
 \newblock Block diffusion: Interpolating between autoregressive and diffusion language models.
 \newblock \emph{ICLR (Oral)}, 2025.
 
+\bibitem[Austin et al.(2021)]{austin2021mbpp}
+J.~Austin, A.~Odena, M.~Nye, M.~Bosma, H.~Michalewski, D.~Dohan, E.~Jiang, C.~Cai, M.~Terry, Q.~Le, and C.~Sutton.
+\newblock Program synthesis with large language models.
+\newblock \emph{arXiv:2108.07732}, 2021.
+
+\bibitem[Chen et al.(2021)]{chen2021humaneval}
+M.~Chen, J.~Tworek, H.~Jun, Q.~Yuan, H.~P. de~Oliveira~Pinto, J.~Kaplan, H.~Edwards, Y.~Burda, N.~Joseph, G.~Brockman, A.~Ray, R.~Puri, G.~Krueger, M.~Petrov, H.~Khlaaf, G.~Sastry, P.~Mishkin, B.~Chan, S.~Gray, N.~Ryder, and others.
+\newblock Evaluating large language models trained on code.
+\newblock \emph{arXiv:2107.03374}, 2021.
+
+\bibitem[Cobbe et al.(2021)]{cobbe2021gsm8k}
+K.~Cobbe, V.~Kosaraju, M.~Bavarian, M.~Chen, H.~Jun, L.~Kaiser, M.~Plappert, J.~Tworek, J.~Hilton, R.~Nakano, C.~Hesse, and J.~Schulman.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv:2110.14168}, 2021.
+
 \bibitem[Gong et al.(2025)]{gong2025diffullama}
 S.~Gong, S.~Agarwal, Y.~Zhang, J.~Ye, L.~Zheng, M.~Li, C.~An, P.~Zhao, W.~Bi, J.~Han, H.~Peng, and L.~Kong.
 \newblock Scaling diffusion language models via adaptation from autoregressive models.
 \newblock \emph{ICLR}, 2025.
+
+\bibitem[Hendrycks et al.(2021)]{hendrycks2021math}
+D.~Hendrycks, C.~Burns, S.~Kadavath, A.~Arora, S.~Basart, E.~Tang, D.~Song, and J.~Steinhardt.
+\newblock Measuring mathematical problem solving with the MATH dataset.
+\newblock \emph{arXiv:2103.03874}, 2021.
+
+\bibitem[Jiang et al.(2026)]{jiang2026d2cache}
+Y.~Jiang, Y.~Cai, X.~Luo, J.~Fu, J.~Wang, C.~Liu, and X.~Yang.
+\newblock d\textsuperscript{2}Cache: Accelerating diffusion-based LLMs via dual adaptive caching.
+\newblock \emph{ICLR}, 2026. arXiv:2509.23094.
 
 \bibitem[Killick et al.(2012)]{killick2012optimal}
 R.~Killick, P.~Fearnhead, and I.~A. Eckley.
 \newblock Optimal detection of changepoints with a linear computational cost.
 \newblock \emph{Journal of the American Statistical Association}, 107(500):1590--1598, 2012.
 
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2019adamw}
+I.~Loshchilov and F.~Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock \emph{ICLR}, 2019.
+
+\bibitem[Lou et al.(2024)]{lou2024sedd}
+A.~Lou, C.~Meng, and S.~Ermon.
+\newblock Discrete diffusion modeling by estimating the ratios of the data distribution.
+\newblock \emph{ICML}, 2024.
+
 \bibitem[Lu et al.(2026)]{lu2025adablock}
 G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
 \newblock AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size.
-\newblock \emph{ICLR}, 2026.
+\newblock \emph{ICLR}, 2026. arXiv:2509.26432.
 
 \bibitem[Nie et al.(2025)]{nie2025llada}
 S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
 \newblock Large language diffusion models.
 \newblock \emph{arXiv:2502.09992}, 2025.
 
+\bibitem[Sahoo et al.(2024)]{sahoo2024mdlm}
+S.~S.~Sahoo, M.~Arriola, Y.~Schiff, A.~Gokaslan, E.~Marroquin, J.~T.~Chiu, A.~M.~Rush, and V.~Kuleshov.
+\newblock Simple and effective masked diffusion language models.
+\newblock \emph{NeurIPS}, 2024.
+
 \bibitem[Vaswani et al.(2017)]{vaswani2017attention}
 A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez, L.~Kaiser, and I.~Polosukhin.
 \newblock Attention is all you need.
 \newblock \emph{NeurIPS}, 2017.
 
-\bibitem[Wu et al.(2026)]{wu2025fastdllm}
+\bibitem[Wu et al.(2026a)]{wu2026dynamicdllm}
+T.~Wu, X.~Sun, Y.~Jiao, Y.~Li, Y.~Chen, Y.-H.~Cao, Y.-Q.~Hu, and Z.~Tian.
+\newblock Dynamic-dLLM: Dynamic cache-budget and adaptive parallel decoding for training-free acceleration of diffusion LLM.
+\newblock \emph{ICLR}, 2026.
+
+\bibitem[Wu et al.(2026b)]{wu2025fastdllm}
 C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
 \newblock Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding.
-\newblock \emph{ICLR}, 2026.
+\newblock \emph{ICLR}, 2026. arXiv:2505.22618.
 
 \bibitem[Ye et al.(2025)]{ye2025dream}
 J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
@@ -816,21 +872,21 @@ J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
   \centering
   \includegraphics[width=0.7\linewidth]{figs/Keshav - LLMR Course Feedback Complete.png}
   \caption{Course feedback Completion - Keshav Krishna}
-  \label{fig:course-feedback-complete}
+  \label{fig:course-feedback-keshav}
 \end{figure}
 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.7\linewidth]{figs/prajesh_feedback.png}
   \caption{Course feedback Completion - Prajesh Kumar}
-  \label{fig:course-feedback-complete}
+  \label{fig:course-feedback-prajesh}
 \end{figure}
 
 \begin{figure}[t!]
   \centering
   \includegraphics[width=0.7\linewidth]{figs/Siva - LLMR Course Feedback Complete.png}
   \caption{Course feedback Completion - Siva Satvik Mandapati}
-  \label{fig:course-feedback-complete}
+  \label{fig:course-feedback-siva}
 \end{figure}
 
 \FloatBarrier
