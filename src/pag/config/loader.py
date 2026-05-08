@@ -23,9 +23,7 @@ def load_run_config(path: str | Path) -> RunConfig:
 def load_samples(path: str | Path) -> list[SampleRecord]:
     payload = load_yaml(path)
     raw_samples = (
-        payload["samples"]
-        if isinstance(payload, dict) and "samples" in payload
-        else payload
+        payload["samples"] if isinstance(payload, dict) and "samples" in payload else payload
     )
     return [from_dict(SampleRecord, item) for item in raw_samples]
 

@@ -66,9 +66,7 @@ def main() -> None:
         # Fallback: some diffusion LMs use a custom mask token id
         mask_token_id = tokenizer.convert_tokens_to_ids("[MASK]")
         if mask_token_id == tokenizer.unk_token_id:
-            raise ValueError(
-                "Could not find mask token id. Check tokenizer for DREAM-7B."
-            )
+            raise ValueError("Could not find mask token id. Check tokenizer for DREAM-7B.")
 
     prompt_ids = tokenizer.encode(args.prompt, return_tensors="pt").to(device)
     mask_ids = torch.full((1, args.target_len), mask_token_id, device=device)
@@ -116,9 +114,7 @@ def main() -> None:
         records.append(record)
 
         tau_str = str(tau_stable) if tau_stable is not None else "-"
-        print(
-            f"{i:>4}  {top_tokens[i]:<18}  {conf:>10.4f}  {ent:>10.4f}  {tau_str:>10}"
-        )
+        print(f"{i:>4}  {top_tokens[i]:<18}  {conf:>10.4f}  {ent:>10.4f}  {tau_str:>10}")
 
     confident_count = sum(1 for r in records if r["above_threshold"])
     mean_conf = sum(r["confidence"] for r in records) / len(records)

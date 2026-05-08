@@ -1,2 +1,1 @@
 """Scheduler stage tests."""
-

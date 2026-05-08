@@ -203,7 +203,9 @@ class PhaseFullSequenceDataset(Dataset):  # type: ignore[type-arg]
         self.feature_fields = feature_fields
 
         if feature_fields is not None:
-            input_seqs = [_extended_sequence_tensor(sequence, feature_fields) for sequence in sequences]
+            input_seqs = [
+                _extended_sequence_tensor(sequence, feature_fields) for sequence in sequences
+            ]
         else:
             input_seqs = [_sequence_tensor(sequence) for sequence in sequences]
 

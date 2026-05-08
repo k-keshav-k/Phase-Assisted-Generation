@@ -34,4 +34,3 @@ def test_baseline_artifacts_persist_and_load(
     assert restored.summary.artifact_paths["requests"].endswith("requests.jsonl")
     assert len(restored.requests) == len(sample_records)
     assert len(restored.token_signals) == len(baseline_artifacts.token_signals)
-

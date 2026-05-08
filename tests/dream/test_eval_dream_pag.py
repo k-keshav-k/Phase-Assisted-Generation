@@ -25,7 +25,7 @@ def _install_lm_eval_stubs() -> None:
     api_model = ModuleType("lm_eval.api.model")
     api_model.LM = object
     api_registry = ModuleType("lm_eval.api.registry")
-    api_registry.register_model = lambda *_args, **_kwargs: (lambda cls: cls)
+    api_registry.register_model = lambda *_args, **_kwargs: lambda cls: cls
 
     models = ModuleType("lm_eval.models")
     models_utils = ModuleType("lm_eval.models.utils")

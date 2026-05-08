@@ -233,9 +233,7 @@ def main() -> None:
     block_df = flatten_blocks(records)
 
     categories = (
-        sorted(block_df["category"].dropna().unique().tolist())
-        if not block_df.empty
-        else []
+        sorted(block_df["category"].dropna().unique().tolist()) if not block_df.empty else []
     )
     selected_categories = st.sidebar.multiselect(
         "Categories",

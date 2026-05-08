@@ -17,11 +17,7 @@ def normalize_breakpoints(
         return []
 
     normalized = sorted(
-        {
-            int(breakpoint)
-            for breakpoint in breakpoints
-            if 1 <= int(breakpoint) < token_count
-        }
+        {int(breakpoint) for breakpoint in breakpoints if 1 <= int(breakpoint) < token_count}
     )
 
     accepted: list[int] = []
@@ -69,4 +65,3 @@ def build_segment_summaries(
             )
         )
     return summaries
-

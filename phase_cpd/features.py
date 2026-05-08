@@ -11,11 +11,9 @@ from phase_cpd.schema import FeatureSeries, TraceRecord
 class FeatureExtractor(Protocol):
     name: str
 
-    def is_available(self, trace: TraceRecord) -> bool:
-        ...
+    def is_available(self, trace: TraceRecord) -> bool: ...
 
-    def extract(self, trace: TraceRecord) -> FeatureSeries:
-        ...
+    def extract(self, trace: TraceRecord) -> FeatureSeries: ...
 
 
 class StabilizingTop1ProbExtractor:
@@ -27,8 +25,7 @@ class StabilizingTop1ProbExtractor:
         except (FileNotFoundError, ValueError):
             return False
         return all(
-            _stabilizing_observation(token).top1_prob is not None
-            for token in identity_trace.tokens
+            _stabilizing_observation(token).top1_prob is not None for token in identity_trace.tokens
         )
 
     def extract(self, trace: TraceRecord) -> FeatureSeries:
@@ -59,8 +56,7 @@ class StabilizingEntropyExtractor:
         except (FileNotFoundError, ValueError):
             return False
         return all(
-            _stabilizing_extra(token, "entropy") is not None
-            for token in identity_trace.tokens
+            _stabilizing_extra(token, "entropy") is not None for token in identity_trace.tokens
         )
 
     def extract(self, trace: TraceRecord) -> FeatureSeries:
@@ -168,8 +164,7 @@ def _stabilizing_observation(token) -> object:
 
     observations = sorted(token.observations, key=lambda item: item.step_index)
     identities = [
-        _observation_identity(observation, token.token_text)
-        for observation in observations
+        _observation_identity(observation, token.token_text) for observation in observations
     ]
     if any(identity is None for identity in identities):
         msg = (

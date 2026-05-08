@@ -66,4 +66,3 @@ class PipelineArtifacts:
     adaptive: AdaptiveRunArtifacts
     evaluation: EvaluationArtifacts | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
-

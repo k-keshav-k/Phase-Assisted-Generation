@@ -11,8 +11,7 @@ from phase_predict.schema import ModelConfig, PhaseTuple
 
 def _make_sequence(n: int = 20) -> list[PhaseTuple]:
     """Return a deterministic synthetic sequence of length *n*."""
-    return [PhaseTuple(block_size=(i % 8) + 1, refinement_steps=i % 6)
-            for i in range(n)]
+    return [PhaseTuple(block_size=(i % 8) + 1, refinement_steps=i % 6) for i in range(n)]
 
 
 class TestBuildWindows:

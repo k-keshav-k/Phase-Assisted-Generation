@@ -83,4 +83,3 @@ def run_config(tmp_path: Path, sample_records: list[SampleRecord]) -> RunConfig:
         evaluation=EvaluationConfig(name="default-eval", metrics=["throughput_proxy"]),
         notes={"suite": "pytest"},
     )
-

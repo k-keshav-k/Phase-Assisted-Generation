@@ -37,4 +37,3 @@ def mock_evaluator(
         metadata={"implementation": "mock_evaluator"},
     )
     return EvaluationArtifacts(run_config=run_config, records=records, summary=summary)
-

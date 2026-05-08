@@ -82,4 +82,3 @@ def _restore(annotation: Any, payload: Any) -> Any:
                 kwargs[field.name] = _restore(field_type, payload[field.name])
         return annotation(**kwargs)
     return payload
-

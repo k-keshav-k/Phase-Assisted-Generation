@@ -32,4 +32,3 @@ def run_pipeline(
     if persist:
         persist_pipeline_artifacts(artifacts)
     return artifacts
-

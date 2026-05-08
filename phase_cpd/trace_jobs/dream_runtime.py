@@ -289,9 +289,7 @@ class _StepRecorder:
                     max(resolved_delimiter_values) if resolved_delimiter_values else None
                 )
                 delimiter_confidences.append(delimiter_prob_max)
-                is_mask = (
-                    self._mask_token_id is not None and token_id == self._mask_token_id
-                )
+                is_mask = self._mask_token_id is not None and token_id == self._mask_token_id
                 extras = {
                     "entropy": _or_zero(snapshot.entropies[token_index]),
                     "is_mask": 1.0 if is_mask else 0.0,
@@ -310,9 +308,7 @@ class _StepRecorder:
                         "top1_prob": _maybe_round(snapshot.selected_probs[token_index]),
                         "selected_logit": _maybe_round(snapshot.selected_logits[token_index]),
                         "top2_prob": _maybe_round(snapshot.top2_probs[token_index]),
-                        "extras": {
-                            key: _maybe_round(value) for key, value in extras.items()
-                        },
+                        "extras": {key: _maybe_round(value) for key, value in extras.items()},
                     }
                 )
             mask_positions = [

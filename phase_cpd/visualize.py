@@ -42,9 +42,7 @@ def build_feature_chart(feature_series: FeatureSeries, breakpoints: Sequence[int
 
     rule_frame = pd.DataFrame({"breakpoint": [breakpoint - 0.5 for breakpoint in breakpoints]})
     rules = (
-        alt.Chart(rule_frame)
-        .mark_rule(color="#dc2626", strokeDash=[6, 4])
-        .encode(x="breakpoint:Q")
+        alt.Chart(rule_frame).mark_rule(color="#dc2626", strokeDash=[6, 4]).encode(x="breakpoint:Q")
     )
     return alt.layer(line, rules)
 
@@ -125,9 +123,7 @@ def render_segmented_text_html(segment_summaries: Sequence[SegmentSummary]) -> s
             "</div>"
         )
     return (
-        "<div style='display:flex; flex-direction:column; gap:0.55rem;'>"
-        f"{''.join(segments)}"
-        "</div>"
+        f"<div style='display:flex; flex-direction:column; gap:0.55rem;'>{''.join(segments)}</div>"
     )
 
 

@@ -41,8 +41,8 @@ def test_render_blocked_output_escapes_inline_block_text(monkeypatch) -> None:
     assert calls[0] == "**PAG Output**"
     assert len(component_calls) == 1
     body = str(component_calls[0]["body"])
-    assert "class=\"generation-block\"" in body
-    assert "data-refinement=\"4\"" in body
+    assert 'class="generation-block"' in body
+    assert 'data-refinement="4"' in body
     assert "a<br>b &lt;/div&gt; &lt;/span&gt;" in body
     assert "a\nb </div> </span>" not in body
 

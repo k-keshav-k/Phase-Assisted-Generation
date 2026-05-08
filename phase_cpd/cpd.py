@@ -35,8 +35,7 @@ class CPDParameters:
 class ChangePointDetector(Protocol):
     name: str
 
-    def detect(self, values: Sequence[float], params: CPDParameters) -> list[int]:
-        ...
+    def detect(self, values: Sequence[float], params: CPDParameters) -> list[int]: ...
 
 
 class PeltDetector:
@@ -53,11 +52,15 @@ class PeltDetector:
         if np.allclose(standardized, 0.0):
             return []
 
-        raw_breakpoints = rpt.Pelt(
-            model=params.cost,
-            min_size=params.min_segment_length,
-            jump=1,
-        ).fit(standardized.reshape(-1, 1)).predict(pen=params.penalty)
+        raw_breakpoints = (
+            rpt.Pelt(
+                model=params.cost,
+                min_size=params.min_segment_length,
+                jump=1,
+            )
+            .fit(standardized.reshape(-1, 1))
+            .predict(pen=params.penalty)
+        )
         return normalize_breakpoints(
             raw_breakpoints,
             token_count,
@@ -85,10 +88,14 @@ class KernelCPDDetector:
         if np.allclose(standardized, 0.0):
             return []
 
-        raw_breakpoints = rpt.KernelCPD(
-            kernel=self.kernel,
-            min_size=params.min_segment_length,
-        ).fit(standardized.reshape(-1, 1)).predict(pen=params.penalty)
+        raw_breakpoints = (
+            rpt.KernelCPD(
+                kernel=self.kernel,
+                min_size=params.min_segment_length,
+            )
+            .fit(standardized.reshape(-1, 1))
+            .predict(pen=params.penalty)
+        )
         return normalize_breakpoints(
             raw_breakpoints,
             token_count,

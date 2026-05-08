@@ -1,4 +1,5 @@
 """Unit tests for phase_predict.model."""
+
 from __future__ import annotations
 
 import torch
@@ -8,9 +9,17 @@ from phase_predict.schema import ModelConfig
 
 
 def _make_cfg(**kwargs) -> ModelConfig:
-    defaults = dict(window_size=4, d_model=16, n_heads=2, n_layers=1,
-                    input_tuple_size=2, output_tuple_size=2,
-                    num_block_classes=128, num_stab_thresholds=10, dropout=0.0)
+    defaults = dict(
+        window_size=4,
+        d_model=16,
+        n_heads=2,
+        n_layers=1,
+        input_tuple_size=2,
+        output_tuple_size=2,
+        num_block_classes=128,
+        num_stab_thresholds=10,
+        dropout=0.0,
+    )
     defaults.update(kwargs)
     return ModelConfig(**defaults)
 

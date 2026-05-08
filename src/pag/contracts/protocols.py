@@ -18,8 +18,7 @@ class BaselineRunner(Protocol):
         self,
         run_config: RunConfig,
         samples: Sequence[SampleRecord],
-    ) -> BaselineRunArtifacts:
-        ...
+    ) -> BaselineRunArtifacts: ...
 
 
 class PhaseRunner(Protocol):
@@ -28,8 +27,7 @@ class PhaseRunner(Protocol):
         run_config: RunConfig,
         baseline_artifacts: BaselineRunArtifacts,
         hidden_state_features: dict[str, list[dict[str, float]]] | None = None,
-    ) -> PhaseArtifacts:
-        ...
+    ) -> PhaseArtifacts: ...
 
 
 class SchedulerRunner(Protocol):
@@ -38,8 +36,7 @@ class SchedulerRunner(Protocol):
         run_config: RunConfig,
         baseline_artifacts: BaselineRunArtifacts,
         phase_artifacts: PhaseArtifacts,
-    ) -> AdaptiveRunArtifacts:
-        ...
+    ) -> AdaptiveRunArtifacts: ...
 
 
 class Evaluator(Protocol):
@@ -48,10 +45,8 @@ class Evaluator(Protocol):
         run_config: RunConfig,
         baseline_artifacts: BaselineRunArtifacts,
         adaptive_artifacts: AdaptiveRunArtifacts,
-    ) -> EvaluationArtifacts:
-        ...
+    ) -> EvaluationArtifacts: ...
 
 
 class ArtifactStore(Protocol):
-    def save(self, target: Path, payload: Any) -> None:
-        ...
+    def save(self, target: Path, payload: Any) -> None: ...

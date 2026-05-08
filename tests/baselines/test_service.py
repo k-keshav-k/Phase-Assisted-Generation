@@ -15,4 +15,3 @@ def test_run_baseline_returns_contract_compliant_outputs(run_config, sample_reco
     }
     assert all(result.tokens for result in artifacts.completions)
     assert artifacts.summary.stage == "baseline"
-

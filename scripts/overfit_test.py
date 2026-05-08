@@ -3,6 +3,7 @@
 Run from repo root:
     uv run python scripts/overfit_test.py
 """
+
 from __future__ import annotations
 
 import sys
@@ -22,10 +23,18 @@ from phase_predict.train import Trainer
 
 
 INPUT_FEATURES = [
-    "block_size", "nfe", "mean_stab_step", "max_stab_step",
-    "mean_ref_step", "max_ref_step", "mean_gap", "max_gap",
-    "mean_top1_confidence", "min_top1_confidence",
-    "digit_fraction", "delimiter_fraction",
+    "block_size",
+    "nfe",
+    "mean_stab_step",
+    "max_stab_step",
+    "mean_ref_step",
+    "max_ref_step",
+    "mean_gap",
+    "max_gap",
+    "mean_top1_confidence",
+    "min_top1_confidence",
+    "digit_fraction",
+    "delimiter_fraction",
 ]
 
 rich_path = Path("traces/rich/stab_tuples_conf_train_rich.jsonl")
@@ -102,6 +111,8 @@ with torch.no_grad():
         block_actual = int(block_target.item()) + 1
         stab_actual = int(stab_target.sum().item())  # sum of 1s = the actual value
         match = block_pred == block_actual and stab_pred == stab_actual
-        print(f"  Sample {i}: pred=({block_pred:>3d}, {stab_pred:>2d}) actual=({block_actual:>3d}, {stab_actual:>2d}) {'✓' if match else '✗'}")
+        print(
+            f"  Sample {i}: pred=({block_pred:>3d}, {stab_pred:>2d}) actual=({block_actual:>3d}, {stab_actual:>2d}) {'✓' if match else '✗'}"
+        )
 
 print(f"\nOverfit test: {'PASSED' if loss_ok else 'FAILED'} (best loss = {best_loss:.6f})")

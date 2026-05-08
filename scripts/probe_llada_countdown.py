@@ -53,20 +53,20 @@ from transformers import AutoModel, AutoTokenizer, PreTrainedModel
 if not hasattr(PreTrainedModel, "all_tied_weights_keys"):
     PreTrainedModel.all_tied_weights_keys = property(lambda _: {})
 
-MODEL_ID        = "GSAI-ML/LLaDA-8B-Base"
-DATASET_ID      = "Jiayi-Pan/Countdown-Tasks-3to4"
-N_SAMPLES       = 50
+MODEL_ID = "GSAI-ML/LLaDA-8B-Base"
+DATASET_ID = "Jiayi-Pan/Countdown-Tasks-3to4"
+N_SAMPLES = 50
 DENOISING_STEPS = 64
-TARGET_LEN      = 32   # tokens to generate per sample
+TARGET_LEN = 32  # tokens to generate per sample
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--n_samples",  type=int, default=N_SAMPLES)
-    parser.add_argument("--steps",      type=int, default=DENOISING_STEPS)
+    parser.add_argument("--n_samples", type=int, default=N_SAMPLES)
+    parser.add_argument("--steps", type=int, default=DENOISING_STEPS)
     parser.add_argument("--target_len", type=int, default=TARGET_LEN)
-    parser.add_argument("--output",     type=str, default="countdown_baseline_traces.jsonl")
-    parser.add_argument("--split",      type=str, default="train")
+    parser.add_argument("--output", type=str, default="countdown_baseline_traces.jsonl")
+    parser.add_argument("--split", type=str, default="train")
     return parser.parse_args()
 
 
@@ -137,11 +137,11 @@ def run_denoising_loop(
     """
     prompt_len = prompt_ids.shape[1]
 
-    mask_ids  = torch.full((1, target_len), mask_token_id, dtype=torch.long, device=device)
+    mask_ids = torch.full((1, target_len), mask_token_id, dtype=torch.long, device=device)
     input_ids = torch.cat([prompt_ids, mask_ids], dim=1)
 
-    tau_commit      = [None] * target_len
-    committed       = [False] * target_len
+    tau_commit = [None] * target_len
+    committed = [False] * target_len
 
     # Per-step observation log: observations[i] = list of dicts, one per masked step
     observations: list[list[dict]] = [[] for _ in range(target_len)]
@@ -153,49 +153,51 @@ def run_denoising_loop(
 
         with torch.no_grad():
             outputs = model(input_ids)
-            logits  = outputs.logits[0, prompt_len:].float()
+            logits = outputs.logits[0, prompt_len:].float()
 
-        probs   = torch.softmax(logits, dim=-1)
-        top2    = probs.topk(2, dim=-1)
-        top_ids = top2.indices[:, 0]   # argmax token id per position
-        top1_p  = top2.values[:, 0]    # max probability
-        top2_p  = top2.values[:, 1]    # second-highest probability
+        probs = torch.softmax(logits, dim=-1)
+        top2 = probs.topk(2, dim=-1)
+        top_ids = top2.indices[:, 0]  # argmax token id per position
+        top1_p = top2.values[:, 0]  # max probability
+        top2_p = top2.values[:, 1]  # second-highest probability
 
         for i in masked_positions:
-            tid       = int(top_ids[i].item())
-            tok_text  = tokenizer.decode([tid]).strip()
-            t1p       = round(float(top1_p[i].item()), 6)
-            t2p       = round(float(top2_p[i].item()), 6)
-            ent       = round(compute_entropy(probs[i]), 6)
+            tid = int(top_ids[i].item())
+            tok_text = tokenizer.decode([tid]).strip()
+            t1p = round(float(top1_p[i].item()), 6)
+            t2p = round(float(top2_p[i].item()), 6)
+            ent = round(compute_entropy(probs[i]), 6)
 
-            observations[i].append({
-                "step_index": step,
-                "token_id":   tid,
-                "token_text": tok_text,
-                "top1_prob":  t1p,
-                "top2_prob":  t2p,
-                "extras":     {"entropy": ent},
-            })
+            observations[i].append(
+                {
+                    "step_index": step,
+                    "token_id": tid,
+                    "token_text": tok_text,
+                    "top1_prob": t1p,
+                    "top2_prob": t2p,
+                    "extras": {"entropy": ent},
+                }
+            )
 
         remaining_steps = T - step
         n_to_unmask = math.ceil(len(masked_positions) / remaining_steps)
-        ranked      = sorted(masked_positions, key=lambda i: top1_p[i].item(), reverse=True)
-        to_unmask   = ranked[:n_to_unmask]
+        ranked = sorted(masked_positions, key=lambda i: top1_p[i].item(), reverse=True)
+        to_unmask = ranked[:n_to_unmask]
 
         for i in to_unmask:
-            tau_commit[i]              = step
+            tau_commit[i] = step
             input_ids[0, prompt_len + i] = top_ids[i]
-            committed[i]               = True
+            committed[i] = True
 
     final_token_ids = input_ids[0, prompt_len:].tolist()
-    final_tokens    = [tokenizer.decode([tid]).strip() for tid in final_token_ids]
+    final_tokens = [tokenizer.decode([tid]).strip() for tid in final_token_ids]
 
     # Compute tau_stable using phase_cpd stabilization definition:
     # first step where predicted token_id == final token_id AND stays stable.
     tau_stable = []
     for i in range(target_len):
         predicted_ids = [obs["token_id"] for obs in observations[i]]
-        stable_idx    = _first_stable_step(predicted_ids, final_token_ids[i])
+        stable_idx = _first_stable_step(predicted_ids, final_token_ids[i])
         # stable_idx is an index into observations[i]; convert to actual step number
         tau_stable.append(observations[i][stable_idx]["step_index"])
 
@@ -203,11 +205,11 @@ def run_denoising_loop(
 
     return {
         "final_token_ids": final_token_ids,
-        "final_tokens":    final_tokens,
-        "tau_commit":      tau_commit,
-        "tau_stable":      tau_stable,
-        "gap":             gap,
-        "observations":    observations,
+        "final_tokens": final_tokens,
+        "tau_commit": tau_commit,
+        "tau_stable": tau_stable,
+        "gap": gap,
+        "observations": observations,
     }
 
 
@@ -219,7 +221,7 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
     model = AutoModel.from_pretrained(MODEL_ID, trust_remote_code=True, torch_dtype=torch.float16)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model  = model.to(device)
+    model = model.to(device)
     model.eval()
     print(f"Model on {device}\n")
 
@@ -227,7 +229,7 @@ def main() -> None:
 
     # ── Load dataset ──────────────────────────────────────────────────────────
     print(f"Loading {DATASET_ID} (first {args.n_samples} samples) ...")
-    ds      = load_dataset(DATASET_ID, split=args.split)
+    ds = load_dataset(DATASET_ID, split=args.split)
     samples = list(ds.select(range(args.n_samples)))
     print(f"Loaded {len(samples)} samples\n")
 
@@ -237,27 +239,25 @@ def main() -> None:
 
     with open(args.output, "w") as out_f:
         for idx, sample in enumerate(samples):
-            nums   = list(sample["nums"])
+            nums = list(sample["nums"])
             target = int(sample["target"])
             prompt = build_prompt(nums, target)
 
             prompt_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
 
-            t0      = time.time()
+            t0 = time.time()
             results = run_denoising_loop(
-                model         = model,
-                tokenizer     = tokenizer,
-                prompt_ids    = prompt_ids,
-                target_len    = args.target_len,
-                T             = args.steps,
-                mask_token_id = mask_token_id,
-                device        = device,
+                model=model,
+                tokenizer=tokenizer,
+                prompt_ids=prompt_ids,
+                target_len=args.target_len,
+                T=args.steps,
+                mask_token_id=mask_token_id,
+                device=device,
             )
             elapsed = time.time() - t0
 
-            steps_used = max(
-                (r for r in results["tau_commit"] if r is not None), default=0
-            ) + 1
+            steps_used = max((r for r in results["tau_commit"] if r is not None), default=0) + 1
 
             nums_str = str(nums)
             print(f"{idx:>4}  {target:>6}  {nums_str:<20}  {steps_used:>5}  {elapsed:>5.1f}s")
@@ -269,48 +269,54 @@ def main() -> None:
             tokens = []
             cursor = 0
             for i in range(args.target_len):
-                tok_text  = results["final_tokens"][i]
+                tok_text = results["final_tokens"][i]
                 char_start = cursor
-                char_end   = cursor + len(tok_text)
-                cursor     = char_end + 1  # +1 for the space separator
+                char_end = cursor + len(tok_text)
+                cursor = char_end + 1  # +1 for the space separator
 
-                tokens.append({
-                    "token_index": i,
-                    "token_text":  tok_text,
-                    "char_start":  char_start,
-                    "char_end":    char_end,
-                    "observations": results["observations"][i],
-                })
+                tokens.append(
+                    {
+                        "token_index": i,
+                        "token_text": tok_text,
+                        "char_start": char_start,
+                        "char_end": char_end,
+                        "observations": results["observations"][i],
+                    }
+                )
 
             # Per-token summary kept in decoding_metadata for downstream analysis
             token_summaries = []
             for i in range(args.target_len):
-                token_summaries.append({
-                    "position":            i,
-                    "token":               results["final_tokens"][i],
-                    "token_id":            results["final_token_ids"][i],
-                    "tau_commit":          results["tau_commit"][i],
-                    "tau_stable":          results["tau_stable"][i],
-                    "max_refinement_step": results["tau_commit"][i],  # last masked step == commit
-                    "gap":                 results["gap"][i],
-                })
+                token_summaries.append(
+                    {
+                        "position": i,
+                        "token": results["final_tokens"][i],
+                        "token_id": results["final_token_ids"][i],
+                        "tau_commit": results["tau_commit"][i],
+                        "tau_stable": results["tau_stable"][i],
+                        "max_refinement_step": results["tau_commit"][
+                            i
+                        ],  # last masked step == commit
+                        "gap": results["gap"][i],
+                    }
+                )
 
             # ── Unified TraceRecord output (phase_cpd compatible) ─────────────
             record = {
-                "trace_id":    f"countdown-llada-{idx:04d}",
-                "backend":     "llada",
-                "model_name":  MODEL_ID,
-                "prompt":      prompt,
-                "final_text":  final_text,
-                "tokens":      tokens,
+                "trace_id": f"countdown-llada-{idx:04d}",
+                "backend": "llada",
+                "model_name": MODEL_ID,
+                "prompt": prompt,
+                "final_text": final_text,
+                "tokens": tokens,
                 "decoding_metadata": {
-                    "dataset":          DATASET_ID,
-                    "nums":             nums,
-                    "target":           target,
-                    "denoising_steps":  args.steps,
-                    "target_len":       args.target_len,
-                    "algorithm":        "greedy_confidence",
-                    "token_summaries":  token_summaries,
+                    "dataset": DATASET_ID,
+                    "nums": nums,
+                    "target": target,
+                    "denoising_steps": args.steps,
+                    "target_len": args.target_len,
+                    "algorithm": "greedy_confidence",
+                    "token_summaries": token_summaries,
                 },
                 "tags": ["countdown", "arithmetic", "baseline"],
             }

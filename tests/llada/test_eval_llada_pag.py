@@ -19,7 +19,7 @@ def _install_stubs() -> None:
     main.cli_evaluate = lambda: None
     api = ModuleType("lm_eval.api")
     api_registry = ModuleType("lm_eval.api.registry")
-    api_registry.register_model = lambda *_args, **_kwargs: (lambda cls: cls)
+    api_registry.register_model = lambda *_args, **_kwargs: lambda cls: cls
 
     base_module = ModuleType("eval_llada_adablock")
 

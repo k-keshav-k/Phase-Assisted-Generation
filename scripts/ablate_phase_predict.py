@@ -102,7 +102,7 @@ ABLATION_PRESETS = {
         "learning_rate": [1e-3, 5e-4],
     },
     "medium": {
-        "window_size": [8], # Placeholder, will be overridden to max sequence length
+        "window_size": [8],  # Placeholder, will be overridden to max sequence length
         "d_model": [64],
         "n_heads": [2, 4],
         "n_layers": [2, 4],
@@ -110,7 +110,7 @@ ABLATION_PRESETS = {
         "learning_rate": [1e-3, 5e-4],
     },
     "large": {
-        "window_size": [8, 16], # Placeholder, will be overridden to max sequence length
+        "window_size": [8, 16],  # Placeholder, will be overridden to max sequence length
         "d_model": [128],
         "n_heads": [2, 4, 8],
         "n_layers": [2, 4],
@@ -118,7 +118,7 @@ ABLATION_PRESETS = {
         "learning_rate": [1e-3, 5e-4],
     },
     "xlarge": {
-        "window_size": [8, 16], # Placeholder, will be overridden to max sequence length
+        "window_size": [8, 16],  # Placeholder, will be overridden to max sequence length
         "d_model": [256, 512],
         "n_heads": [2, 4, 8],
         "n_layers": [2, 4, 6],
@@ -249,9 +249,7 @@ def align_configs_to_training_shape(
     """
     all_sequences = train_sequences + val_sequences
     effective_window_size = (
-        max(len(sequence) for sequence in all_sequences) - 1
-        if whole_sequence
-        else window_size
+        max(len(sequence) for sequence in all_sequences) - 1 if whole_sequence else window_size
     )
 
     aligned_configs: list[tuple[ModelConfig, TrainConfig]] = []
@@ -302,18 +300,22 @@ def run_ablation(
         AblationResult with metrics, or None if training failed.
     """
     try:
-        print(f"\n{'='*70}")  # noqa: T201
+        print(f"\n{'=' * 70}")  # noqa: T201
         print(f"Run: {run_id}")  # noqa: T201
-        print(f"  ModelConfig: window_size={model_cfg.window_size}, "
-              f"d_model={model_cfg.d_model}, n_heads={model_cfg.n_heads}, "
-              f"n_layers={model_cfg.n_layers}, dropout={model_cfg.dropout}")  # noqa: T201
+        print(
+            f"  ModelConfig: window_size={model_cfg.window_size}, "
+            f"d_model={model_cfg.d_model}, n_heads={model_cfg.n_heads}, "
+            f"n_layers={model_cfg.n_layers}, dropout={model_cfg.dropout}"
+        )  # noqa: T201
         run_train_cfg = replace(
             train_cfg,
             batch_size=batch_size,
             num_workers=num_workers,
         )
-        print(f"  TrainConfig: lr={run_train_cfg.learning_rate}, "
-              f"epochs={run_train_cfg.max_epochs}, batch_size={run_train_cfg.batch_size}")  # noqa: T201
+        print(
+            f"  TrainConfig: lr={run_train_cfg.learning_rate}, "
+            f"epochs={run_train_cfg.max_epochs}, batch_size={run_train_cfg.batch_size}"
+        )  # noqa: T201
 
         if whole_sequence:
             train_dataset = PhaseFullSequenceDataset(
@@ -508,9 +510,7 @@ def main(argv: list[str] | None = None) -> None:
 
     all_tuples = [t for seq in (train_sequences + val_sequences) for t in seq]
     if len(all_tuples) < args.window_size + 2 and not args.whole_sequence:
-        parser.error(
-            f"Not enough tuples ({len(all_tuples)}) for window_size={args.window_size}."
-        )
+        parser.error(f"Not enough tuples ({len(all_tuples)}) for window_size={args.window_size}.")
 
     if args.input_features is not None:
         configs = [
@@ -569,8 +569,8 @@ def main(argv: list[str] | None = None) -> None:
                 f"d{model_cfg.d_model}_"
                 f"h{model_cfg.n_heads}_"
                 f"l{model_cfg.n_layers}_"
-                f"dp{int(model_cfg.dropout*100)}_"
-                f"lr{_train_cfg.learning_rate*1000}"
+                f"dp{int(model_cfg.dropout * 100)}_"
+                f"lr{_train_cfg.learning_rate * 1000}"
             )
             print(f"  {i:3d}. {run_id}")  # noqa: T201
         return
@@ -586,8 +586,8 @@ def main(argv: list[str] | None = None) -> None:
             f"d{model_cfg.d_model}_"
             f"h{model_cfg.n_heads}_"
             f"l{model_cfg.n_layers}_"
-            f"dp{int(model_cfg.dropout*100)}_"
-            f"lr{train_cfg.learning_rate*1000}"
+            f"dp{int(model_cfg.dropout * 100)}_"
+            f"lr{train_cfg.learning_rate * 1000}"
         )
 
         train_cfg = replace(train_cfg, max_epochs=args.epochs)
@@ -613,9 +613,9 @@ def main(argv: list[str] | None = None) -> None:
     total_time = time.time() - start_time
 
     # Save results
-    print(f"\n{'='*70}")  # noqa: T201
+    print(f"\n{'=' * 70}")  # noqa: T201
     print(f"Ablation complete: {len(results)}/{len(configs)} runs succeeded")  # noqa: T201
-    print(f"Total time: {total_time/60:.1f} minutes")  # noqa: T201
+    print(f"Total time: {total_time / 60:.1f} minutes")  # noqa: T201
 
     # Save results as CSV
     csv_path = args.output_dir / "ablation_results.csv"
@@ -689,8 +689,7 @@ def main(argv: list[str] | None = None) -> None:
         print("\nTop 5 configurations by validation loss:")  # noqa: T201
         for i, result in enumerate(sorted_results[:5], 1):
             print(f"  {i}. {result.run_id}")  # noqa: T201
-            print(f"     val_loss={result.val_loss:.6f}, "
-                  f"train_loss={result.train_loss:.6f}")  # noqa: T201
+            print(f"     val_loss={result.val_loss:.6f}, train_loss={result.train_loss:.6f}")  # noqa: T201
 
 
 if __name__ == "__main__":

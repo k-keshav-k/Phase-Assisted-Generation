@@ -234,8 +234,7 @@ def _infer_trace_profile(*, alg: str | None, alg_temp: float | None) -> str:
                 continue
             return profile_name
     msg = (
-        "Unsupported --alg/--alg-temp combination. "
-        "Use one of the built-in trace profiles instead."
+        "Unsupported --alg/--alg-temp combination. Use one of the built-in trace profiles instead."
     )
     raise ValueError(msg)
 

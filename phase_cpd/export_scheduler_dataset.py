@@ -26,11 +26,7 @@ def main() -> int:
             smoothing_window=args.smoothing_window,
         ),
     )
-    rows = [
-        row
-        for trace in traces
-        for row in build_scheduler_rows(trace, config=config)
-    ]
+    rows = [row for trace in traces for row in build_scheduler_rows(trace, config=config)]
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

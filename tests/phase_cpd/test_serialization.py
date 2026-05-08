@@ -15,8 +15,7 @@ def test_trace_json_round_trip(tmp_path) -> None:
     assert restored.trace_id == trace.trace_id
     assert restored.final_text == trace.final_text
     assert (
-        restored.tokens[0].observations[-1].top1_prob
-        == trace.tokens[0].observations[-1].top1_prob
+        restored.tokens[0].observations[-1].top1_prob == trace.tokens[0].observations[-1].top1_prob
     )
     assert restored.tokens[0].observations[-1].extras == trace.tokens[0].observations[-1].extras
 

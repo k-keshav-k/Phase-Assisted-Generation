@@ -142,11 +142,14 @@ class VariableOrderMarkovModel:
 
     def save(self, path: str) -> None:
         with open(path, "wb") as f:
-            pickle.dump({
-                "max_order": self.max_order,
-                "counts": self.counts,
-                "marginal": self.marginal,
-            }, f)
+            pickle.dump(
+                {
+                    "max_order": self.max_order,
+                    "counts": self.counts,
+                    "marginal": self.marginal,
+                },
+                f,
+            )
 
     @classmethod
     def load(cls, path: str) -> "VariableOrderMarkovModel":

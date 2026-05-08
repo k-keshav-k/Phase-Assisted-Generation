@@ -38,14 +38,31 @@ def load_sequences(path: Path) -> List[List[PhaseTuple]]:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Ablate VOMM max_order hyperparameter.")
-    parser.add_argument("--train-jsonl", type=Path, default=Path("traces/phase_tuples_train.jsonl"),
-                        help="Training JSONL file or directory")
-    parser.add_argument("--test-jsonl", type=Path, default=Path("traces/phase_tuples_test.jsonl"),
-                        help="Test JSONL file or directory (optional)")
-    parser.add_argument("--output-dir", type=Path, default=Path("output/vomm_ablation"),
-                        help="Directory to save checkpoints and results")
-    parser.add_argument("--orders", type=int, nargs="+", default=[1,2,4,10,20,30],
-                        help="List of max_order values to try")
+    parser.add_argument(
+        "--train-jsonl",
+        type=Path,
+        default=Path("traces/phase_tuples_train.jsonl"),
+        help="Training JSONL file or directory",
+    )
+    parser.add_argument(
+        "--test-jsonl",
+        type=Path,
+        default=Path("traces/phase_tuples_test.jsonl"),
+        help="Test JSONL file or directory (optional)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("output/vomm_ablation"),
+        help="Directory to save checkpoints and results",
+    )
+    parser.add_argument(
+        "--orders",
+        type=int,
+        nargs="+",
+        default=[1, 2, 4, 10, 20, 30],
+        help="List of max_order values to try",
+    )
     args = parser.parse_args(argv)
 
     if not args.train_jsonl.exists():
@@ -94,7 +111,9 @@ def main(argv: list[str] | None = None) -> None:
 
         print(f"  val_mse={val_mse:.6f}, time={fit_time:.1f}s, ckpt={ckpt_path}")  # noqa: T201
 
-        if best is None or (not (entry["val_mse"] != entry["val_mse"]) and entry["val_mse"] < best["val_mse"]):
+        if best is None or (
+            not (entry["val_mse"] != entry["val_mse"]) and entry["val_mse"] < best["val_mse"]
+        ):
             best = entry
 
     # save CSV and JSON

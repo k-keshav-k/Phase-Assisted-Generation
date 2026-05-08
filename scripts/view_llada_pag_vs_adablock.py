@@ -129,8 +129,7 @@ def flatten_methods(records: list[dict[str, Any]]) -> pd.DataFrame:
                     "run_label": _run_label(record),
                     "prompt_id": record.get("prompt_id") or f"record_{record_index}",
                     "prompt_label": (
-                        f"{record.get('prompt_id') or f'record_{record_index}'} "
-                        f"#{record_index}"
+                        f"{record.get('prompt_id') or f'record_{record_index}'} #{record_index}"
                     ),
                     "category": record.get("prompt_category") or "uncategorized",
                     "created_at": record.get("created_at"),
@@ -165,8 +164,7 @@ def flatten_deltas(records: list[dict[str, Any]]) -> pd.DataFrame:
                 "run_label": _run_label(record),
                 "prompt_id": record.get("prompt_id") or f"record_{record_index}",
                 "prompt_label": (
-                    f"{record.get('prompt_id') or f'record_{record_index}'} "
-                    f"#{record_index}"
+                    f"{record.get('prompt_id') or f'record_{record_index}'} #{record_index}"
                 ),
                 "category": record.get("prompt_category") or "uncategorized",
                 "prompt": record.get("prompt", ""),
@@ -379,10 +377,10 @@ def _render_blocked_output(
         badge = html.escape(_block_badge(block), quote=True)
         pieces.append(
             "<span "
-            "class=\"generation-block\" "
-            f"style=\"--block-color: {color};\" "
-            f"title=\"{title}\" "
-            f"data-refinement=\"{badge}\">"
+            'class="generation-block" '
+            f'style="--block-color: {color};" '
+            f'title="{title}" '
+            f'data-refinement="{badge}">'
             f"{escaped_text}"
             "</span>"
         )
@@ -552,8 +550,7 @@ def render_overview_charts(method_df: pd.DataFrame, delta_df: pd.DataFrame) -> N
     answer_df = method_df.dropna(subset=["answer_score"])
     if answer_df.empty:
         st.info(
-            "No answer accuracy metrics found. "
-            "Re-run the comparison eval to populate answer_check."
+            "No answer accuracy metrics found. Re-run the comparison eval to populate answer_check."
         )
     else:
         accuracy_chart = (
@@ -792,10 +789,7 @@ def main() -> None:
     records = _filter_records_by_run(records, selected_run)
 
     all_categories = sorted(
-        {
-            record.get("prompt_category") or "uncategorized"
-            for record in records
-        }
+        {record.get("prompt_category") or "uncategorized" for record in records}
     )
     selected_categories = st.sidebar.multiselect(
         "Categories",

@@ -15,4 +15,3 @@ def test_run_phase_analysis_accepts_baseline_outputs(run_config, sample_records)
         sample.sample_id for sample in sample_records
     }
     assert phase_artifacts.summary.stage == "phases"
-

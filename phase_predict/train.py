@@ -81,7 +81,8 @@ def train_epoch(
             block_logits, stab_logits = model(inputs)
             loss_block = F.cross_entropy(block_logits, block_targets)
             loss_stab = F.binary_cross_entropy_with_logits(
-                stab_logits, stab_targets,
+                stab_logits,
+                stab_targets,
                 pos_weight=stab_pos_weight,
                 reduction="mean",
             )
@@ -140,7 +141,8 @@ def evaluate(
             block_logits, stab_logits = model(inputs)
             loss_block = F.cross_entropy(block_logits, block_targets)
             loss_stab = F.binary_cross_entropy_with_logits(
-                stab_logits, stab_targets,
+                stab_logits,
+                stab_targets,
                 pos_weight=stab_pos_weight,
                 reduction="mean",
             )
@@ -260,11 +262,19 @@ class Trainer:
 
         for epoch in range(1, self.config.max_epochs + 1):
             train_loss = train_epoch(
-                self.model, train_loader, optimizer, self.device, self.config, scaler,
+                self.model,
+                train_loader,
+                optimizer,
+                self.device,
+                self.config,
+                scaler,
                 stab_pos_weight=self._stab_pos_weight,
             )
             val_loss = evaluate(
-                self.model, val_loader, self.device, scaler,
+                self.model,
+                val_loader,
+                self.device,
+                scaler,
                 stab_pos_weight=self._stab_pos_weight,
             )
 
@@ -282,10 +292,7 @@ class Trainer:
             else:
                 epochs_no_improve += 1
 
-            if (
-                self.config.log_interval > 0
-                and epoch % self.config.log_interval == 0
-            ):
+            if self.config.log_interval > 0 and epoch % self.config.log_interval == 0:
                 print(  # noqa: T201
                     f"Epoch {epoch:4d}/{self.config.max_epochs} | "
                     f"train_loss={train_loss:.6f} | "
@@ -303,8 +310,6 @@ class Trainer:
 
         # restore best weights
         if hasattr(self, "_best_state"):
-            self.model.load_state_dict(
-                {k: v.to(self.device) for k, v in self._best_state.items()}
-            )
+            self.model.load_state_dict({k: v.to(self.device) for k, v in self._best_state.items()})
 
         return history

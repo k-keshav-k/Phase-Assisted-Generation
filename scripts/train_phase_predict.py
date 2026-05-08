@@ -189,7 +189,9 @@ def _extract_sequences_from_trace_jsonl(trace_path: Path) -> list[list[PhaseTupl
     for path in jsonl_paths:
         file_sequences = tuple_sequences_from_trace_jsonl(path)
         file_tuple_count = sum(len(sequence) for sequence in file_sequences)
-        print(f"  Loaded {path.name}: {file_tuple_count} tuples across {len(file_sequences)} sequences")  # noqa: T201
+        print(
+            f"  Loaded {path.name}: {file_tuple_count} tuples across {len(file_sequences)} sequences"
+        )  # noqa: T201
         sequences.extend(file_sequences)
 
     return sequences
@@ -238,29 +240,47 @@ def main(argv: list[str] | None = None) -> None:
         default=Path("traces/rich/stab_tuples_conf_test_rich.jsonl"),
         help="Path to phase_tuples test JSONL file or directory.",
     )
-    parser.add_argument("--trace-dir", type=Path, default=None,
-                        help="Path to trace JSON directory.")
-    parser.add_argument("--trace-jsonl", type=Path, default=None,
-                        help="Path to trace JSONL file or directory of JSONL files.")
-    parser.add_argument("--window-size", type=int, default=8,
-                        help="Context window size (number of past tuples).")
-    parser.add_argument("--d-model", type=int, default=64,
-                        help="Transformer hidden size.")
-    parser.add_argument("--n-heads", type=int, default=4,
-                        help="Number of attention heads.")
-    parser.add_argument("--n-layers", type=int, default=2,
-                        help="Number of Transformer encoder layers.")
-    parser.add_argument("--dropout", type=float, default=0.1,
-                        help="Dropout probability.")
-    parser.add_argument("--whole-sequence", action="store_true",
-                        help="Train on each full trace sequence instead of sliding windows.")
+    parser.add_argument(
+        "--trace-dir", type=Path, default=None, help="Path to trace JSON directory."
+    )
+    parser.add_argument(
+        "--trace-jsonl",
+        type=Path,
+        default=None,
+        help="Path to trace JSONL file or directory of JSONL files.",
+    )
+    parser.add_argument(
+        "--window-size", type=int, default=8, help="Context window size (number of past tuples)."
+    )
+    parser.add_argument("--d-model", type=int, default=64, help="Transformer hidden size.")
+    parser.add_argument("--n-heads", type=int, default=4, help="Number of attention heads.")
+    parser.add_argument(
+        "--n-layers", type=int, default=2, help="Number of Transformer encoder layers."
+    )
+    parser.add_argument("--dropout", type=float, default=0.1, help="Dropout probability.")
+    parser.add_argument(
+        "--whole-sequence",
+        action="store_true",
+        help="Train on each full trace sequence instead of sliding windows.",
+    )
     parser.add_argument("--epochs", type=int, default=100, help="Max training epochs.")
-    parser.add_argument("--batch-size", type=int, default=2048,
-                        help="Batch size for training and validation.")
-    parser.add_argument("--num-workers", type=int, default=4,
-                        help="DataLoader worker processes (0 = main process only).")
-    parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=1e-3,
-                        help="Learning rate.")
+    parser.add_argument(
+        "--batch-size", type=int, default=2048, help="Batch size for training and validation."
+    )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=4,
+        help="DataLoader worker processes (0 = main process only).",
+    )
+    parser.add_argument(
+        "--learning-rate",
+        "--lr",
+        dest="learning_rate",
+        type=float,
+        default=1e-3,
+        help="Learning rate.",
+    )
     parser.add_argument(
         "--device",
         type=str,
@@ -284,26 +304,57 @@ def main(argv: list[str] | None = None) -> None:
         "--input-features",
         type=str,
         nargs="+",
-        default=["block_size", "nfe", "mean_stab_step", "max_stab_step",
-                 "mean_ref_step", "max_ref_step", "mean_gap", "max_gap",
-                 "mean_top1_confidence", "min_top1_confidence",
-                 "digit_fraction", "delimiter_fraction"],
+        default=[
+            "block_size",
+            "nfe",
+            "mean_stab_step",
+            "max_stab_step",
+            "mean_ref_step",
+            "max_ref_step",
+            "mean_gap",
+            "max_gap",
+            "mean_top1_confidence",
+            "min_top1_confidence",
+            "digit_fraction",
+            "delimiter_fraction",
+        ],
         help="List of field names to use as input features.",
     )
-    parser.add_argument("--output", type=str, default="phase_predict.pt",
-                        help="Path to save the checkpoint.")
-    parser.add_argument("--per-token", action="store_true",
-                        help="Use one tuple per token (instead of per CPD segment).")
-    parser.add_argument("--cpd-penalty", type=float, default=0.1,
-                        help="CPD penalty for breakpoint detection (default: 0.1).")
-    parser.add_argument("--cpd-min-segment", type=int, default=2,
-                        help="CPD minimum segment length in tokens (default: 2).")
-    parser.add_argument("--cpd-smoothing", type=int, default=3,
-                         help="CPD smoothing window size (default: 3).")
-    parser.add_argument("--num-block-classes", type=int, default=128,
-                        help="Number of block size classes for classification head.")
-    parser.add_argument("--num-stab-thresholds", type=int, default=83,
-                        help="Number of ordinal thresholds for stab step head.")
+    parser.add_argument(
+        "--output", type=str, default="phase_predict.pt", help="Path to save the checkpoint."
+    )
+    parser.add_argument(
+        "--per-token",
+        action="store_true",
+        help="Use one tuple per token (instead of per CPD segment).",
+    )
+    parser.add_argument(
+        "--cpd-penalty",
+        type=float,
+        default=0.1,
+        help="CPD penalty for breakpoint detection (default: 0.1).",
+    )
+    parser.add_argument(
+        "--cpd-min-segment",
+        type=int,
+        default=2,
+        help="CPD minimum segment length in tokens (default: 2).",
+    )
+    parser.add_argument(
+        "--cpd-smoothing", type=int, default=3, help="CPD smoothing window size (default: 3)."
+    )
+    parser.add_argument(
+        "--num-block-classes",
+        type=int,
+        default=128,
+        help="Number of block size classes for classification head.",
+    )
+    parser.add_argument(
+        "--num-stab-thresholds",
+        type=int,
+        default=83,
+        help="Number of ordinal thresholds for stab step head.",
+    )
     args = parser.parse_args(argv)
 
     if args.train_jsonl is not None and not args.train_jsonl.exists():
@@ -361,8 +412,11 @@ def main(argv: list[str] | None = None) -> None:
                 )
         else:
             if len(train_sequences) < 2:
-                print("ERROR: phase_tuples training needs at least two sequences "
-                      "when no --test-jsonl is provided.", file=sys.stderr)
+                print(
+                    "ERROR: phase_tuples training needs at least two sequences "
+                    "when no --test-jsonl is provided.",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             split_index = max(1, int(len(train_sequences) * 0.8))
             split_index = min(split_index, len(train_sequences) - 1)

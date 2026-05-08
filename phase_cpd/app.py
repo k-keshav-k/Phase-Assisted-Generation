@@ -105,9 +105,7 @@ def main() -> None:
     trace = _trace(trace_labels[selected_label])
 
     available_features = [
-        name
-        for name, extractor in FEATURE_EXTRACTORS.items()
-        if extractor.is_available(trace)
+        name for name, extractor in FEATURE_EXTRACTORS.items() if extractor.is_available(trace)
     ]
     if not available_features:
         st.error(

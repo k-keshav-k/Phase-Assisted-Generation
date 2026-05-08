@@ -62,12 +62,10 @@ class Predictor:
                 self.device = torch.device("cpu")
 
         in_ts = self.config.input_tuple_size
-        self.input_mean = (
-            input_mean if input_mean is not None else torch.zeros(in_ts)
-        ).to(self.device)
-        self.input_std = (
-            input_std if input_std is not None else torch.ones(in_ts)
-        ).to(self.device)
+        self.input_mean = (input_mean if input_mean is not None else torch.zeros(in_ts)).to(
+            self.device
+        )
+        self.input_std = (input_std if input_std is not None else torch.ones(in_ts)).to(self.device)
         # optional ordered list of input field names (used when coercing
         # ExtendedPhaseTuple objects during inference)
         self.input_fields = input_fields
@@ -95,7 +93,9 @@ class Predictor:
             from phase_predict.schema import ExtendedPhaseTuple
 
             if isinstance(value, ExtendedPhaseTuple):
-                return int(value.values.get("block_size", 0)), int(value.values.get("refinement_steps", 0))
+                return int(value.values.get("block_size", 0)), int(
+                    value.values.get("refinement_steps", 0)
+                )
         except Exception:
             # if import fails or value is not ExtendedPhaseTuple, continue
             pass
@@ -222,8 +222,12 @@ class Predictor:
         checkpoint = {
             "model_config": dataclasses.asdict(self.config),
             "model_state": {k: v.cpu() for k, v in self.model.state_dict().items()},
-            "input_mean": getattr(self, "input_mean", torch.zeros(self.config.input_tuple_size)).cpu().tolist(),
-            "input_std": getattr(self, "input_std", torch.ones(self.config.input_tuple_size)).cpu().tolist(),
+            "input_mean": getattr(self, "input_mean", torch.zeros(self.config.input_tuple_size))
+            .cpu()
+            .tolist(),
+            "input_std": getattr(self, "input_std", torch.ones(self.config.input_tuple_size))
+            .cpu()
+            .tolist(),
             "input_fields": getattr(self, "input_fields", None),
         }
         torch.save(checkpoint, path)

@@ -114,8 +114,7 @@ class TestExtractPerToken:
 class TestExtractPerSegment:
     def _make_trace(self, n: int) -> _Trace:
         tokens = [
-            _Token(i, observations=[_Obs(0, token_id=i), _Obs(1, token_id=i)])
-            for i in range(n)
+            _Token(i, observations=[_Obs(0, token_id=i), _Obs(1, token_id=i)]) for i in range(n)
         ]
         return _Trace(tokens=tokens)
 

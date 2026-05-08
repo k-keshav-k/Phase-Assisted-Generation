@@ -53,4 +53,3 @@ def evaluation_paths(run_config: RunConfig) -> dict[str, Path]:
         "records": base / "records.jsonl",
         "summary": base / "run_summary.json",
     }
-

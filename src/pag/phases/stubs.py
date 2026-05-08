@@ -57,9 +57,7 @@ def mock_phase_runner(
 
         for signal in sample_signals:
             label = (
-                PhaseLabel.EASY.value
-                if signal.token_index < midpoint
-                else PhaseLabel.HARD.value
+                PhaseLabel.EASY.value if signal.token_index < midpoint else PhaseLabel.HARD.value
             )
             predictor_dataset.append(
                 PredictorDatasetItem(

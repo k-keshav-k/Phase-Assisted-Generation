@@ -123,4 +123,3 @@ def mock_baseline_runner(
         completions=completions,
         summary=summary,
     )
-

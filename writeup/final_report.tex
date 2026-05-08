@@ -1,10 +1,9 @@
 \documentclass[11pt]{article}
 
-\usepackage[margin=0.85in]{geometry}
+\usepackage[margin=0.78in, top=0.82in, bottom=0.86in]{geometry}
 \usepackage{times}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
-\usepackage{float}
 \usepackage{hyperref}
 \usepackage{natbib}
 \usepackage{booktabs}
@@ -13,287 +12,573 @@
 \usepackage[T1]{fontenc}
 \usepackage{setspace}
 \usepackage{titlesec}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{subcaption}
+\usepackage{placeins}
 
-\setstretch{0.96}
-\setlength{\parskip}{0.35em}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc, fit}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+
+\setstretch{0.94}
+\setlength{\parskip}{0.28em}
 \setlength{\parindent}{0pt}
-\titlespacing*{\section}{0pt}{0.8em}{0.35em}
-\titlespacing*{\subsection}{0pt}{0.65em}{0.3em}
+\titlespacing*{\section}{0pt}{0.75em}{0.32em}
+\titlespacing*{\subsection}{0pt}{0.58em}{0.25em}
+\titlespacing*{\subsubsection}{0pt}{0.45em}{0.18em}
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
 
 \hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
 
-\newcommand{\projectname}{Phase-Assisted Generation}
+\input{figs/final_eval_summary.tex}
+
+\newcommand{\projectname}{Phase-Adaptive Generation}
 \newcommand{\pag}{PAG}
-\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\dllm}{dLLM}
+\newcommand{\nfe}{NFE}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\tikzset{
+  stage/.style={draw, rounded corners=2pt, align=center, minimum height=0.72cm,
+    minimum width=2.15cm, fill=blue!7, font=\small},
+  data/.style={draw, rounded corners=2pt, align=center, minimum height=0.62cm,
+    minimum width=2.0cm, fill=orange!10, font=\small},
+  modelbox/.style={draw, rounded corners=2pt, align=center, minimum height=0.72cm,
+    minimum width=2.25cm, fill=green!8, font=\small},
+  arrow/.style={-{Latex[length=2mm]}, thick}
+}
 
 \begin{document}
 
 \begin{center}
-{\LARGE\bfseries Phase-Assisted Generation: Final Report}\\[0.4em]
-{\large Keshav Krishna \quad Prajesh Kumar \quad Siva Satvik Mandapati}\\[0.2em]
+{\LARGE\bfseries Phase-Adaptive Generation: Learned Compute Scheduling for Diffusion Language Models}\\[0.35em]
+{\large Keshav Krishna \quad Prajesh Kumar \quad Siva Satvik Mandapati}\\[0.16em]
 {\normalsize New York University, Building LLM Reasoners --- Spring 2026}\\
 {\normalsize \texttt{\{kk6081, pg2973, sm12779\}@nyu.edu}}
 \end{center}
 
 \begin{abstract}
-\projectname{} (\pag{}) studies adaptive decoding for diffusion language models. The project began with a trace-analysis pipeline around Dream and LLaDA: collect token-level refinement trajectories, extract stabilization features, run change-point detection (CPD), convert segments into block/phase tuples, and train a next-tuple predictor. The main design lesson from this stage was that CPD is useful for interpreting confidence and stabilization dynamics, but it is an awkward permanent label-construction step when the final scheduler needs block-level controls. The codebase therefore evolved toward an AdaBlock-style, block-native pipeline in which traces directly expose block size and stabilization/refinement behavior. This report template summarizes the project motivation, methodology, implemented experiments, preliminary findings, evaluations and limitations.
+Diffusion language models decode by iteratively refining masked tokens, which exposes a useful scheduling question: should every part of a reasoning answer receive the same block size and refinement budget? We study this question through \projectname{} (\pag{}), a system for predicting block-level control tuples from generation traces and using them to adapt LLaDA decoding. The project produced three connected contributions. 
+First, we built trace-analysis tooling for Dream and LLaDA, including token-level stabilization features, PELT/kernel change-point detection, and a Streamlit inspection interface. 
+Second, we converted AdaBlock-style LLaDA traces into block-native training data and compared several next-control predictors, including a regression Transformer, a variable-order Markov baseline, a multi-output random forest, and a classification/ordinal Transformer over rich block features. 
+Third, we integrated the learned predictor into a tuple-conditioned LLaDA scheduler and evaluated it against AdaBlock on 200 held-out GSM8K prompts. 
+On the final run, PAG matched AdaBlock answer accuracy at \(89.5\%\) while reducing average total \nfe{} from \AdaAvgNfe{} to \PagAvgNfe{} per prompt, a \(\approx 21.4\%\) reduction, with a small predictor overhead of \(\SchedulerAvgMs\) ms per prompt. 
+PAG also gave significant response time savings over vanilla AdaBlock with average runtime delta of PAG - AdaBlock being approximately 0.10 sec.
 \end{abstract}
 
 \section{Introduction}
 
-Autoregressive language models decode one token at a time, which makes long reasoning traces expensive. Diffusion language models (dLLMs), including Dream and LLaDA, instead generate or refine multiple tokens through iterative denoising. This creates a natural scheduling question: should every region of an answer receive the same block size and refinement budget, or can the decoder adapt based on local difficulty?
+Autoregressive language models spend one decoding step per output token. Diffusion language models (\dllm{}s) such as Dream and LLaDA instead produce text through iterative masked-token refinement, so they can commit multiple positions in a block. This creates an explicit compute-allocation problem. Some spans of a solution are syntactically predictable or copied from context; other spans contain arithmetic, variable binding, or answer-finalization steps. A fixed schedule treats both regimes similarly.
 
-The central hypothesis of \pag{} is that generation traces contain reusable phase structure. Easy spans should stabilize quickly and can be decoded in larger or cheaper blocks, while hard reasoning spans should receive smaller blocks or more refinement. The goal is not only to detect phases after the fact, but to learn a lightweight predictor that can forecast the next block-level control tuple during generation.
-
-The current repository implements this idea as a staged research system:
-\begin{center}
-\texttt{baseline decoding} $\rightarrow$
-\texttt{trace/signals} $\rightarrow$
-\texttt{phase analysis} $\rightarrow$
-\texttt{phase prediction} $\rightarrow$
-\texttt{adaptive scheduling} $\rightarrow$
-\texttt{evaluation}.
-\end{center}
-
-\section{Problem Statement}
-
-Given a partially generated dLLM trace, \pag{} aims to predict the next decoding control tuple. In the current implementation, the core tuple is
+\pag{} asks whether generation traces contain enough phase structure to forecast the next block-level control decision. Our final control tuple is
 \[
-  y_t = (\text{block\_size}_t, \text{refinement\_steps}_t),
+  y_t = (\text{block\_size}_t,\ \text{refinement\_budget}_t),
 \]
-with newer data paths also supporting richer fields such as NFE, top-1 confidence statistics, digit fraction, delimiter fraction, and stabilization summaries.
+where block size controls how many tokens are attempted together and refinement budget controls the number of model forward evaluations allowed before committing the block. The broader implementation supports richer conditioning fields: observed \nfe{}, stabilization/refinement steps, confidence statistics, digit fraction, delimiter fraction, and gap statistics.
 
-\textbf{----CHECK IF THE FOLLOWING FIELDS DEFINITIONS ARE CORRECT----}
+The project evolved in two phases. We first treated phase discovery as an interpretability problem over token-level traces: collect Dream/LLaDA refinement histories, extract stabilization features, and segment them with change-point detection (CPD). This showed interpretable difficulty shifts but also exposed a label-construction problem: CPD boundaries move with the feature, smoothing window, and penalty. We therefore shifted to a block-native path based on AdaBlock traces, where block boundaries and compute budgets are directly observed. CPD remains useful for analysis, while training and scheduling use block-level tuples.
 
-Here,
-\begin{itemize}
-\item \texttt{nfe}: number of forward evaluations in the block which is essentially the number of refintement steps + 1 (initial forward pass)
-\item \texttt{mean\_top1\_confidence}: mean of the top-1 token confidence across the block
-\item \texttt{min\_top1\_confidence}: minimum top-1 token confidence across the block
-\item \texttt{digit\_fraction}: fraction of tokens in the block that are digits
-\item \texttt{delimiter\_fraction}: fraction of tokens in the block that are delimiters (e.g., parentheses, commas)
-\end{itemize}
+\section{Related Work}
 
-At inference time, the predicted tuple should drive adaptive unmasking: block size determines how many tokens are committed together, while the refinement/stabilization component determines how much compute is spent before the block is accepted. The intended evaluation compares adaptive decoding against fixed decoding on quality, latency, number of function evaluations (NFE), and stability.
+\textbf{Diffusion language models.} Dream and LLaDA demonstrate that diffusion-style language generation can support reasoning, planning, and instruction following without left-to-right token generation~\citep{ye2025dream,nie2025llada}. Block Diffusion formalizes semi-autoregressive diffusion decoding as an interpolation between fully autoregressive and fully parallel generation~\citep{arriola2025block}. DiffuLLaMA and related adaptation work show that diffusion LMs can inherit strong language-model priors from autoregressive models~\citep{gong2025diffullama}.
 
-\section{Background}
+\textbf{Efficient \dllm{} inference.} Fast-dLLM studies KV caching and parallel decoding for training-free acceleration~\citep{wu2025fastdllm}. AdaBlock-dLLM is the closest prior system to our final implementation: it adapts block length using confidence and semantic boundary heuristics~\citep{lu2025adablock}. Our contribution is complementary. Instead of only reacting to the current confidence band, we train predictors over realized block histories and feed their next-control predictions into the decoding loop.
 
-\textbf{Diffusion language models.} Dream and LLaDA show that diffusion-style generation can be applied to language modeling and reasoning. Their iterative refinement traces provide the token-level trajectories used in the first phase of this project.
+\textbf{Sequence modeling and change-point detection.} Our predictor variants use compact Transformer encoders with sinusoidal positional encodings~\citep{vaswani2017attention}. Our early analysis used PELT-style CPD, which optimizes a penalized segmentation objective and prunes dynamic-programming states for efficiency~\citep{killick2012optimal}. In this project, CPD is an analysis and data-understanding tool rather than the final source of scheduler labels.
 
-\textbf{Semi-autoregressive and block decoding.} Block diffusion and related semi-autoregressive methods interpolate between fully autoregressive decoding and fully parallel generation. These methods motivate block-level scheduling as a useful control surface.
+\section{System Overview}
 
-\textbf{Adaptive block inference.} AdaBlock-dLLM is the closest prior to the final direction of this project because it adapts block size using semantic or confidence-based signals. Our contribution is to frame the schedule as a learned next-control prediction problem over trace-derived tuples rather than only a reactive heuristic.
+PAG comprises two subsystems: an offline predictor-training pipeline that extracts block-level control tuples from AdaBlock LLaDA generation traces and trains a Transformer-based next-tuple predictor, and an online scheduler that loads the trained checkpoint and governs per-block refinement with a learned budget and soft-cap early exit.
+Figure~\ref{fig:architecture} shows this overview.
 
-\textbf{AdaBlock Trace Analysis}
+\textbf{Predictor training.} We run AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems, recording one control tuple per decoded block. 
+Each tuple captures the realized block size, the number of model forward evaluations (NFE), the mean and minimum top-1 softmax confidence across unmasked positions, the fraction of digit tokens in the block, and the fraction of delimiter tokens. 
+The resulting corpus contains 138{,}901 tuples. For training, we construct sliding-window sequences of length eight: each window of past tuples predicts the next (\textit{block\_size}, \textit{refinement\_budget}) pair. 
+Features are z-score normalized per field using corpus statistics. The predictor is a Transformer encoder (ablations over layers, heads, learning rate, pre-norm) with two output heads: a softmax classifier over 128 block-size classes and an ordinal regression head over 83 binary refinement-budget thresholds. 
+The budget head receives the block-size logits as conditioning, allowing the model to capture that larger blocks often need different budgets. 
+Training uses cross-entropy for block size and binary cross-entropy for ordinal thresholds with an AdamW optimizer and early stopping. 
+The final checkpoint bundles model weights, normalization statistics, and the ordered feature-field list.
 
-The traces analyzed in this section are the per-block records produced when AdaBlock-dLLM decodes GSM8K with LLaDA-8B-Instruct. Each line of the resulting JSONL file is a single sample (\texttt{sample\_id}, \texttt{dataset}, \texttt{split}) together with an ordered list of \texttt{tuples}, one entry per decoded block. A tuple captures four orthogonal views of that block: its compute footprint (\texttt{block\_size}, \texttt{nfe}), its confidence under the model (\texttt{mean\_top1\_confidence}, \texttt{min\_top1\_confidence}), its refinement dynamics (\texttt{mean\_stab\_step} / \texttt{max\_stab\_step}, \texttt{mean\_ref\_step} / \texttt{max\_ref\_step}, \texttt{mean\_gap} / \texttt{max\_gap}), and the lexical content of the decoded tokens (\texttt{digit\_fraction}, \texttt{delimiter\_fraction}). Together these fields form the input space that the downstream next-tuple predictor consumes during adaptive scheduling.
+\textbf{Online scheduling.} At decode time, the checkpoint is loaded by a scheduler that maintains a rolling context of realized tuples. 
+The first block completely simulates AdaBlock to get block coundary and refinement; subsequent blocks pad the observed history to the window length, forward it through the predictor, and clamp the output by remaining sequence length and configured minimum and maximum bounds. 
+Block sizing follows AdaBlock's adaptive mechanism: the model identifies the highest-confidence delimiter token in a forward-looking window and positions the block boundary there, defaulting to a system-chosen length when no delimiter meets the threshold. 
+The predictor supplies the refinement budget independently. Decoding proceeds as a threshold-based unmasking loop within the active block. Once the forward-evaluation count reaches the predicted budget, a soft-cap mechanism checks per-token confidence and stability: 
+if the minimum unmasking confidence exceeds \(\tau_{\text{commit}} = 0.8\) or predictions have been stable for \(\tau_{\text{stable}} = 2\) steps, the block exits early or
+when only a small fraction of the block remains and confidence is adequate, a forced commit terminates refinement unconditionally. 
+After each block, the realized tuple---actual NFE, mean and minimum confidence, digit fraction, and delimiter fraction---is appended to the rolling context. 
+The scheduler is a drop-in replacement within AdaBlock-dLLM's LLaDA generation harness, enabling per-prompt comparison against an unmodified AdaBlock run from the same random seed.
 
-Concretely, the dataset is collected by running the AdaBlock-dLLM scheduler (LLaDA-8B variant) over the full GSM8K training split (5{,}000 problems) and a 200-problem subset of the public test split, plus an additional disjoint 200-problem subset of the GSM8K test split that is held out purely as an evaluation set for the downstream scheduler. At every block boundary the scheduler emits the applied block size and the number of forward evaluations actually consumed; in addition, the diffusion loop is instrumented so that for each masked position we record the step at which its argmax first matches the eventual decoded token (\texttt{stab\_step}) and the step of its final flip (\texttt{ref\_step}). Block-level features are then computed by aggregating these per-token quantities together with the softmax top-1 probabilities of the committed tokens and a tokenizer-based classification of decoded surface forms into digits and structural delimiters. The resulting corpus contains 138{,}901 training blocks and 5{,}543 test blocks (144{,}444 total) and is the input to every plot in this section as well as to the trained predictor evaluated later in the report.
-
-\subsection*{Block structure}
-
-\begin{figure}[H]
+\begin{figure}[t!]
   \centering
-  \includegraphics[width=\linewidth]{figs/block_structure.png}
-  \caption{Top: number of blocks AdaBlock-dLLM emits per GSM8K sample, train (left) vs.\ test (right). Bottom: distribution of \texttt{block\_size} across all decoded blocks, truncated at the 99th percentile.}
+  \resizebox{0.96\linewidth}{!}{%
+    \begin{tikzpicture}[node distance=0.55cm and 0.5cm]
+      % === Offline training track ===
+      \node[font=\small\bfseries, anchor=south] (trainlabel) {Offline predictor training};
+
+      \node[data, below=0.2cm of trainlabel] (adablock) {AdaBlock LLaDA on GSM8K};
+      \node[data, below=0.5cm of adablock] (prep) {Block tuples + sliding windows [w=8]};
+      \node[modelbox, below=0.5cm of prep] (trans) {Transformer training (dual output heads)};
+      \node[data, below=0.5cm of trans] (ckpt) {Checkpoint};
+
+      \draw[arrow] (adablock) -- (prep);
+      \draw[arrow] (prep) -- (trans);
+      \draw[arrow] (trans) -- (ckpt);
+
+      % === Online inference track ===
+      \node[stage, below=0.55cm of ckpt] (sched) {PAG\\scheduler};
+      \draw[arrow, dashed] (ckpt) -- (sched);
+
+      % Per-block decoding loop
+      \node[data, below=0.5cm of sched] (ctx) {History [w=8]};
+      \node[modelbox, right=of ctx] (pred) {Predictor};
+      \node[stage, right=of pred] (clip) {Clamp};
+      \node[stage, right=of clip] (dec) {Decode + soft cap};
+      \node[data, below=0.3cm of dec] (rectup) {Record};
+
+      \draw[arrow] (ctx) -- (pred);
+      \draw[arrow] (pred) -- (clip);
+      \draw[arrow] (clip) -- (dec);
+      \draw[arrow] (dec) -- (rectup);
+      \draw[arrow] (rectup.south) -- ++(0,-0.15) -| (ctx.south);
+
+      \node[draw, dashed, rounded corners=2pt, inner sep=0.2cm,
+            fit=(ctx)(pred)(clip)(dec)(rectup),
+            label={[font=\small, label distance=1pt]north:Per-block loop}] (loopbox) {};
+
+      \draw[arrow] (sched) -- (loopbox);
+
+      \node[stage, below=0.4cm of loopbox] (eval) {Evaluation};
+      \node[data, below=0.4cm of eval] (metrics) {Accuracy, NFE, runtime};
+
+      \draw[arrow] (loopbox) -- (eval);
+      \draw[arrow] (eval) -- (metrics);
+    \end{tikzpicture}
+  }
+  \caption{System architecture. The offline training pipeline (top) extracts block-level tuples from AdaBlock LLaDA traces and trains a Transformer predictor with dual output heads. The online scheduler (bottom) loads the checkpoint and governs per-block decoding via a learned refinement budget and soft-cap early exit.}
+  \label{fig:architecture}
+\end{figure}
+
+\section{Trace Data and Interpretability}
+
+\subsection{Token-Level CPD Analysis}
+
+Our first research thread instrumented Dream and LLaDA generation to store per-token refinement histories. At each diffusion step we record token identities, top-1 and top-2 softmax probabilities, and full-vocabulary entropy for every position. A per-token observation history is built by tracking positions across steps via their token index. From this history we identify each token's \emph{stabilization step}: the earliest step index after which a token's identity never changes. All scalar features described below are read at this stabilization step, yielding one value per final output token.
+
+Change-point detection (CPD) partitions a univariate series into contiguous segments whose internal statistical properties are homogeneous. Given a feature series \(y_1,\dots,y_n\) indexed by token position, the PELT algorithm (Pruned Exact Linear Time) solves
+
+\[
+\min_{K,\tau_1,\dots,\tau_K}\; \sum_{k=1}^{K+1} \mathcal{C}(y_{\tau_{k-1}+1:\tau_k}) + \beta K,
+\]
+
+where \(0=\tau_0<\tau_1<\cdots<\tau_K<\tau_{K+1}=n\) are segment boundaries, \(\beta\ge 0\) is a penalty that controls the trade-off between data fidelity and over-segmentation, and \(\mathcal{C}\) is a segment cost function. With the \(\ell_2\) cost,
+
+\[
+\mathcal{C}(y_{a:b}) = \sum_{t=a}^b (y_t - \hat\mu)^2,\qquad
+\hat\mu = \frac{1}{b-a+1}\sum_{t=a}^b y_t,
+\]
+
+the total objective equals the sum of within-segment squared deviations plus a linear penalty on the number of changepoints. PELT achieves \(O(n)\) runtime by pruning candidate boundaries that cannot improve the objective under the additive cost structure.
+
+We extracted four per-token features at each token's stabilization step.
+\textbf{Stabilizing probability} (\(p_{\text{top-1}}\)) is the softmax confidence for the final token identity at the moment it stabilizes.
+\textbf{Stabilizing entropy} (\(-\sum_i p_i\log p_i\)) measures full-vocabulary uncertainty and is useful when top-1 probabilities saturate near 1.0.
+\textbf{Stabilizing margin} (\(p_{\text{top-1}} - p_{\text{top-2}}\)) captures the separation between the top two candidates.
+\textbf{Stabilizing refinement step} records the diffusion step index at which stabilization occurs, reflecting how long the model deliberated before committing.
+
+Figure~\ref{fig:cpd} shows these features for two representative Dream traces: an algebra problem and a binary-search code snippet. The left column plots raw stabilizing probability across token position. Both prompts exhibit a distinctive structure---extended plateaus near 1.0 for template tokens, repeated phrasing, and punctuation, punctuated by sharp dips to \(0.3\)--\(0.6\) during arithmetic computation, variable binding, and return-value construction. This aligns with the phase hypothesis: some spans are nearly effortless for the model while others demand significantly more selective refinement. The center column overlays PELT-detected boundaries on the same probability curves; segment boundaries align with intuitive semantic transitions such as the start of a numerical simplification or the boundary between a loop header and its body. The right column shows stabilizing refinement step, which is more monotonic: later tokens generally stabilize later in the diffusion process, making it less useful as a standalone segmentation signal.
+
+A critical methodological observation tempered this analysis. CPD boundaries shift with the choice of feature, smoothing window, penalty value, and detector type---the same trace can produce anywhere from two to eight segments depending on configuration. This sensitivity makes CPD a valuable interpretability tool but an unreliable label generator for a scheduler whose control space is block-native. It motivated the shift to directly observed block-level traces, described next.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob.png}
+    \caption{Algebra: raw stabilizing probability.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_prob_segments.png}
+    \caption{Algebra: probability with PELT segments.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/algebra_images/algebra_stab_ref_steps_segments.png}
+    \caption{Algebra: refinement-step signal.}
+  \end{subfigure}
+
+  \vspace{0.22cm}
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob.png}
+    \caption{Binary search: raw stabilizing probability.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_prob_segments.png}
+    \caption{Binary search: probability with PELT segments.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.30\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{../phase_cpd/results_pelt/pelt_images/binary_search_images/binary_stab_ref_steps_segments.png}
+    \caption{Binary search: refinement-step signal.}
+  \end{subfigure}
+  \caption{Token-level CPD analysis for two representative prompts (algebra and binary search). Left column: raw stabilizing probability curves showing high-confidence plateaus alternating with low-confidence computation spans. Center column: same curves overlaid with PELT-detected segment boundaries. Right column: stabilizing refinement step, which is more monotonic across token position.}
+  \label{fig:cpd}
+\end{figure}
+
+\subsection{Block-Native AdaBlock Traces}
+
+The final training path uses AdaBlock-style LLaDA traces. We ran LLaDA-8B-Instruct on GSM8K and recorded one tuple per decoded block. Each tuple contains the applied block size, actual \nfe{}, token stabilization/refinement summaries, top-1 confidence statistics, digit fraction, delimiter fraction, and gap statistics. The training corpus contains 5{,}000 GSM8K training problems with 138{,}901 blocks and 200 validation/test problems with 5{,}543 blocks. A separate 200-prompt test slice (GSM8K test indices 200--399) is used for downstream scheduler evaluation.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=0.88\linewidth]{figs/block_structure.png}
+  \caption{AdaBlock block structure on GSM8K. Blocks per sample are similar between train and test, while block sizes have strong point masses at size 1 and 16.}
   \label{fig:block-structure}
 \end{figure}
 
-Figure~\ref{fig:block-structure} shows the decoding granularity AdaBlock-dLLM produces on GSM8K. Blocks per sample (top row) is unimodal around 25--30 with a tail to $\sim$55--60, and the train/test shapes match closely, so the 200-problem evaluation set is representative of the training pool. The \texttt{block\_size} distribution (bottom row) is sharply bimodal: $\sim$21\% of blocks are size 1 (almost always a delimiter the confidence scheduler accepts immediately) and another $\sim$29\% sit at the AdaBlock content cap of 16, with sizes 2--15 forming a low decaying ridge. Only $\sim$1\% of blocks exceed 47 tokens (max 128), so a discrete classifier capped at 48 classes loses negligible coverage, though it must still handle the heavy point-mass mixture at 1 and 16 rather than a smooth scale.
+Figure~\ref{fig:block-structure} shows why the prediction problem is not a smooth regression problem. The schedule has a heavy point mass at delimiter-size blocks and a large mass at the content cap. A predictor that averages targets can be numerically close under MSE while producing poor discrete controls.
 
-\subsection*{Compute (NFE) per block}
-
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=\linewidth]{figs/nfe.png}
-  \caption{Top: distribution of \texttt{nfe} per block, train (left) vs.\ test (right), truncated at the 99th percentile. Bottom: mean \texttt{nfe} as a function of \texttt{block\_size} with the inter-quartile band, train (left) vs.\ test (right).}
+  \begin{tabular}{@{}ccc@{}}
+    \includegraphics[width=0.31\linewidth, trim=0 376 651 0, clip]{figs/nfe.png} &
+    \includegraphics[width=0.31\linewidth, trim=651 376 0 0, clip]{figs/nfe.png} &
+    \includegraphics[width=0.31\linewidth, trim=0 0 706 0, clip]{figs/confidence_vs_nfe.png} \\[-0.15em]
+    \includegraphics[width=0.31\linewidth, trim=0 0 651 376, clip]{figs/nfe.png} &
+    \includegraphics[width=0.31\linewidth, trim=651 0 0 376, clip]{figs/nfe.png} &
+    \includegraphics[width=0.31\linewidth, trim=760 0 0 0, clip]{figs/confidence_vs_nfe.png}
+  \end{tabular}
+  \caption{Per-block compute and confidence. \nfe{} grows with block size but has wide conditional variance, while high-compute blocks are lower-confidence and more variable.}
   \label{fig:nfe}
-\end{figure}
-
-Figure~\ref{fig:nfe} shows the per-block compute spend. About 42\% of blocks finish in a single forward pass (the size-1 delimiter blocks), and only $\sim$1\% need more than 13 NFE. Conditioning on \texttt{block\_size} (bottom row), mean NFE grows roughly linearly to $\sim$4 at the AdaBlock cap of 16, where a clear spike marks the full-content block, and then plateaus around 4--6. The IQR band is wide at every block size, so \texttt{block\_size} alone underdetermines compute and a useful predictor must combine it with confidence and refinement signals.
-
-\subsection*{Confidence vs.\ compute}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth]{figs/confidence_vs_nfe.png}
-  \caption{Mean top-1 confidence per block, bucketed by the NFE actually spent on the block, train (left) vs.\ test (right). Boxes show median and IQR; whiskers extend to $1.5\times$IQR.}
   \label{fig:conf-vs-nfe}
 \end{figure}
 
-Figure~\ref{fig:conf-vs-nfe} confirms that NFE is allocated where the model is least sure. Single-NFE blocks sit tightly at confidence $\approx 1.0$ (the easy delimiter and high-certainty content blocks the scheduler commits immediately), and median confidence falls monotonically as the NFE bucket grows: $\sim$0.97 at 2 NFE, $\sim$0.95 at 5--6, $\sim$0.92 at 7--9, and $\sim$0.88 in the 10+ bucket. The spread also widens with NFE, so high-compute blocks are not just lower confidence on average but also more variable. The train and test panels are visually indistinguishable, supporting the use of confidence statistics as inputs to the next-tuple predictor.
+\section{Predictors}
 
+\subsection{Regression Transformer}
 
-% \section{Repository Architecture}
+The first learned predictor treated the next tuple as a continuous regression target. A compact Transformer encoder consumed a sliding window of previous tuples, projected them to a hidden dimension, added sinusoidal position encodings, pooled the final context position, and produced real-valued outputs. Inference rounded outputs back to integer controls. This model was easy to extend from two features to rich tuples, and several checkpoints reached validation losses near \(0.096\) on normalized tuple targets. The failure mode was deployment-oriented: MSE encouraged averaged predictions in a discrete, multimodal target space.
 
-% The codebase is organized around explicit stage boundaries. The public stage entrypoints are:
-% \begin{itemize}[leftmargin=1.5em]
-%   \item \texttt{pag.baselines.run\_baseline(...)}
-%   \item \texttt{pag.phases.run\_phase\_analysis(...)}
-%   \item \texttt{pag.scheduler.run\_adaptive\_decoding(...)}
-%   \item \texttt{pag.evaluation.evaluate\_runs(...)}
-% \end{itemize}
+\subsection{Classification/Ordinal Transformer}
 
-% The main implementation packages and experimental folders are:
-% \begin{itemize}[leftmargin=1.5em]
-%   \item \texttt{src/pag/contracts}: shared dataclasses and artifact contracts.
-%   \item \texttt{src/pag/baselines}: baseline fixed decoding stage.
-%   \item \texttt{src/pag/phases}: phase analysis stage and predictor-ready artifacts.
-%   \item \texttt{src/pag/scheduler}: adaptive scheduling and decode decisions.
-%   \item \texttt{src/pag/evaluation}: baseline/adaptive comparison records.
-%   \item \texttt{phase\_cpd}: offline trace loading, stabilization-feature extraction, CPD, and visualization.
-%   \item \texttt{phase\_predict}: tuple-sequence datasets, Transformer models, training, inference, and checkpointing.
-%   \item \texttt{traces/}: curated training and test JSONL files, including richer stabilization/confidence tuples.
-%   \item \texttt{output/}: saved ablation summaries and model checkpoints.
-% \end{itemize}
+The final predictor keeps the Transformer encoder but changes the heads. The block-size head is a classifier over possible block sizes. The stabilization/\nfe{} head is ordinal: it predicts threshold logits and recovers the budget by counting thresholds whose sigmoid exceeds 0.5. The stabilization head is conditioned on block logits, so the model can represent that larger blocks often require different refinement budgets.
 
-\section{Method}
+\begin{figure}[!htbp]
+  \centering
+  \resizebox{0.94\linewidth}{!}{%
+  \begin{tikzpicture}[node distance=0.58cm and 0.5cm]
+    \node[data] (inp) {Past block tuples\\\(w \times d\)};
+    \node[modelbox, right=of inp] (proj) {Linear\\projection};
+    \node[modelbox, right=of proj] (pos) {Sinusoidal\\positions};
+    \node[modelbox, right=of pos] (enc) {Transformer\\encoder};
+    \node[modelbox, right=of enc] (pool) {Last-position\\state};
+    \node[modelbox, above right=0.15cm and 0.56cm of pool] (block) {Block-size\\softmax};
+    \node[modelbox, below right=0.15cm and 0.56cm of pool] (stab) {Ordinal\\budget head};
+    \node[data, right=0.56cm of block] (bout) {\(\hat b_t\)};
+    \node[data, right=0.56cm of stab] (sout) {\(\hat r_t\)};
+    \draw[arrow] (inp) -- (proj);
+    \draw[arrow] (proj) -- (pos);
+    \draw[arrow] (pos) -- (enc);
+    \draw[arrow] (enc) -- (pool);
+    \draw[arrow] (pool) -- (block);
+    \draw[arrow] (pool) -- (stab);
+    \draw[arrow] (block) -- (bout);
+    \draw[arrow] (stab) -- (sout);
+    \draw[arrow] (block.south) to[bend left=8] node[midway, right, font=\scriptsize]{logits} (stab.north);
+  \end{tikzpicture}
+  }
+  \caption{Classification/ordinal Transformer architecture. The block-size logits condition the refinement-budget head.}
+  \label{fig:model-arch}
+\end{figure}
 
-\subsection{Initial CPD-Based Pipeline}
+Training uses cross-entropy for block size and binary cross-entropy for ordinal budget thresholds. The implementation supports a 6-feature and 12-feature input mode. The final scheduler checkpoint used the rich-feature classifier path and was integrated through \code{AdaBlock-dLLM/llada/pag\_predictor.py}.
 
-The first pipeline was:
-\[
-\begin{aligned}
-&\text{Dream/LLaDA trace collection}
-\rightarrow \text{token-level feature extraction}
-\rightarrow \text{CPD segmentation}\\
-&\rightarrow \text{segment tuple construction}
-\rightarrow \text{next-tuple prediction}.
-\end{aligned}
-\]
-The token-level features included stabilizing probability, stabilizing margin, stabilizing entropy, and stabilizing refinement step. CPD was run with PELT or kernel CPD using configurable cost, penalty, minimum segment length, and smoothing window.
+\subsection{Other Predictor Experiments}
 
-Change-point detection (CPD) is the task of finding positions in a sequence where the underlying behavior changes. In our setting, the sequence is not the text itself but a token-level feature curve, such as stabilizing entropy or stabilizing probability across the generated output. A detected change point marks a candidate boundary between two decoding phases: for example, a high-confidence span followed by a lower-confidence reasoning span.
+We also explored two non-Transformer baselines.
 
-PELT (Pruned Exact Linear Time) is a dynamic-programming CPD algorithm that searches for segment boundaries by minimizing a total objective: the within-segment fit cost plus a penalty for adding more segments. The penalty controls how aggressively the algorithm splits the trace. A low penalty produces many short phases, while a high penalty keeps only the strongest regime changes. In our experiments, PELT with L2 or normal costs was useful for quick scalar-feature analysis.
+\textbf{Variable-order Markov model.} The VOMM predictor memorizes recent tuple contexts and backs off when a context is unseen. It is useful as a sanity check because it is cheap and interpretable, but it cannot generalize well to continuous confidence features or unseen block patterns.
 
-Kernel CPD is a more flexible CPD variant that compares segments in an implicit feature space defined by a kernel, such as RBF, linear, or cosine. Instead of assuming that a simple mean or variance shift explains the boundary, kernel CPD can detect broader distributional changes in the feature trajectory. This makes it useful when phase shifts are nonlinear or subtle, though it can also be more sensitive to kernel choice and hyperparameters.
+\textbf{Random forest.} The \code{rf-block-stab-predict} branch trained a multi-output random forest on rolling-window statistics. With window size 5, 200 trees, max depth 15, and features \(\{\) \nfe{}, block size, max stabilization step, mean refinement step, mean gap, max gap \(\}\), it trained on 90{,}994 examples and tested on 22{,}907 examples. Its held-out MAE was 7.24 for block size and 1.66 for max stabilization step. Figure~\ref{fig:rf-ablation} shows that the most predictive feature was the last observed block size, followed by window variability and trend features. This baseline supported the decision to keep history statistics in the learned setting, but the Transformer remained better matched to sequential deployment.
 
-This pipeline was useful for analysis because it showed that token trajectories often contain visible regime changes. However, it also introduced a label-construction dependency: CPD boundaries changed with feature choice and penalty, while the downstream scheduler ultimately needed block-level controls.
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.47\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        xbar, width=\linewidth, height=5.5cm,
+        xmin=0, xlabel={importance},
+        symbolic y coords={block\_size\_last,block\_size\_std,block\_size\_trend,mean\_ref\_step\_trend,mean\_gap\_std,mean\_gap\_trend,mean\_ref\_step\_mean,mean\_ref\_step\_std,mean\_gap\_mean,mean\_ref\_step\_last},
+        ytick=data, yticklabel style={font=\scriptsize},
+        xticklabel style={font=\scriptsize},
+      ]
+        \addplot[fill=blue!35] table[x=importance,y=feature] {figs/rf_importance.tsv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Random forest feature importance.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar, width=\linewidth, height=5.5cm,
+        ylabel={best validation loss},
+        xtick=data, xticklabels from table={figs/ablation_bestvals.tsv}{run},
+        x tick label style={rotate=45, anchor=east, font=\tiny},
+        yticklabel style={font=\scriptsize},
+        ymin=0, bar width=7pt,
+      ]
+        \addplot[fill=green!35] table[x expr=\coordindex,y=val_loss] {figs/ablation_bestvals.tsv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Best saved Transformer ablation checkpoints.}
+  \end{subfigure}
+  \caption{Predictor experiments beyond the final scheduler. The RF branch provided interpretable feature rankings; Transformer ablations tested context length, hidden size, heads, layers, dropout, and learning rate.}
+  \label{fig:rf-ablation}
+\end{figure}
 
-\subsection{Revised Block-Native Pipeline}
+\section{Tuple-Conditioned Scheduling}
 
-The revised direction is:
-\[
-\begin{aligned}
-&\text{AdaBlock/block-native traces}
-\rightarrow \text{block tuple sequence construction}\\
-&\rightarrow \text{next-tuple prediction}
-\rightarrow \text{tuple-conditioned unmasking}.
-\end{aligned}
-\]
-This design keeps the training labels aligned with the scheduler. Instead of inferring block boundaries from token-level curves, the trace itself provides block size and stabilization/refinement behavior. CPD remains valuable as an analysis tool, but it is no longer the preferred production training path.
+The final scheduler integrates the predictor into LLaDA generation. For each block, it builds a padded history of realized block outcomes, predicts the next control tuple, clips it by remaining length and configured bounds, and runs LLaDA refinement on that active span. The implementation records the realized block size, actual \nfe{}, confidence statistics, digit fraction, and delimiter fraction, then appends that tuple to the history before the next prediction.
 
-This revision moved the project toward a predictor trained on explicit block-level supervision rather than CPD-derived pseudo-boundaries.
-
-\subsection{Phase Predictor}
-
-\subsubsection{Regression-Based Predictor}
-
-The first version of the phase predictor treated next-tuple prediction as a regression problem. Given a context window of previous tuples, the model predicted continuous values for the next control tuple, typically $(\texttt{block\_size}, \texttt{refinement\_steps})$. Inputs were normalized using training-set statistics, the model produced one real-valued output per tuple field, and inference rounded the outputs back to non-negative integer scheduler controls.
-
-This regression framing was simple and flexible: adding a new output field only required changing the tuple size, and mean-squared error gave a direct training objective. However, due to the mean-squared error, the model tended to produce outputs that were not well-aligned with the discrete nature of the controls. This motivated the current implementation, which keeps the Transformer encoder but changes the output heads and losses.
-
-\textbf{ADD A PICTURE IF POSSIBLE}
-
-\subsubsection{Current Classification/Ordinal Transformer}
-
-The currently implemented \texttt{phase\_predict.model.PhaseTransformer} is a compact Transformer encoder with two task-specific heads. Each input item is a window of previous phase tuples or extended feature tuples with shape
-\[
-  (\texttt{batch}, \texttt{window\_size}, \texttt{input\_tuple\_size}).
-\]
-The model first projects each input tuple into a hidden dimension, adds fixed sinusoidal positional encodings, and passes the sequence through a stack of Transformer encoder layers. The implementation uses batch-first tensors, pre-normalized encoder layers, a feed-forward width of $4d$, and the final context position as the pooled representation.
-
-From this final representation, the model predicts two outputs:
-\begin{itemize}[leftmargin=1.5em]
-  \item a block-size classification head that maps the final hidden state to logits over block sizes $1,\ldots,K_b$;
-  \item a stabilization ordinal head that maps the final hidden state concatenated with block logits to $K_s$ threshold logits for the maximum stabilization step.
+Several engineering changes were necessary to make the learned scheduler comparable to AdaBlock:
+\begin{itemize}[leftmargin=1.3em, itemsep=0.1em]
+  \item \textbf{Seed alignment.} The final comparator seeds PAG from AdaBlock's realized first block for the same prompt. This removes an artifact where separate probes created unfair first-block differences.
+  \item \textbf{Reactive safeguards.} The branch \code{feat/reactive-block-predictive-budget} added reactive block sizing, predictive residual budgeting, soft exit gates, and a fix preventing the ``few remaining'' gate from force-committing low-confidence tokens.
+  \item \textbf{Caching.} Prefix-cache and dual-cache variants preserve tuple-conditioned scheduling while reducing repeated computation in LLaDA.
+  \item \textbf{Visualization.} The log viewers flatten prompt, method, delta, and block histories into dashboards for qualitative inspection.
 \end{itemize}
 
-The stabilization head is conditioned on the block prediction by concatenating the final hidden state with the block logits before predicting ordinal thresholds. Training uses cross-entropy loss for the block-size class and binary cross-entropy-with-logits for the ordinal stabilization vector, then sums the two losses. The dataset encodes the block target as \texttt{block\_size - 1} and encodes the stabilization target as a prefix vector: if the target stabilization step is $s$, the first $s$ thresholds are set to one.
-
-At inference time, the predictor applies \texttt{argmax} to the block logits and adds one to recover the block size. It converts stabilization logits with a sigmoid and counts thresholds above 0.5 to recover the predicted stabilization/refinement count. The current schema defaults to 128 block classes and 83 stabilization thresholds, based on observed trace ranges. It still supports multi-feature inputs through extended tuples and configurable fields such as block size, NFE, maximum stabilization step, confidence statistics, digit fraction, and delimiter fraction.
-
-\textbf{ADD A PICTURE IF POSSIBLE}
-
-\subsection{Tuple-Conditioned Diffusion Unmasking}
-
-The tuple-conditioned unmasking loop is implemented using LLaDA model. We keep a history of realized block outcomes as extended tuples, use a seed tuple for the first block, and then queries the trained phase predictor using the recent padded history. The predicted tuple is converted into a concrete scheduled block: the block-size component determines the active span to decode, and the refinement/stabilization component determines the maximum number of LLaDA forward passes allowed for that span. The scheduler clips these values by the remaining generation length, maximum block length, global step budget, and a minimum refinement floor. In this way, the phase predictor becomes a direct controller for diffusion unmasking rather than just an offline trace model.
-
-Inside each scheduled block, LLaDA repeatedly predicts token IDs for masked positions and transfers tokens according to a confidence-threshold policy. Under low-confidence remasking, only masked positions whose predicted token confidence exceeds the threshold are unmasked, while at least one token is forced to transfer so generation cannot stall. If the block reaches its budgeted refinement step before all positions are confidently unmasked, the implementation force-commits the remaining masked positions to keep decoding bounded. After the block finishes, the scheduler records the realized block size, actual NFE, mean and minimum confidence, digit fraction, and delimiter fraction, so the next prediction is conditioned on what actually happened during decoding. Prefix-cache and dual-cache variants preserve the same tuple-conditioned scheduling semantics while reducing repeated computation.
-
-\section{Experiments}
-
-\subsection{Trace and CPD Analysis}
-
-The \texttt{phase\_cpd} experiments used curated Dream/LLaDA-style traces from the local real-trace directory. The CPD UI and scripts support stabilizing entropy, margin, probability, and refinement-step features.
-
-\textbf{Finding.} Stabilizing probability and entropy often reveal interpretable blocks: high-confidence spans tend to correspond to easy copied or syntactically predictable regions, while lower-confidence/noisier spans tend to align with reasoning or code-construction regions. Stabilizing refinement step was less informative in several traces because it often behaved monotonically, although spikes sometimes marked harder reasoning transitions.
-
-\textbf{Design consequence.} CPD is useful for diagnosing phase-like behavior, but its sensitivity to smoothing and penalty settings made it less attractive as the sole source of training labels.
-
-\textbf{ADD PICTURES}
-
-% \subsection{Tuple Predictor Training}
-
-% The predictor training scripts support both legacy trace extraction and direct JSONL tuple loading. The current default training data paths point to:
-% \begin{itemize}[leftmargin=1.5em]
-%   \item \texttt{traces/rich/stab\_tuples\_conf\_train\_rich.jsonl}
-%   \item \texttt{traces/rich/stab\_tuples\_conf\_test\_rich.jsonl}
-% \end{itemize}
-% These rich tuples are intended to support multi-feature conditioning while keeping the target as a compact block/refinement control.
-
-\subsection{Ablation Results}
-
-
-
-\section{Preliminary Findings}
-
-\begin{enumerate}[leftmargin=1.5em]
-  \item dLLM traces do show useful stabilization structure. CPD plots over stabilizing probability and entropy reveal plausible phase boundaries in algebra and coding examples.
-  \item CPD is better as an analysis instrument than as a mandatory training-label generator. Hyperparameters can move boundaries, and block-native traces avoid that ambiguity.
-  \item The learned predictor path is viable. The codebase supports Transformer training, checkpointing, inference, and hyperparameter ablation over tuple sequences.
-  \item Richer tuple features are likely important. The project moved from two-field tuples toward multi-feature inputs that include NFE, stabilization statistics, confidence statistics, digit fraction, and delimiter fraction.
-\end{enumerate}
+\begin{figure}[!htbp]
+  \centering
+  \begin{tikzpicture}[node distance=0.62cm and 0.66cm]
+    \node[data] (hist) {Realized\\history};
+    \node[modelbox, right=of hist] (pred) {Phase\\predictor};
+    \node[stage, right=of pred] (clip) {Clip by\\budget};
+    \node[stage, right=of clip] (llada) {LLaDA block\\refinement};
+    \node[data, below=0.72cm of llada] (obs) {Observed\\block tuple};
+    \draw[arrow] (hist) -- (pred);
+    \draw[arrow] (pred) -- node[above, font=\scriptsize]{\((\hat b,\hat r)\)} (clip);
+    \draw[arrow] (clip) -- (llada);
+    \draw[arrow] (llada) -- (obs);
+    \draw[arrow] (obs.west) -| (hist.south);
+  \end{tikzpicture}
+  \caption{Deployment loop. Predictions are not only offline labels: they directly control the next LLaDA block and are updated with realized outcomes.}
+  \label{fig:scheduler-loop}
+\end{figure}
 
 \section{Evaluation}
 
+\subsection{Setup}
+
+We evaluate on 200 GSM8K test prompts, \code{gsm8k\_test\_0200}--\code{gsm8k\_test\_0399}, using LLaDA-8B-Instruct with generation length 256, 64 diffusion steps, confidence threshold 0.9, delimiter threshold 0.3, prefix+dual cache, minimum block length 1, minimum refinement budget 1, and no refinement offset. The final log file contains multiple runs; the reported numbers use the latest complete 200-prompt run, \code{\FinalRunId}. The answer metric is exact presence of the accepted numeric answer in the generated text after normalization, matching the repository evaluator.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{lrrrr}
+    \toprule
+    Method & Accuracy & Correct & Avg. total \nfe{} & Avg. blocks \\
+    \midrule
+    PAG & \PagAccPct\% & \PagCorrect/\FinalNumPrompts & \PagAvgNfe & \PagAvgBlocks \\
+    AdaBlock & \AdaAccPct\% & \AdaCorrect/\FinalNumPrompts & \AdaAvgNfe & \AdaAvgBlocks \\
+    \bottomrule
+  \end{tabular}
+  \caption{Final 200-prompt GSM8K evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
+  \label{tab:final-eval}
+\end{table}
+
+\begin{figure}[!htbp]
+  \centering
+	  \begin{subfigure}{0.46\linewidth}
+	    \centering
+	    \begin{tikzpicture}
+	      \begin{axis}[
+	        ybar, width=\linewidth, height=4.6cm,
+        ylabel={avg. total \nfe{}}, symbolic x coords={PAG,AdaBlock},
+        xtick=data, ymin=0, bar width=22pt, nodes near coords,
+      ]
+        \addplot[fill=blue!35] coordinates {(PAG,\PagAvgNfe) (AdaBlock,\AdaAvgNfe)};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Average compute.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.46\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        ybar, width=\linewidth, height=4.6cm,
+        ylabel={answer accuracy (\%)}, symbolic x coords={PAG,AdaBlock},
+        xtick=data, ymin=80, ymax=95, bar width=22pt, nodes near coords,
+      ]
+        \addplot[fill=green!35] coordinates {(PAG,\PagAccPct) (AdaBlock,\AdaAccPct)};
+      \end{axis}
+	    \end{tikzpicture}
+	    \caption{Answer accuracy.}
+	  \end{subfigure}
+	  \caption{Aggregate final evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
+	  \label{fig:final-eval-summary}
+	\end{figure}
+
+\begin{figure}[!htbp]
+  \centering
+	  \begin{subfigure}{0.46\linewidth}
+	    \centering
+	    \begin{tikzpicture}
+	      \begin{axis}[
+        ybar, width=\linewidth, height=4.6cm,
+        xlabel={PAG - AdaBlock \nfe{} delta}, ylabel={prompts},
+        xtick=data, xticklabels from table={figs/nfe_delta_hist.tsv}{bin},
+        x tick label style={rotate=45, anchor=east, font=\tiny},
+        ymin=0, bar width=6pt,
+      ]
+        \addplot[fill=orange!45] table[x expr=\coordindex,y=count] {figs/nfe_delta_hist.tsv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{\nfe{} savings distribution.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.46\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=\linewidth, height=4.6cm,
+        xlabel={AdaBlock total \nfe{}}, ylabel={PAG total \nfe{}},
+        yticklabel style={font=\scriptsize}, xticklabel style={font=\scriptsize},
+        legend style={font=\scriptsize, at={(0.03,0.97)}, anchor=north west},
+      ]
+        \addplot[only marks, mark=*, mark size=1.1pt, blue!65]
+          table[x=adablock_nfe,y=pag_nfe] {figs/final_eval_points.tsv};
+        \addplot[domain=35:170, dashed, black] {x};
+        \legend{prompt, parity}
+      \end{axis}
+    \end{tikzpicture}
+	    \caption{Per-prompt compute parity.}
+	  \end{subfigure}
+	  \caption{Per-prompt final evaluation plots. PAG reduced \nfe{} on \NfeWinCount{} of \FinalNumPrompts{} prompts, tied on \NfeTieCount{}, and used more \nfe{} on \NfeLossCount{}.}
+	  \label{fig:final-eval}
+\end{figure}
+
+The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased.
+
+\begin{figure}[!htbp]
+  \centering
+  \begin{subfigure}{0.49\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=\linewidth, height=4.8cm,
+        xlabel={block index}, ylabel={value},
+        legend style={font=\scriptsize},
+        yticklabel style={font=\scriptsize}, xticklabel style={font=\scriptsize},
+      ]
+        \addplot[blue, mark=*] table[x=block,y=block_size] {figs/pag_saving_schedule.tsv};
+        \addplot[orange, mark=square*] table[x=block,y=actual_nfe] {figs/pag_saving_schedule.tsv};
+        \legend{block size, actual \nfe{}}
+      \end{axis}
+    \end{tikzpicture}
+    \caption{\BestSavingPrompt{}: \BestSavingDelta{} \nfe{} delta.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.49\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=\linewidth, height=4.8cm,
+        xlabel={block index}, ylabel={value},
+        legend style={font=\scriptsize},
+        yticklabel style={font=\scriptsize}, xticklabel style={font=\scriptsize},
+      ]
+        \addplot[blue, mark=*] table[x=block,y=block_size] {figs/pag_overhead_schedule.tsv};
+        \addplot[orange, mark=square*] table[x=block,y=actual_nfe] {figs/pag_overhead_schedule.tsv};
+        \legend{block size, actual \nfe{}}
+      \end{axis}
+    \end{tikzpicture}
+    \caption{\WorstOverheadPrompt{}: +\WorstOverheadDelta{} \nfe{} delta.}
+  \end{subfigure}
+  \caption{Example PAG schedules from the final run. Most prompts save compute; the rare overhead cases occur when the learned schedule spends extra refinement on difficult blocks.}
+  \label{fig:schedules}
+\end{figure}
+
+\FloatBarrier
+
+\section{Discussion}
+
+\textbf{What worked.} The strongest empirical result is that learned tuple scheduling can preserve AdaBlock-level GSM8K answer accuracy while reducing compute. The result is not just an offline predictor metric: it holds inside the LLaDA decoding loop, with predicted tuples controlling actual unmasking. The trace analysis also produced a useful interpretability story: confidence and stabilization dynamics line up with intuitive easy and hard regions.
+
+\textbf{What did not fully work.} Regression losses were misleading because the scheduler controls are discrete and multimodal. CPD also became less central than originally planned; it was valuable for understanding traces, but too sensitive for permanent label construction. The random forest baseline was interpretable but less natural for rollout because it depends on hand-designed rolling statistics and does not model sequence context as directly.
+
+\textbf{Why the final gains are plausible.} AdaBlock reacts to current confidence. PAG inherits an AdaBlock-compatible seed and then uses learned history to choose later blocks and budgets. The final run shows that many prompts need systematically less refinement than AdaBlock allocates, while accuracy disagreements are rare: PAG loses 2 prompts that AdaBlock solves and gains 2 prompts that AdaBlock misses across the complete final run.
 
 \section{Limitations}
 
+Our answer metric is a normalized numeric substring check, so it can miss reasoning quality differences that do not change the final answer. We evaluate one model family, LLaDA-8B-Instruct, and one benchmark slice, GSM8K test[200:400]. HumanEval, MBPP, MATH, and Dream integration remain natural follow-up evaluations. Runtime results should also be interpreted carefully: Python-side scheduler overhead is not optimized, and a fused implementation could change the wall-clock tradeoff.
 
+The predictor is trained from AdaBlock traces, so it learns to imitate and improve around AdaBlock's operating regime rather than discovering schedules from first principles. Finally, we do not yet have a full learned model for future confidence/digit/delimiter features under rollout; during real decoding those features are observed after each block, but offline cost-aware evaluation must partially teacher-force non-control fields.
 
 \section{Conclusion}
 
-\pag{} frames adaptive dLLM decoding as a learned next-control prediction problem. The project began with token-level trace analysis and CPD segmentation, then shifted toward block-native AdaBlock-style traces after observing that CPD adds avoidable ambiguity to label construction. The codebase now contains a working staged architecture, trace analysis tools, tuple extraction, Transformer predictor training, multi-feature support, and saved ablation outputs. The remaining work for the final report is to consolidate experiments under one evaluation protocol and document the end-to-end scheduler results.
-
+\pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
 
 \bibliographystyle{plainnat}
-
-\begin{thebibliography}{6}
-\bibitem[Ye et al.(2025)]{ye2025dream}
-J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
-Dream 7B: Diffusion large language models. \textit{arXiv:2508.15487}, 2025.
-
-\bibitem[Nie et al.(2025)]{nie2025llada}
-S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
-Large language diffusion models. \textit{arXiv:2502.09992}, 2025.
-
-\bibitem[Lu et al.(2025)]{lu2025adablock}
-G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
-AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size. \textit{ICLR}, 2026.
+\small
+\begin{thebibliography}{9}
+\setlength{\itemsep}{0.05em}
 
 \bibitem[Arriola et al.(2025)]{arriola2025block}
 M.~Arriola, A.~Gokaslan, J.~T.~Chiu, Z.~Yang, Z.~Qi, J.~Han, S.~S.~Sahoo, and V.~Kuleshov.
-Block diffusion: Interpolating between autoregressive and diffusion language models. \textit{ICLR (Oral)}, 2025.
-
-\bibitem[Wu et al.(2025)]{wu2025fastdllm}
-C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
-Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding. \textit{ICLR}, 2026.
+\newblock Block diffusion: Interpolating between autoregressive and diffusion language models.
+\newblock \emph{ICLR (Oral)}, 2025.
 
 \bibitem[Gong et al.(2025)]{gong2025diffullama}
 S.~Gong, S.~Agarwal, Y.~Zhang, J.~Ye, L.~Zheng, M.~Li, C.~An, P.~Zhao, W.~Bi, J.~Han, H.~Peng, and L.~Kong.
-Scaling diffusion language models via adaptation from autoregressive models. \textit{ICLR}, 2025.
+\newblock Scaling diffusion language models via adaptation from autoregressive models.
+\newblock \emph{ICLR}, 2025.
+
+\bibitem[Killick et al.(2012)]{killick2012optimal}
+R.~Killick, P.~Fearnhead, and I.~A. Eckley.
+\newblock Optimal detection of changepoints with a linear computational cost.
+\newblock \emph{Journal of the American Statistical Association}, 107(500):1590--1598, 2012.
+
+\bibitem[Lu et al.(2026)]{lu2025adablock}
+G.~Lu, H.~M.~Chen, Y.~Karashima, Z.~Wang, D.~Fujiki, and H.~Fan.
+\newblock AdaBlock-dLLM: Semantic-aware diffusion LLM inference via adaptive block size.
+\newblock \emph{ICLR}, 2026.
+
+\bibitem[Nie et al.(2025)]{nie2025llada}
+S.~Nie, F.~Zhu, Z.~You, X.~Zhang, J.~Ou, J.~Hu, J.~Zhou, Y.~Lin, J.-R.~Wen, and C.~Li.
+\newblock Large language diffusion models.
+\newblock \emph{arXiv:2502.09992}, 2025.
+
+\bibitem[Vaswani et al.(2017)]{vaswani2017attention}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez, L.~Kaiser, and I.~Polosukhin.
+\newblock Attention is all you need.
+\newblock \emph{NeurIPS}, 2017.
+
+\bibitem[Wu et al.(2026)]{wu2025fastdllm}
+C.~Wu, H.~Zhang, S.~Xue, Z.~Liu, S.~Diao, L.~Zhu, P.~Luo, S.~Han, and E.~Xie.
+\newblock Fast-dLLM: Training-free acceleration of diffusion LLM by enabling KV cache and parallel decoding.
+\newblock \emph{ICLR}, 2026.
+
+\bibitem[Ye et al.(2025)]{ye2025dream}
+J.~Ye, Z.~Xie, L.~Zheng, J.~Gao, Z.~Wu, X.~Jiang, Z.~Li, and L.~Kong.
+\newblock Dream 7B: Diffusion large language models.
+\newblock \emph{arXiv:2508.15487}, 2025.
+
 \end{thebibliography}
 
 \end{document}

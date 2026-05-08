@@ -17,4 +17,3 @@ __all__ = [
     "phase_paths",
     "run_directory",
 ]
-

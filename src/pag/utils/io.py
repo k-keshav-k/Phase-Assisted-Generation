@@ -145,9 +145,7 @@ def read_evaluation_artifacts(run_config: RunConfig) -> EvaluationArtifacts:
 def load_samples_from_config(run_config: RunConfig) -> list[SampleRecord]:
     payload = yaml.safe_load(Path(run_config.dataset_path).read_text(encoding="utf-8"))
     raw_items = (
-        payload["samples"]
-        if isinstance(payload, dict) and "samples" in payload
-        else payload
+        payload["samples"] if isinstance(payload, dict) and "samples" in payload else payload
     )
     return [
         SampleRecord(

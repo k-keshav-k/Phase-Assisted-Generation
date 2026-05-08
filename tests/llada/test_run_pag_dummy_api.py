@@ -127,10 +127,13 @@ def test_max_stabilizing_step_matches_trace_style_max() -> None:
         torch.tensor([4, 8, 2]),
     ]
 
-    assert run_pag_dummy_api._max_stabilizing_step(
-        predictions,
-        torch.tensor([4, 8, 2]),
-    ) == 2
+    assert (
+        run_pag_dummy_api._max_stabilizing_step(
+            predictions,
+            torch.tensor([4, 8, 2]),
+        )
+        == 2
+    )
 
 
 def test_effective_seed_uses_explicit_seed_when_adablock_probe_disabled() -> None:

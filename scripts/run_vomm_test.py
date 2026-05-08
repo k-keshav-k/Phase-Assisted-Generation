@@ -38,7 +38,9 @@ def load_sequences(path: Path) -> List[List[PhaseTuple]]:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Load VOMM checkpoint and evaluate/test.")
-    parser.add_argument("--checkpoint", type=Path, required=True, help="Path to VOMM checkpoint (.pt)")
+    parser.add_argument(
+        "--checkpoint", type=Path, required=True, help="Path to VOMM checkpoint (.pt)"
+    )
     parser.add_argument("--sample", action="store_true", help="Run sample predictions")
     args = parser.parse_args(argv)
 
@@ -50,8 +52,25 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.sample:
         samples = [
-            [PhaseTuple(15, 4), PhaseTuple(16, 7), PhaseTuple(16, 9), PhaseTuple(16, 11), PhaseTuple(14, 8), PhaseTuple(15, 3), PhaseTuple(8, 3), PhaseTuple(1, 1)],
-            [PhaseTuple(26, 4), PhaseTuple(1, 1), PhaseTuple(14, 9), PhaseTuple(7, 4), PhaseTuple(8, 4), PhaseTuple(15, 3), PhaseTuple(8, 3)],
+            [
+                PhaseTuple(15, 4),
+                PhaseTuple(16, 7),
+                PhaseTuple(16, 9),
+                PhaseTuple(16, 11),
+                PhaseTuple(14, 8),
+                PhaseTuple(15, 3),
+                PhaseTuple(8, 3),
+                PhaseTuple(1, 1),
+            ],
+            [
+                PhaseTuple(26, 4),
+                PhaseTuple(1, 1),
+                PhaseTuple(14, 9),
+                PhaseTuple(7, 4),
+                PhaseTuple(8, 4),
+                PhaseTuple(15, 3),
+                PhaseTuple(8, 3),
+            ],
         ]
         for ctx in samples:
             pred = model.predict(ctx)

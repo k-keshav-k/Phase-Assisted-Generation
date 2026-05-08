@@ -286,4 +286,3 @@ class RunSummary:
         _require_text(self.run_id, "RunSummary.run_id")
         _require_text(self.stage, "RunSummary.stage")
         _require_non_negative(self.num_samples, "RunSummary.num_samples")
-

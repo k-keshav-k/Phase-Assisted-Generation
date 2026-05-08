@@ -165,9 +165,7 @@ def build_profile_report(
                 ),
                 "mean_token_rewrite_count": _mean(rewrite_counts),
                 "stabilization_monotonicity": _mean(monotonicity_scores),
-                "oracle_block_size_variance": _variance(
-                    row["oracle_block_size"] for row in rows
-                ),
+                "oracle_block_size_variance": _variance(row["oracle_block_size"] for row in rows),
                 "oracle_max_refinement_steps_variance": _variance(
                     row["oracle_max_refinement_steps"] for row in rows
                 ),
@@ -177,10 +175,7 @@ def build_profile_report(
 
 
 def _stable_steps_by_token(trace: TraceRecord) -> list[int]:
-    return [
-        int(value)
-        for value in StabilizingRefinementStepExtractor().extract(trace).values
-    ]
+    return [int(value) for value in StabilizingRefinementStepExtractor().extract(trace).values]
 
 
 def _trace_step_indices(trace: TraceRecord) -> list[int]:

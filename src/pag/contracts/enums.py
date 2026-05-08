@@ -13,4 +13,3 @@ class StageName(StrEnum):
 class PhaseLabel(StrEnum):
     EASY = "easy"
     HARD = "hard"
-

@@ -1,0 +1,11 @@
+feature	importance
+block\_size\_last	0.2143
+block\_size\_std	0.084
+block\_size\_trend	0.0462
+mean\_ref\_step\_trend	0.0437
+mean\_gap\_std	0.0395
+mean\_gap\_trend	0.0378
+mean\_ref\_step\_mean	0.037
+mean\_ref\_step\_std	0.0357
+mean\_gap\_mean	0.0345
+mean\_ref\_step\_last	0.0312

@@ -1,0 +1,9 @@
+run	val_loss
+large-ws67-d256-h8-l1-dp0-lr1p0	0.095973
+med-ws67-d128-h2-l3-dp10-lr0p5	0.099031
+med-ws57-d64-h4-l2-dp0-lr1p0	0.127861
+med-ws57-d128-h2-l1-dp10-lr1p0	0.132761
+med-ws33-d64-h2-l2-dp20-lr0p1	0.14096
+large-ws67-d256-h8-l3-dp10-lr0p5	0.412367
+med-ws67-d64-h4-l3-dp20-lr1p0	0.471248
+med-ws8-d64-h4-l4-dp10-lr0p5	2.216957
