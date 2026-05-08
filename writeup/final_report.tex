@@ -463,12 +463,17 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
           \State $logits,\ tokens \gets model(x)$
           \State $nfe \gets nfe + 1$; $\textsc{UnmaskLowConf}(x,\ tokens)$
           \If{$nfe \ge r$}
-            \If{$\min\_conf \ge 0.8$} \State \textbf{break} \Comment{confidence}
-            \ElsIf{$\textsc{Stable}(prev,\ 2)$} \State \textbf{break} \Comment{stability}
-            \ElsIf{$frac < 0.1$} \State \textbf{break} \Comment{few remaining}
+            \State $remaining \gets \textsc{CountMasked}(x)$
+            \State $conf \gets (remaining = 0)$ \textbf{or} $(\min\_conf \ge 0.8)$
+            \State $stab \gets (remaining = 0)$ \textbf{or} $\textsc{Stable}(prev,\ 2)$
+            \State $few \gets remaining \le \max(1,\ \lceil 0.1 \cdot b \rceil)$
+            \If{$conf$ \textbf{or} $stab$ \textbf{or} $(few$ \textbf{and} $conf)$}
+              \State $\textsc{ForceCommit}(x)$; \textbf{break}
             \EndIf
           \EndIf
-          \If{$nfe \ge max\_ref$} \State \textbf{break} \Comment{hard cap} \EndIf
+          \If{$nfe \ge max\_ref$}
+            \State $\textsc{ForceCommit}(x)$; \textbf{break} \Comment{hard cap}
+          \EndIf
           \State $prev.\textsc{Append}(tokens)$
         \EndWhile
 
