@@ -172,7 +172,7 @@ def generate_pag(
         x[transfer_index] = x0[transfer_index]
 
         nfe = 0
-        prev_predictions: torch.Tensor | None = None
+        prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
@@ -199,9 +199,12 @@ def generate_pag(
                 else:
                     confident = True
                 stable = False
-                if prev_predictions is not None and remaining_count > 0:
+                if remaining_count > 0 and len(prev_predictions) >= tau_stable_steps:
                     current_for_remaining = predicted_tokens[:, block_start:block_end][block_mask]
-                    stable = torch.all(current_for_remaining == prev_predictions[block_mask])
+                    stable = all(
+                        torch.all(current_for_remaining == p[block_mask])
+                        for p in prev_predictions[-tau_stable_steps:]
+                    )
                 elif remaining_count == 0:
                     stable = True
                 if few_remaining or confident or stable:
@@ -212,7 +215,7 @@ def generate_pag(
                     x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
                     x[transfer_index] = x0[transfer_index]
                     break
-                _, transfer_index = get_transfer_index(
+                x0, transfer_index = get_transfer_index(
                     logits, predicted_tokens, remasking, mask_index, x, None, threshold,
                 )
             else:
@@ -224,7 +227,8 @@ def generate_pag(
             if newly_unmasked.any():
                 unmask_confs.append(block_max_probs[newly_unmasked])
             x[transfer_index] = x0[transfer_index]
-            prev_predictions = predicted_tokens[:, block_start:block_end].clone()
+            prev_predictions.append(predicted_tokens[:, block_start:block_end].clone())
+            prev_predictions = prev_predictions[-tau_stable_steps:]
             if nfe >= max_refinement_steps:
                 break
 
@@ -327,7 +331,7 @@ def generate_pag_prefix_cache(
                 prefix_cache[-1] += (cache_entry[:, :, :block_start],)
 
         nfe = 0
-        prev_predictions: torch.Tensor | None = None
+        prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
@@ -357,10 +361,12 @@ def generate_pag_prefix_cache(
                 else:
                     confident = True
                 stable = False
-                if prev_predictions is not None and remaining_count > 0:
+                if remaining_count > 0 and len(prev_predictions) >= tau_stable_steps:
                     current_for_remaining = block_predicted_tokens[0, :block_length][block_mask[0, :block_length]]
-                    prev_for_remaining = prev_predictions[block_mask[0, :block_length]]
-                    stable = torch.all(current_for_remaining == prev_for_remaining)
+                    stable = all(
+                        torch.all(current_for_remaining == p[block_mask[0, :block_length]])
+                        for p in prev_predictions[-tau_stable_steps:]
+                    )
                 elif remaining_count == 0:
                     stable = True
                 if few_remaining or confident or stable:
@@ -371,7 +377,7 @@ def generate_pag_prefix_cache(
                     x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
                     x[:, block_start:][transfer_index] = x0[transfer_index]
                     break
-                _, transfer_index = get_transfer_index(
+                x0, transfer_index = get_transfer_index(
                     block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:], None, threshold,
                 )
             else:
@@ -383,7 +389,8 @@ def generate_pag_prefix_cache(
             if newly_unmasked.any():
                 unmask_confs.append(block_max_probs[0, :block_length][newly_unmasked[0]])
             x[:, block_start:][transfer_index] = x0[transfer_index]
-            prev_predictions = block_predicted_tokens[0, :block_length].clone()
+            prev_predictions.append(block_predicted_tokens[0, :block_length].clone())
+            prev_predictions = prev_predictions[-tau_stable_steps:]
 
         if unmask_confs:
             all_confs = torch.cat(unmask_confs)
@@ -485,7 +492,7 @@ def generate_pag_dual_cache(
 
         # Refinement loop with dual cache
         nfe = 0
-        prev_predictions: torch.Tensor | None = None
+        prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
@@ -518,10 +525,12 @@ def generate_pag_dual_cache(
                 else:
                     confident = True
                 stable = False
-                if prev_predictions is not None and remaining_count > 0:
+                if remaining_count > 0 and len(prev_predictions) >= tau_stable_steps:
                     current_for_remaining = block_predicted_tokens[0][mask_index[0]]
-                    prev_for_remaining = prev_predictions[mask_index[0]]
-                    stable = torch.all(current_for_remaining == prev_for_remaining)
+                    stable = all(
+                        torch.all(current_for_remaining == p[mask_index[0]])
+                        for p in prev_predictions[-tau_stable_steps:]
+                    )
                 elif remaining_count == 0:
                     stable = True
                 if few_remaining or confident or stable:
@@ -532,7 +541,7 @@ def generate_pag_dual_cache(
                     x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:block_end])
                     x[:, block_start:block_end][transfer_index] = x0[transfer_index]
                     break
-                _, transfer_index = get_transfer_index(
+                x0, transfer_index = get_transfer_index(
                     block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:block_end], None, threshold,
                 )
             else:
@@ -544,7 +553,8 @@ def generate_pag_dual_cache(
             if newly_unmasked.any():
                 unmask_confs.append(block_max_probs[newly_unmasked])
             x[:, block_start:block_end][transfer_index] = x0[transfer_index]
-            prev_predictions = block_predicted_tokens[0].clone()
+            prev_predictions.append(block_predicted_tokens[0].clone())
+            prev_predictions = prev_predictions[-tau_stable_steps:]
 
         if unmask_confs:
             all_confs = torch.cat(unmask_confs)
