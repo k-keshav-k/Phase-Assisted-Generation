@@ -208,7 +208,7 @@ def generate_pag(
                     )
                 elif remaining_count == 0:
                     stable = True
-                if few_remaining or confident or stable:
+                if (confident or stable) or (few_remaining and confident):
                     x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
                     x[transfer_index] = x0[transfer_index]
                     break
@@ -371,7 +371,7 @@ def generate_pag_prefix_cache(
                     )
                 elif remaining_count == 0:
                     stable = True
-                if few_remaining or confident or stable:
+                if (confident or stable) or (few_remaining and confident):
                     x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
                     x[:, block_start:][transfer_index] = x0[transfer_index]
                     break
@@ -533,7 +533,7 @@ def generate_pag_dual_cache(
                     )
                 elif remaining_count == 0:
                     stable = True
-                if few_remaining or confident or stable:
+                if (confident or stable) or (few_remaining and confident):
                     x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:block_end])
                     x[:, block_start:block_end][transfer_index] = x0[transfer_index]
                     break
