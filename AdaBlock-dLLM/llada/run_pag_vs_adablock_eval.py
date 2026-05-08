@@ -283,6 +283,7 @@ def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecor
         delimiter_threshold=args.delimiter_threshold,
         tau_commit=args.tau_commit,
         tau_stable_steps=args.tau_stable_steps,
+        default_block_length=args.adablock_init_block_length,
     )
     _synchronize_if_cuda(args.device)
     elapsed = time.perf_counter() - start
