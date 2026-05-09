@@ -102,13 +102,13 @@ Figure~\ref{fig:architecture} shows this overview.
 \textbf{Predictor training.} We run AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems~\citep{cobbe2021gsm8k}, recording one control tuple per decoded block. 
 Each tuple captures the realized block size, the number of model forward evaluations (NFE), the mean and minimum top-1 softmax confidence across unmasked positions, the fraction of digit tokens in the block, and the fraction of delimiter tokens. 
 The resulting corpus contains 138{,}901 tuples. For training, we construct sliding-window sequences of length eight: each window of past tuples predicts the next (\textit{block\_size}, \textit{refinement\_budget}) pair. 
-Features are z-score normalized per field using corpus statistics. The predictor is a Transformer encoder (ablations over layers, heads, learning rate, pre-norm) with two output heads: a softmax classifier over 128 block-size classes and an ordinal regression head over 83 binary refinement-budget thresholds. 
+Features are z-score normalized per field using corpus statistics. The predictor is a Transformer encoder (ablations over layers, heads, learning rate) with two output heads: a softmax classifier over 128 block-size classes and an ordinal regression head over 83 binary refinement-budget thresholds.
 The budget head receives the block-size logits as conditioning, allowing the model to capture that larger blocks often need different budgets. 
 Training uses cross-entropy for block size and binary cross-entropy for ordinal thresholds with an AdamW optimizer~\citep{loshchilov2019adamw} and early stopping. 
 The final checkpoint bundles model weights, normalization statistics, and the ordered feature-field list.
 
 \textbf{Online scheduling.} At decode time, the checkpoint is loaded by a scheduler that maintains a rolling context of realized tuples. 
-The first block completely simulates AdaBlock to get block coundary and refinement; subsequent blocks pad the observed history to the window length, forward it through the predictor, and clamp the output by remaining sequence length and configured minimum and maximum bounds. 
+The first block completely simulates AdaBlock to get block boundary and refinement; subsequent blocks pad the observed history to the window length, forward it through the predictor, and clamp the output by remaining sequence length and configured minimum and maximum bounds.
 Block sizing follows AdaBlock's adaptive mechanism: the model identifies the highest-confidence delimiter token in a forward-looking window and positions the block boundary there, defaulting to a system-chosen length when no delimiter meets the threshold. 
 The predictor supplies the refinement budget independently. Decoding proceeds as a threshold-based unmasking loop within the active block. Once the forward-evaluation count reaches the predicted budget, a soft-cap mechanism checks per-token confidence and stability: 
 if the minimum unmasking confidence exceeds \(\tau_{\text{commit}} = 0.8\) or predictions have been stable for \(\tau_{\text{stable}} = 2\) steps, the block exits early or
@@ -303,9 +303,9 @@ Figure~\ref{fig:nfe} examines the per-block compute-accuracy trade-off. While \n
 The first learned predictor treated the next control tuple as a continuous regression target. A compact Transformer encoder consumed a sliding window of previous tuples, projected them to a hidden dimension, added sinusoidal position encodings, pooled the final context position, and produced real-valued outputs that were rounded to integers at inference time. Validation loss reached \(0.096\) on normalized targets, suggesting the model had learned the training distribution well.
 
 This offline metric was misleading. When deployed inside the LLaDA decoding loop, the regression model produced block-size predictions that fell between the discrete modes of the empirical distribution---for example,~8 for a prompt with equal numbers of size-1 delimiter blocks and size-16 content blocks. These interpolated sizes have no training support: no real decoding block in the training corpus was created with those boundaries. LLaDA partially unmasked the requested span and left the remainder in the masked state, producing garbled output with truncated, repeated, or overlapping token spans. The resulting text exhibited what we term \emph{degenerate English}: short windows of local fluency---a few correctly decoded words---embedded within broken sentences that carried no coherent meaning. The best checkpoint we obtained under this approach reached only 73\% answer accuracy on 30 held-out multi-step arithmetic prompts---compared to 93\% for the unmodified AdaBlock baseline---while averaging just 8.1 blocks per prompt against AdaBlock's 12.3. The reduced block count indicates that the model merged semantically distinct spans into single oversized blocks. A representative output from the evaluation log shows clear degeneration:
-```
+\texttt{``
 Number of bags: 3 bags bags - Number Number apples
-```
+''}
 The text preserves isolated correct phrases but degrades into word repetitions, losing all coherent sentence structure.
 
 Two root causes explain this collapse. First, MSE's Bayes-optimal prediction for a multimodal target is the conditional mean of the modes, which falls in a region of the control space with zero training density. The regression head has no inductive bias toward valid block sizes; it is equally happy to predict size~8 or size~16 if the squared error is similar. Second, the model was trained on rich tuples that include realized confidence and token-type fractions from past blocks. During deployment the \emph{current} block's confidence is unknown until decoding completes, creating a distribution shift between the features seen at training time and those available at inference time.
@@ -491,7 +491,7 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
 \end{algorithm}
 \section{Evaluation}
 
-We conducted a systematic hyperparameter search to optimize the Transformer predictor. The script implements a grid-based ablation study that trains multiple model configurations. We tested four ablation presets (small, medium, large and xlarge) spanning different model capacities and parameter ranges.
+We conducted a systematic hyperparameter search to optimize the Classiﬁcation/Ordinal Transformer predictor. The script implements a grid-based ablation study that trains multiple model configurations. We tested four ablation presets (small, medium, large and xlarge) spanning different model capacities and parameter ranges.
 
 \begin{table}[!htbp]
   \centering
@@ -512,7 +512,7 @@ We conducted a systematic hyperparameter search to optimize the Transformer pred
 
 The ablation study generated hundreds of model checkpoints across different hyperparameter combinations. Each configuration was trained for up to 300 epochs with early stopping based on validation loss. We tracked training loss, validation loss, best epoch, and the corresponding checkpoint for each run. The best-performing model was selected based on the lowest validation loss, which correlated well with downstream evaluation performance.
 
-Figure~\ref{fig:transformer-ablation-grid} summarizes the checkpoint names from the full ablation sweep. The strongest run was the medium checkpoint with \(\text{ws}=8\), \(d=64\), \(h=4\), \(l=4\), \(\text{dp}=10\), \(\text{lr}=0.5\), and best validation loss \(2.216957\). The sweep shows a clear capacity sweet spot: adding depth helped up to four layers, but larger \(d_{\text{model}}\) values did not improve validation loss on this dataset. A small amount of dropout was consistently helpful, while zero dropout overfit and 20\% dropout slightly underperformed the 10\% setting. We used the best medium checkpoint for the online scheduler because it achieved the best validation loss and the strongest downstream inference behavior on held-out GSM8K prompts.
+Figure~\ref{fig:transformer-ablation-grid} summarizes the result from the full ablation sweep and Table~\ref{tab:top-ablation-runs} shows the top 6 results overall. The strongest run was the medium checkpoint with \(\text{ws}=8\), \(d=64\), \(h=4\), \(l=4\), \(\text{dp}=10\), \(\text{lr}=5e^{-4}\), and best validation loss \(2.216957\). The sweep shows a clear capacity sweet spot: adding depth helped up to four layers, but larger \(d_{\text{model}}\) values did not improve validation loss on this dataset. A small amount of dropout was consistently helpful, while zero dropout overfit and 20\% dropout slightly underperformed the 10\% setting. We used the best medium checkpoint for the online scheduler because it achieved the best validation loss and the strongest downstream inference behavior on held-out GSM8K prompts.
 
 \begin{figure}[!htbp]
   \centering
@@ -621,7 +621,7 @@ Figure~\ref{fig:transformer-ablation-grid} summarizes the checkpoint names from 
   \end{tabular}
 \end{table}
 
-We evaluated the selected predictor checkpoint on 200 unseen GSM8K test prompts using LLaDA-8B-Instruct with generation length 256 and 64 diffusion steps. We saw the results summarized in Table~\ref{tab:final-eval} and Figure~\ref{fig:final-eval-summary}.
+We evaluated the selected predictor checkpoint on the 200 unseen GSM8K test prompts using LLaDA-8B-Instruct with generation length 256 and 64 diffusion steps. We saw the results summarized in Table~\ref{tab:final-eval} and Figures~\ref{fig:final-eval-summary},~\ref{fig:final-eval} and ~\ref{fig:schedules}.
 
 \begin{table}[!htbp]
   \centering
@@ -711,7 +711,6 @@ We evaluated the selected predictor checkpoint on 200 unseen GSM8K test prompts 
 	  \label{fig:final-eval}
 \end{figure}
 \FloatBarrier
-The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased.
 
 \begin{figure}[t!]
   \centering
@@ -751,6 +750,8 @@ The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewe
   \caption{Example PAG schedules from the final run. Most prompts save compute; the rare overhead cases occur when the learned schedule spends extra refinement on difficult blocks.}
   \label{fig:schedules}
 \end{figure}
+
+The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased. Figure~\ref{fig:final-eval} summarizes per-prompt outcomes: the left panel shows the distribution of per-prompt \nfe{} deltas (most prompts yield positive savings), while the right panel plots AdaBlock vs. PAG total \nfe{} with a parity line — most points fall below this line, indicating that PAG reduced compute for the majority of prompts. Figure~\ref{fig:schedules} presents two representative per-block schedules from the final run: the left panel illustrates the prompt with the largest \nfe{} savings (\BestSavingDelta{}), where PAG allocates smaller blocks and reduces refinement; the right panel shows a rare overhead case where the learned schedule spends extra refinement, increasing \nfe{}.
 
 \FloatBarrier
 
