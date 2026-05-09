@@ -78,18 +78,9 @@ PAG also gave significant response time savings over vanilla AdaBlock with avera
 
 Autoregressive language models spend one decoding step per output token. Diffusion language models (\dllm{}s) such as Dream and LLaDA instead begin from a mostly masked sequence and repeatedly denoise multiple positions in parallel. At each refinement step, the model scores masked positions, commits high-confidence tokens, and leaves uncertain positions masked for later passes. This changes the decoding problem from ``which single token comes next?'' to ``which subset of positions should be refined now, and how much compute should this span receive?''
 
-\subsection{What is Block Diffusion?}
-
 Block diffusion(Figure~\ref{fig:llada-block-diffusion}) is a semi-autoregressive way to run a diffusion language model. Rather than denoising the entire sequence at once, the decoder partitions the output into contiguous blocks and finishes one block before moving to the next. Inside a block, generation is still diffusion-style: multiple masked tokens are refined over several forward evaluations. Across blocks, generation is ordered: earlier blocks provide context for later blocks. This makes block diffusion an interpolation between fully autoregressive decoding, which commits one token at a time, and fully parallel diffusion decoding, which refines all positions together~\citep{arriola2025block}.
 
 The block view is important for reasoning tasks because it exposes two scheduler controls. The first is \emph{block size}: how many tokens should be attempted together. The second is \emph{refinement budget}: how many forward evaluations should be spent before committing the block. Some spans of a solution are syntactically predictable or copied from context; other spans contain arithmetic, variable binding, or answer-finalization steps. A fixed schedule treats both regimes similarly, while an adaptive schedule can spend more compute where the trace suggests uncertainty.
-
-\begin{figure}[t!]
-  \centering
-  \includegraphics[width=0.86\linewidth]{figs/llada_block_diffusion_diagram.png}
-  \caption{Block diffusion intuition for LLaDA-style masked refinement, adapted from the ML Honk LLaDA explainer~\citep{viola2025llada}. A span is decoded as a block: uncertain positions remain masked across several denoising steps, while high-confidence tokens are committed. PAG keeps this block-level interface but learns how much refinement budget to allocate from previous block histories.}
-  \label{fig:llada-block-diffusion}
-\end{figure}
 
 \pag{} asks whether generation traces contain enough phase structure to forecast the next block-level control decision. Our final control tuple is
 \[
@@ -98,6 +89,13 @@ The block view is important for reasoning tasks because it exposes two scheduler
 where block size controls how many tokens are attempted together and refinement budget controls the number of model forward evaluations allowed before committing the block. The broader implementation supports richer conditioning fields: observed \nfe{}, stabilization/refinement steps, confidence statistics, digit fraction, delimiter fraction, and gap statistics.
 
 The project evolved in two phases. We first treated phase discovery as an interpretability problem over token-level traces: collect Dream/LLaDA refinement histories, extract stabilization features, and segment them with change-point detection (CPD). This showed interpretable difficulty shifts but also exposed a label-construction problem: CPD boundaries move with the feature, smoothing window, and penalty. We therefore shifted to a block-native path based on AdaBlock traces, where block boundaries and compute budgets are directly observed. CPD remains useful for analysis, while training and scheduling use block-level tuples.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.86\linewidth]{figs/llada_block_diffusion_diagram.png}
+  \caption{Block diffusion intuition for LLaDA-style masked refinement, adapted from the ML Honk LLaDA explainer~\citep{viola2025llada}. A span is decoded as a block: uncertain positions remain masked across several denoising steps, while high-confidence tokens are committed. PAG keeps this block-level interface but learns how much refinement budget to allocate from previous block histories.}
+  \label{fig:llada-block-diffusion}
+\end{figure}
 
 \section{Related Work}
 
