@@ -71,7 +71,7 @@ First, we built trace-analysis tooling for Dream and LLaDA, including token-leve
 Second, we converted AdaBlock-style LLaDA traces into block-native training data and compared several next-control predictors, including a regression Transformer, a variable-order Markov baseline, a multi-output random forest, and a classification/ordinal Transformer over rich block features. 
 Third, we integrated the learned predictor into a tuple-conditioned LLaDA scheduler and evaluated it against AdaBlock on 200 held-out GSM8K prompts. 
 On the final run, PAG matched AdaBlock answer accuracy at \(89.5\%\) while reducing average total \nfe{} from \AdaAvgNfe{} to \PagAvgNfe{} per prompt, a \(\approx 21.4\%\) reduction, with a small predictor overhead of \(\SchedulerAvgMs\) ms per prompt. 
-PAG also gave significant response time savings over vanilla AdaBlock with average runtime delta of PAG - AdaBlock being approximately 0.10 sec.
+PAG also gave significant response time savings over vanilla AdaBlock with average runtime delta of PAG - AdaBlock being approximately 5 millisec.
 \end{abstract}
 
 \section{Introduction}
