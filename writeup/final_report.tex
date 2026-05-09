@@ -76,7 +76,20 @@ PAG also gave significant response time savings over vanilla AdaBlock with avera
 
 \section{Introduction}
 
-Autoregressive language models spend one decoding step per output token. Diffusion language models (\dllm{}s) such as Dream and LLaDA instead produce text through iterative masked-token refinement, so they can commit multiple positions in a block. This creates an explicit compute-allocation problem. Some spans of a solution are syntactically predictable or copied from context; other spans contain arithmetic, variable binding, or answer-finalization steps. A fixed schedule treats both regimes similarly.
+Autoregressive language models spend one decoding step per output token. Diffusion language models (\dllm{}s) such as Dream and LLaDA instead begin from a mostly masked sequence and repeatedly denoise multiple positions in parallel. At each refinement step, the model scores masked positions, commits high-confidence tokens, and leaves uncertain positions masked for later passes. This changes the decoding problem from ``which single token comes next?'' to ``which subset of positions should be refined now, and how much compute should this span receive?''
+
+\subsection{What is Block Diffusion?}
+
+Block diffusion(Figure~\ref{fig:llada-block-diffusion}) is a semi-autoregressive way to run a diffusion language model. Rather than denoising the entire sequence at once, the decoder partitions the output into contiguous blocks and finishes one block before moving to the next. Inside a block, generation is still diffusion-style: multiple masked tokens are refined over several forward evaluations. Across blocks, generation is ordered: earlier blocks provide context for later blocks. This makes block diffusion an interpolation between fully autoregressive decoding, which commits one token at a time, and fully parallel diffusion decoding, which refines all positions together~\citep{arriola2025block}.
+
+The block view is important for reasoning tasks because it exposes two scheduler controls. The first is \emph{block size}: how many tokens should be attempted together. The second is \emph{refinement budget}: how many forward evaluations should be spent before committing the block. Some spans of a solution are syntactically predictable or copied from context; other spans contain arithmetic, variable binding, or answer-finalization steps. A fixed schedule treats both regimes similarly, while an adaptive schedule can spend more compute where the trace suggests uncertainty.
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.86\linewidth]{figs/llada_block_diffusion_diagram.png}
+  \caption{Block diffusion intuition for LLaDA-style masked refinement, adapted from the ML Honk LLaDA explainer~\citep{viola2025llada}. A span is decoded as a block: uncertain positions remain masked across several denoising steps, while high-confidence tokens are committed. PAG keeps this block-level interface but learns how much refinement budget to allocate from previous block histories.}
+  \label{fig:llada-block-diffusion}
+\end{figure}
 
 \pag{} asks whether generation traces contain enough phase structure to forecast the next block-level control decision. Our final control tuple is
 \[
@@ -88,9 +101,9 @@ The project evolved in two phases. We first treated phase discovery as an interp
 
 \section{Related Work}
 
-\textbf{Diffusion language models.} Dream and LLaDA demonstrate that diffusion-style language generation can support reasoning, planning, and instruction following without left-to-right token generation~\citep{ye2025dream,nie2025llada}. Earlier discrete and masked diffusion work such as SEDD and MDLM established strong language-modeling objectives for non-autoregressive text generation~\citep{lou2024sedd,sahoo2024mdlm}. Block Diffusion formalizes semi-autoregressive diffusion decoding as an interpolation between fully autoregressive and fully parallel generation~\citep{arriola2025block}. DiffuLLaMA and related adaptation work show that diffusion LMs can inherit strong language-model priors from autoregressive models~\citep{gong2025diffullama}.
+\textbf{Diffusion language models.} Dream and LLaDA demonstrate that diffusion-style language generation can support reasoning, planning, and instruction following without left-to-right token generation~\citep{ye2025dream,nie2025llada}. LLaDA itself is best understood as a masked diffusion language model: it repeatedly predicts masked positions and commits tokens according to confidence, but it does not by itself prescribe a semantic block scheduler. Earlier discrete and masked diffusion work such as SEDD and MDLM established strong language-modeling objectives for non-autoregressive text generation~\citep{lou2024sedd,sahoo2024mdlm}. Block Diffusion adds an explicit block interface on top of diffusion denoising, formalizing semi-autoregressive generation as an interpolation between fully autoregressive and fully parallel generation~\citep{arriola2025block}. DiffuLLaMA and related adaptation work show that diffusion LMs can inherit strong language-model priors from autoregressive models~\citep{gong2025diffullama}.
 
-\textbf{Efficient \dllm{} inference.} Fast-dLLM studies KV caching and parallel decoding for training-free acceleration, with related cache-budget and adaptive-cache approaches in Dynamic-dLLM and d\textsuperscript{2}Cache~\citep{wu2025fastdllm,wu2026dynamicdllm,jiang2026d2cache}. AdaBlock-dLLM is the closest prior system to our final implementation: it adapts block length using confidence and semantic boundary heuristics~\citep{lu2025adablock}. Our contribution is complementary. Instead of only reacting to the current confidence band, we train predictors over realized block histories and feed their next-control predictions into the decoding loop.
+\textbf{Efficient \dllm{} inference.} Fast-dLLM studies KV caching and parallel decoding for training-free acceleration, with related cache-budget and adaptive-cache approaches in Dynamic-dLLM and d\textsuperscript{2}Cache~\citep{wu2025fastdllm,wu2026dynamicdllm,jiang2026d2cache}. AdaBlock-dLLM is the closest prior system to our final implementation: it wraps LLaDA generation in an adaptive block loop, chooses block boundaries from high-confidence delimiter tokens, and refines each active block until confidence-based stopping criteria are met~\citep{lu2025adablock}. Our contribution is complementary. Instead of only reacting to the current confidence band, we train predictors over realized block histories and feed their next-control predictions into the decoding loop, while retaining AdaBlock's reliable delimiter-based boundary selection.
 
 \textbf{Sequence modeling and change-point detection.} Our predictor variants use compact Transformer encoders with sinusoidal positional encodings~\citep{vaswani2017attention}. Our early analysis used PELT-style CPD, which optimizes a penalized segmentation objective and prunes dynamic-programming states for efficiency~\citep{killick2012optimal}. In this project, CPD is an analysis and data-understanding tool rather than the final source of scheduler labels.
 
@@ -847,6 +860,11 @@ S.~S.~Sahoo, M.~Arriola, Y.~Schiff, A.~Gokaslan, E.~Marroquin, J.~T.~Chiu, A.~M.
 A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez, L.~Kaiser, and I.~Polosukhin.
 \newblock Attention is all you need.
 \newblock \emph{NeurIPS}, 2017.
+
+\bibitem[Viola(2025)]{viola2025llada}
+M.~Viola.
+\newblock 10. LLaDA: Large Language Diffusion Models.
+\newblock \emph{Machine Learning with a Honk}, March 5, 2025. \url{https://mlhonk.substack.com/p/10-llada-large-language-diffusion}.
 
 \bibitem[Wu et al.(2026a)]{wu2026dynamicdllm}
 T.~Wu, X.~Sun, Y.~Jiao, Y.~Li, Y.~Chen, Y.-H.~Cao, Y.-Q.~Hu, and Z.~Tian.
