@@ -254,7 +254,7 @@ A critical methodological observation tempered this analysis. CPD boundaries shi
 
 The final training path uses AdaBlock-style LLaDA traces. We ran AdaBlock-dLLM with LLaDA-8B-Instruct on 5{,}000 GSM8K training problems~\citep{cobbe2021gsm8k}. AdaBlock selects each block boundary adaptively: it identifies the highest-confidence delimiter token in a forward-looking window and positions the boundary there, defaulting to a fixed cap of 16 tokens when no delimiter exceeds the threshold. Within each block, LLaDA unmasking proceeds via threshold-based confidence sampling until the block's tokens stabilize. After every block we record a 12-field control tuple: the applied block size, the actual number of forward evaluations (NFE), per-token stabilization and refinement step statistics, mean and minimum top-1 softmax confidence, the fraction of digit tokens, and the fraction of delimiter tokens. The resulting corpus contains 138{,}901 tuples across training prompts and 5{,}543 tuples across 200 validation prompts. A separate 200-prompt test slice (GSM8K test indices 200--399) is held out for downstream scheduler evaluation.
 
-\begin{table}[!htbp]
+\begin{table}[t!]
   \centering
   \caption{First 12 block tuples from a single GSM8K prompt. Delimiter blocks (size~1, NFE~1, confidence~1) alternate with content blocks. Blocks with nonzero digit fraction consume more NFE and exhibit lower minimum confidence.}
   \label{tab:sample-trace}
@@ -504,7 +504,7 @@ The core insight was that AdaBlock's delimiter-based block boundary detection so
 
 We conducted a systematic hyperparameter search to optimize the Classiﬁcation/Ordinal Transformer predictor. The script implements a grid-based ablation study that trains multiple model configurations. We tested four ablation presets (small, medium, large and xlarge) spanning different model capacities and parameter ranges.
 
-\begin{table}[!htbp]
+\begin{table}[t!]
   \centering
   \caption{Transformer ablation hyperparameter search space. Window size (WS) is the context length in number of past tuples; $d_{\text{model}}$ is the hidden dimension; $H$ is the number of attention heads; $N$ is the number of Transformer encoder layers; dropout (DP) is applied during training; learning rate (LR) is for the AdamW optimizer.}
   \label{tab:ablation-params}
@@ -613,7 +613,7 @@ Figure~\ref{fig:transformer-ablation-grid} summarizes the result from the full a
   \label{fig:transformer-ablation-grid}
 \end{figure}
 
-\begin{table}[!htbp]
+\begin{table}[t!]
   \centering
   \caption{Top Transformer ablation checkpoints by validation loss.}
   \label{tab:top-ablation-runs}
@@ -634,7 +634,7 @@ Figure~\ref{fig:transformer-ablation-grid} summarizes the result from the full a
 
 We evaluated the selected predictor checkpoint on the 200 unseen GSM8K test prompts using LLaDA-8B-Instruct with generation length 256 and 64 diffusion steps. We saw the results summarized in Table~\ref{tab:final-eval} and Figures~\ref{fig:final-eval-summary},~\ref{fig:final-eval} and ~\ref{fig:schedules}.
 
-\begin{table}[!htbp]
+\begin{table}[t!]
   \centering
   \caption{Final 200-prompt GSM8K evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
   \begin{tabular}{lrrrr}
