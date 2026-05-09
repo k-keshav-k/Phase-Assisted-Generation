@@ -763,15 +763,15 @@ The separation of concerns between boundary detection and budget prediction is t
 
 The predictor's overhead is modest. Each inference costs approximately 64~ms per prompt (dominated by the small Transformer forward pass on CPU), contributing about 13~s total across the 200-prompt evaluation. Runtime savings (\(\approx 0.05\)~s per prompt) are smaller than NFE savings (\(\approx 21\%\)) because Python-level control logic---history padding, clamping, budget checks, gate evaluation---adds fixed overhead per block that is independent of model compute. A fused implementation in a lower-level runtime would close this gap, but even in the current form the predictor overhead is dwarfed by LLaDA's decoding time.
 
-The hyperparameter ablations reveal that validation loss clusters tightly around 2.2--2.3 across all configurations. Model capacity (hidden dimension, number of layers) has surprisingly little impact beyond a modest floor---the worst configuration is only about 0.07 worse than the best. This suggests the prediction problem is inherently bounded: the maximum achievable budget-forecast accuracy is limited by the stochasticity of LLaDA's unmasking process rather than by model capacity.
+% The hyperparameter ablations reveal that validation loss clusters tightly around 2.2--2.3 across all configurations. Model capacity (hidden dimension, number of layers) has surprisingly little impact beyond a modest floor---the worst configuration is only about 0.07 worse than the best. This suggests the prediction problem is inherently bounded: the maximum achievable budget-forecast accuracy is limited by the stochasticity of LLaDA's unmasking process rather than by model capacity.
 
 These results come with important caveats. The evaluation uses one model (LLaDA-8B-Instruct) and one benchmark (GSM8K~\citep{cobbe2021gsm8k}). HumanEval, MBPP, MATH, and Dream integration remain as natural extensions~\citep{chen2021humaneval,austin2021mbpp,hendrycks2021math}. The predictor is trained on AdaBlock traces and thus inherits AdaBlock's operating regime---it learns to imitate and improve around AdaBlock's schedule rather than discovering schedules from first principles. The answer-matching metric (normalized substring check) may also miss qualitative differences in reasoning quality that do not change the final numeric answer. Future work should investigate whether the classifier-plus-ordinal design generalizes across model scales, whether schedule discovery from scratch is feasible, and whether the soft-gate thresholds can themselves be learned rather than hand-tuned.
 
 \section{Conclusion}
 \pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
 
-\section{Code}
-Our code is available at \url{https://github.com/k-keshav-k/Phase-Assisted-Generation}.
+    \section{Code}
+    Our code is available at \href{https://github.com/k-keshav-k/Phase-Assisted-Generation}{this link}.
 
 \bibliographystyle{plainnat}
 \small
