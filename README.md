@@ -1,81 +1,222 @@
 # Phase-Adaptive Generation (PAG)
 
-PAG is a research codebase for studying phase-adaptive decoding in diffusion language models. The project is organized around a simple pipeline: baseline fixed decoding, trace and signal analysis, phase prediction, adaptive scheduling, and evaluation.
+Phase-Adaptive Generation (PAG) is a research codebase for **adaptive compute scheduling in diffusion language models**. It combines:
 
-## Design goals
+- a structured `src/pag` 4-stage pipeline (baseline → phase analysis → scheduler → evaluation),
+- a production-style AdaBlock/LLaDA integration for online adaptive decoding,
+- an offline phase-change and trace analysis toolkit with a Streamlit UI,
+- predictor training/evaluation tooling for next block-size + refinement-budget control.
 
-- Keep module boundaries explicit and small.
-- Share data through typed artifacts rather than inheritance-heavy services.
-- Allow each team to evolve its own package without touching orchestration or breaking stage handoffs.
-- Make test subsets runnable per teammate.
+For project details, method rationale, and full results, see `writeup/final_report.pdf`.
 
-## Public stage entrypoints
+---
 
-- `pag.baselines.run_baseline(...)`
-- `pag.phases.run_phase_analysis(...)`
-- `pag.scheduler.run_adaptive_decoding(...)`
-- `pag.evaluation.evaluate_runs(...)`
+## Repository map
 
-These are the only hard code-level boundaries the project enforces. Teams are free to use functions, classes, or other internal structure behind them.
+- `src/pag/`: typed, modular orchestration pipeline (contracts + stages + CLI).
+- `AdaBlock-dLLM/`: LLaDA and Dream integration with PAG/AdaBlock/baseline decode harnesses.
+- `phase_predict/`: block-tuple dataset, model, train, and inference code.
+- `phase_cpd/`: trace loading, feature extraction, CPD segmentation, plotting, and UI app.
+- `scripts/`: convenience scripts to run stages and experiments.
+- `tests/`: unit and integration tests across PAG, LLaDA/Dream glue, phase prediction, and CPD.
+- `writeup/`: final report, figures, and experiment summary tables.
 
-## Workflow
+---
+
+## End-to-end workflow
 
 ```mermaid
 flowchart LR
-    A[RunConfig + Dataset Samples] --> B[Baseline Stage]
-    B --> C[Generation Traces]
-    B --> D[Token Signals]
-    B --> E[Baseline Completions]
-    C --> F[Phase Analysis]
-    D --> F
-    F --> G[Phase Annotations]
-    F --> H[Predictor Dataset]
-    F --> I[Phase Predictions]
-    E --> J[Scheduler]
-    I --> J
-    J --> K[Schedule Plans + Decisions]
-    K --> L[Adaptive Decode]
-    L --> M[Adaptive Completions]
-    E --> N[Evaluation]
-    M --> N
-    N --> O[Comparison Records + Run Summaries]
+    A[Prompt Dataset] --> B[Baseline / AdaBlock Decode]
+    B --> C[Trace + Block Tuple Logging]
+    C --> D[Offline Analysis
+CPD + Feature Mining]
+    C --> E[Predictor Dataset]
+    E --> F[Predictor Training]
+    F --> G[Checkpoint]
+    G --> H[Online PAG Scheduler]
+    H --> I[Adaptive Decode]
+    B --> J[Baseline Outputs]
+    I --> K[Evaluation]
+    J --> K
+    K --> L[Accuracy / NFE / Runtime Reports]
 ```
 
-The workflow is stage-based:
+### `src/pag` stage workflow
 
-- The baseline stage runs fixed decoding and produces traces, token-level signals, and baseline completions.
-- The phase stage consumes those traces and signals to build annotations, predictor-ready items, and phase predictions.
-- The scheduler stage combines baseline outputs with phase predictions to decide chunk sizes and refinement intensity for adaptive decoding.
-- The evaluation stage compares baseline and adaptive outputs and writes comparison-ready records and summaries.
+```mermaid
+flowchart LR
+    C0[Run Config YAML] --> C1[Baseline Stage]
+    C1 --> C2[Phase Stage]
+    C2 --> C3[Scheduler Stage]
+    C3 --> C4[Evaluation Stage]
+    C4 --> C5[Artifacts + Run Summaries]
+```
 
-## Quick start
+---
+
+## Setup
+
+## 1) Environment
 
 ```bash
 uv sync
-uv run python scripts/run_pipeline.py --config configs/runs/adaptive_mock.yaml
-make test
 ```
 
-`uv sync` creates the project-local virtual environment at `.venv/` and installs the default `dev`
-dependency group automatically.
+This creates `.venv/` and installs dependencies from `pyproject.toml` / `uv.lock`.
 
-## Repo layout
+## 2) Optional: install AdaBlock-dLLM dependencies
 
-- `src/pag/contracts`: shared dataclasses, typing protocols, serialization helpers
-- `src/pag/baselines`: baseline stage entrypoint and implementation
-- `src/pag/phases`: phase analysis stage entrypoint and implementation
-- `src/pag/scheduler`: adaptive scheduling stage entrypoint and implementation
-- `src/pag/evaluation`: comparison and evaluation entrypoint and implementation
-- `src/pag/orchestration`: pipeline wiring and CLI
-- `src/pag/config`: YAML config loading and artifact path helpers
-- `src/pag/utils`: artifact persistence helpers and run/request ids
-- `configs`: example YAML configs for runs, model, decoding, predictor, scheduler, evaluation, dataset
-- `tests`: contract, stage, and end-to-end wiring tests
-- `docs`: architecture and teammate workflow documentation
+If you are running experiments under `AdaBlock-dLLM/`, also install:
 
-## Artifact layout
+```bash
+uv pip install -r AdaBlock-dLLM/requirements.txt
+```
 
-Artifacts are written under `artifacts/<run_id>/` by stage:
+---
+
+## How to run each part of the codebase
+
+## A) Structured PAG pipeline (`src/pag`)
+
+Run one mock adaptive pipeline pass:
+
+```bash
+uv run python scripts/run_pipeline.py --config configs/runs/adaptive_mock.yaml
+```
+
+Run baseline-only mock config:
+
+```bash
+uv run python scripts/run_pipeline.py --config configs/runs/baseline_mock.yaml
+```
+
+You can also invoke the package CLI:
+
+```bash
+uv run python -m pag --config configs/runs/adaptive_mock.yaml
+```
+
+## B) Individual stage scripts
+
+Baseline stage:
+
+```bash
+uv run python scripts/run_baseline.py --config configs/runs/baseline_mock.yaml
+```
+
+Phase analysis stage:
+
+```bash
+uv run python scripts/run_phase_analysis.py --config configs/runs/adaptive_mock.yaml
+```
+
+Adaptive scheduling stage:
+
+```bash
+uv run python scripts/run_adaptive.py --config configs/runs/adaptive_mock.yaml
+```
+
+Evaluation utility:
+
+```bash
+uv run python scripts/evaluate_runs.py --help
+```
+
+## C) Predictor training + evaluation (`phase_predict/`)
+
+Train predictor:
+
+```bash
+uv run python scripts/train_phase_predict.py --help
+```
+
+Build/inspect tuple dataset:
+
+```bash
+uv run python scripts/build_predictor_dataset.py --help
+```
+
+Quick predictor sanity test:
+
+```bash
+uv run python scripts/run_phase_predict_test.py --help
+```
+
+## D) AdaBlock / LLaDA / Dream experiments (`AdaBlock-dLLM/`)
+
+LLaDA evaluation scripts:
+
+```bash
+uv run python AdaBlock-dLLM/llada/eval_llada_baseline.py --help
+uv run python AdaBlock-dLLM/llada/eval_llada_adablock.py --help
+uv run python AdaBlock-dLLM/llada/eval_llada_pag.py --help
+```
+
+Dream evaluation scripts:
+
+```bash
+uv run python AdaBlock-dLLM/dream/eval_dream.py --help
+uv run python AdaBlock-dLLM/dream/eval_dream_adablock.py --help
+uv run python AdaBlock-dLLM/dream/eval_dream_pag.py --help
+```
+
+Compare PAG vs AdaBlock logs:
+
+```bash
+uv run python scripts/view_llada_pag_vs_adablock.py --help
+uv run python AdaBlock-dLLM/llada/run_pag_vs_adablock_eval.py --help
+```
+
+## E) CPD analysis + UI (`phase_cpd/`)
+
+Run CPD/feature report script:
+
+```bash
+uv run python phase_cpd/report_trace_profiles.py --help
+```
+
+Export scheduler-style dataset from traces:
+
+```bash
+uv run python phase_cpd/export_scheduler_dataset.py --help
+```
+
+Launch Streamlit UI:
+
+```bash
+uv run streamlit run phase_cpd/app.py
+```
+
+The UI is for browsing trace profiles, segment boundaries, and feature-derived phase behavior.
+
+---
+
+## Results snapshot (from `writeup/final_report.pdf`)
+
+On the final GSM8K holdout comparison (200 prompts), PAG reports:
+
+- **Accuracy parity** with AdaBlock at **89.5%**.
+- **Lower average total NFE**: from AdaBlock `34.63` to PAG `27.22` (**~21.4% reduction**).
+- **Small scheduler overhead**: about **3.38 ms per prompt**.
+- **Net runtime improvement** vs vanilla AdaBlock: approximately **5 ms faster on average**.
+
+### Visual results included in this repo
+
+- CPD/token-stability visualizations:
+  - `phase_cpd/results_pelt/pelt_images/algebra_images/*`
+  - `phase_cpd/results_pelt/pelt_images/binary_search_images/*`
+- Report figures and tables:
+  - `writeup/figs/nfe.png`
+  - `writeup/figs/confidence_vs_nfe.png`
+  - `writeup/figs/final_eval_summary.tex`
+  - `writeup/figs/final_eval_points.tsv`
+
+---
+
+## Artifact structure
+
+Pipeline artifacts are written under `artifacts/<run_id>/` by stage:
 
 - `baseline/requests.jsonl`
 - `baseline/traces.jsonl`
@@ -95,10 +236,33 @@ Artifacts are written under `artifacts/<run_id>/` by stage:
 - `evaluation/records.jsonl`
 - `evaluation/run_summary.json`
 
-## Team ownership
+---
 
-- Baselines / adapters / inference / eval: `src/pag/baselines`, `src/pag/evaluation`
-- Phase analysis / signals / predictor: `src/pag/phases`
-- Scheduler / adaptive decode / orchestration policy: `src/pag/scheduler`
+## Testing
 
-The orchestration layer only wires stage outputs into stage inputs. It should stay thin.
+Run full test suite:
+
+```bash
+make test
+```
+
+Or run subsets:
+
+```bash
+uv run pytest tests/integration -q
+uv run pytest tests/phase_predict -q
+uv run pytest tests/phase_cpd -q
+uv run pytest tests/llada -q
+uv run pytest tests/dream -q
+```
+
+---
+
+## Additional docs
+
+- `docs/architecture.md`
+- `docs/module_contracts.md`
+- `docs/module_io_contracts.md`
+- `docs/workflow_diagram.md`
+- `docs/testing_guide.md`
+- `docs/teammate_workflow.md`
