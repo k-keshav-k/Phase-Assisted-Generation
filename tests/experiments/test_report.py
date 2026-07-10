@@ -29,5 +29,7 @@ def test_report_writes_statistics_tables_and_figure(tmp_path) -> None:
     )
     assert summary["gsm8k_test"]["pag"]["nfe_difference"]["estimate"] == -2
     assert (tmp_path / "summary.json").exists()
-    assert (tmp_path / "tables" / "gsm8k_results.tex").exists()
+    assert (tmp_path / "tables" / "gsm8k_test.tex").exists()
+    assert (tmp_path / "tables" / "paired_gsm8k.tex").exists()
     assert (tmp_path / "figures" / "nfe_deltas.pdf").exists()
+    assert (tmp_path / "figures" / "nfe_parity.pdf").exists()

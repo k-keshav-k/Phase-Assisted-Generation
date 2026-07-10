@@ -10,6 +10,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np
 
 from pag.experiments.statistics import (
     correctness_matrix,
@@ -92,6 +93,26 @@ def summarize_pair(
     }
 
 
+def summarize_method(records: list[dict[str, object]]) -> dict[str, float | int]:
+    if not records:
+        raise ValueError("cannot summarize an empty method")
+    correctness = [bool(row["grade"]["is_correct"]) for row in records]
+    nfe = np.asarray([float(row["total_nfe"]) for row in records])
+    latency = np.asarray([float(row["elapsed_sec"]) for row in records])
+    allocated = np.asarray([float(row.get("peak_allocated_bytes", 0)) for row in records])
+    return {
+        "count": len(records),
+        "correct": sum(correctness),
+        "accuracy": float(np.mean(correctness)),
+        "mean_nfe": float(nfe.mean()),
+        "median_nfe": float(np.median(nfe)),
+        "mean_latency_sec": float(latency.mean()),
+        "median_latency_sec": float(np.median(latency)),
+        "p95_latency_sec": float(np.quantile(latency, 0.95)),
+        "peak_allocated_bytes": int(allocated.max()),
+    }
+
+
 def write_report(
     output_dir: str | Path,
     *,
@@ -106,6 +127,12 @@ def write_report(
     for stage, methods in stages.items():
         rows = [record for records in methods.values() for record in records]
         _write_csv(output / f"{stage}_results.csv", _flat_rows(rows))
+        if stage == "development":
+            _write_csv(output / "ablations.csv", _flat_rows(rows))
+        method_summaries = {
+            method: summarize_method(records) for method, records in methods.items()
+        }
+        summary[f"{stage}_methods"] = method_summaries
         if "adablock" not in methods:
             continue
         stage_summary: dict[str, object] = {}
@@ -132,12 +159,23 @@ def write_report(
         summary[stage] = stage_summary
     _write_json(output / "summary.json", summary)
     _write_json(output / "paired_statistics.json", summary)
-    _write_latex_table(output / "tables" / "gsm8k_results.tex", summary.get("gsm8k_test", {}))
+    for stage in ("development", "gsm8k_test", "math500", "timing"):
+        _write_method_table(
+            output / "tables" / f"{stage}.tex",
+            summary.get(f"{stage}_methods", {}),
+        )
+    _write_pair_table(output / "tables" / "paired_gsm8k.tex", summary.get("gsm8k_test", {}))
     _write_nfe_figure(output / "figures" / "nfe_deltas.pdf", stages.get("gsm8k_test", {}))
+    _write_parity_figure(output / "figures" / "nfe_parity.pdf", stages.get("gsm8k_test", {}))
+    _write_tradeoff_figure(
+        output / "figures" / "accuracy_nfe_tradeoff.pdf",
+        stages.get("development", {}),
+    )
+    _write_latency_figure(output / "figures" / "latency_deltas.pdf", stages.get("timing", {}))
     return summary
 
 
-def _write_latex_table(path: Path, rows: object) -> None:
+def _write_pair_table(path: Path, rows: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     mapping = rows if isinstance(rows, dict) else {}
     lines = [
@@ -158,6 +196,27 @@ def _write_latex_table(path: Path, rows: object) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _write_method_table(path: Path, rows: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mapping = rows if isinstance(rows, dict) else {}
+    lines = [
+        "\\begin{tabular}{lrrrr}",
+        "\\toprule",
+        "Method & $n$ & Accuracy & Mean NFE & Median latency (s) \\\\",
+        "\\midrule",
+    ]
+    for name, payload in sorted(mapping.items()):
+        if not isinstance(payload, dict):
+            continue
+        safe_name = name.replace("_", "\\_")
+        lines.append(
+            f"{safe_name} & {payload['count']} & {payload['accuracy']:.3f} & "
+            f"{payload['mean_nfe']:.2f} & {payload['median_latency_sec']:.3f} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def _write_nfe_figure(path: Path, methods: dict[str, list[dict[str, object]]]) -> None:
     if "adablock" not in methods or "pag" not in methods:
         return
@@ -169,6 +228,56 @@ def _write_nfe_figure(path: Path, methods: dict[str, list[dict[str, object]]]) -
     axis.axvline(0, color="black", linestyle="--", linewidth=1)
     axis.set_xlabel("PAG - AdaBlock total NFE")
     axis.set_ylabel("Prompts")
+    figure.tight_layout()
+    figure.savefig(path)
+    plt.close(figure)
+
+
+def _write_parity_figure(path: Path, methods: dict[str, list[dict[str, object]]]) -> None:
+    if "adablock" not in methods or "pag" not in methods:
+        return
+    pairs = pair_records(methods["pag"], methods["adablock"])
+    baseline = [float(right["total_nfe"]) for _, right in pairs]
+    pag = [float(left["total_nfe"]) for left, _ in pairs]
+    low, high = min([*baseline, *pag]), max([*baseline, *pag])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure, axis = plt.subplots(figsize=(4.5, 4.0))
+    axis.scatter(baseline, pag, s=8, alpha=0.55)
+    axis.plot([low, high], [low, high], color="black", linestyle="--", linewidth=1)
+    axis.set_xlabel("AdaBlock total NFE")
+    axis.set_ylabel("PAG total NFE")
+    figure.tight_layout()
+    figure.savefig(path)
+    plt.close(figure)
+
+
+def _write_tradeoff_figure(path: Path, methods: dict[str, list[dict[str, object]]]) -> None:
+    if not methods:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure, axis = plt.subplots(figsize=(6.0, 4.0))
+    for method, records in sorted(methods.items()):
+        values = summarize_method(records)
+        axis.scatter(values["mean_nfe"], values["accuracy"], s=35)
+        axis.annotate(method, (values["mean_nfe"], values["accuracy"]), fontsize=7)
+    axis.set_xlabel("Mean total NFE")
+    axis.set_ylabel("Accuracy")
+    figure.tight_layout()
+    figure.savefig(path)
+    plt.close(figure)
+
+
+def _write_latency_figure(path: Path, methods: dict[str, list[dict[str, object]]]) -> None:
+    if "adablock" not in methods or "pag" not in methods:
+        return
+    pairs = pair_records(methods["pag"], methods["adablock"])
+    deltas = [float(left["elapsed_sec"]) - float(right["elapsed_sec"]) for left, right in pairs]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure, axis = plt.subplots(figsize=(5.5, 3.5))
+    axis.hist(deltas, bins=25)
+    axis.axvline(0, color="black", linestyle="--", linewidth=1)
+    axis.set_xlabel("PAG - AdaBlock latency (s)")
+    axis.set_ylabel("Trials")
     figure.tight_layout()
     figure.savefig(path)
     plt.close(figure)
