@@ -1,0 +1,47 @@
+schema_version: 1
+seed: 20260710
+datasets:
+  gsm8k:
+    path: openai/gsm8k
+    revision: 740312add88f781978c0658806c59bc2815b9866
+    config: main
+    development_indices: [6000, 6199]
+    confirmatory_indices: [400, 1318]
+  math500:
+    path: math-ai/math500
+    revision: 91b8f0024070e42ff83b949d6ca29da311fd3371
+    sample_size: 300
+decoding:
+  temperature: 0.0
+  gen_length: 256
+  steps: 64
+  threshold: 0.9
+  delimiter_threshold: 0.3
+  delimiter_ids: [198]
+  use_cache: true
+  dual_cache: true
+  tau_commit: 0.80
+  tau_stable_steps: 2
+methods:
+  development:
+    - adablock
+    - gates_only
+    - constant_budget
+    - size_lookup
+    - previous_nfe
+    - random_forest
+    - pag_hard_cap
+    - pag
+  final_required: [adablock, gates_only, pag]
+  math500: [adablock, pag]
+promotion:
+  candidates: [constant_budget, size_lookup]
+  max_correct_loss: 3
+timing:
+  warmups: 5
+  prompts: 50
+  repetitions: 3
+statistics:
+  bootstrap_samples: 10000
+budget:
+  reserve_fraction: 0.10
