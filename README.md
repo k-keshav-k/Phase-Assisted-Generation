@@ -238,7 +238,36 @@ Pipeline artifacts are written under `artifacts/<run_id>/` by stage:
 
 ---
 
-## Testing
+## NeurIPS Strategy 1 evidence run
+
+The workshop evidence package runs the eight-method development ablation, promotes a frozen
+history-free baseline, evaluates four methods on all 1,319 GSM8K test examples, reports the
+untouched indices 400--1318 separately, evaluates PAG and AdaBlock on 300 stratified MATH-500
+examples, and finishes with synchronized latency trials and paper-ready statistics.
+
+On the Thunder Compute RTX A6000, run this single command from the repository root:
+
+```bash
+uv run python scripts/run_neurips_strategy1.py --model-path GSAI-ML/LLaDA-8B-Instruct --predictor-ckpt output/ablations/medium_ws8_d64_h4_l4_dp10_lr0.5_bestval=2.216957.pt --device cuda --budget-usd 20 --gpu-rate 0.35
+```
+
+The run ID is derived from the configuration, checkpoint, and model. Running the same command again
+resumes matching atomic prompt records. The runner reserves 10% of the budget and exits with status
+75 before a stage projected to exceed the usable amount. Keep the Thunder instance running only
+while the process is active; provider billing, not the local estimate, is authoritative.
+
+Artifacts are written under `artifacts/neurips_strategy1/<run-id>/`, with final tables and figures
+under `report/`. Inspect the protocol without loading datasets or a model with:
+
+```bash
+make run-neurips-dry
+```
+
+Important: the course-report PAG code omitted each block's initial proposal forward pass from PAG's
+NFE counter while AdaBlock included it. The Strategy 1 runner corrects this accounting mismatch.
+Treat the previously reported 21.4% NFE reduction as unverified until this run completes.
+
+## General testing
 
 Run full test suite:
 

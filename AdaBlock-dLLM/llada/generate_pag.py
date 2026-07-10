@@ -108,6 +108,33 @@ def decide_budget_enforcement(
     return EnforcementDecision(False, None)
 
 
+def _initial_enforcement_decision(
+    *,
+    x: torch.Tensor,
+    block_start: int,
+    block_end: int,
+    mask_id: int,
+    initial_max_probs: torch.Tensor,
+    mode: str,
+    budget: int,
+    max_steps: int,
+    tau_commit: float,
+) -> EnforcementDecision:
+    remaining = x[:, block_start:block_end] == mask_id
+    complete = not bool(remaining.any())
+    confidences = initial_max_probs[remaining]
+    confident = bool(confidences.numel()) and confidences.min().item() >= tau_commit
+    return decide_budget_enforcement(
+        mode=mode,
+        nfe=1,
+        budget=budget,
+        max_steps=max_steps,
+        confident=confident,
+        stable=False,
+        complete=complete,
+    )
+
+
 def _record_schedule(
     schedule_history: list[dict[str, object]],
     *,
@@ -235,10 +262,27 @@ def generate_pag(
         nfe = 1
         exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
+        initial_decision = _initial_enforcement_decision(
+            x=x,
+            block_start=block_start,
+            block_end=block_end,
+            mask_id=mask_id,
+            initial_max_probs=initial_max_probs,
+            mode=enforcement_mode,
+            budget=schedule.budgeted_refinement_steps,
+            max_steps=max_refinement_steps,
+            tau_commit=tau_commit,
+        )
+        if initial_decision.force_commit:
+            mask_index = x == mask_id
+            mask_index[:, block_end:] = 0
+            x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
+            x[transfer_index] = x0[transfer_index]
+            exit_reason = initial_decision.reason
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
-                exit_reason = "complete"
+                exit_reason = exit_reason or "complete"
                 break
             if nfe >= max_refinement_steps:
                 mask_index = x == mask_id
@@ -459,10 +503,28 @@ def generate_pag_prefix_cache(
         nfe = 1
         exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
+        initial_decision = _initial_enforcement_decision(
+            x=x,
+            block_start=block_start,
+            block_end=block_end,
+            mask_id=mask_id,
+            initial_max_probs=initial_max_probs,
+            mode=enforcement_mode,
+            budget=schedule.budgeted_refinement_steps,
+            max_steps=max_refinement_steps,
+            tau_commit=tau_commit,
+        )
+        if initial_decision.force_commit:
+            mask_index = x[:, block_start:] == mask_id
+            mask_index[:, block_length:] = 0
+            local_predictions = predicted_tokens[:, block_start:]
+            x0, transfer_index = _force_commit(local_predictions, mask_index, x[:, block_start:])
+            x[:, block_start:][transfer_index] = x0[transfer_index]
+            exit_reason = initial_decision.reason
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
-                exit_reason = "complete"
+                exit_reason = exit_reason or "complete"
                 break
             if nfe >= max_refinement_steps:
                 mask_index = x[:, block_start:] == mask_id
@@ -691,10 +753,29 @@ def generate_pag_dual_cache(
         nfe = 1
         exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
+        initial_decision = _initial_enforcement_decision(
+            x=x,
+            block_start=block_start,
+            block_end=block_end,
+            mask_id=mask_id,
+            initial_max_probs=initial_max_probs,
+            mode=enforcement_mode,
+            budget=schedule.budgeted_refinement_steps,
+            max_steps=max_refinement_steps,
+            tau_commit=tau_commit,
+        )
+        if initial_decision.force_commit:
+            mask_index = x[:, block_start:block_end] == mask_id
+            local_predictions = predicted_tokens[:, block_start:block_end]
+            x0, transfer_index = _force_commit(
+                local_predictions, mask_index, x[:, block_start:block_end]
+            )
+            x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+            exit_reason = initial_decision.reason
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
-                exit_reason = "complete"
+                exit_reason = exit_reason or "complete"
                 break
             if nfe >= max_refinement_steps:
                 mask_index = x[:, block_start:block_end] == mask_id

@@ -8,7 +8,6 @@ import yaml
 
 from pag.experiments.config import load_experiment_config, validate_experiment_config
 
-
 CONFIG = Path("configs/experiments/neurips_strategy1.yaml")
 
 
