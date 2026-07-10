@@ -3,9 +3,11 @@ Block boundaries are determined reactively from logits (AdaBlock-style).
 Refinement budget is predicted by the classifier.
 Budget enforcement is soft: exit early if tokens are few/confident/stable.
 """
+
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 import torch
 import torch.nn.functional as F
@@ -73,6 +75,39 @@ def _force_commit(
     return x0, mask_index
 
 
+@dataclass(frozen=True, slots=True)
+class EnforcementDecision:
+    force_commit: bool
+    reason: str | None
+
+
+def decide_budget_enforcement(
+    *,
+    mode: str,
+    nfe: int,
+    budget: int,
+    max_steps: int,
+    confident: bool,
+    stable: bool,
+    complete: bool,
+) -> EnforcementDecision:
+    if mode not in {"soft_gate", "hard_cap"}:
+        raise ValueError(f"Unsupported enforcement mode: {mode}")
+    if complete:
+        return EnforcementDecision(False, "complete")
+    if nfe >= max_steps:
+        return EnforcementDecision(True, "hard_max")
+    if nfe < budget:
+        return EnforcementDecision(False, None)
+    if mode == "hard_cap":
+        return EnforcementDecision(True, "hard_budget")
+    if confident:
+        return EnforcementDecision(True, "confidence_gate")
+    if stable:
+        return EnforcementDecision(True, "stability_gate")
+    return EnforcementDecision(False, None)
+
+
 def _record_schedule(
     schedule_history: list[dict[str, object]],
     *,
@@ -80,6 +115,7 @@ def _record_schedule(
     nfe: int,
     block_start: int,
     block_end: int,
+    exit_reason: str,
 ) -> None:
     schedule_history.append(
         {
@@ -93,6 +129,7 @@ def _record_schedule(
             "actual_nfe_used": int(nfe),
             "block_start": int(block_start),
             "block_end": int(block_end),
+            "exit_reason": exit_reason,
         }
     )
 
@@ -118,13 +155,25 @@ def generate_pag(
     tau_commit: float = 0.80,
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
+    enforcement_mode: str = "soft_gate",
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
+    decide_budget_enforcement(
+        mode=enforcement_mode,
+        nfe=0,
+        budget=1,
+        max_steps=1,
+        confident=False,
+        stable=False,
+        complete=True,
+    )
     from generate_adablock import compute_block_length
 
-    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
-    x[:, :prompt.shape[1]] = prompt.clone()
+    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
+        model.device
+    )
+    x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
@@ -142,8 +191,12 @@ def generate_pag(
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
         block_length = compute_block_length(
-            logits, predicted_tokens, prompt, gen_length,
-            generated_length, default_block_length=default_block_length,
+            logits,
+            predicted_tokens,
+            prompt,
+            gen_length,
+            generated_length,
+            default_block_length=default_block_length,
             delimiter_ids=delimiter_ids,
             delimiter_threshold=delimiter_threshold or float("inf"),
         )
@@ -163,7 +216,13 @@ def generate_pag(
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
         x0, transfer_index = get_transfer_index(
-            logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+            logits,
+            predicted_tokens,
+            remasking,
+            mask_index,
+            x,
+            None,
+            threshold,
         )
         initial_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
         initial_max_probs = initial_probs.max(dim=-1).values
@@ -172,11 +231,21 @@ def generate_pag(
             unmask_confs.append(initial_max_probs[newly_unmasked])
         x[transfer_index] = x0[transfer_index]
 
-        nfe = 0
+        # Count every model invocation, including the boundary/proposal pass above.
+        nfe = 1
+        exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
+                exit_reason = "complete"
+                break
+            if nfe >= max_refinement_steps:
+                mask_index = x == mask_id
+                mask_index[:, block_end:] = 0
+                x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
+                x[transfer_index] = x0[transfer_index]
+                exit_reason = "hard_max"
                 break
             output = model(x)
             logits = output.logits
@@ -208,20 +277,38 @@ def generate_pag(
                     )
                 elif remaining_count == 0:
                     stable = True
-                if (confident or stable) or (few_remaining and confident):
+                decision = decide_budget_enforcement(
+                    mode=enforcement_mode,
+                    nfe=nfe,
+                    budget=schedule.budgeted_refinement_steps,
+                    max_steps=max_refinement_steps,
+                    confident=confident or (few_remaining and confident),
+                    stable=stable,
+                    complete=False,
+                )
+                if decision.force_commit:
                     x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
                     x[transfer_index] = x0[transfer_index]
-                    break
-                if nfe >= max_refinement_steps:
-                    x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
-                    x[transfer_index] = x0[transfer_index]
+                    exit_reason = decision.reason
                     break
                 x0, transfer_index = get_transfer_index(
-                    logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+                    logits,
+                    predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x,
+                    None,
+                    threshold,
                 )
             else:
                 x0, transfer_index = get_transfer_index(
-                    logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+                    logits,
+                    predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x,
+                    None,
+                    threshold,
                 )
 
             newly_unmasked = transfer_index[:, block_start:block_end]
@@ -230,8 +317,8 @@ def generate_pag(
             x[transfer_index] = x0[transfer_index]
             prev_predictions.append(predicted_tokens[:, block_start:block_end].clone())
             prev_predictions = prev_predictions[-tau_stable_steps:]
-            if nfe >= max_refinement_steps:
-                break
+            if nfe >= max_refinement_steps and exit_reason is None:
+                exit_reason = "hard_max"
 
         if unmask_confs:
             all_confs = torch.cat(unmask_confs)
@@ -240,12 +327,27 @@ def generate_pag(
         else:
             mean_conf = min_conf = 1.0
         block_tokens = x[0, block_start:block_end]
-        digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item() if digit_ids_tensor is not None else 0.0
-        delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item() if delimiter_ids_tensor is not None else 0.0
+        digit_frac = (
+            torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+            if digit_ids_tensor is not None
+            else 0.0
+        )
+        delim_frac = (
+            torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+            if delimiter_ids_tensor is not None
+            else 0.0
+        )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
         nfe_history.append(nfe)
         block_history.append(block_length)
-        _record_schedule(schedule_history, schedule=schedule, nfe=nfe, block_start=block_start, block_end=block_end)
+        _record_schedule(
+            schedule_history,
+            schedule=schedule,
+            nfe=nfe,
+            block_start=block_start,
+            block_end=block_end,
+            exit_reason=exit_reason or "complete",
+        )
 
     return x, nfe_history, block_history, schedule_history
 
@@ -271,13 +373,25 @@ def generate_pag_prefix_cache(
     tau_commit: float = 0.80,
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
+    enforcement_mode: str = "soft_gate",
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
+    decide_budget_enforcement(
+        mode=enforcement_mode,
+        nfe=0,
+        budget=1,
+        max_steps=1,
+        confident=False,
+        stable=False,
+        complete=True,
+    )
     from generate_adablock import compute_block_length
 
-    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
-    x[:, :prompt.shape[1]] = prompt.clone()
+    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
+        model.device
+    )
+    x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
@@ -296,8 +410,12 @@ def generate_pag_prefix_cache(
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
         block_length = compute_block_length(
-            logits, predicted_tokens, prompt, gen_length,
-            generated_length, default_block_length=default_block_length,
+            logits,
+            predicted_tokens,
+            prompt,
+            gen_length,
+            generated_length,
+            default_block_length=default_block_length,
             delimiter_ids=delimiter_ids,
             delimiter_threshold=delimiter_threshold or float("inf"),
         )
@@ -317,7 +435,13 @@ def generate_pag_prefix_cache(
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
         x0, transfer_index = get_transfer_index(
-            logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+            logits,
+            predicted_tokens,
+            remasking,
+            mask_index,
+            x,
+            None,
+            threshold,
         )
         initial_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
         initial_max_probs = initial_probs.max(dim=-1).values
@@ -332,13 +456,23 @@ def generate_pag_prefix_cache(
             for cache_entry in cache_layer:
                 prefix_cache[-1] += (cache_entry[:, :, :block_start],)
 
-        nfe = 0
+        nfe = 1
+        exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
+                exit_reason = "complete"
                 break
             if nfe >= max_refinement_steps:
+                mask_index = x[:, block_start:] == mask_id
+                mask_index[:, block_length:] = 0
+                local_predictions = predicted_tokens[:, block_start:]
+                x0, transfer_index = _force_commit(
+                    local_predictions, mask_index, x[:, block_start:]
+                )
+                x[:, block_start:][transfer_index] = x0[transfer_index]
+                exit_reason = "hard_max"
                 break
 
             mask_index = x[:, block_start:] == mask_id
@@ -359,32 +493,56 @@ def generate_pag_prefix_cache(
                 confident = False
                 if remaining_count > 0:
                     local_conf = block_max_probs[0, :block_length][block_mask[0, :block_length]]
-                    confident = local_conf.min().item() >= tau_commit if local_conf.numel() > 0 else True
+                    confident = (
+                        local_conf.min().item() >= tau_commit if local_conf.numel() > 0 else True
+                    )
                 else:
                     confident = True
                 stable = False
                 if remaining_count > 0 and len(prev_predictions) >= tau_stable_steps:
-                    current_for_remaining = block_predicted_tokens[0, :block_length][block_mask[0, :block_length]]
+                    current_for_remaining = block_predicted_tokens[0, :block_length][
+                        block_mask[0, :block_length]
+                    ]
                     stable = all(
                         torch.all(current_for_remaining == p[block_mask[0, :block_length]])
                         for p in prev_predictions[-tau_stable_steps:]
                     )
                 elif remaining_count == 0:
                     stable = True
-                if (confident or stable) or (few_remaining and confident):
-                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
+                decision = decide_budget_enforcement(
+                    mode=enforcement_mode,
+                    nfe=nfe,
+                    budget=schedule.budgeted_refinement_steps,
+                    max_steps=max_refinement_steps,
+                    confident=confident or (few_remaining and confident),
+                    stable=stable,
+                    complete=False,
+                )
+                if decision.force_commit:
+                    x0, transfer_index = _force_commit(
+                        block_predicted_tokens, mask_index, x[:, block_start:]
+                    )
                     x[:, block_start:][transfer_index] = x0[transfer_index]
-                    break
-                if nfe >= max_refinement_steps:
-                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:])
-                    x[:, block_start:][transfer_index] = x0[transfer_index]
+                    exit_reason = decision.reason
                     break
                 x0, transfer_index = get_transfer_index(
-                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:], None, threshold,
+                    block_logits,
+                    block_predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x[:, block_start:],
+                    None,
+                    threshold,
                 )
             else:
                 x0, transfer_index = get_transfer_index(
-                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:], None, threshold,
+                    block_logits,
+                    block_predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x[:, block_start:],
+                    None,
+                    threshold,
                 )
 
             newly_unmasked = transfer_index[:, :block_length]
@@ -401,14 +559,31 @@ def generate_pag_prefix_cache(
         else:
             mean_conf = min_conf = 1.0
         block_tokens = x[0, block_start:block_end]
-        digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item() if digit_ids_tensor is not None else 0.0
-        delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item() if delimiter_ids_tensor is not None else 0.0
+        digit_frac = (
+            torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+            if digit_ids_tensor is not None
+            else 0.0
+        )
+        delim_frac = (
+            torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+            if delimiter_ids_tensor is not None
+            else 0.0
+        )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
         nfe_history.append(nfe)
         block_history.append(block_length)
-        _record_schedule(schedule_history, schedule=schedule, nfe=nfe, block_start=block_start, block_end=block_end)
+        _record_schedule(
+            schedule_history,
+            schedule=schedule,
+            nfe=nfe,
+            block_start=block_start,
+            block_end=block_end,
+            exit_reason=exit_reason or "complete",
+        )
 
     return x, nfe_history, block_history, schedule_history
+
+
 @torch.no_grad()
 def generate_pag_dual_cache(
     model,
@@ -430,13 +605,25 @@ def generate_pag_dual_cache(
     tau_commit: float = 0.80,
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
+    enforcement_mode: str = "soft_gate",
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
+    decide_budget_enforcement(
+        mode=enforcement_mode,
+        nfe=0,
+        budget=1,
+        max_steps=1,
+        confident=False,
+        stable=False,
+        complete=True,
+    )
     from generate_adablock import compute_block_length
 
-    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
-    x[:, :prompt.shape[1]] = prompt.clone()
+    x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
+        model.device
+    )
+    x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
@@ -455,8 +642,12 @@ def generate_pag_dual_cache(
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
         block_length = compute_block_length(
-            logits, predicted_tokens, prompt, gen_length,
-            generated_length, default_block_length=default_block_length,
+            logits,
+            predicted_tokens,
+            prompt,
+            gen_length,
+            generated_length,
+            default_block_length=default_block_length,
             delimiter_ids=delimiter_ids,
             delimiter_threshold=delimiter_threshold or float("inf"),
         )
@@ -478,7 +669,13 @@ def generate_pag_dual_cache(
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
         x0, transfer_index = get_transfer_index(
-            logits, predicted_tokens, remasking, mask_index, x, None, threshold,
+            logits,
+            predicted_tokens,
+            remasking,
+            mask_index,
+            x,
+            None,
+            threshold,
         )
         initial_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
         initial_max_probs = initial_probs.max(dim=-1).values
@@ -491,13 +688,22 @@ def generate_pag_dual_cache(
         replace_position[:, block_start:block_end] = 1
 
         # Refinement loop with dual cache
-        nfe = 0
+        nfe = 1
+        exit_reason: str | None = None
         prev_predictions: list[torch.Tensor] = []
 
         while True:
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
+                exit_reason = "complete"
                 break
             if nfe >= max_refinement_steps:
+                mask_index = x[:, block_start:block_end] == mask_id
+                local_predictions = predicted_tokens[:, block_start:block_end]
+                x0, transfer_index = _force_commit(
+                    local_predictions, mask_index, x[:, block_start:block_end]
+                )
+                x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+                exit_reason = "hard_max"
                 break
 
             mask_index = x[:, block_start:block_end] == mask_id
@@ -521,7 +727,9 @@ def generate_pag_dual_cache(
                 confident = False
                 if remaining_count > 0:
                     local_conf = block_max_probs[0, mask_index[0]]
-                    confident = local_conf.min().item() >= tau_commit if local_conf.numel() > 0 else True
+                    confident = (
+                        local_conf.min().item() >= tau_commit if local_conf.numel() > 0 else True
+                    )
                 else:
                     confident = True
                 stable = False
@@ -533,20 +741,40 @@ def generate_pag_dual_cache(
                     )
                 elif remaining_count == 0:
                     stable = True
-                if (confident or stable) or (few_remaining and confident):
-                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:block_end])
+                decision = decide_budget_enforcement(
+                    mode=enforcement_mode,
+                    nfe=nfe,
+                    budget=schedule.budgeted_refinement_steps,
+                    max_steps=max_refinement_steps,
+                    confident=confident or (few_remaining and confident),
+                    stable=stable,
+                    complete=False,
+                )
+                if decision.force_commit:
+                    x0, transfer_index = _force_commit(
+                        block_predicted_tokens, mask_index, x[:, block_start:block_end]
+                    )
                     x[:, block_start:block_end][transfer_index] = x0[transfer_index]
-                    break
-                if nfe >= max_refinement_steps:
-                    x0, transfer_index = _force_commit(block_predicted_tokens, mask_index, x[:, block_start:block_end])
-                    x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+                    exit_reason = decision.reason
                     break
                 x0, transfer_index = get_transfer_index(
-                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:block_end], None, threshold,
+                    block_logits,
+                    block_predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x[:, block_start:block_end],
+                    None,
+                    threshold,
                 )
             else:
                 x0, transfer_index = get_transfer_index(
-                    block_logits, block_predicted_tokens, remasking, mask_index, x[:, block_start:block_end], None, threshold,
+                    block_logits,
+                    block_predicted_tokens,
+                    remasking,
+                    mask_index,
+                    x[:, block_start:block_end],
+                    None,
+                    threshold,
                 )
 
             newly_unmasked = transfer_index
@@ -563,11 +791,26 @@ def generate_pag_dual_cache(
         else:
             mean_conf = min_conf = 1.0
         block_tokens = x[0, block_start:block_end]
-        digit_frac = torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item() if digit_ids_tensor is not None else 0.0
-        delim_frac = torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item() if delimiter_ids_tensor is not None else 0.0
+        digit_frac = (
+            torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+            if digit_ids_tensor is not None
+            else 0.0
+        )
+        delim_frac = (
+            torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+            if delimiter_ids_tensor is not None
+            else 0.0
+        )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
         nfe_history.append(nfe)
         block_history.append(block_length)
-        _record_schedule(schedule_history, schedule=schedule, nfe=nfe, block_start=block_start, block_end=block_end)
+        _record_schedule(
+            schedule_history,
+            schedule=schedule,
+            nfe=nfe,
+            block_start=block_start,
+            block_end=block_end,
+            exit_reason=exit_reason or "complete",
+        )
 
     return x, nfe_history, block_history, schedule_history

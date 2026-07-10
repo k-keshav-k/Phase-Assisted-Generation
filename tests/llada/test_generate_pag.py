@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -34,7 +35,8 @@ class FakeScheduler:
         self._index += 1
         return schedule
 
-    def record_realized(self, block_size: int, actual_nfe_used: int) -> None:
+    def record_realized(self, block_size: int, actual_nfe_used: int, *metrics: float) -> None:
+        del metrics
         self.recorded.append((block_size, actual_nfe_used))
 
 
@@ -101,6 +103,11 @@ def test_generate_pag_uses_refinement_budget_and_force_commits_final_pass() -> N
                 5: (7, 0.1),
             },
         ),
+        _make_logits(
+            seq_len=6,
+            vocab_size=8,
+            predictions={5: (7, 0.1)},
+        ),
     ]
     model = FakeModel(logits_plan)
     input_ids = torch.tensor([[1, 2]], dtype=torch.long)
@@ -117,9 +124,9 @@ def test_generate_pag_uses_refinement_budget_and_force_commits_final_pass() -> N
     )
 
     assert result.tolist() == [[1, 2, 3, 5, 6, 7]]
-    assert nfe_history == [2, 1]
+    assert nfe_history == [2, 2]
     assert block_history == [2, 2]
-    assert scheduler.recorded == [(2, 2), (2, 1)]
+    assert scheduler.recorded == [(2, 2), (2, 2)]
     assert schedule_history == [
         {
             "block_index": 0,
@@ -129,14 +136,43 @@ def test_generate_pag_uses_refinement_budget_and_force_commits_final_pass() -> N
             "actual_nfe_used": 2,
             "block_start": 2,
             "block_end": 4,
+            "exit_reason": "complete",
         },
         {
             "block_index": 1,
             "predicted_tuple": {"block_size": 2, "refinement_steps": 1},
             "applied_block_size": 2,
             "budgeted_refinement_steps": 1,
-            "actual_nfe_used": 1,
+            "actual_nfe_used": 2,
             "block_start": 4,
             "block_end": 6,
+            "exit_reason": "complete",
         },
     ]
+
+
+def test_hard_cap_mode_force_commits_at_budget() -> None:
+    decision = importlib.import_module("generate_pag").decide_budget_enforcement(
+        mode="hard_cap",
+        nfe=2,
+        budget=2,
+        max_steps=4,
+        confident=False,
+        stable=False,
+        complete=False,
+    )
+    assert decision.force_commit
+    assert decision.reason == "hard_budget"
+
+
+def test_invalid_enforcement_mode_is_rejected() -> None:
+    with pytest.raises(ValueError, match="Unsupported enforcement mode"):
+        importlib.import_module("generate_pag").decide_budget_enforcement(
+            mode="unknown",
+            nfe=1,
+            budget=2,
+            max_steps=4,
+            confident=False,
+            stable=False,
+            complete=False,
+        )
