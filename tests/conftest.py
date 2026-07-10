@@ -14,6 +14,7 @@ from pag.contracts.schemas import (
     SampleRecord,
     SchedulerConfig,
 )
+from pag.experiments.config import load_experiment_config
 
 
 @pytest.fixture
@@ -83,3 +84,8 @@ def run_config(tmp_path: Path, sample_records: list[SampleRecord]) -> RunConfig:
         evaluation=EvaluationConfig(name="default-eval", metrics=["throughput_proxy"]),
         notes={"suite": "pytest"},
     )
+
+
+@pytest.fixture
+def strategy_config():
+    return load_experiment_config("configs/experiments/neurips_strategy1.yaml")
