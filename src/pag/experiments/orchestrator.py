@@ -36,6 +36,34 @@ class ControlledStop(RuntimeError):
     """Raised after safely recording a budget or signal stop."""
 
 
+@dataclass(frozen=True, slots=True)
+class StageWork:
+    remaining_runs: int
+    observed_seconds_per_run: float | None
+
+
+def inspect_stage_work(
+    store: RecordStore,
+    stage: str,
+    samples: Sequence[ExperimentSample],
+    methods: Sequence[str],
+) -> StageWork:
+    remaining = 0
+    observed: list[float] = []
+    for method in methods:
+        for record in store.records(stage, method):
+            elapsed = record.get("elapsed_sec")
+            if isinstance(elapsed, (int, float)) and elapsed > 0:
+                observed.append(float(elapsed))
+        for sample in samples:
+            if not store.is_complete(stage, method, sample.sample_id):
+                remaining += 1
+    return StageWork(
+        remaining_runs=remaining,
+        observed_seconds_per_run=float(np.median(observed)) if observed else None,
+    )
+
+
 def select_history_free(
     records: dict[str, list[dict[str, Any]]], *, max_correct_loss: int
 ) -> dict[str, object]:
@@ -226,12 +254,19 @@ class StrategyOneOrchestrator:
             }
         )
 
-    def _admit(self, stage: str, remaining_runs: int) -> None:
-        if self.seconds_per_run is None:
+    def _admit(
+        self,
+        stage: str,
+        remaining_runs: int,
+        *,
+        observed_seconds_per_run: float | None = None,
+    ) -> None:
+        seconds_per_run = observed_seconds_per_run or self.seconds_per_run
+        if seconds_per_run is None or remaining_runs == 0:
             return
         decision = self.guard.can_start(
             stage=stage,
-            projected_seconds=self.seconds_per_run * remaining_runs * 1.25,
+            projected_seconds=seconds_per_run * remaining_runs * 1.25,
         )
         if not decision.allowed:
             self._manifest(stage, "controlled_stop", reason=decision.reason)
@@ -284,7 +319,18 @@ class StrategyOneOrchestrator:
         samples: Sequence[ExperimentSample],
         methods: Sequence[str],
     ) -> None:
-        self._admit(stage, len(samples) * len(methods))
+        work = inspect_stage_work(self.store, stage, samples, methods)
+        self._admit(
+            stage,
+            work.remaining_runs,
+            observed_seconds_per_run=work.observed_seconds_per_run,
+        )
+        if work.remaining_runs == 0:
+            self._manifest(
+                stage, "complete", resumed=True, skipped_runs=len(samples) * len(methods)
+            )
+            print(f"[{stage}] already complete; all records verified", flush=True)
+            return
         self._manifest(stage, "running")
         for index, sample in enumerate(samples, start=1):
             baseline = self._run_record(stage, "adablock", sample, None)
