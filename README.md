@@ -192,14 +192,12 @@ The UI is for browsing trace profiles, segment boundaries, and feature-derived p
 
 ---
 
-## Results snapshot (from `writeup/final_report.pdf`)
+## Audited results snapshot
 
-On the final GSM8K holdout comparison (200 prompts), PAG reports:
-
-- **Accuracy parity** with AdaBlock at **89.5%**.
-- **Lower average total NFE**: from AdaBlock `34.63` to PAG `27.22` (**~21.4% reduction**).
-- **Small scheduler overhead**: about **3.38 ms per prompt**.
-- **Net runtime improvement** vs vanilla AdaBlock: approximately **5 ms faster on average**.
+Corrected accounting counts every initial proposal forward pass. On GSM8K, PAG reaches 76.19%
+accuracy vs 77.79% for AdaBlock and uses 4.0% fewer NFEs. On MATH-500, PAG reaches 36.67% vs
+38.00% and uses 6.7% fewer NFEs. `size_lookup` slightly dominates PAG on GSM8K; this motivates the
+risk-controlled residual experiment below. See the run's `report_regraded/` directory.
 
 ### Visual results included in this repo
 
@@ -264,8 +262,26 @@ make run-neurips-dry
 ```
 
 Important: the course-report PAG code omitted each block's initial proposal forward pass from PAG's
-NFE counter while AdaBlock included it. The Strategy 1 runner corrects this accounting mismatch.
-Treat the previously reported 21.4% NFE reduction as unverified until this run completes.
+NFE counter while AdaBlock included it. The Strategy 1 runner and regraded report correct this
+accounting mismatch; do not use the original course-report efficiency headline.
+
+## Cross-model residual PAG run
+
+This frozen protocol calibrates only on GSM8K train 6200--6299, then evaluates LLaDA and Dream on
+fresh GSM8K train 6300--6699 and the untouched 200-example MATH-500 complement. It compares
+AdaBlock, `size_lookup`, and residual PAG under a $19 hard cap.
+
+```bash
+TOKENIZERS_PARALLELISM=false uv run python scripts/run_neurips_cross_model.py --config configs/experiments/neurips_cross_model.yaml --device cuda --budget-usd 19 --gpu-rate 0.35
+```
+
+The deterministic run ID makes the command resumable. Artifacts go to
+`artifacts/neurips_cross_model/<run-id>/`. `report/claim_audit.json` is authoritative: a leap claim is
+allowed only when `headline_eligible` is true. Local-only check:
+
+```bash
+uv run python scripts/run_neurips_cross_model.py --preflight-only --device cpu
+```
 
 ## General testing
 

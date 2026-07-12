@@ -69,9 +69,7 @@
 Diffusion language models decode by iteratively refining masked tokens, which exposes a useful scheduling question: should every part of a reasoning answer receive the same block size and refinement budget? We study this question through \projectname{} (\pag{}), a system for predicting block-level control tuples from generation traces and using them to adapt LLaDA decoding. The project produced three connected contributions. 
 First, we built trace-analysis tooling for Dream and LLaDA, including token-level stabilization features, PELT/kernel change-point detection, and a Streamlit inspection interface. 
 Second, we converted AdaBlock-style LLaDA traces into block-native training data and compared several next-control predictors, including a regression Transformer, a variable-order Markov baseline, a multi-output random forest, and a classification/ordinal Transformer over rich block features. 
-Third, we integrated the learned predictor into a tuple-conditioned LLaDA scheduler and evaluated it against AdaBlock on 200 held-out GSM8K prompts. 
-On the final run, PAG matched AdaBlock answer accuracy at \(89.5\%\) while reducing average total \nfe{} from \AdaAvgNfe{} to \PagAvgNfe{} per prompt, a \(\approx 21.4\%\) reduction, with a small predictor overhead of \(\SchedulerAvgMs\) ms per prompt. 
-PAG also gave significant response time savings over vanilla AdaBlock with average runtime delta of PAG - AdaBlock being approximately 5 millisec.
+Third, we integrated the learned predictor into a tuple-conditioned LLaDA scheduler and audited it against AdaBlock and history-free controls with corrected forward-pass accounting. On GSM8K, PAG reduced mean \nfe{} by 4.0\% relative to AdaBlock with a 1.6-point accuracy reduction; on MATH-500 it reduced mean \nfe{} by 6.7\% with a 1.3-point accuracy reduction. A size-conditioned lookup policy slightly dominated the learned scheduler on GSM8K, motivating a risk-controlled residual formulation whose frozen cross-model protocol evaluates LLaDA and Dream without test-set tuning.
 \end{abstract}
 
 \section{Introduction}
@@ -632,11 +630,18 @@ Figure~\ref{fig:transformer-ablation-grid} summarizes the result from the full a
   \end{tabular}
 \end{table}
 
-We evaluated the selected predictor checkpoint on the 200 unseen GSM8K test prompts using LLaDA-8B-Instruct with generation length 256 and 64 diffusion steps. We saw the results summarized in Table~\ref{tab:final-eval} and Figures~\ref{fig:final-eval-summary},~\ref{fig:final-eval} and ~\ref{fig:schedules}.
+\subsection{Audited Strategy 1 Results}
+
+Corrected accounting counts each block's initial proposal forward pass for every method. On all 1,319 GSM8K test examples, PAG reached 76.19\% accuracy versus 77.79\% for AdaBlock while reducing mean \nfe{} from 87.81 to 84.26 (4.0\%). On 300 stratified MATH-500 examples, PAG reached 36.67\% versus 38.00\% while reducing mean \nfe{} from 119.65 to 111.67 (6.7\%). The confirmatory GSM8K accuracy difference was $-1.20$ percentage points with a paired 95\% interval of $[-2.61,0.22]$. These results establish an efficiency--accuracy trade-off, not dominance: the size-conditioned lookup policy achieved 76.42\% GSM8K accuracy at 82.14 mean \nfe{}.
+
+The next experiment therefore uses a residual policy: a size-lookup prior plus a learned, bounded correction from rolling phase history. One risk quantile is selected jointly on disjoint LLaDA and Dream calibration sets, then frozen before evaluation on fresh GSM8K and MATH-500 examples. Generated claims are gated by paired confidence intervals and are included only when all predeclared criteria pass.
+
+\iffalse
+We evaluated the selected predictor checkpoint on the legacy 200-prompt slice using LLaDA-8B-Instruct. The following figures are retained in source only for historical comparison; their NFE accounting was not comparable and they are excluded from the compiled paper.
 
 \begin{table}[t!]
   \centering
-  \caption{Final 200-prompt GSM8K evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
+  \caption{Legacy 200-prompt GSM8K evaluation.}
   \begin{tabular}{lrrrr}
     \toprule
     Method & Accuracy & Correct & Avg. total \nfe{} & Avg. blocks \\
@@ -679,7 +684,7 @@ We evaluated the selected predictor checkpoint on the 200 unseen GSM8K test prom
 	    \end{tikzpicture}
 	    \caption{Answer accuracy.}
 	  \end{subfigure}
-	  \caption{Aggregate final evaluation. PAG matches AdaBlock answer accuracy while using fewer forward evaluations.}
+	  \caption{Legacy aggregate evaluation.}
 	  \label{fig:final-eval-summary}
 	\end{figure}
 
@@ -761,24 +766,25 @@ We evaluated the selected predictor checkpoint on the 200 unseen GSM8K test prom
   \label{fig:schedules}
 \end{figure}
 
-The average \nfe{} ratio was \(\AvgNfeRatio\), so PAG used about \(21.4\%\) fewer forward evaluations than AdaBlock. Median \nfe{} delta was \(\MedNfeDelta\), and average runtime delta was \(\AvgRuntimeDelta\) seconds. Runtime savings are smaller than \nfe{} savings because predictor calls and Python control overhead are visible at this evaluation scale, but the model compute component still decreased. Figure~\ref{fig:final-eval} summarizes per-prompt outcomes: the left panel shows the distribution of per-prompt \nfe{} deltas (most prompts yield positive savings), while the right panel plots AdaBlock vs. PAG total \nfe{} with a parity line — most points fall below this line, indicating that PAG reduced compute for the majority of prompts. Figure~\ref{fig:schedules} presents two representative per-block schedules from the final run: the left panel illustrates the prompt with the largest \nfe{} savings (\BestSavingDelta{}), where PAG allocates smaller blocks and reduces refinement; the right panel shows a rare overhead case where the learned schedule spends extra refinement, increasing \nfe{}.
+The legacy aggregate used inconsistent forward-pass accounting and is not used as evidence.
+\fi
 
 \FloatBarrier
 
 \section{Discussion}
 
-Our central result is that learned tuple scheduling preserves AdaBlock-level answer accuracy (both 89.5\% on 200 GSM8K prompts) while reducing average NFE by 21.4\% (72.1 vs.\ 90.8). This savings is consistent across the evaluation set: PAG used fewer forward evaluations on 199 of 200 prompts, and the median NFE delta of \(-18.0\) confirms the mean is not driven by outliers. The single prompt where PAG used more NFE involved a multi-phase rate calculation that required additional refinement beyond AdaBlock's allocation, suggesting the predictor can sometimes identify under-refined spans that AdaBlock terminates too early.
+The audited result is narrower than the exploratory result: learned tuple scheduling reduces corrected NFE relative to AdaBlock, but a size-conditioned lookup policy is stronger on GSM8K. This identifies the right target for learning. Rather than predicting the entire budget independently, residual PAG predicts when phase history justifies departing from a strong history-free prior, while online confidence and stability checks prevent unsafe forced exits.
 
 The separation of concerns between boundary detection and budget prediction is the key architectural insight. AdaBlock's delimiter-based boundary detection uses a reactive signal---the current logit confidence at candidate delimiter positions---which is inherently reliable for finding semantic breakpoints. The predictor, by contrast, uses historical context to forecast future computational effort, a fundamentally different and complementary capability. Our initial integration, which let the predictor control both dimensions, collapsed into a death spiral of size-1 blocks and out-of-distribution context features. The hybrid architecture---AdaBlock for boundaries, predictor for budget, soft gates for graceful degradation---solved all three failure modes simultaneously.
 
-The predictor's overhead is modest. Each inference costs approximately 64~ms per prompt (dominated by the small Transformer forward pass on CPU), contributing about 13~s total across the 200-prompt evaluation. Runtime savings (\(\approx 0.05\)~s per prompt) are smaller than NFE savings (\(\approx 21\%\)) because Python-level control logic---history padding, clamping, budget checks, gate evaluation---adds fixed overhead per block that is independent of model compute. A fused implementation in a lower-level runtime would close this gap, but even in the current form the predictor overhead is dwarfed by LLaDA's decoding time.
+On the synchronized 150-prompt timing subset, PAG and AdaBlock both reached 84\% accuracy. PAG was 0.31 seconds faster on average, but the paired latency interval crossed zero; we therefore treat wall-clock speed as a secondary outcome and avoid a significance claim. NFE remains the hardware-independent primary efficiency measure.
 
 % The hyperparameter ablations reveal that validation loss clusters tightly around 2.2--2.3 across all configurations. Model capacity (hidden dimension, number of layers) has surprisingly little impact beyond a modest floor---the worst configuration is only about 0.07 worse than the best. This suggests the prediction problem is inherently bounded: the maximum achievable budget-forecast accuracy is limited by the stochasticity of LLaDA's unmasking process rather than by model capacity.
 
-These results come with important caveats. The evaluation uses one model (LLaDA-8B-Instruct) and one benchmark (GSM8K~\citep{cobbe2021gsm8k}). HumanEval, MBPP, MATH, and Dream integration remain as natural extensions~\citep{chen2021humaneval,austin2021mbpp,hendrycks2021math}. The predictor is trained on AdaBlock traces and thus inherits AdaBlock's operating regime---it learns to imitate and improve around AdaBlock's schedule rather than discovering schedules from first principles. The answer-matching metric (normalized substring check) may also miss qualitative differences in reasoning quality that do not change the final numeric answer. Future work should investigate whether the classifier-plus-ordinal design generalizes across model scales, whether schedule discovery from scratch is feasible, and whether the soft-gate thresholds can themselves be learned rather than hand-tuned.
+The predictor is trained on AdaBlock traces and therefore improves within AdaBlock's operating regime rather than discovering schedules from scratch. Exact-answer grading can miss qualitative reasoning changes, and provider-level latency is noisy. The frozen cross-model protocol addresses the earlier one-model limitation with LLaDA and Dream, fresh GSM8K and MATH-500 splits, paired statistics, strict coverage checks, and a machine-readable claim audit.
 
 \section{Conclusion}
-\pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. Across the project, we built trace collection, CPD analysis, block-native tuple datasets, multiple predictor families, LLaDA scheduler integration, visualization dashboards, and a 200-prompt final evaluation. The most important design lesson is that phase structure is real but should be attached to the scheduler's native control space. On the final held-out GSM8K run, the learned scheduler matched AdaBlock answer accuracy while reducing average \nfe{} by about \(21\%\), showing that lightweight history-conditioned control is a viable direction for diffusion LLM reasoning systems.
+\pag{} frames adaptive \dllm{} decoding as a next-control prediction problem. The audited experiments show that phase-aware scheduling can reduce model evaluations, but also that a strong size-conditioned prior must be beaten before attributing the gain to learned history. Risk-controlled residual PAG turns that negative finding into a testable cross-model method: preserve semantic boundaries, predict bounded compute corrections, and permit a headline claim only when frozen paired evaluations satisfy the declared accuracy and NFE gates.
 
     \section{Code}
     Our code is available at \href{https://github.com/k-keshav-k/Phase-Assisted-Generation}{this link}.
