@@ -112,6 +112,10 @@ class FakeModel:
         self.call_index += 1
         return SimpleNamespace(logits=logits, past_key_values=[(torch.zeros(1), torch.zeros(1))])
 
+    def _compute_block_length(self, *args, **kwargs) -> int:
+        del args, kwargs
+        return 2
+
 
 def _make_schedule(block_size: int, refinement_steps: int) -> SimpleNamespace:
     return SimpleNamespace(
@@ -222,3 +226,34 @@ def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> Non
             "block_end": 6,
         },
     ]
+
+
+def test_cached_pag_uses_adablock_boundary_and_counts_initial_forward() -> None:
+    scheduler = FakeScheduler([_make_schedule(2, 1), _make_schedule(2, 1)])
+    logits_plan = [
+        _make_logits(6, 8, {1: (3, 8.0), 2: (5, 8.0)}),
+        _make_logits(6, 8, {3: (6, 8.0), 4: (7, 8.0)}),
+    ]
+    model = FakeModel(logits_plan, scheduler)
+    model._sample = DreamGenerationMixin._sample_pag_cache.__get__(model, FakeModel)
+    generation_config = DreamGenerationConfig(
+        max_length=6,
+        steps=4,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+    result = model._sample(
+        torch.tensor([[1, 2]], dtype=torch.long),
+        attention_mask=None,
+        generation_config=generation_config,
+        threshold=0.8,
+        dual_cache=True,
+        max_block_length=2,
+        max_refinement_steps=4,
+    )
+    assert result.sequences.tolist() == [[1, 2, 3, 5, 6, 7]]
+    assert result.nfe_history == [1, 1]
+    assert result.block_history == [2, 2]

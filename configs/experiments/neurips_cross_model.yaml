@@ -9,12 +9,12 @@ datasets:
   gsm8k:
     path: openai/gsm8k
     config: main
-    revision: main
+    revision: 740312add88f781978c0658806c59bc2815b9866
     calibration_indices: [6200, 6299]
     test_indices: [6300, 6699]
   math500:
-    path: HuggingFaceH4/MATH-500
-    revision: main
+    path: math-ai/math500
+    revision: 91b8f0024070e42ff83b949d6ca29da311fd3371
     prior_selection_manifest: artifacts/neurips_strategy1/strategy1-b36c0c38-fd7a9aaa-5a6f6c2a/selected_samples.json
     expected_complement: 200
 

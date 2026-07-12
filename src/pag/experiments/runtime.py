@@ -13,6 +13,11 @@ import torch
 from pag.experiments.config import ExperimentConfig
 from pag.experiments.datasets import ExperimentSample
 from pag.experiments.grading import grade_gsm8k, grade_math500
+from pag.experiments.residual import (
+    ResidualBudgetScheduler,
+    ResidualEstimator,
+    TraceBudgetStats,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
@@ -83,7 +88,30 @@ class ExperimentRuntime:
         self.trace_sequences = variants.load_trace_sequences(self.trace_path)
         self.trace_stats = variants.derive_trace_budget_stats(self.trace_sequences)
         self._rf_scheduler = None
+        self._residual_estimator: ResidualEstimator | None = None
+        self._residual_stats: TraceBudgetStats | None = None
+        self._residual_quantile = 0.25
+        self._residual_max_abs_correction = 2
         self.digit_ids_tensor, self.delimiter_ids_tensor = self._token_type_tensors()
+
+    def configure_residual_policy(
+        self,
+        *,
+        stats: TraceBudgetStats,
+        estimator: ResidualEstimator,
+        quantile: float,
+        max_abs_correction: int,
+    ) -> None:
+        self._residual_stats = stats
+        self._residual_estimator = estimator
+        self._residual_quantile = float(quantile)
+        self._residual_max_abs_correction = int(max_abs_correction)
+        variants = importlib.import_module("scheduler_variants")
+        self.trace_stats = variants.TraceBudgetStats(
+            content_median=stats.content_median,
+            delimiter_median=stats.delimiter_median,
+            by_size=dict(stats.by_size),
+        )
 
     def _token_type_tensors(self) -> tuple[torch.Tensor, torch.Tensor]:
         digit_ids: set[int] = set()
@@ -134,6 +162,16 @@ class ExperimentRuntime:
             self._rf_scheduler.seed_budget = seed_nfe
             self._rf_scheduler.reset()
             return self._rf_scheduler
+        if method == "residual_pag":
+            if self._residual_stats is None or self._residual_estimator is None:
+                raise ValueError("residual_pag requires a configured estimator")
+            return ResidualBudgetScheduler(
+                seed_budget=seed_nfe,
+                stats=self._residual_stats,
+                estimator=self._residual_estimator,
+                quantile=self._residual_quantile,
+                max_abs_correction=self._residual_max_abs_correction,
+            )
         if method in {"pag", "pag_hard_cap"}:
             scheduler_class = importlib.import_module("pag_predictor").PAGTupleScheduler
             return scheduler_class(

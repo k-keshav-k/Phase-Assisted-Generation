@@ -145,6 +145,7 @@ class Dream(AdaBlockDream):
         self.max_refinement_steps = int(
             diffusion_steps if max_refinement_steps is None else max_refinement_steps
         )
+        self.delimiter_threshold = 0.3
         self.min_refinement_steps = int(min_refinement_steps or 1)
         self.pag_scheduler = PAGTupleScheduler(
             predictor_ckpt=self.predictor_ckpt,
@@ -242,6 +243,7 @@ class Dream(AdaBlockDream):
             block_length=self.block_length,
             max_block_length=self.max_block_length,
             max_refinement_steps=self.max_refinement_steps,
+            delimiter_threshold=self.delimiter_threshold,
         )
 
         generated_sequence = generation_ids.sequences[0][prompt_ids.shape[1] :]

@@ -137,6 +137,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
         dual_cache = kwargs.get("dual_cache", False)
         max_block_length = kwargs.get("max_block_length", block_length)
         max_refinement_steps = kwargs.get("max_refinement_steps", generation_config.steps)
+        delimiter_threshold = kwargs.get("delimiter_threshold", 0.3)
 
         return self._sample(
             input_ids,
@@ -147,6 +148,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
             dual_cache=dual_cache,
             max_block_length=max_block_length,
             max_refinement_steps=max_refinement_steps,
+            delimiter_threshold=delimiter_threshold,
         )
 
     def _sample_pag(
@@ -159,6 +161,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
         dual_cache: bool = False,
         max_block_length: int | None = None,
         max_refinement_steps: int | None = None,
+        delimiter_threshold: float = 0.3,
     ) -> DreamModelOutput | torch.LongTensor:
         del block_length, dual_cache
 
@@ -215,16 +218,45 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
 
         while generated_length < gen_length:
             remaining_tokens = gen_length - generated_length
+            block_start = prompt_length + generated_length
+            model_output = self(
+                x,
+                attention_mask if attention_mask != "full" else attention_mask,
+                tok_idx if tok_idx is not None else None,
+            )
+            logits = model_output.logits
+            logits = torch.cat([logits[:, :1], logits[:, :-1]], dim=1)
+            nfe = 1
+            proposed_block_size = self._compute_block_length(
+                logits,
+                prompt_length,
+                gen_length,
+                generated_length,
+                max_block_length,
+                delimiter_threshold=delimiter_threshold,
+            )
             schedule = self.pag_scheduler.next_schedule(
+                block_size=proposed_block_size,
                 remaining_tokens=remaining_tokens,
                 max_block_length=max_block_length,
                 max_refinement_steps=max_refinement_steps,
             )
-            block_start = prompt_length + generated_length
             block_end = block_start + schedule.applied_block_size
             generated_length += schedule.applied_block_size
 
-            nfe = 0
+            local_logits = logits[:, block_start:block_end, :]
+            mask_index = x[:, block_start:block_end] == mask_token_id
+            _apply_confidence_threshold_sample(
+                target_tokens=x[:, block_start:block_end],
+                logits=local_logits,
+                mask_index=mask_index,
+                mask_token_id=mask_token_id,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                threshold=float(threshold),
+                force_all=nfe >= schedule.budgeted_refinement_steps,
+            )
             while True:
                 if (x[:, block_start:block_end] == mask_token_id).sum() == 0:
                     break
@@ -309,6 +341,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
         dual_cache: bool = False,
         max_block_length: int | None = None,
         max_refinement_steps: int | None = None,
+        delimiter_threshold: float = 0.3,
     ) -> DreamModelOutput | torch.LongTensor:
         del block_length
 
@@ -368,52 +401,70 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
 
         while generated_length < gen_length:
             remaining_tokens = gen_length - generated_length
+            block_start = prompt_length + generated_length
+            model_output = self(
+                x,
+                attention_mask if attention_mask != "full" else attention_mask,
+                tok_idx if tok_idx is not None else None,
+                use_cache=True,
+            )
+            past_key_values = model_output.past_key_values
+            logits = model_output.logits
+            logits = torch.cat([logits[:, :1], logits[:, :-1]], dim=1)
+            nfe = 1
+            proposed_block_size = self._compute_block_length(
+                logits,
+                prompt_length,
+                gen_length,
+                generated_length,
+                max_block_length,
+                delimiter_threshold=delimiter_threshold,
+            )
             schedule = self.pag_scheduler.next_schedule(
+                block_size=proposed_block_size,
                 remaining_tokens=remaining_tokens,
                 max_block_length=max_block_length,
                 max_refinement_steps=max_refinement_steps,
             )
-            block_start = prompt_length + generated_length
             block_end = block_start + schedule.applied_block_size
             generated_length += schedule.applied_block_size
 
             replace_position = torch.zeros_like(x, dtype=torch.bool)
             replace_position[:, block_start:block_end] = 1
-            past_key_values = None
-            nfe = 0
+            local_logits = logits[:, block_start:block_end, :]
+            mask_index = x[:, block_start:block_end] == mask_token_id
+            _apply_confidence_threshold_sample(
+                target_tokens=x[:, block_start:block_end],
+                logits=local_logits,
+                mask_index=mask_index,
+                mask_token_id=mask_token_id,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                threshold=float(threshold),
+                force_all=nfe >= schedule.budgeted_refinement_steps,
+            )
 
             while True:
                 if (x[:, block_start:block_end] == mask_token_id).sum() == 0:
                     break
 
-                if nfe == 0:
-                    model_output = self(
-                        x,
-                        attention_mask if attention_mask != "full" else attention_mask,
-                        tok_idx if tok_idx is not None else None,
-                        use_cache=True,
-                    )
-                    past_key_values = model_output.past_key_values
-                    logits = model_output.logits
-                    logits = torch.cat([logits[:, :1], logits[:, :-1]], dim=1)
-                    local_logits = logits[:, block_start:block_end, :]
-                else:
-                    current_attention_mask = (
-                        attention_mask[:, :, :, block_start:]
-                        if attention_mask != "full"
-                        else attention_mask
-                    )
-                    model_output = self(
-                        x[:, block_start:block_end],
-                        current_attention_mask,
-                        tok_idx[:, block_start:block_end] if tok_idx is not None else None,
-                        past_key_values=past_key_values,
-                        use_cache=True,
-                        dual_cache=True,
-                        replace_position=replace_position,
-                    )
-                    local_logits = model_output.logits
-                    local_logits = torch.cat([local_logits[:, :1], local_logits[:, :-1]], dim=1)
+                current_attention_mask = (
+                    attention_mask[:, :, :, block_start:]
+                    if attention_mask != "full"
+                    else attention_mask
+                )
+                model_output = self(
+                    x[:, block_start:block_end],
+                    current_attention_mask,
+                    tok_idx[:, block_start:block_end] if tok_idx is not None else None,
+                    past_key_values=past_key_values,
+                    use_cache=True,
+                    dual_cache=True,
+                    replace_position=replace_position,
+                )
+                local_logits = model_output.logits
+                local_logits = torch.cat([local_logits[:, :1], local_logits[:, :-1]], dim=1)
 
                 nfe += 1
                 mask_index = x[:, block_start:block_end] == mask_token_id

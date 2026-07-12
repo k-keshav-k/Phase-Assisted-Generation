@@ -218,6 +218,7 @@ def test_eval_dream_pag_wires_predictor_args_into_generation(monkeypatch) -> Non
     assert call["block_length"] == 4
     assert call["max_block_length"] == 4
     assert call["max_refinement_steps"] == 6
+    assert call["delimiter_threshold"] == 0.3
     assert responses == ["decoded"]
     assert nfe_history == [2]
     assert block_history == [2]

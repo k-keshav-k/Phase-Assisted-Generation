@@ -9,14 +9,18 @@ import joblib
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 
-from phase_predict.schema import PhaseTuple
-
 
 @dataclass(frozen=True, slots=True)
 class TraceBudgetStats:
     content_median: int
     delimiter_median: int
     by_size: dict[int, int]
+
+
+@dataclass(frozen=True, slots=True)
+class PhaseTuple:
+    block_size: int
+    refinement_steps: int
 
 
 @dataclass(slots=True)
@@ -277,3 +281,43 @@ class ResidualBudgetScheduler:
         self._history.append(row)
         if self.prediction_trace:
             self.prediction_trace[-1]["realized_tuple"] = row
+
+
+class SizeLookupScheduler(ResidualBudgetScheduler):
+    source = "size_lookup"
+
+    def __init__(self, *, seed_budget: int, stats: TraceBudgetStats) -> None:
+        self.seed_budget = max(1, int(seed_budget))
+        self.stats = stats
+        self.reset()
+
+    def next_schedule(
+        self,
+        *,
+        block_size: int | None,
+        remaining_tokens: int,
+        max_block_length: int,
+        max_refinement_steps: int,
+    ) -> ScheduledBlock:
+        if remaining_tokens < 1:
+            raise ValueError("remaining_tokens must be positive")
+        size = min(max(1, int(block_size or 1)), max_block_length, remaining_tokens)
+        started = time.perf_counter()
+        budget = (
+            self.seed_budget if self._block_index == 0 else size_lookup_budget(self.stats, size)
+        )
+        budget = min(max_refinement_steps, max(1, budget))
+        elapsed = time.perf_counter() - started
+        self.scheduler_predict_time_sec += elapsed
+        self.prediction_trace.append(
+            {
+                "block_index": self._block_index,
+                "source": self.source,
+                "prior_budget": size_lookup_budget(self.stats, size),
+                "budgeted_refinement_steps": budget,
+                "history_length": len(self._history),
+                "predict_time_sec": elapsed,
+            }
+        )
+        self._block_index += 1
+        return ScheduledBlock(PhaseTuple(size, budget), size, budget)
