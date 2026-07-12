@@ -13,6 +13,7 @@ import torch
 from pag.experiments.budget import BudgetGuard
 from pag.experiments.config import inclusive_range
 from pag.experiments.cross_model_config import CrossModelConfig
+from pag.experiments.cross_model_report import write_cross_model_report
 from pag.experiments.cross_model_runtime import (
     CrossModelRuntime,
     UnifiedCrossModelRuntime,
@@ -387,5 +388,16 @@ class CrossModelOrchestrator:
         frozen = self._freeze_policy()
         self._manifest("freeze_policy", "complete", selected=frozen["selected"])
         self._run_confirmatory(frozen, gsm_test, math500)
-        self._manifest("report", "pending")
+        audit = write_cross_model_report(
+            self.run_dir,
+            identity=self.store.identity,
+            bootstrap_samples=self.config.bootstrap_samples,
+            seed=self.config.seed,
+            thresholds=asdict(self.config.claim_gates),
+        )
+        self._manifest(
+            "report",
+            "complete",
+            headline_eligible=bool(audit["headline_eligible"]),
+        )
         return self.run_dir
