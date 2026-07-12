@@ -79,6 +79,26 @@ def _apply_confidence_threshold_sample(
     target_tokens[transfer_index] = candidate_tokens[transfer_index]
 
 
+def _token_fraction(tokens: torch.Tensor, token_ids: torch.Tensor | None) -> float:
+    if token_ids is None or token_ids.numel() == 0 or tokens.numel() == 0:
+        return 0.0
+    return float(torch.isin(tokens, token_ids.to(tokens.device)).float().mean().item())
+
+
+def _realized_features(
+    model,
+    tokens: torch.Tensor,
+    logits: torch.Tensor,
+) -> tuple[float, float, float, float]:
+    top1_confidence = torch.softmax(logits.float(), dim=-1).amax(dim=-1)
+    return (
+        float(top1_confidence.mean().item()),
+        float(top1_confidence.min().item()),
+        _token_fraction(tokens, getattr(model, "pag_digit_ids", None)),
+        _token_fraction(tokens, getattr(model, "pag_delimiter_ids", None)),
+    )
+
+
 class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
     @torch.no_grad()
     def diffusion_generate(
@@ -97,8 +117,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
 
         input_ids_length = input_ids.shape[-1]
         has_default_max_length = (
-            kwargs.get("max_length") is None
-            and generation_config.max_length is not None
+            kwargs.get("max_length") is None and generation_config.max_length is not None
         )
         generation_config = self._prepare_generated_length(
             generation_config=generation_config,
@@ -236,7 +255,19 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 if nfe >= schedule.budgeted_refinement_steps:
                     break
 
-            self.pag_scheduler.record_realized(schedule.applied_block_size, nfe)
+            mean_conf, min_conf, digit_frac, delim_frac = _realized_features(
+                self,
+                x[:, block_start:block_end],
+                local_logits,
+            )
+            self.pag_scheduler.record_realized(
+                schedule.applied_block_size,
+                nfe,
+                mean_conf,
+                min_conf,
+                digit_frac,
+                delim_frac,
+            )
             nfe_history.append(nfe)
             block_history.append(schedule.applied_block_size)
             schedule_history.append(
@@ -249,6 +280,10 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     "applied_block_size": int(schedule.applied_block_size),
                     "budgeted_refinement_steps": int(schedule.budgeted_refinement_steps),
                     "actual_nfe_used": int(nfe),
+                    "mean_top1_confidence": mean_conf,
+                    "min_top1_confidence": min_conf,
+                    "digit_fraction": digit_frac,
+                    "delimiter_fraction": delim_frac,
                     "block_start": int(block_start),
                     "block_end": int(block_end),
                 }
@@ -397,7 +432,19 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 if nfe >= schedule.budgeted_refinement_steps:
                     break
 
-            self.pag_scheduler.record_realized(schedule.applied_block_size, nfe)
+            mean_conf, min_conf, digit_frac, delim_frac = _realized_features(
+                self,
+                x[:, block_start:block_end],
+                local_logits,
+            )
+            self.pag_scheduler.record_realized(
+                schedule.applied_block_size,
+                nfe,
+                mean_conf,
+                min_conf,
+                digit_frac,
+                delim_frac,
+            )
             nfe_history.append(nfe)
             block_history.append(schedule.applied_block_size)
             schedule_history.append(
@@ -410,6 +457,10 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     "applied_block_size": int(schedule.applied_block_size),
                     "budgeted_refinement_steps": int(schedule.budgeted_refinement_steps),
                     "actual_nfe_used": int(nfe),
+                    "mean_top1_confidence": mean_conf,
+                    "min_top1_confidence": min_conf,
+                    "digit_fraction": digit_frac,
+                    "delimiter_fraction": delim_frac,
                     "block_start": int(block_start),
                     "block_end": int(block_end),
                 }

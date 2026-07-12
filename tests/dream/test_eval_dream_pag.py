@@ -194,7 +194,11 @@ def test_eval_dream_pag_wires_predictor_args_into_generation(monkeypatch) -> Non
         "context_seed_block_length": None,
         "context_seed_stabilizing_steps": None,
         "min_refinement_steps": 3,
+        "min_block_length": 4,
+        "refinement_step_offset": 1,
     }
+    assert dream.model.pag_digit_ids.numel() == 0
+    assert dream.model.pag_delimiter_ids.numel() > 0
     assert dream.pag_scheduler.reset_calls == 1
     assert dream.model.pag_scheduler is dream.pag_scheduler
     assert len(dream.model.calls) == 1

@@ -62,7 +62,7 @@ class FakeScheduler:
     def __init__(self, schedules: list[SimpleNamespace]) -> None:
         self.schedules = schedules
         self.reset_calls = 0
-        self.recorded: list[tuple[int, int]] = []
+        self.recorded: list[tuple[int, int, float, float, float, float]] = []
         self._index = 0
 
     def reset(self) -> None:
@@ -76,8 +76,25 @@ class FakeScheduler:
         self._index += 1
         return schedule
 
-    def record_realized(self, block_size: int, actual_nfe_used: int) -> None:
-        self.recorded.append((block_size, actual_nfe_used))
+    def record_realized(
+        self,
+        block_size: int,
+        actual_nfe_used: int,
+        mean_confidence: float = 1.0,
+        min_confidence: float = 1.0,
+        digit_fraction: float = 0.0,
+        delimiter_fraction: float = 0.0,
+    ) -> None:
+        self.recorded.append(
+            (
+                block_size,
+                actual_nfe_used,
+                mean_confidence,
+                min_confidence,
+                digit_fraction,
+                delimiter_fraction,
+            )
+        )
 
 
 class FakeModel:
@@ -85,6 +102,8 @@ class FakeModel:
         self.device = torch.device("cpu")
         self.logits_plan = logits_plan
         self.pag_scheduler = scheduler
+        self.pag_digit_ids = torch.tensor([5, 7], dtype=torch.long)
+        self.pag_delimiter_ids = torch.tensor([3, 6], dtype=torch.long)
         self.call_index = 0
 
     def __call__(self, *args, **kwargs):
@@ -170,7 +189,11 @@ def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> Non
     assert result.sequences.tolist() == [[1, 2, 3, 5, 6, 7]]
     assert result.nfe_history == [2, 1]
     assert result.block_history == [2, 2]
-    assert scheduler.recorded == [(2, 2), (2, 1)]
+    assert [(row[0], row[1]) for row in scheduler.recorded] == [(2, 2), (2, 1)]
+    for row in scheduler.recorded:
+        assert all(0.0 <= value <= 1.0 for value in row[2:])
+    assert scheduler.recorded[0][4] == 0.5
+    assert scheduler.recorded[1][5] == 0.5
     assert result.schedule_history == [
         {
             "block_index": 0,
@@ -178,6 +201,10 @@ def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> Non
             "applied_block_size": 2,
             "budgeted_refinement_steps": 2,
             "actual_nfe_used": 2,
+            "mean_top1_confidence": scheduler.recorded[0][2],
+            "min_top1_confidence": scheduler.recorded[0][3],
+            "digit_fraction": 0.5,
+            "delimiter_fraction": 0.5,
             "block_start": 2,
             "block_end": 4,
         },
@@ -187,6 +214,10 @@ def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> Non
             "applied_block_size": 2,
             "budgeted_refinement_steps": 1,
             "actual_nfe_used": 1,
+            "mean_top1_confidence": scheduler.recorded[1][2],
+            "min_top1_confidence": scheduler.recorded[1][3],
+            "digit_fraction": 0.5,
+            "delimiter_fraction": 0.5,
             "block_start": 4,
             "block_end": 6,
         },

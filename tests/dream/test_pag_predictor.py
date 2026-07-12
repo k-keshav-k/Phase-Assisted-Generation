@@ -18,7 +18,7 @@ PAGTupleScheduler = importlib.import_module("pag_predictor").PAGTupleScheduler
 class FakePredictor:
     def __init__(self, outputs: list[PhaseTuple], window_size: int = 4) -> None:
         self._outputs = outputs
-        self.calls: list[list[PhaseTuple]] = []
+        self.calls: list[list[object]] = []
         self.config = SimpleNamespace(window_size=window_size)
 
     def predict(self, context):
@@ -67,12 +67,40 @@ def test_later_blocks_use_left_padded_realized_history() -> None:
         max_refinement_steps=12,
     )
 
-    assert predictor.calls == [
+    assert [[item.values for item in call] for call in predictor.calls] == [
         [
-            PhaseTuple(8, 1),
-            PhaseTuple(8, 1),
-            PhaseTuple(8, 1),
-            PhaseTuple(8, 3),
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 4,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
         ]
     ]
     assert second.predicted_tuple == PhaseTuple(6, 6)
@@ -84,6 +112,7 @@ def test_scheduler_clamps_block_size_and_refinement_budget() -> None:
         predictor=predictor,
         seed_block_length=5,
         seed_refinement_steps=2,
+        min_block_length=1,
     )
 
     seed = scheduler.next_schedule(

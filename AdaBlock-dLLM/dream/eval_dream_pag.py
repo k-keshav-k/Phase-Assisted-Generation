@@ -19,6 +19,33 @@ from pag_predictor import PAGTupleScheduler
 
 eval_logger = logging.getLogger(__name__)
 
+DREAM_DELIMITER_IDS = (
+    198,
+    271,
+    280,
+    319,
+    340,
+    382,
+    401,
+    532,
+    624,
+    630,
+    692,
+    698,
+    921,
+    1248,
+    1837,
+    1939,
+    2219,
+    2533,
+    3276,
+    3876,
+    4894,
+    5267,
+    14750,
+    68327,
+)
+
 
 @register_model("dream")
 class Dream(AdaBlockDream):
@@ -108,15 +135,15 @@ class Dream(AdaBlockDream):
             self._rank = 0
             self._world_size = 1
 
+        self._install_pag_token_classes()
+
         self.predictor_ckpt = predictor_ckpt
         self.seed_block_length = int(seed_block_length)
         self.seed_refinement_steps = int(seed_refinement_steps)
         self.predictor_device = predictor_device or "cpu"
-        self.max_block_length = (
-            int(block_length if max_block_length is None else max_block_length)
-        )
-        self.max_refinement_steps = (
-            int(diffusion_steps if max_refinement_steps is None else max_refinement_steps)
+        self.max_block_length = int(block_length if max_block_length is None else max_block_length)
+        self.max_refinement_steps = int(
+            diffusion_steps if max_refinement_steps is None else max_refinement_steps
         )
         self.min_refinement_steps = int(min_refinement_steps or 1)
         self.pag_scheduler = PAGTupleScheduler(
@@ -132,14 +159,27 @@ class Dream(AdaBlockDream):
         )
         self.model.pag_scheduler = self.pag_scheduler
 
+    def _install_pag_token_classes(self) -> None:
+        digit_ids: list[int] = []
+        for token_id in range(int(getattr(self.tokenizer, "vocab_size", 0))):
+            text = self.tokenizer.decode([token_id], skip_special_tokens=True).strip()
+            if text and all(character.isdigit() for character in text):
+                digit_ids.append(token_id)
+        device = getattr(self.model, "device", self.device)
+        self.model.pag_digit_ids = torch.tensor(digit_ids, dtype=torch.long, device=device)
+        self.model.pag_delimiter_ids = torch.tensor(
+            DREAM_DELIMITER_IDS,
+            dtype=torch.long,
+            device=device,
+        )
+
     def _create_model_and_tokenizer(self, pretrained, dtype, trust_remote_code):
         self.model = (
             DreamModel.from_pretrained(
                 pretrained,
                 torch_dtype=get_dtype(dtype),
                 trust_remote_code=trust_remote_code,
-            )
-            .eval()
+            ).eval()
         ).to(self.device)
         self.model.diffusion_generate = types.MethodType(
             DreamGenerationMixin.diffusion_generate,
@@ -207,8 +247,8 @@ class Dream(AdaBlockDream):
         generated_sequence = generation_ids.sequences[0][prompt_ids.shape[1] :]
         self.num_tokens += generated_sequence.numel()
         self.num_tokens_excluding_eos += (
-            generated_sequence != self.tokenizer.eos_token_id
-        ).sum().item()
+            (generated_sequence != self.tokenizer.eos_token_id).sum().item()
+        )
         responses = [
             self.tokenizer.decode(g[len(p) :].tolist()).split(self.tokenizer.eos_token)[0]
             for p, g in zip(prompt_ids, generation_ids.sequences, strict=False)
