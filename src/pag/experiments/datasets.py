@@ -35,6 +35,20 @@ class GSM8KSplits:
         return tuple(item.sample_id for item in self.full_test)
 
 
+@dataclass(frozen=True, slots=True)
+class FreshGSM8KSplits:
+    calibration: tuple[ExperimentSample, ...]
+    test: tuple[ExperimentSample, ...]
+
+    @property
+    def calibration_ids(self) -> tuple[str, ...]:
+        return tuple(item.sample_id for item in self.calibration)
+
+    @property
+    def test_ids(self) -> tuple[str, ...]:
+        return tuple(item.sample_id for item in self.test)
+
+
 def _gsm8k_gold(answer: str) -> str:
     marker = "####"
     if marker not in answer:
@@ -83,6 +97,31 @@ def materialize_gsm8k(
     ):
         raise ValueError("GSM8K development and test IDs overlap")
     return GSM8KSplits(development_samples, full_test, confirmatory_samples)
+
+
+def materialize_fresh_gsm8k(
+    train_rows: Sequence[Mapping[str, Any]],
+    *,
+    calibration: Iterable[int],
+    test: Iterable[int],
+) -> FreshGSM8KSplits:
+    calibration_indices = tuple(calibration)
+    test_indices = tuple(test)
+    all_indices = (*calibration_indices, *test_indices)
+    if not calibration_indices or not test_indices:
+        raise ValueError("fresh GSM8K calibration and test splits must be non-empty")
+    if min(all_indices) < 0 or max(all_indices) >= len(train_rows):
+        raise ValueError("fresh GSM8K indices exceed the training split")
+    if set(calibration_indices) & set(test_indices):
+        raise ValueError("fresh GSM8K calibration and test indices overlap")
+    calibration_rows = tuple(
+        _gsm8k_sample(train_rows[index], split="train", index=index)
+        for index in calibration_indices
+    )
+    test_rows = tuple(
+        _gsm8k_sample(train_rows[index], split="train", index=index) for index in test_indices
+    )
+    return FreshGSM8KSplits(calibration_rows, test_rows)
 
 
 def _allocate_strata(
@@ -148,6 +187,19 @@ def stratified_math500(
                 )
             )
     return tuple(sorted(selected, key=lambda item: item.sample_id))
+
+
+def complement_math500(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    excluded_ids: set[str],
+) -> tuple[ExperimentSample, ...]:
+    all_samples = stratified_math500(rows, sample_size=len(rows), seed=0)
+    known_ids = {sample.sample_id for sample in all_samples}
+    unknown = excluded_ids - known_ids
+    if unknown:
+        raise ValueError(f"excluded MATH-500 IDs are unknown: {sorted(unknown)}")
+    return tuple(sample for sample in all_samples if sample.sample_id not in excluded_ids)
 
 
 def load_datasets(config: ExperimentConfig) -> tuple[GSM8KSplits, tuple[ExperimentSample, ...]]:

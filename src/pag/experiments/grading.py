@@ -14,18 +14,29 @@ class GradeResult:
 
 
 _FINAL_ANSWER = re.compile(r"final\s+answer\s*:\s*([^\n\r]+)", re.IGNORECASE)
+_LATEX_FRACTION = re.compile(
+    r"\\(?:d?frac)\s*\{\s*([-+]?\d+(?:\.\d+)?)\s*\}"
+    r"\s*\{\s*([-+]?\d+(?:\.\d+)?)\s*\}"
+)
+_NUMERIC_PREFIX = re.compile(
+    r"[-+]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)"
+    r"(?:\s*/\s*[-+]?(?:\d[\d,]*(?:\.\d+)?|\.\d+))?"
+)
 
 
 def _clean_numeric(value: str) -> str:
-    cleaned = value.strip().replace(",", "").replace("$", "")
-    cleaned = cleaned.replace("\\(", "").replace("\\)", "").strip()
-    cleaned = cleaned.rstrip(". ")
+    cleaned = value.strip().replace("\\(", "").replace("\\)", "").strip()
+    cleaned = cleaned.strip("*`_ ")
     if cleaned.startswith("\\boxed{") and cleaned.endswith("}"):
         cleaned = cleaned[7:-1].strip()
-    match = re.fullmatch(r"([-+]?\d+(?:\.\d+)?(?:/[-+]?\d+(?:\.\d+)?)?)", cleaned)
+    latex_fraction = _LATEX_FRACTION.search(cleaned)
+    if latex_fraction:
+        return f"{latex_fraction.group(1)}/{latex_fraction.group(2)}"
+    cleaned = cleaned.lstrip("$£€¥ ")
+    match = _NUMERIC_PREFIX.match(cleaned)
     if not match:
         raise ValueError(f"not a strict numeric answer: {value!r}")
-    return match.group(1)
+    return match.group(0).replace(",", "").replace(" ", "")
 
 
 def _fraction(value: str) -> Fraction:
@@ -49,9 +60,13 @@ def grade_gsm8k(text: str, gold_answer: str) -> GradeResult:
 
 def grade_math500(text: str, gold_answer: str) -> GradeResult:
     try:
-        from math_verify import parse, verify
+        from math_verify import LatexExtractionConfig, parse, verify
 
-        parsed_gold = parse(gold_answer, raise_on_error=True)
+        parsed_gold = parse(
+            f"${gold_answer}$",
+            extraction_config=[LatexExtractionConfig()],
+            raise_on_error=True,
+        )
         parsed_prediction = parse(text, raise_on_error=True)
         if not parsed_gold or not parsed_prediction:
             return GradeResult(False, None, gold_answer, "Math-Verify extracted no answer")
