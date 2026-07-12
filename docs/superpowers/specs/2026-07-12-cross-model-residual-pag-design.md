@@ -26,7 +26,8 @@ headline claim:
    difference is no worse than -2 percentage points.
 3. Residual PAG reduces paired mean NFE by at least 3% relative to `size_lookup` while satisfying the
    same accuracy constraint.
-4. The direction of the NFE result is consistent on GSM8K and MATH-500.
+4. Residual PAG has lower paired mean NFE than AdaBlock separately on GSM8K and MATH-500 for
+   each model; the 10% threshold remains a per-model aggregate requirement across both datasets.
 
 Wall-clock latency, peak memory, and prediction overhead are secondary outcomes. They will be
 reported with uncertainty but are not headline gates because Python and provider overhead can mask
