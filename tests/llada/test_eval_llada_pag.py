@@ -125,6 +125,8 @@ def test_eval_llada_pag_wires_predictor_args_into_generation(monkeypatch) -> Non
         "context_seed_block_length": None,
         "context_seed_stabilizing_steps": None,
         "min_refinement_steps": 3,
+        "min_block_length": 4,
+        "refinement_step_offset": 1,
     }
     assert harness.schedule_histories == [[{"block_index": 0}]]
     assert len(calls) == 1

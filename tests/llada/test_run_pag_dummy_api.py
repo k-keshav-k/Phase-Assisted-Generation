@@ -230,12 +230,40 @@ def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
 
     assert first.predicted_tuple == run_pag_dummy_api.BlockTuple(8, 2)
     assert second.predicted_tuple == run_pag_dummy_api.BlockTuple(5, 4)
-    assert predictor.calls == [
+    assert [[item.values for item in call] for call in predictor.calls] == [
         [
-            run_pag_dummy_api.BlockTuple(8, 1),
-            run_pag_dummy_api.BlockTuple(8, 1),
-            run_pag_dummy_api.BlockTuple(8, 1),
-            run_pag_dummy_api.BlockTuple(8, 3),
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 1,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
+            {
+                "block_size": 8,
+                "nfe": 4,
+                "mean_top1_confidence": 1.0,
+                "min_top1_confidence": 1.0,
+                "digit_fraction": 0.0,
+                "delimiter_fraction": 0.0,
+            },
         ]
     ]
     assert scheduler.prediction_trace[1]["source"] == "checkpoint"
@@ -243,7 +271,11 @@ def test_checkpoint_scheduler_uses_seed_then_predictor_context() -> None:
     assert scheduler.prediction_trace[1]["metadata"]["stabilizing_step_offset"] == 1
     assert scheduler.prediction_trace[1]["realized_tuple"] == {
         "block_size": 5,
-        "refinement_steps": 3,
+        "nfe": 4,
+        "mean_top1_confidence": 1.0,
+        "min_top1_confidence": 1.0,
+        "digit_fraction": 0.0,
+        "delimiter_fraction": 0.0,
     }
     assert scheduler.prediction_trace[1]["realized_decode_tuple"] == {
         "block_size": 5,

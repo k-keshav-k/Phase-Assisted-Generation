@@ -206,12 +206,8 @@ def _summarize_method(
             "llada_decode_time_sec": llada_decode_time_sec,
             "total_nfe": sum(nfe_history),
             "num_blocks": len(block_history),
-            "avg_block_size": (sum(block_history) / len(block_history))
-            if block_history
-            else 0,
-            "avg_nfe_per_block": (sum(nfe_history) / len(nfe_history))
-            if nfe_history
-            else 0,
+            "avg_block_size": (sum(block_history) / len(block_history)) if block_history else 0,
+            "avg_nfe_per_block": (sum(nfe_history) / len(nfe_history)) if nfe_history else 0,
             "decoded_chars": len(generated_text),
             "substring_check": _substring_score(generated_text, expected_contains),
             "answer_check": _answer_score(generated_text, expected_answers),
@@ -221,24 +217,24 @@ def _summarize_method(
 
 def _run_pag(args: argparse.Namespace, model, tokenizer, record: EvalPromptRecord):
     from generate_pag import generate_pag, generate_pag_dual_cache, generate_pag_prefix_cache
-    from run_pag_dummy_api import DIGIT_IDS_TENSOR, DELIM_IDS_TENSOR
 
     user_input = _build_prompt(tokenizer, args.model_path, record.prompt)
     input_ids = torch.tensor(tokenizer(user_input)["input_ids"], device=args.device).unsqueeze(0)
 
     # Precompute digit and delimiter token ID sets for this tokenizer
     digit_ids = set()
-    for tid in range(tokenizer.vocab_size):
+    for tid in range(int(getattr(tokenizer, "vocab_size", 0))):
         text = tokenizer.decode([tid]).strip()
         if text and all(c.isdigit() for c in text):
             digit_ids.add(tid)
     delimiter_ids = set(args.delimiter_ids or [198])
-    for tid in range(tokenizer.vocab_size):
+    for tid in range(int(getattr(tokenizer, "vocab_size", 0))):
         text = tokenizer.decode([tid]).strip()
         if text in {"\n", "<|endoftext|>", "<|eot_id|>"}:
             delimiter_ids.add(tid)
     # Assign to module-level globals for the probe function
     import run_pag_dummy_api as rpda
+
     rpda.DIGIT_IDS_TENSOR = torch.tensor(list(digit_ids), dtype=torch.long)
     rpda.DELIM_IDS_TENSOR = torch.tensor(list(delimiter_ids), dtype=torch.long)
     digit_cache = rpda.DIGIT_IDS_TENSOR.to(args.device)
@@ -382,15 +378,9 @@ def _comparison_delta(pag: dict[str, object], adablock: dict[str, object]) -> di
         "elapsed_delta_sec_pag_minus_adablock": (
             pag_metrics["elapsed_sec"] - adablock_metrics["elapsed_sec"]
         ),
-        "total_elapsed_delta_sec_pag_minus_adablock": (
-            pag_total_elapsed - adablock_total_elapsed
-        ),
-        "llada_decode_delta_sec_pag_minus_adablock": (
-            pag_decode - adablock_decode
-        ),
-        "scheduler_predict_delta_sec_pag_minus_adablock": (
-            pag_predict - adablock_predict
-        ),
+        "total_elapsed_delta_sec_pag_minus_adablock": (pag_total_elapsed - adablock_total_elapsed),
+        "llada_decode_delta_sec_pag_minus_adablock": (pag_decode - adablock_decode),
+        "scheduler_predict_delta_sec_pag_minus_adablock": (pag_predict - adablock_predict),
         "block_count_delta_pag_minus_adablock": (
             pag_metrics["num_blocks"] - adablock_metrics["num_blocks"]
         ),
@@ -453,14 +443,30 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-block-length", type=int, default=None)
     parser.add_argument("--max-refinement-steps", type=int, default=None)
     parser.add_argument("--min-refinement-steps", type=int, default=3)
-    parser.add_argument("--min-block-length", type=int, default=4,
-                        help="Minimum block size (default: 4). Set 1 for no floor.")
-    parser.add_argument("--refinement-step-offset", type=int, default=1,
-                        help="Offset added to predicted refinement steps (default: 1). Set 0 for no offset.")
-    parser.add_argument("--tau-commit", type=float, default=0.80,
-                        help="Min confidence for soft-cap exit (default: 0.80)")
-    parser.add_argument("--tau-stable-steps", type=int, default=2,
-                        help="Steps of stable predictions required for exit (default: 2)")
+    parser.add_argument(
+        "--min-block-length",
+        type=int,
+        default=4,
+        help="Minimum block size (default: 4). Set 1 for no floor.",
+    )
+    parser.add_argument(
+        "--refinement-step-offset",
+        type=int,
+        default=1,
+        help="Offset added to predicted refinement steps (default: 1). Set 0 for no offset.",
+    )
+    parser.add_argument(
+        "--tau-commit",
+        type=float,
+        default=0.80,
+        help="Min confidence for soft-cap exit (default: 0.80)",
+    )
+    parser.add_argument(
+        "--tau-stable-steps",
+        type=int,
+        default=2,
+        help="Steps of stable predictions required for exit (default: 2)",
+    )
     parser.add_argument("--context-seed-block-length", type=int, default=None)
     parser.add_argument("--context-seed-stabilizing-steps", type=int, default=None)
     parser.add_argument("--adablock-init-block-length", type=int, default=32)
@@ -565,9 +571,7 @@ def main() -> None:
                 "requested_seed_refinement_steps": args.seed_refinement_steps,
                 "effective_seed_block_length": pag_args.seed_block_length,
                 "effective_seed_refinement_steps": pag_args.seed_refinement_steps,
-                "effective_context_seed_stabilizing_steps": (
-                    context_seed_stabilizing_steps
-                ),
+                "effective_context_seed_stabilizing_steps": (context_seed_stabilizing_steps),
                 "seed_source": seed_source,
                 "seed_from_adablock_first_block": args.seed_from_adablock_first_block,
                 "pag_seed_source": seed_source,

@@ -11,6 +11,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
+import torch
+
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -74,10 +76,19 @@ def _normalize_tuple(block_size: int, refinement_steps: int) -> BlockTuple:
     )
 
 
-def _normalize_stabilizing_tuple(block_size: int, stabilizing_steps: int) -> BlockTuple:
-    return BlockTuple(
-        block_size=max(1, int(block_size)),
-        refinement_steps=max(0, int(stabilizing_steps)),
+def _normalize_stabilizing_tuple(
+    block_size: int,
+    stabilizing_steps: int,
+) -> ExtendedPhaseTuple:
+    return ExtendedPhaseTuple(
+        values={
+            "block_size": max(1, int(block_size)),
+            "nfe": max(0, int(stabilizing_steps)),
+            "mean_top1_confidence": 1.0,
+            "min_top1_confidence": 1.0,
+            "digit_fraction": 0.0,
+            "delimiter_fraction": 0.0,
+        }
     )
 
 
@@ -377,14 +388,16 @@ class CheckpointTupleScheduler:
         self.refinement_step_offset = int(refinement_step_offset)
 
         if seed is not None:
-            self.context_seed_tuple = ExtendedPhaseTuple(values={
-                "block_size": seed.block_length,
-                "nfe": seed.refinement_steps,
-                "mean_top1_confidence": seed.context_mean_confidence,
-                "min_top1_confidence": seed.context_min_confidence,
-                "digit_fraction": seed.context_digit_fraction,
-                "delimiter_fraction": seed.context_delimiter_fraction,
-            })
+            self.context_seed_tuple = ExtendedPhaseTuple(
+                values={
+                    "block_size": seed.block_length,
+                    "nfe": seed.refinement_steps,
+                    "mean_top1_confidence": seed.context_mean_confidence,
+                    "min_top1_confidence": seed.context_min_confidence,
+                    "digit_fraction": seed.context_digit_fraction,
+                    "delimiter_fraction": seed.context_delimiter_fraction,
+                }
+            )
         else:
             self.context_seed_tuple = _normalize_stabilizing_tuple(
                 seed_block_length
@@ -466,9 +479,7 @@ class CheckpointTupleScheduler:
             ),
         )
         budget_floor = (
-            1
-            if is_seed_block
-            else min(self.min_refinement_steps, int(max_refinement_steps))
+            1 if is_seed_block else min(self.min_refinement_steps, int(max_refinement_steps))
         )
         budgeted_refinement_steps = min(
             int(max_refinement_steps),
@@ -505,14 +516,18 @@ class CheckpointTupleScheduler:
         delimiter_fraction: float = 0.0,
     ) -> None:
         decode_tuple = _normalize_tuple(applied_block_size, actual_nfe_used)
-        realized_et = ExtendedPhaseTuple(values={
-            "block_size": max(1, int(applied_block_size)),
-            "nfe": max(3, max(0, int(actual_nfe_used))) if int(applied_block_size) > 1 else max(0, int(actual_nfe_used)),
-            "mean_top1_confidence": float(mean_confidence),
-            "min_top1_confidence": float(min_confidence),
-            "digit_fraction": float(digit_fraction),
-            "delimiter_fraction": float(delimiter_fraction),
-        })
+        realized_et = ExtendedPhaseTuple(
+            values={
+                "block_size": max(1, int(applied_block_size)),
+                "nfe": max(3, max(0, int(actual_nfe_used)))
+                if int(applied_block_size) > 1
+                else max(0, int(actual_nfe_used)),
+                "mean_top1_confidence": float(mean_confidence),
+                "min_top1_confidence": float(min_confidence),
+                "digit_fraction": float(digit_fraction),
+                "delimiter_fraction": float(delimiter_fraction),
+            }
+        )
         self._history.append(realized_et)
         self.prediction_trace[-1]["realized_tuple"] = realized_et.values
         self.prediction_trace[-1]["realized_decode_tuple"] = _tuple_to_dict(decode_tuple)
@@ -584,12 +599,16 @@ def _load_model_and_tokenizer(
 
     config = AutoConfig.from_pretrained(model_path)
     config.flash_attention = True
-    model = LLaDAModelLM.from_pretrained(
-        model_path,
-        trust_remote_code=True,
-        torch_dtype=dtype,
-        config=config,
-    ).to(device).eval()
+    model = (
+        LLaDAModelLM.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            torch_dtype=dtype,
+            config=config,
+        )
+        .to(device)
+        .eval()
+    )
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     return model, tokenizer
 
@@ -628,9 +647,7 @@ def _build_block_visualization(
                 "block_index": int(schedule["block_index"]),
                 "predicted_tuple": dict(schedule["predicted_tuple"]),
                 "applied_block_size": int(schedule["applied_block_size"]),
-                "budgeted_refinement_steps": int(
-                    schedule["budgeted_refinement_steps"]
-                ),
+                "budgeted_refinement_steps": int(schedule["budgeted_refinement_steps"]),
                 "actual_nfe_used": int(schedule["actual_nfe_used"]),
                 "generated_span": {
                     "start": int(rel_start),
@@ -946,12 +963,8 @@ def _run_one_prompt(
         "summary": {
             "num_blocks": len(block_history),
             "total_nfe": sum(nfe_history),
-            "avg_block_size": (sum(block_history) / len(block_history))
-            if block_history
-            else 0,
-            "avg_refinement_steps": (sum(nfe_history) / len(nfe_history))
-            if nfe_history
-            else 0,
+            "avg_block_size": (sum(block_history) / len(block_history)) if block_history else 0,
+            "avg_refinement_steps": (sum(nfe_history) / len(nfe_history)) if nfe_history else 0,
         },
     }
 
