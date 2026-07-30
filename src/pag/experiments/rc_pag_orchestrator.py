@@ -568,24 +568,43 @@ class RCPAGOrchestrator:
 
     def _run_report(self) -> None:
         self._write_manifest("report", "running")
+        from pag.experiments.rc_pag_report import write_rc_pag_report
+
+        records = {
+            model: {
+                dataset: {
+                    method: self.store.records(f"confirm/{dataset}/{model}", method)
+                    for method in self.config.confirmatory_methods
+                }
+                for dataset in self.config.confirmatory_counts
+            }
+            for model in self.config.models
+        }
         counts = {
-            f"{model}/{dataset}/{method}": len(
-                self.store.records(f"confirm/{dataset}/{model}", method)
-            )
+            f"{model}/{dataset}/{method}": len(records[model][dataset][method])
             for model in self.config.models
             for dataset in self.config.confirmatory_counts
             for method in self.config.confirmatory_methods
         }
+        certificate = json.loads(
+            (self.run_dir / "risk_certificate.json").read_text(encoding="utf-8")
+        )
         payload = {
             "config_hash": self.config.config_hash,
-            "certificate": json.loads(
-                (self.run_dir / "risk_certificate.json").read_text(encoding="utf-8")
-            ),
+            "certificate": certificate,
             "coverage": counts,
             "mock": all(self._runtime(model).is_mock for model in self.config.models),
         }
         self.store.write_named("report/inputs.json", payload)
-        self._write_manifest("report", "completed", inputs=payload)
+        audit = write_rc_pag_report(
+            self.run_dir,
+            records=records,
+            certificate=certificate,
+            bootstrap_samples=self.config.statistics.bootstrap_samples,
+            seed=self.config.seed,
+            minimum_accuracy_lower_ci=self.config.claim_gates.minimum_accuracy_lower_ci,
+        )
+        self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 
     def _run_paper(self) -> None:
         self._write_manifest("paper", "running")
