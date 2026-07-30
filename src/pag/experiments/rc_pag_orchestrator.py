@@ -182,6 +182,7 @@ class RCPAGOrchestrator:
         device: str = "cpu",
         runtime_factory: Callable[[str], RCPAGRuntime] | None = None,
         development_limit: int | None = None,
+        mock_mode: bool | None = None,
     ) -> None:
         if development_limit is not None and development_limit < 1:
             raise ValueError("development_limit must be positive")
@@ -189,6 +190,7 @@ class RCPAGOrchestrator:
         self.run_dir = Path(run_dir)
         self.device = device
         self.development_limit = development_limit
+        self.mock_mode = mock_mode
         self.runtime_factory = runtime_factory
         if runtime_factory is None:
             raise ValueError("a runtime_factory is required until a model runtime is configured")
@@ -253,8 +255,10 @@ class RCPAGOrchestrator:
         refs = tuple(SampleRef(dataset, index) for index in range(count))
         if self.development_limit is None:
             return refs
-        runtimes = [self._runtime(model) for model in self.config.models]
-        if not all(runtime.is_mock for runtime in runtimes):
+        is_mock = self.mock_mode
+        if is_mock is None:
+            is_mock = all(self._runtime(model).is_mock for model in self.config.models)
+        if not is_mock:
             raise ValueError("confirmatory execution rejects development limits")
         return refs[: self.development_limit]
 
@@ -322,6 +326,11 @@ class RCPAGOrchestrator:
                         estimator_paths=estimator_paths,
                     )
                     self.store.write(model_stage, method, sample.sample_id, payload)
+            if not runtime.is_mock:
+                close = getattr(runtime, "close", None)
+                if close is not None:
+                    close()
+                self._runtimes.pop(model, None)
 
     def _run_pilot(self) -> None:
         self._write_manifest("pilot", "running")
@@ -374,11 +383,18 @@ class RCPAGOrchestrator:
                 raise ValueError(f"no collected examples for {model}")
             examples = tuple(
                 TrainingExample(
-                    features=row["features"],
-                    unsafe=bool(row["unsafe"]),
-                    prompt_id=str(row["sample_id"]),
+                    features=example["features"],
+                    unsafe=bool(example["unsafe"]),
+                    prompt_id=f"{row['sample_id']}:{example_index}",
                 )
                 for row in rows
+                for example_index, example in enumerate(
+                    row["training_examples"]
+                    if "training_examples" in row
+                    else (
+                        {"features": row["features"], "unsafe": row["unsafe"]},
+                    )
+                )
             )
             metadata[model] = {}
             for variant, include_history in (
@@ -448,11 +464,38 @@ class RCPAGOrchestrator:
             )
             for method in sorted(nonlearned)
         }
-        best_nonlearned = min(method_nfe, key=lambda name: (method_nfe[name], name))
+        method_correct = {
+            method: sum(
+                bool(row.get("is_correct", row.get("grade", {}).get("is_correct", False)))
+                for model in self.config.models
+                for row in self.store.records(f"screen/{model}", method)
+            )
+            for method in sorted(nonlearned)
+        }
+        count = sum(
+            len(self.store.records(f"screen/{model}", "adablock"))
+            for model in self.config.models
+        )
+        allowed_loss = max(2, math.floor(0.02 * count))
+        baseline_correct = method_correct["adablock"]
+        eligible = {
+            method: baseline_correct - correct <= allowed_loss
+            for method, correct in method_correct.items()
+        }
+        eligible_names = [method for method in sorted(nonlearned) if eligible[method]]
+        if not eligible_names:
+            raise ControlledStop("no accuracy-eligible nonlearned method survived screening")
+        best_nonlearned = min(
+            eligible_names,
+            key=lambda name: (method_nfe[name], -method_correct[name], name),
+        )
         summary = {
             "best_nonlearned": best_nonlearned,
             "best_nonlearned_mean_nfe": method_nfe[best_nonlearned],
             "method_mean_nfe": method_nfe,
+            "method_correct": method_correct,
+            "accuracy_eligible": eligible,
+            "allowed_correct_loss": allowed_loss,
         }
         self.store.write_named("screening_summary.json", summary)
         self._write_manifest("screen", "completed", summary=summary)
@@ -497,7 +540,11 @@ class RCPAGOrchestrator:
             delta=self.config.risk.delta,
         )
         payload = certificate.to_dict()
-        payload["mock"] = all(self._runtime(model).is_mock for model in self.config.models)
+        payload["mock"] = (
+            self.mock_mode
+            if self.mock_mode is not None
+            else all(self._runtime(model).is_mock for model in self.config.models)
+        )
         self.store.write_named("risk_certificate.json", payload)
         self._write_manifest("calibrate", "completed", certificate=payload)
 
@@ -548,12 +595,31 @@ class RCPAGOrchestrator:
             ("rc_pag_local", candidate_lookup[selected_by_variant["rc_pag_local"]]),
             ("rc_pag_history", candidate_lookup[selected_by_variant["rc_pag_history"]]),
         )
-        for dataset in self.config.confirmatory_counts:
-            self._run_records(
-                stage=f"confirm/{dataset}",
-                refs=self._confirm_refs(dataset),
-                methods=methods,
-            )
+        estimator_paths = {
+            path.stem: str(path) for path in sorted((self.run_dir / "estimators").glob("*.joblib"))
+        }
+        for model in self.config.models:
+            runtime = self._runtime(model)
+            for dataset in self.config.confirmatory_counts:
+                stage = f"confirm/{dataset}/{model}"
+                for sample in self._confirm_refs(dataset):
+                    for method, candidate in methods:
+                        if self.store.is_complete(stage, method, sample.sample_id):
+                            continue
+                        payload = runtime.run(
+                            stage="confirm",
+                            model=model,
+                            sample=sample,
+                            method=method,
+                            candidate=candidate,
+                            estimator_paths=estimator_paths,
+                        )
+                        self.store.write(stage, method, sample.sample_id, payload)
+            if not runtime.is_mock:
+                close = getattr(runtime, "close", None)
+                if close is not None:
+                    close()
+                self._runtimes.pop(model, None)
         self.store.write_named(
             "frozen_confirmatory_policy.json",
             {
@@ -593,7 +659,7 @@ class RCPAGOrchestrator:
             "config_hash": self.config.config_hash,
             "certificate": certificate,
             "coverage": counts,
-            "mock": all(self._runtime(model).is_mock for model in self.config.models),
+            "mock": bool(certificate.get("mock", False)),
         }
         self.store.write_named("report/inputs.json", payload)
         audit = write_rc_pag_report(

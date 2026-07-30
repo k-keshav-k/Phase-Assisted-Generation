@@ -49,6 +49,18 @@ class StageSizes:
 
 
 @dataclass(frozen=True, slots=True)
+class DecodingSpec:
+    temperature: float
+    gen_length: int
+    max_refinement_steps: int
+    max_block_length: int
+    transfer_threshold: float
+    delimiter_threshold: float
+    use_cache: bool
+    dual_cache: bool
+
+
+@dataclass(frozen=True, slots=True)
 class StatisticsSpec:
     bootstrap_samples: int
     confidence: float
@@ -71,6 +83,7 @@ class RCPAGConfig:
     datasets: dict[str, DatasetSpec]
     splits: dict[str, dict[str, tuple[int, int]]]
     stage_sizes: StageSizes
+    decoding: DecodingSpec
     estimator_kinds: tuple[str, ...]
     history_window: int
     candidates: tuple[PolicyCandidateSpec, ...]
@@ -196,6 +209,20 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if {name: int(sizes.get(name, 0)) for name in expected_sizes} != expected_sizes:
         raise ValueError("stage sizes do not match the frozen compute funnel")
 
+    decoding = payload.get("decoding", {})
+    expected_decoding = {
+        "temperature": 0.0,
+        "gen_length": 256,
+        "max_refinement_steps": 64,
+        "max_block_length": 64,
+        "transfer_threshold": 0.9,
+        "delimiter_threshold": 0.3,
+        "use_cache": True,
+        "dual_cache": True,
+    }
+    if decoding != expected_decoding:
+        raise ValueError("decoding settings do not match the frozen deterministic protocol")
+
     policy = payload.get("policy", {})
     if tuple(policy.get("estimator_kinds", ())) != (
         "hist_gradient_boosting",
@@ -290,6 +317,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
         for role, pools in payload["splits"].items()
     }
     stage_sizes = payload["stage_sizes"]
+    decoding = payload["decoding"]
     policy = payload["policy"]
     risk = payload["risk"]
     statistics = payload["statistics"]
@@ -301,6 +329,16 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
         datasets=datasets,
         splits=splits,
         stage_sizes=StageSizes(**{name: int(value) for name, value in stage_sizes.items()}),
+        decoding=DecodingSpec(
+            temperature=float(decoding["temperature"]),
+            gen_length=int(decoding["gen_length"]),
+            max_refinement_steps=int(decoding["max_refinement_steps"]),
+            max_block_length=int(decoding["max_block_length"]),
+            transfer_threshold=float(decoding["transfer_threshold"]),
+            delimiter_threshold=float(decoding["delimiter_threshold"]),
+            use_cache=bool(decoding["use_cache"]),
+            dual_cache=bool(decoding["dual_cache"]),
+        ),
         estimator_kinds=tuple(policy["estimator_kinds"]),
         history_window=int(policy["history_window"]),
         candidates=tuple(

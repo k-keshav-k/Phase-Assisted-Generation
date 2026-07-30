@@ -13,7 +13,8 @@ LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
 if str(LLADA_DIR) not in sys.path:
     sys.path.insert(0, str(LLADA_DIR))
 
-generate_pag = importlib.import_module("generate_pag").generate_pag
+generate_pag_module = importlib.import_module("generate_pag")
+generate_pag = generate_pag_module.generate_pag
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
 
 
@@ -51,6 +52,31 @@ class FakeModel:
         logits = self.logits_plan[self.call_index]
         self.call_index += 1
         return SimpleNamespace(logits=logits, past_key_values=[(torch.zeros(1), torch.zeros(1))])
+
+
+class FakeRiskPolicy:
+    def __init__(self) -> None:
+        self.observations = []
+        self.realized = []
+
+    def reset_prompt(self) -> None:
+        self.observations.clear()
+        self.realized.clear()
+
+    def start_block(self) -> None:
+        pass
+
+    def observe(self, observation):
+        self.observations.append(observation)
+        return SimpleNamespace(
+            should_stop=True,
+            risk_score=0.01,
+            safe_streak=1,
+            reason="risk_certified_candidate",
+        )
+
+    def record_realized(self, block) -> None:
+        self.realized.append(block)
 
 
 def _make_schedule(block_size: int, refinement_steps: int) -> SimpleNamespace:
@@ -176,3 +202,46 @@ def test_invalid_enforcement_mode_is_rejected() -> None:
             stable=False,
             complete=False,
         )
+
+
+def test_llada_compact_observation_adapter_fields() -> None:
+    logits = _make_logits(2, 8, {0: (5, 4.0), 1: (6, 3.0)})
+    observation = generate_pag_module._rc_pag_observation(
+        logits,
+        torch.tensor([[0, 6]]),
+        mask_token_id=0,
+        step_index=3,
+        digit_ids=torch.tensor([5]),
+        delimiter_ids=torch.tensor([6]),
+    )
+
+    assert observation.block_size == 2
+    assert observation.masked == (True, False)
+    assert observation.token_ids == (5, 6)
+    assert observation.step_index == 3
+
+
+def test_llada_policy_stop_and_shadow_label_are_recorded() -> None:
+    scheduler = FakeScheduler([_make_schedule(2, 4)])
+    model = FakeModel([_make_logits(4, 8, {2: (5, 4.0), 3: (6, 3.0)})])
+    policy = FakeRiskPolicy()
+
+    result, nfe_history, _, schedules = generate_pag(
+        model,
+        torch.tensor([[1, 2]], dtype=torch.long),
+        scheduler,
+        steps=4,
+        gen_length=2,
+        threshold=0.99,
+        max_block_length=2,
+        max_refinement_steps=4,
+        risk_policy=policy,
+        shadow_callback=lambda request: request.proposed_tokens.clone(),
+    )
+
+    assert result.tolist() == [[1, 2, 5, 6]]
+    assert nfe_history == [1]
+    assert len(policy.observations) == 1
+    assert len(policy.realized) == 1
+    assert schedules[0]["exit_reason"] == "risk_policy"
+    assert schedules[0]["shadow_losses"] == [0]

@@ -52,9 +52,8 @@ sys.modules.setdefault("model", model_pkg)
 DreamGenerationConfig = importlib.import_module(
     "model.generation_utils_adablock",
 ).DreamGenerationConfig
-DreamGenerationMixin = importlib.import_module(
-    "model.generation_utils_pag",
-).DreamGenerationMixin
+dream_pag_module = importlib.import_module("model.generation_utils_pag")
+DreamGenerationMixin = dream_pag_module.DreamGenerationMixin
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
 
 
@@ -115,6 +114,31 @@ class FakeModel:
     def _compute_block_length(self, *args, **kwargs) -> int:
         del args, kwargs
         return 2
+
+
+class FakeRiskPolicy:
+    def __init__(self) -> None:
+        self.observations = []
+        self.realized = []
+
+    def reset_prompt(self) -> None:
+        self.observations.clear()
+        self.realized.clear()
+
+    def start_block(self) -> None:
+        pass
+
+    def observe(self, observation):
+        self.observations.append(observation)
+        return SimpleNamespace(
+            should_stop=True,
+            risk_score=0.01,
+            safe_streak=1,
+            reason="risk_certified_candidate",
+        )
+
+    def record_realized(self, block) -> None:
+        self.realized.append(block)
 
 
 def _make_schedule(block_size: int, refinement_steps: int) -> SimpleNamespace:
@@ -257,3 +281,52 @@ def test_cached_pag_uses_adablock_boundary_and_counts_initial_forward() -> None:
     assert result.sequences.tolist() == [[1, 2, 3, 5, 6, 7]]
     assert result.nfe_history == [1, 1]
     assert result.block_history == [2, 2]
+
+
+def test_dream_compact_observation_adapter_fields() -> None:
+    logits = _make_logits(2, 8, {0: (5, 4.0), 1: (6, 3.0)})
+    observation = dream_pag_module._rc_pag_observation(
+        logits,
+        torch.tensor([[0, 6]]),
+        mask_token_id=0,
+        step_index=3,
+        digit_ids=torch.tensor([5]),
+        delimiter_ids=torch.tensor([6]),
+    )
+
+    assert observation.block_size == 2
+    assert observation.masked == (True, False)
+    assert observation.token_ids == (5, 6)
+    assert observation.step_index == 3
+
+
+def test_dream_policy_stop_and_shadow_label_are_recorded() -> None:
+    scheduler = FakeScheduler([_make_schedule(2, 4)])
+    model = FakeModel([_make_logits(4, 8, {1: (5, 4.0), 2: (6, 3.0)})], scheduler)
+    model._sample = DreamGenerationMixin._sample_pag.__get__(model, FakeModel)
+    model.pag_risk_policy = FakeRiskPolicy()
+    model.pag_shadow_callback = lambda request: request.proposed_tokens.clone()
+    generation_config = DreamGenerationConfig(
+        max_length=4,
+        steps=4,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+
+    result = model._sample(
+        torch.tensor([[1, 2]], dtype=torch.long),
+        attention_mask=None,
+        generation_config=generation_config,
+        threshold=0.99,
+        max_block_length=2,
+        max_refinement_steps=4,
+    )
+
+    assert result.sequences.tolist() == [[1, 2, 5, 6]]
+    assert result.nfe_history == [1]
+    assert len(model.pag_risk_policy.observations) == 1
+    assert len(model.pag_risk_policy.realized) == 1
+    assert result.schedule_history[0]["shadow_losses"] == [0]

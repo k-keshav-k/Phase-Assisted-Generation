@@ -112,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         device=device,
         runtime_factory=runtime_factory,
         development_limit=development_limit,
+        mock_mode=args.mock,
     )
     print(f"Run ID: {run_id}")
     print(f"Config hash: {config.config_hash}")

@@ -12,6 +12,133 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 
+from pag.experiments.rc_pag_adapter import (
+    continue_shadow_refinement,
+    observation_from_tensors,
+    observe_policy_step,
+    serialize_policy_step,
+)
+from pag.experiments.rc_pag_features import RealizedBlock
+
+
+def _rc_pag_observation(
+    logits: torch.Tensor,
+    current_tokens: torch.Tensor,
+    *,
+    mask_token_id: int,
+    step_index: int,
+    digit_ids: torch.Tensor | None = None,
+    delimiter_ids: torch.Tensor | None = None,
+):
+    return observation_from_tensors(
+        logits=logits,
+        current_tokens=current_tokens,
+        mask_token_id=mask_token_id,
+        step_index=step_index,
+        digit_ids=digit_ids,
+        delimiter_ids=delimiter_ids,
+    )
+
+
+def _observe_rc_pag_step(
+    risk_policy,
+    *,
+    local_logits: torch.Tensor,
+    local_tokens: torch.Tensor,
+    mask_id: int,
+    step_index: int,
+    full_tokens: torch.Tensor,
+    block_start: int,
+    block_end: int,
+    digit_ids_tensor: torch.Tensor | None,
+    delimiter_ids_tensor: torch.Tensor | None,
+    cache,
+    shadow_callback,
+    shadow_all_steps: bool,
+    records: list[dict[str, object]],
+) -> bool:
+    step = observe_policy_step(
+        risk_policy,
+        logits=local_logits,
+        current_tokens=local_tokens,
+        mask_token_id=mask_id,
+        step_index=step_index,
+        full_tokens=full_tokens,
+        block_start=block_start,
+        block_end=block_end,
+        digit_ids=digit_ids_tensor,
+        delimiter_ids=delimiter_ids_tensor,
+        cache=cache,
+        shadow_callback=shadow_callback,
+        shadow_all_steps=shadow_all_steps,
+    )
+    if step is None:
+        return False
+    records.append(serialize_policy_step(step))
+    return bool(step.decision.should_stop)
+
+
+def _record_rc_pag_realized(
+    risk_policy,
+    *,
+    block_length: int,
+    nfe: int,
+    mean_confidence: float,
+    min_confidence: float,
+    digit_fraction: float,
+    delimiter_fraction: float,
+) -> None:
+    if risk_policy is None:
+        return
+    risk_policy.record_realized(
+        RealizedBlock(
+            block_size=int(block_length),
+            nfe=int(nfe),
+            mean_confidence=float(mean_confidence),
+            min_confidence=float(min_confidence),
+            digit_fraction=float(digit_fraction),
+            delimiter_fraction=float(delimiter_fraction),
+        )
+    )
+
+
+def make_llada_shadow_callback(
+    model,
+    *,
+    mode: str,
+    mask_id: int,
+    threshold: float,
+    max_steps: int,
+):
+    """Create an on-policy shadow continuation for uncached or dual-cache LLaDA."""
+    if mode not in {"uncached", "dual_cache"}:
+        raise ValueError("LLaDA shadow mode must be uncached or dual_cache")
+
+    def callback(request):
+        def forward(tokens, cache, block_start, block_end):
+            if mode == "uncached":
+                output = model(tokens)
+                return output.logits[:, block_start:block_end, :], None
+            replace_position = torch.zeros_like(tokens, dtype=torch.bool)
+            replace_position[:, block_start:block_end] = True
+            output = model(
+                tokens[:, block_start:block_end],
+                past_key_values=cache,
+                use_cache=True,
+                replace_position=replace_position,
+            )
+            return output.logits, cache
+
+        return continue_shadow_refinement(
+            request,
+            forward=forward,
+            mask_token_id=mask_id,
+            threshold=threshold,
+            max_steps=max_steps,
+        ).tokens
+
+    return callback
+
 
 def add_gumbel_noise(logits: torch.Tensor, temperature: float) -> torch.Tensor:
     if temperature == 0:
@@ -143,9 +270,10 @@ def _record_schedule(
     block_start: int,
     block_end: int,
     exit_reason: str,
+    risk_steps: list[dict[str, object]] | None = None,
+    final_tokens: torch.Tensor | None = None,
 ) -> None:
-    schedule_history.append(
-        {
+    record = {
             "block_index": len(schedule_history),
             "predicted_tuple": {
                 "block_size": int(schedule.predicted_tuple.block_size),
@@ -158,7 +286,15 @@ def _record_schedule(
             "block_end": int(block_end),
             "exit_reason": exit_reason,
         }
-    )
+    if risk_steps:
+        record["risk_steps"] = risk_steps
+        record["final_tokens"] = (
+            final_tokens.detach().cpu().reshape(-1).tolist() if final_tokens is not None else []
+        )
+        record["shadow_losses"] = [
+            row["shadow_loss"] for row in risk_steps if row.get("shadow_loss") is not None
+        ]
+    schedule_history.append(record)
 
 
 @torch.no_grad()
@@ -183,6 +319,9 @@ def generate_pag(
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
     enforcement_mode: str = "soft_gate",
+    risk_policy=None,
+    shadow_callback=None,
+    shadow_all_steps: bool = False,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
@@ -202,6 +341,8 @@ def generate_pag(
     )
     x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
+    if risk_policy is not None:
+        risk_policy.reset_prompt()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
     delimiter_ids = delimiter_ids or [198]
@@ -238,10 +379,29 @@ def generate_pag(
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + block_length
         generated_length += block_length
+        risk_steps: list[dict[str, object]] = []
+        if risk_policy is not None:
+            risk_policy.start_block()
 
         unmask_confs: list[torch.Tensor] = []
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
+        risk_force_commit = _observe_rc_pag_step(
+            risk_policy,
+            local_logits=logits[:, block_start:block_end, :],
+            local_tokens=x[:, block_start:block_end],
+            mask_id=mask_id,
+            step_index=1,
+            full_tokens=x,
+            block_start=block_start,
+            block_end=block_end,
+            digit_ids_tensor=digit_ids_tensor,
+            delimiter_ids_tensor=delimiter_ids_tensor,
+            cache=None,
+            shadow_callback=shadow_callback,
+            shadow_all_steps=shadow_all_steps,
+            records=risk_steps,
+        )
         x0, transfer_index = get_transfer_index(
             logits,
             predicted_tokens,
@@ -273,6 +433,8 @@ def generate_pag(
             max_steps=max_refinement_steps,
             tau_commit=tau_commit,
         )
+        if risk_force_commit:
+            initial_decision = EnforcementDecision(True, "risk_policy")
         if initial_decision.force_commit:
             mask_index = x == mask_id
             mask_index[:, block_end:] = 0
@@ -300,6 +462,27 @@ def generate_pag(
             mask_index[:, block_end:] = 0
             block_probs = F.softmax(logits[:, block_start:block_end, :], dim=-1)
             block_max_probs = block_probs.max(dim=-1).values
+            risk_force_commit = _observe_rc_pag_step(
+                risk_policy,
+                local_logits=logits[:, block_start:block_end, :],
+                local_tokens=x[:, block_start:block_end],
+                mask_id=mask_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                digit_ids_tensor=digit_ids_tensor,
+                delimiter_ids_tensor=delimiter_ids_tensor,
+                cache=None,
+                shadow_callback=shadow_callback,
+                shadow_all_steps=shadow_all_steps,
+                records=risk_steps,
+            )
+            if risk_force_commit:
+                x0, transfer_index = _force_commit(predicted_tokens, mask_index, x)
+                x[transfer_index] = x0[transfer_index]
+                exit_reason = "risk_policy"
+                break
 
             if nfe >= schedule.budgeted_refinement_steps:
                 block_mask = x[:, block_start:block_end] == mask_id
@@ -382,6 +565,15 @@ def generate_pag(
             else 0.0
         )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
+        _record_rc_pag_realized(
+            risk_policy,
+            block_length=block_length,
+            nfe=nfe,
+            mean_confidence=mean_conf,
+            min_confidence=min_conf,
+            digit_fraction=digit_frac,
+            delimiter_fraction=delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(block_length)
         _record_schedule(
@@ -391,6 +583,8 @@ def generate_pag(
             block_start=block_start,
             block_end=block_end,
             exit_reason=exit_reason or "complete",
+            risk_steps=risk_steps,
+            final_tokens=block_tokens,
         )
 
     return x, nfe_history, block_history, schedule_history
@@ -418,6 +612,9 @@ def generate_pag_prefix_cache(
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
     enforcement_mode: str = "soft_gate",
+    risk_policy=None,
+    shadow_callback=None,
+    shadow_all_steps: bool = False,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
@@ -437,6 +634,8 @@ def generate_pag_prefix_cache(
     )
     x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
+    if risk_policy is not None:
+        risk_policy.reset_prompt()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
     delimiter_ids = delimiter_ids or [198]
@@ -474,10 +673,29 @@ def generate_pag_prefix_cache(
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + block_length
         generated_length += block_length
+        risk_steps: list[dict[str, object]] = []
+        if risk_policy is not None:
+            risk_policy.start_block()
 
         unmask_confs: list[torch.Tensor] = []
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
+        risk_force_commit = _observe_rc_pag_step(
+            risk_policy,
+            local_logits=logits[:, block_start:block_end, :],
+            local_tokens=x[:, block_start:block_end],
+            mask_id=mask_id,
+            step_index=1,
+            full_tokens=x,
+            block_start=block_start,
+            block_end=block_end,
+            digit_ids_tensor=digit_ids_tensor,
+            delimiter_ids_tensor=delimiter_ids_tensor,
+            cache=full_cache,
+            shadow_callback=shadow_callback,
+            shadow_all_steps=shadow_all_steps,
+            records=risk_steps,
+        )
         x0, transfer_index = get_transfer_index(
             logits,
             predicted_tokens,
@@ -514,6 +732,8 @@ def generate_pag_prefix_cache(
             max_steps=max_refinement_steps,
             tau_commit=tau_commit,
         )
+        if risk_force_commit:
+            initial_decision = EnforcementDecision(True, "risk_policy")
         if initial_decision.force_commit:
             mask_index = x[:, block_start:] == mask_id
             mask_index[:, block_length:] = 0
@@ -547,6 +767,29 @@ def generate_pag_prefix_cache(
 
             block_probs = F.softmax(block_logits, dim=-1)
             block_max_probs = block_probs.max(dim=-1).values
+            risk_force_commit = _observe_rc_pag_step(
+                risk_policy,
+                local_logits=block_logits[:, :block_length, :],
+                local_tokens=x[:, block_start:block_end],
+                mask_id=mask_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                digit_ids_tensor=digit_ids_tensor,
+                delimiter_ids_tensor=delimiter_ids_tensor,
+                cache=prefix_cache,
+                shadow_callback=shadow_callback,
+                shadow_all_steps=shadow_all_steps,
+                records=risk_steps,
+            )
+            if risk_force_commit:
+                x0, transfer_index = _force_commit(
+                    block_predicted_tokens, mask_index, x[:, block_start:]
+                )
+                x[:, block_start:][transfer_index] = x0[transfer_index]
+                exit_reason = "risk_policy"
+                break
 
             if nfe >= schedule.budgeted_refinement_steps:
                 block_mask = x[:, block_start:block_end] == mask_id
@@ -632,6 +875,15 @@ def generate_pag_prefix_cache(
             else 0.0
         )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
+        _record_rc_pag_realized(
+            risk_policy,
+            block_length=block_length,
+            nfe=nfe,
+            mean_confidence=mean_conf,
+            min_confidence=min_conf,
+            digit_fraction=digit_frac,
+            delimiter_fraction=delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(block_length)
         _record_schedule(
@@ -641,6 +893,8 @@ def generate_pag_prefix_cache(
             block_start=block_start,
             block_end=block_end,
             exit_reason=exit_reason or "complete",
+            risk_steps=risk_steps,
+            final_tokens=block_tokens,
         )
 
     return x, nfe_history, block_history, schedule_history
@@ -668,6 +922,9 @@ def generate_pag_dual_cache(
     tau_stable_steps: int = 2,
     default_block_length: int = 32,
     enforcement_mode: str = "soft_gate",
+    risk_policy=None,
+    shadow_callback=None,
+    shadow_all_steps: bool = False,
 ):
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     assert threshold is not None
@@ -687,6 +944,8 @@ def generate_pag_dual_cache(
     )
     x[:, : prompt.shape[1]] = prompt.clone()
     scheduler.reset()
+    if risk_policy is not None:
+        risk_policy.reset_prompt()
     max_block_length = gen_length if max_block_length is None else int(max_block_length)
     max_refinement_steps = steps if max_refinement_steps is None else int(max_refinement_steps)
     delimiter_ids = delimiter_ids or [198]
@@ -725,11 +984,30 @@ def generate_pag_dual_cache(
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + block_length
         generated_length += block_length
+        risk_steps: list[dict[str, object]] = []
+        if risk_policy is not None:
+            risk_policy.start_block()
 
         # First unmask
         unmask_confs: list[torch.Tensor] = []
         mask_index = x == mask_id
         mask_index[:, block_end:] = 0
+        risk_force_commit = _observe_rc_pag_step(
+            risk_policy,
+            local_logits=logits[:, block_start:block_end, :],
+            local_tokens=x[:, block_start:block_end],
+            mask_id=mask_id,
+            step_index=1,
+            full_tokens=x,
+            block_start=block_start,
+            block_end=block_end,
+            digit_ids_tensor=digit_ids_tensor,
+            delimiter_ids_tensor=delimiter_ids_tensor,
+            cache=full_cache,
+            shadow_callback=shadow_callback,
+            shadow_all_steps=shadow_all_steps,
+            records=risk_steps,
+        )
         x0, transfer_index = get_transfer_index(
             logits,
             predicted_tokens,
@@ -764,6 +1042,8 @@ def generate_pag_dual_cache(
             max_steps=max_refinement_steps,
             tau_commit=tau_commit,
         )
+        if risk_force_commit:
+            initial_decision = EnforcementDecision(True, "risk_policy")
         if initial_decision.force_commit:
             mask_index = x[:, block_start:block_end] == mask_id
             local_predictions = predicted_tokens[:, block_start:block_end]
@@ -801,6 +1081,29 @@ def generate_pag_dual_cache(
 
             block_probs = F.softmax(block_logits, dim=-1)
             block_max_probs = block_probs.max(dim=-1).values
+            risk_force_commit = _observe_rc_pag_step(
+                risk_policy,
+                local_logits=block_logits,
+                local_tokens=x[:, block_start:block_end],
+                mask_id=mask_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                digit_ids_tensor=digit_ids_tensor,
+                delimiter_ids_tensor=delimiter_ids_tensor,
+                cache=full_cache,
+                shadow_callback=shadow_callback,
+                shadow_all_steps=shadow_all_steps,
+                records=risk_steps,
+            )
+            if risk_force_commit:
+                x0, transfer_index = _force_commit(
+                    block_predicted_tokens, mask_index, x[:, block_start:block_end]
+                )
+                x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+                exit_reason = "risk_policy"
+                break
 
             if nfe >= schedule.budgeted_refinement_steps:
                 remaining_count = (x[:, block_start:block_end] == mask_id).sum().item()
@@ -883,6 +1186,15 @@ def generate_pag_dual_cache(
             else 0.0
         )
         scheduler.record_realized(block_length, nfe, mean_conf, min_conf, digit_frac, delim_frac)
+        _record_rc_pag_realized(
+            risk_policy,
+            block_length=block_length,
+            nfe=nfe,
+            mean_confidence=mean_conf,
+            min_confidence=min_conf,
+            digit_fraction=digit_frac,
+            delimiter_fraction=delim_frac,
+        )
         nfe_history.append(nfe)
         block_history.append(block_length)
         _record_schedule(
@@ -892,6 +1204,8 @@ def generate_pag_dual_cache(
             block_start=block_start,
             block_end=block_end,
             exit_reason=exit_reason or "complete",
+            risk_steps=risk_steps,
+            final_tokens=block_tokens,
         )
 
     return x, nfe_history, block_history, schedule_history

@@ -73,6 +73,16 @@ stage_sizes:
   tuning_per_model: 150
   calibration_per_model: 300
 
+decoding:
+  temperature: 0.0
+  gen_length: 256
+  max_refinement_steps: 64
+  max_block_length: 64
+  transfer_threshold: 0.9
+  delimiter_threshold: 0.3
+  use_cache: true
+  dual_cache: true
+
 policy:
   estimator_kinds: [hist_gradient_boosting, logistic]
   history_window: 4

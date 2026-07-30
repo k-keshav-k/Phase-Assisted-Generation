@@ -23,6 +23,8 @@ def test_frozen_config_loads_with_declared_family_and_counts():
     assert config.stage_sizes.traces_per_model == 600
     assert config.stage_sizes.calibration_per_model == 300
     assert config.statistics.bootstrap_samples == 10_000
+    assert config.decoding.temperature == 0.0
+    assert config.decoding.max_refinement_steps == 64
     assert len(config.candidates) == 6
     assert {candidate.variant for candidate in config.candidates} == {
         "rc_pag_local",

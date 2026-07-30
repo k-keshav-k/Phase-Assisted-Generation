@@ -13,6 +13,146 @@ from model.generation_utils_adablock import (
 from model.generation_utils_adablock import (
     DreamGenerationMixin as AdaBlockDreamGenerationMixin,
 )
+from pag.experiments.rc_pag_adapter import (
+    continue_shadow_refinement,
+    observation_from_tensors,
+    observe_policy_step,
+    serialize_policy_step,
+)
+from pag.experiments.rc_pag_features import RealizedBlock
+
+
+def _rc_pag_observation(
+    logits: torch.Tensor,
+    current_tokens: torch.Tensor,
+    *,
+    mask_token_id: int,
+    step_index: int,
+    digit_ids: torch.Tensor | None = None,
+    delimiter_ids: torch.Tensor | None = None,
+):
+    return observation_from_tensors(
+        logits=logits,
+        current_tokens=current_tokens,
+        mask_token_id=mask_token_id,
+        step_index=step_index,
+        digit_ids=digit_ids,
+        delimiter_ids=delimiter_ids,
+    )
+
+
+def _observe_rc_pag_step(
+    model,
+    *,
+    local_logits: torch.Tensor,
+    local_tokens: torch.Tensor,
+    mask_token_id: int,
+    step_index: int,
+    full_tokens: torch.Tensor,
+    block_start: int,
+    block_end: int,
+    cache,
+    records: list[dict[str, object]],
+) -> bool:
+    policy = getattr(model, "pag_risk_policy", None)
+    step = observe_policy_step(
+        policy,
+        logits=local_logits,
+        current_tokens=local_tokens,
+        mask_token_id=mask_token_id,
+        step_index=step_index,
+        full_tokens=full_tokens,
+        block_start=block_start,
+        block_end=block_end,
+        digit_ids=getattr(model, "pag_digit_ids", None),
+        delimiter_ids=getattr(model, "pag_delimiter_ids", None),
+        cache=cache,
+        shadow_callback=getattr(model, "pag_shadow_callback", None),
+        shadow_all_steps=bool(getattr(model, "pag_shadow_all_steps", False)),
+    )
+    if step is None:
+        return False
+    records.append(serialize_policy_step(step))
+    return bool(step.decision.should_stop)
+
+
+def _record_rc_pag_realized(
+    model,
+    *,
+    block_size: int,
+    nfe: int,
+    mean_confidence: float,
+    min_confidence: float,
+    digit_fraction: float,
+    delimiter_fraction: float,
+) -> None:
+    policy = getattr(model, "pag_risk_policy", None)
+    if policy is None:
+        return
+    policy.record_realized(
+        RealizedBlock(
+            block_size=int(block_size),
+            nfe=int(nfe),
+            mean_confidence=float(mean_confidence),
+            min_confidence=float(min_confidence),
+            digit_fraction=float(digit_fraction),
+            delimiter_fraction=float(delimiter_fraction),
+        )
+    )
+
+
+def make_dream_shadow_callback(
+    model,
+    *,
+    mode: str,
+    attention_mask,
+    tok_idx,
+    mask_token_id: int,
+    threshold: float,
+    max_steps: int,
+):
+    """Create an on-policy shadow continuation for uncached or dual-cache Dream."""
+    if mode not in {"uncached", "dual_cache"}:
+        raise ValueError("Dream shadow mode must be uncached or dual_cache")
+
+    def callback(request):
+        def forward(tokens, cache, block_start, block_end):
+            if mode == "uncached":
+                output = model(
+                    tokens,
+                    attention_mask if attention_mask != "full" else attention_mask,
+                    tok_idx if tok_idx is not None else None,
+                )
+                logits = torch.cat([output.logits[:, :1], output.logits[:, :-1]], dim=1)
+                return logits[:, block_start:block_end, :], None
+            replace_position = torch.zeros_like(tokens, dtype=torch.bool)
+            replace_position[:, block_start:block_end] = True
+            current_attention = (
+                attention_mask[:, :, :, block_start:]
+                if attention_mask != "full"
+                else attention_mask
+            )
+            output = model(
+                tokens[:, block_start:block_end],
+                current_attention,
+                tok_idx[:, block_start:block_end] if tok_idx is not None else None,
+                past_key_values=cache,
+                use_cache=True,
+                dual_cache=True,
+                replace_position=replace_position,
+            )
+            logits = torch.cat([output.logits[:, :1], output.logits[:, :-1]], dim=1)
+            return logits, cache
+
+        return continue_shadow_refinement(
+            request,
+            forward=forward,
+            mask_token_id=mask_token_id,
+            threshold=threshold,
+            max_steps=max_steps,
+        ).tokens
+
+    return callback
 
 
 @dataclass
@@ -215,6 +355,18 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
         schedule_history: list[dict[str, object]] = []
 
         self.pag_scheduler.reset()
+        if getattr(self, "pag_risk_policy", None) is not None:
+            self.pag_risk_policy.reset_prompt()
+            if getattr(self, "pag_shadow_callback", None) == "auto":
+                self.pag_shadow_callback = make_dream_shadow_callback(
+                    self,
+                    mode="uncached",
+                    attention_mask=attention_mask,
+                    tok_idx=tok_idx,
+                    mask_token_id=mask_token_id,
+                    threshold=float(threshold),
+                    max_steps=max_refinement_steps,
+                )
 
         while generated_length < gen_length:
             remaining_tokens = gen_length - generated_length
@@ -243,9 +395,24 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
             )
             block_end = block_start + schedule.applied_block_size
             generated_length += schedule.applied_block_size
+            risk_steps: list[dict[str, object]] = []
+            if getattr(self, "pag_risk_policy", None) is not None:
+                self.pag_risk_policy.start_block()
 
             local_logits = logits[:, block_start:block_end, :]
             mask_index = x[:, block_start:block_end] == mask_token_id
+            risk_force_commit = _observe_rc_pag_step(
+                self,
+                local_logits=local_logits,
+                local_tokens=x[:, block_start:block_end],
+                mask_token_id=mask_token_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                cache=None,
+                records=risk_steps,
+            )
             _apply_confidence_threshold_sample(
                 target_tokens=x[:, block_start:block_end],
                 logits=local_logits,
@@ -255,7 +422,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 top_p=top_p,
                 top_k=top_k,
                 threshold=float(threshold),
-                force_all=nfe >= schedule.budgeted_refinement_steps,
+                force_all=risk_force_commit or nfe >= schedule.budgeted_refinement_steps,
             )
             while True:
                 if (x[:, block_start:block_end] == mask_token_id).sum() == 0:
@@ -272,6 +439,18 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
 
                 local_logits = logits[:, block_start:block_end, :]
                 mask_index = x[:, block_start:block_end] == mask_token_id
+                risk_force_commit = _observe_rc_pag_step(
+                    self,
+                    local_logits=local_logits,
+                    local_tokens=x[:, block_start:block_end],
+                    mask_token_id=mask_token_id,
+                    step_index=nfe,
+                    full_tokens=x,
+                    block_start=block_start,
+                    block_end=block_end,
+                    cache=None,
+                    records=risk_steps,
+                )
                 _apply_confidence_threshold_sample(
                     target_tokens=x[:, block_start:block_end],
                     logits=local_logits,
@@ -281,7 +460,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     top_p=top_p,
                     top_k=top_k,
                     threshold=float(threshold),
-                    force_all=nfe >= schedule.budgeted_refinement_steps,
+                    force_all=risk_force_commit or nfe >= schedule.budgeted_refinement_steps,
                 )
 
                 if nfe >= schedule.budgeted_refinement_steps:
@@ -299,6 +478,15 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 min_conf,
                 digit_frac,
                 delim_frac,
+            )
+            _record_rc_pag_realized(
+                self,
+                block_size=schedule.applied_block_size,
+                nfe=nfe,
+                mean_confidence=mean_conf,
+                min_confidence=min_conf,
+                digit_fraction=digit_frac,
+                delimiter_fraction=delim_frac,
             )
             nfe_history.append(nfe)
             block_history.append(schedule.applied_block_size)
@@ -320,6 +508,16 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     "block_end": int(block_end),
                 }
             )
+            if risk_steps:
+                schedule_history[-1]["risk_steps"] = risk_steps
+                schedule_history[-1]["final_tokens"] = (
+                    x[:, block_start:block_end].detach().cpu().reshape(-1).tolist()
+                )
+                schedule_history[-1]["shadow_losses"] = [
+                    row["shadow_loss"]
+                    for row in risk_steps
+                    if row.get("shadow_loss") is not None
+                ]
 
         if return_dict_in_generate:
             return DreamModelOutput(
@@ -398,6 +596,18 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
         schedule_history: list[dict[str, object]] = []
 
         self.pag_scheduler.reset()
+        if getattr(self, "pag_risk_policy", None) is not None:
+            self.pag_risk_policy.reset_prompt()
+            if getattr(self, "pag_shadow_callback", None) == "auto":
+                self.pag_shadow_callback = make_dream_shadow_callback(
+                    self,
+                    mode="dual_cache",
+                    attention_mask=attention_mask,
+                    tok_idx=tok_idx,
+                    mask_token_id=mask_token_id,
+                    threshold=float(threshold),
+                    max_steps=max_refinement_steps,
+                )
 
         while generated_length < gen_length:
             remaining_tokens = gen_length - generated_length
@@ -428,11 +638,26 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
             )
             block_end = block_start + schedule.applied_block_size
             generated_length += schedule.applied_block_size
+            risk_steps: list[dict[str, object]] = []
+            if getattr(self, "pag_risk_policy", None) is not None:
+                self.pag_risk_policy.start_block()
 
             replace_position = torch.zeros_like(x, dtype=torch.bool)
             replace_position[:, block_start:block_end] = 1
             local_logits = logits[:, block_start:block_end, :]
             mask_index = x[:, block_start:block_end] == mask_token_id
+            risk_force_commit = _observe_rc_pag_step(
+                self,
+                local_logits=local_logits,
+                local_tokens=x[:, block_start:block_end],
+                mask_token_id=mask_token_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                cache=past_key_values,
+                records=risk_steps,
+            )
             _apply_confidence_threshold_sample(
                 target_tokens=x[:, block_start:block_end],
                 logits=local_logits,
@@ -442,7 +667,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 top_p=top_p,
                 top_k=top_k,
                 threshold=float(threshold),
-                force_all=nfe >= schedule.budgeted_refinement_steps,
+                force_all=risk_force_commit or nfe >= schedule.budgeted_refinement_steps,
             )
 
             while True:
@@ -468,6 +693,18 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
 
                 nfe += 1
                 mask_index = x[:, block_start:block_end] == mask_token_id
+                risk_force_commit = _observe_rc_pag_step(
+                    self,
+                    local_logits=local_logits,
+                    local_tokens=x[:, block_start:block_end],
+                    mask_token_id=mask_token_id,
+                    step_index=nfe,
+                    full_tokens=x,
+                    block_start=block_start,
+                    block_end=block_end,
+                    cache=past_key_values,
+                    records=risk_steps,
+                )
                 _apply_confidence_threshold_sample(
                     target_tokens=x[:, block_start:block_end],
                     logits=local_logits,
@@ -477,7 +714,7 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     top_p=top_p,
                     top_k=top_k,
                     threshold=float(threshold),
-                    force_all=nfe >= schedule.budgeted_refinement_steps,
+                    force_all=risk_force_commit or nfe >= schedule.budgeted_refinement_steps,
                 )
 
                 if nfe >= schedule.budgeted_refinement_steps:
@@ -495,6 +732,15 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                 min_conf,
                 digit_frac,
                 delim_frac,
+            )
+            _record_rc_pag_realized(
+                self,
+                block_size=schedule.applied_block_size,
+                nfe=nfe,
+                mean_confidence=mean_conf,
+                min_confidence=min_conf,
+                digit_fraction=digit_frac,
+                delimiter_fraction=delim_frac,
             )
             nfe_history.append(nfe)
             block_history.append(schedule.applied_block_size)
@@ -516,6 +762,16 @@ class DreamGenerationMixin(AdaBlockDreamGenerationMixin):
                     "block_end": int(block_end),
                 }
             )
+            if risk_steps:
+                schedule_history[-1]["risk_steps"] = risk_steps
+                schedule_history[-1]["final_tokens"] = (
+                    x[:, block_start:block_end].detach().cpu().reshape(-1).tolist()
+                )
+                schedule_history[-1]["shadow_losses"] = [
+                    row["shadow_loss"]
+                    for row in risk_steps
+                    if row.get("shadow_loss") is not None
+                ]
 
         if return_dict_in_generate:
             return DreamModelOutput(
