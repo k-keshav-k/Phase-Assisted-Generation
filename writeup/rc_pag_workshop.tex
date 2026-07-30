@@ -1,0 +1,362 @@
+\documentclass{article}
+\IfFileExists{neurips_2026.sty}{
+  \usepackage[dblblindworkshop]{neurips_2026}
+}{
+  \usepackage[margin=1in]{geometry}
+  \usepackage[round,authoryear]{natbib}
+}
+
+\usepackage{amsmath,amssymb,amsthm,booktabs,microtype,multirow}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{xspace}
+
+\newcommand{\method}{\textsc{RC-PAG}\xspace}
+\newcommand{\risk}{\mathcal{R}}
+\newcommand{\data}{\mathcal{D}}
+\newcommand{\family}{\Lambda}
+\newcommand{\indicator}{\mathbf{1}}
+\newcommand{\nfe}{\operatorname{NFE}}
+\newcommand{\pending}[1]{\fcolorbox{orange!70!black}{orange!8}{\parbox{0.92\linewidth}{#1}}}
+\newtheorem{proposition}{Proposition}
+
+\title{Risk-Calibrated Adaptive Stopping for Diffusion Language Models}
+\author{Anonymous Authors}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Diffusion language models expose a useful but hazardous degree of freedom: a decoder can
+stop refining a token block early, reducing neural function evaluations (NFEs), but a
+mistimed stop may irreversibly change the generated continuation. Existing adaptive
+decoders use confidence, entropy, token stability, or learned schedules, yet generally do
+not control this failure probability. We introduce Risk-Calibrated Phase-Adaptive
+Generation (\method), which learns a lightweight risk score from compact online features
+and calibrates a predeclared family of stopping policies with exact binomial tests. For a
+fixed model, prompt distribution, and decoding protocol, the selected policy controls the
+probability that any early-committed block disagrees with its full-refinement continuation,
+up to a user-selected risk level, with finite-sample familywise confidence. Calibration
+labels use same-state shadow continuations only; deployment adds neither a second model nor
+shadow computation. We define a preregistered two-model evaluation and a compute-aware
+experimental funnel designed to distinguish genuine scheduling gains from accuracy loss.
+This draft is wired to insert confirmatory tables only after non-mock evidence passes the
+protocol's coverage checks; numerical claims are intentionally deferred until that run.
+\end{abstract}
+
+\section{Introduction}
+
+Masked diffusion language models (dLMs) generate many tokens in parallel by repeatedly
+denoising a partially masked sequence \citep{nie2025llada,ye2025dream}. Their wall-clock
+advantage depends on when tokens or blocks are committed. Fixed schedules spend refinement
+steps uniformly; recent adaptive methods vary the block length, token transfer, or stopping
+time using confidence and stability signals
+\citep{lu2026adablock,wu2025fastdllm,israel2025apd,mohamed2025sched}.
+
+The central difficulty is that confidence is not itself a safety guarantee. A scheduler
+chosen because it looks efficient on a tuning set can silently over-commit on new prompts,
+and searching many thresholds amplifies this selection bias. We therefore ask:
+\emph{Can an adaptive dLM decoder minimize refinement compute while controlling the
+probability of changing a full-refinement block?}
+
+Our answer, \method, separates prediction from certification. A small CPU estimator predicts
+the risk of stopping from statistics already available in the denoising loop. A finite,
+predeclared policy family turns those scores into stopping rules. On a held-out calibration
+split, the actual on-policy decisions are compared with full-refinement continuations cloned
+from exactly the same decoder states. Exact one-sided binomial tests and a Bonferroni
+correction certify only policies whose prompt-level disagreement risk is below $\alpha$;
+otherwise the system falls back to the full refinement budget.
+
+Our contributions are:
+(i) a prompt-level loss that makes premature block commitment measurable without conflating
+it with task correctness;
+(ii) an online history-aware stopping policy with no deployment-time auxiliary-model forward
+pass;
+(iii) a finite-sample, selection-safe risk certificate for a predeclared policy family; and
+(iv) an auditable evaluation over LLaDA and Dream with paired accuracy, NFE, runtime, strict
+risk, out-of-domain transfer, and explicit positive-claim gates.
+
+\section{Related work}
+
+\paragraph{Efficient dLM decoding.}
+LLaDA and Dream establish competitive autoregressive-style reasoning with masked diffusion
+objectives \citep{nie2025llada,ye2025dream}. Fast-dLLM uses confidence-aware parallel decoding
+and cache reuse \citep{wu2025fastdllm}; AdaBlock adapts block size online
+\citep{lu2026adablock}; APD learns token-wise denoising paths \citep{israel2025apd}; and SchED
+uses similarity-based early stopping \citep{mohamed2025sched}. FreeDave, OSDT, and WINO
+further explore lossless verification, one-shot thresholding, and revocable inference
+optimization \citep{liu2026freedave,zhou2026osdt,wang2026wino}. DiCo and SOAR study
+distillation and schedule optimization, respectively \citep{luo2026dico,cao2026soar}.
+Very recent work predicts semantic block boundaries (SemBlock), combines confidence with
+token and distribution persistence (LESS), or coordinates simultaneous commits through a
+mean-field objective \citep{song2026semblock,mohamed2026less,zoabi2026meanfield}.
+These approaches motivate a broad baseline suite, but their efficiency rules do not provide
+the finite-sample prompt-risk control considered here. Concurrent theory analyzes efficiency
+conditions for confidence decoding \citep{cai2026confidence}; our guarantee instead treats
+the decoder as a black box and controls an observed operational loss. A contemporaneous
+re-evaluation also finds that confidence-based remasking gains can depend strongly on the
+decoding setting \citep{frkovic2026reevaluating}, reinforcing the need for paired,
+protocol-specific evidence.
+
+\paragraph{Statistical risk control.}
+Learn-then-Test (LTT) converts a fixed collection of predictors into risk-controlling choices
+using valid hypothesis tests \citep{angelopoulos2021ltt}; conformal risk control extends this
+perspective to general bounded losses \citep{angelopoulos2022crc}. We apply the LTT principle
+to adaptive inference. Unlike ordinary post-hoc confidence intervals, simultaneous testing
+remains valid after selecting the lowest-compute certified policy.
+
+\section{Risk-calibrated adaptive stopping}
+
+\subsection{Problem and strict shadow loss}
+
+Let $X\sim\data$ be a prompt. A block diffusion decoder creates blocks $b=1,\ldots,B(X)$.
+Within block $b$, $S_{b,t}$ is the complete decoder state after refinement step $t$, and a
+policy $\pi_\lambda$ chooses a stopping time
+$\tau_b^\lambda\in\{1,\ldots,T_b\}$. Its compute is
+\begin{equation}
+ C_\lambda(X)=\sum_{b=1}^{B(X)}\tau_b^\lambda,
+ \qquad \nfe(\pi_\lambda)=\mathbb{E}_{X\sim\data}[C_\lambda(X)].
+ \label{eq:compute}
+\end{equation}
+At every on-policy early stop, we clone $S_{b,\tau_b^\lambda}$ and run a \emph{shadow}
+decoder to the fixed full budget $T_b$. Let
+$Y_b^{\lambda}$ be the committed block and $Y_b^{\mathrm{full}}$ the shadow block. Define
+\begin{equation}
+ L_\lambda(X)=\max_{b:\tau_b^\lambda<T_b}
+ \indicator\!\left\{Y_b^\lambda\ne Y_b^{\mathrm{full}}\right\},\qquad
+ \risk(\lambda)=\Pr_{X\sim\data}[L_\lambda(X)=1],
+ \label{eq:loss}
+\end{equation}
+with the maximum over an empty set equal to zero. This intentionally severe loss penalizes
+\emph{any} changed token in \emph{any} early-committed block. It detects premature commitment,
+not whether either answer is semantically correct. Our constrained objective is
+\begin{equation}
+ \min_{\lambda\in\family}\ \nfe(\pi_\lambda)
+ \quad\text{subject to}\quad \risk(\lambda)\le\alpha.
+ \label{eq:objective}
+\end{equation}
+
+\subsection{Online risk features and policies}
+
+The decoder compresses each logits tensor on device and transfers only scalar summaries:
+masked fraction; block step and size; entropy, top-one probability, and top-one/top-two
+margin quantiles; token churn; changes in these quantities; delimiter and special-token
+rates; and a four-step history. No logits or hidden states are retained on CPU.
+An estimator $\widehat r_\theta(S_{b,t})\in[0,1]$ predicts the probability that stopping at
+that state changes the full-refinement block. Histogram gradient boosting is the primary
+estimator and logistic regression is a capacity ablation. Both are trained offline using
+full trajectories from the training split.
+
+A local policy stops when $t\ge t_{\min}$ and $\widehat r_\theta(S_{b,t})\le q$ for $p$
+consecutive steps. The history-aware policy additionally exposes recent trends and churn to
+the estimator. We freeze six candidates before calibration:
+$q\in\{0.01,0.025,0.05\}$ crossed with local/history variants, all with
+$t_{\min}=p=2$. Thus calibration chooses among policies; it does not tune them.
+
+\subsection{Finite-sample calibration}
+
+Let $X_1,\ldots,X_n$ be an untouched calibration sample and
+$K_\lambda=\sum_i L_\lambda(X_i)$. We treat every model--policy pair as a candidate, so
+$M=2|\family|=12$ simultaneous hypotheses. For each pair, test
+$H_\lambda:\risk(\lambda)>\alpha$ using the boundary-null lower-tail value
+\begin{equation}
+ p_\lambda=\Pr_{Z\sim\mathrm{Binomial}(n,\alpha)}[Z\le K_\lambda].
+ \label{eq:pvalue}
+\end{equation}
+Candidate $\lambda$ is certified if $p_\lambda\le\delta/M$. Among certified candidates we
+select the one with the smallest calibration mean NFE; if none is certified, we return the
+full-budget decoder. We also report the simultaneous one-sided Clopper--Pearson bounds.
+
+\begin{proposition}[Selection-safe prompt-risk control]
+Assume the calibration prompts are exchangeable draws from the deployment distribution,
+the model and decoding protocol are fixed, and $\family$ is independent of calibration
+outcomes. With probability at least $1-\delta$ over calibration, every policy certified by
+Equation~\ref{eq:pvalue} has $\risk(\lambda)\le\alpha$. Consequently, selecting the
+lowest-NFE certified policy preserves this guarantee.
+\end{proposition}
+
+\noindent\textit{Proof sketch.}
+For any unsafe candidate with $\risk(\lambda)>\alpha$, the lower tail of its binomial count is
+stochastically no larger than the boundary distribution, so its test rejects with probability
+at most $\delta/M$. A union bound over the fixed family makes the probability of certifying
+any unsafe candidate at most $\delta$. The final NFE-based selection is a function of this
+simultaneously valid certified set. A full proof appears in Appendix~\ref{app:proof}.
+
+\paragraph{Calibration cost and deployment cost.}
+Shadows run only after on-policy candidate stops during calibration. Training labels are
+amortized from one full trajectory per prompt. At deployment, feature extraction is
+$O(V)$ for the already-materialized vocabulary logits and $O(d)$ retained scalars, while the
+CPU estimator cost is negligible relative to a model forward pass; no shadow is executed.
+
+\section{Experimental protocol}
+
+\paragraph{Models, data, and splits.}
+We pin LLaDA-8B-Instruct and Dream-v0-Instruct-7B revisions and use deterministic decoding
+with generation length 256, at most 64 refinement steps, and block length at most 64.
+Estimator training, tuning, and calibration use disjoint deterministic subsets of GSM8K,
+MATH, and MBPP training data. Confirmation uses all 1,319 GSM8K test examples, MATH-500,
+257 sanitized MBPP problems, and 164 HumanEval problems; HumanEval is declared
+out-of-domain. The calibration pool has 300 prompts per model and is never used for fitting
+or threshold search. The frozen YAML, dataset revisions, seeds, and protocol hash accompany
+the code.
+
+\paragraph{Comparators and ablations.}
+The confirmatory comparison includes AdaBlock, the best accuracy-eligible nonlearned rule
+chosen on tuning data, and the calibrated local/history \method variants. Development-only
+screening additionally covers fixed schedules, constant budgets, entropy, confidence and
+stability gates, size lookup, prior PAG and residual PAG, an offline oracle lower bound,
+and faithful \emph{style reproductions} of Fast-dLLM and SchED heuristics. We label the latter
+as reproductions rather than official implementations. Estimator and history ablations test
+whether gains come from calibration alone or from temporal phase information. HGB and
+logistic estimators are evaluated on the same deterministic, prompt-grouped trace holdout
+using Brier score and AUROC; HGB remains the frozen deployment estimator regardless of that
+comparison.
+
+\paragraph{Metrics and inference.}
+Primary metrics are mean NFE, exact task accuracy, elapsed time, and strict shadow risk.
+Every method receives the same prompt order and decode settings. We report paired bootstrap
+95\% intervals for NFE and accuracy differences (10,000 resamples), normalized cross-model
+NFE, simultaneous calibration bounds, and a failure taxonomy. The positive headline is
+allowed only if: (1) a non-mock certificate exists; (2) history-aware \method lowers NFE
+versus AdaBlock on both models and versus the best nonlearned rule overall; (3) each
+in-domain accuracy-difference lower bound versus AdaBlock is at least $-0.02$; and (4) the
+history-versus-local NFE interval excludes zero without higher empirical calibration risk.
+
+\paragraph{Compute-aware funnel.}
+We first run 32 prompts/model, then project A100-hours and storage. Only if the pilot is
+healthy do we collect 600 training traces/model, tune on 150 prompts/model, and calibrate on
+300 prompts/model. Confirmation cannot start without an explicit flag, a certificate for
+both variants, and a calibration-time compute advantage over the selected nonlearned rule.
+All records are atomic and resumable; models are loaded one at a time on one A100.
+
+\section{Results}
+
+\IfFileExists{generated/headline.tex}{
+  \noindent\input{generated/headline.tex}
+
+  \begin{table}[t]
+    \caption{Cross-model NFE summary on preregistered confirmation sets. Values are generated
+    from paired, complete, non-mock records. Lower normalized NFE is better.}
+    \label{tab:results}
+    \centering
+    \small
+    \input{generated/ablations.tex}
+  \end{table}
+
+  \begin{figure}[t]
+    \centering
+    \includegraphics[width=0.72\linewidth]{generated/nfe_accuracy.pdf}
+    \caption{Accuracy--compute frontier. Each point aggregates paired confirmatory examples;
+    model/dataset detail is supplied in Appendix~\ref{app:results}.}
+    \label{fig:frontier}
+  \end{figure}
+}{
+  \pending{\textbf{Confirmatory results pending.} The build contains no generated numerical
+  claims because a complete, non-mock confirmation directory was not supplied. The release
+  script refuses mock artifacts. Table~\ref{tab:protocol} records the analysis that will be
+  inserted without changing the method or claim gates.}
+}
+
+\begin{table}[t]
+\caption{Frozen confirmatory decisions. These gates are evaluated mechanically before any
+positive headline is emitted.}
+\label{tab:protocol}
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Decision & Frozen rule \\
+\midrule
+Risk target & $\alpha=0.05$, familywise $\delta=0.05$ over 12 model--policy pairs \\
+Accuracy noninferiority & paired 95\% lower bound $\ge-0.02$ \\
+Compute & below AdaBlock on both models; below best heuristic overall \\
+History contribution & paired NFE interval excludes 0; no higher calibration risk \\
+Fallback & full refinement if no candidate is certified \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Regardless of outcome, the final report includes all candidates and all datasets. A failed
+certificate is itself a valid result and triggers the conservative fallback; a compute win
+with a failed accuracy gate is reported as a trade-off, not as an improvement.
+
+\section{Limitations and broader impact}
+
+The certificate is distribution- and protocol-specific. Dataset shift, a different model
+revision, stochastic temperature, altered block size, quantization, or a modified prompt
+template requires new calibration. Prompt-level shadow disagreement is stricter than many
+semantic metrics but does not guarantee correctness, factuality, fairness, or harmlessness.
+Conversely, a disagreement may be semantically benign. Calibration shadows increase
+experimental compute, although deployment does not pay that cost. Bonferroni correction is
+simple and robust but conservative, especially for correlated policies. The evaluation uses
+two open dLM families and reasoning/code tasks; it should not be generalized to all models,
+languages, or domains. Faster generation can lower energy per response but may also increase
+aggregate use. We release exact compute and failure records to make both effects measurable.
+
+\section{Conclusion}
+
+\method reframes adaptive diffusion decoding as constrained risk minimization. It combines
+compact phase-aware features with same-state counterfactual labels and a selection-safe
+finite-sample certificate. The result is a decoder that either chooses a lower-compute policy
+under an explicit premature-commitment risk target or falls back transparently. The frozen
+evaluation is designed so the strength of the paper follows the evidence rather than the
+other way around.
+
+\typeout{RC-PAG-MAIN-PAGES:\arabic{page}}
+
+\bibliographystyle{plainnat}
+\bibliography{rc_pag_references}
+
+\appendix
+
+\section{Proof details}
+\label{app:proof}
+
+Fix an unsafe candidate $\lambda$ with $r=\risk(\lambda)>\alpha$. Under the assumptions,
+$K_\lambda\sim\mathrm{Binomial}(n,r)$. For every integer $k$, the binomial lower-tail
+probability $\Pr_r(K_\lambda\le k)$ is nonincreasing in $r$. Therefore the rejection region
+defined by $p_\lambda\le\delta/M$, whose critical value is computed at $\alpha$, has
+probability at most $\delta/M$ under every $r>\alpha$. By the union bound, the event that at
+least one of at most $M$ unsafe candidates is certified has probability at most $\delta$.
+On the complement, the certified set contains only safe policies; arbitrary selection by NFE
+within that set cannot invalidate the statement. If the set is empty, full refinement is
+returned and no statistical assertion about an adaptive candidate is made.
+
+\section{Online algorithm}
+
+For each block, \method repeats: (1) execute one denoising step; (2) summarize the logits and
+token changes on device; (3) append the summary to a length-four history; (4) obtain
+$\widehat r_\theta$ from the CPU estimator; and (5) commit only after the candidate's minimum
+step and patience conditions hold. During calibration only, a commit also clones the
+pre-commit state, runs full refinement, and records Equation~\ref{eq:loss}. Importantly, the
+shadow cannot change the live trajectory. The prompt loss is the maximum over its block
+comparisons.
+
+\section{Full confirmatory results}
+\label{app:results}
+
+\IfFileExists{generated/main_results.tex}{
+  \begin{center}\scriptsize\input{generated/main_results.tex}\end{center}
+  \begin{center}\scriptsize\input{generated/calibration.tex}\end{center}
+  \begin{center}\scriptsize\input{generated/estimator_ablation.tex}\end{center}
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{generated/reliability.pdf}
+    \caption{Simultaneous calibration diagnostics.}
+  \end{figure}
+}{
+  Complete tables are generated only from a validated non-mock run.
+}
+
+\section{Reproducibility checklist}
+
+The artifact records repository and dataset revisions, the config and protocol hashes,
+prompt IDs, raw outputs, correctness, NFE, elapsed time, per-block compact traces, selected
+policy, shadow losses, calibration counts and $p$-values, paired intervals, and every failed
+claim gate. Code execution grading uses a separate subprocess with a timeout. Secrets are
+read from the environment and never written to the command line or artifacts. Exact local
+and Slurm commands are provided in \texttt{docs/rc\_pag\_runbook.md}.
+
+\end{document}

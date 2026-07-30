@@ -96,7 +96,7 @@ def _pair_summary(
 
 
 def _validate_coverage(
-    records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]]
+    records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
 ) -> None:
     if set(records) != set(_MODELS):
         raise ValueError("report coverage must contain exactly LLaDA and Dream")
@@ -107,9 +107,7 @@ def _validate_coverage(
             methods = records[model][dataset]
             if set(methods) != set(_METHODS):
                 raise ValueError(f"method coverage is incomplete for {model}/{dataset}")
-            id_sets = [
-                {str(row["sample_id"]) for row in methods[method]} for method in _METHODS
-            ]
+            id_sets = [{str(row["sample_id"]) for row in methods[method]} for method in _METHODS]
             if not id_sets[0] or any(ids != id_sets[0] for ids in id_sets[1:]):
                 raise ValueError(f"paired coverage is incomplete for {model}/{dataset}")
 
@@ -137,9 +135,16 @@ def _risk_rows(certificate: Mapping[str, Any]) -> list[dict[str, Any]]:
     return values
 
 
-def _selected_risk(risk_rows: Sequence[Mapping[str, Any]], token: str) -> Mapping[str, Any] | None:
+def _selected_risk(
+    risk_rows: Sequence[Mapping[str, Any]], token: str, *, model: str
+) -> Mapping[str, Any] | None:
+    prefix = f"{model}/"
     eligible = [
-        row for row in risk_rows if token in str(row["name"]) and bool(row["certified"])
+        row
+        for row in risk_rows
+        if str(row["name"]).startswith(prefix)
+        and token in str(row["name"])
+        and bool(row["certified"])
     ]
     return (
         min(eligible, key=lambda row: (float(row["mean_nfe"]), str(row["name"])))
@@ -158,9 +163,14 @@ def _audit(
     records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
 ) -> dict[str, Any]:
     risk_rows = _risk_rows(certificate)
-    risk_ok = not bool(certificate.get("fallback", True)) and certificate.get(
-        "selected"
-    ) != "full_budget"
+    selected_risks = {
+        (model, variant): _selected_risk(risk_rows, variant, model=model)
+        for model in _MODELS
+        for variant in ("local", "history")
+    }
+    risk_ok = not bool(certificate.get("fallback", True)) and all(
+        selected is not None for selected in selected_risks.values()
+    )
     beat_adablock_models = {}
     for model in _MODELS:
         candidate_values = [
@@ -189,8 +199,11 @@ def _audit(
         for row in records[model][dataset]["best_nonlearned"]
     ]
     accuracy_lowers = [
-        float(summary[model][dataset]["comparisons"]["rc_pag_history_vs_adablock"]
-              ["accuracy_difference"]["lower"])
+        float(
+            summary[model][dataset]["comparisons"]["rc_pag_history_vs_adablock"][
+                "accuracy_difference"
+            ]["lower"]
+        )
         for model in _MODELS
         for dataset in _IN_DOMAIN
     ]
@@ -210,18 +223,17 @@ def _audit(
         samples=bootstrap_samples,
         seed=seed + 37,
     )
-    local_risk = _selected_risk(risk_rows, "local")
-    history_risk = _selected_risk(risk_rows, "history")
-    history_risk_not_worse = (
-        local_risk is not None
-        and history_risk is not None
-        and float(history_risk["empirical_risk"]) <= float(local_risk["empirical_risk"])
+    history_risk_not_worse = all(
+        selected_risks[(model, "local")] is not None
+        and selected_risks[(model, "history")] is not None
+        and float(selected_risks[(model, "history")]["empirical_risk"])
+        <= float(selected_risks[(model, "local")]["empirical_risk"])
+        for model in _MODELS
     )
     gates = {
         "risk_certificate": risk_ok,
         "beat_adablock_both_models": all(beat_adablock_models.values()),
-        "beat_best_nonlearned": float(np.mean(candidate_all))
-        < float(np.mean(heuristic_all)),
+        "beat_best_nonlearned": float(np.mean(candidate_all)) < float(np.mean(heuristic_all)),
         "accuracy_noninferiority": min(accuracy_lowers) >= minimum_accuracy_lower_ci,
         "history_frontier": history_interval.upper < 0 and history_risk_not_worse,
     }
@@ -295,6 +307,30 @@ def _write_ablation_table(path: Path, summary: Mapping[str, Any]) -> None:
     for method in _METHODS:
         ratio = float(aggregate[method])
         lines.append(f"{_latex_name(method)} & {ratio:.3f} & {100 * (ratio - 1):+.1f}\\% \\\\ ")
+    lines.extend(("\\bottomrule", "\\end{tabular}"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_estimator_table(path: Path, manifest: Mapping[str, Any]) -> None:
+    lines = [
+        "\\begin{tabular}{llllrr}",
+        "\\toprule",
+        "Model & Features & Estimator & Split & Brier & AUROC \\\\",
+        "\\midrule",
+    ]
+    for model, variants in sorted(manifest.get("models", {}).items()):
+        for variant, payload in sorted(variants.items()):
+            for kind, estimator in sorted(payload["estimators"].items()):
+                validation = estimator["validation"]
+                auc = validation["roc_auc"]
+                auc_text = "--" if auc is None else f"{float(auc):.3f}"
+                split = "holdout" if "holdout" in validation["split"] else "small-run"
+                lines.append(
+                    f"{_latex_name(model)} & {_latex_name(variant)} & "
+                    f"{_latex_name(kind)} & {split} & {float(validation['brier']):.3f} & "
+                    f"{auc_text} \\\\"
+                )
     lines.extend(("\\bottomrule", "\\end{tabular}"))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -401,6 +437,7 @@ def write_rc_pag_report(
     bootstrap_samples: int,
     seed: int,
     minimum_accuracy_lower_ci: float = -0.02,
+    estimator_manifest: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if bootstrap_samples < 1:
         raise ValueError("bootstrap_samples must be positive")
@@ -452,6 +489,8 @@ def write_rc_pag_report(
     _write_main_table(output / "tables" / "main_results.tex", summary)
     _write_calibration_table(output / "tables" / "calibration.tex", risk_rows)
     _write_ablation_table(output / "tables" / "ablations.tex", summary)
+    if estimator_manifest is not None:
+        _write_estimator_table(output / "tables" / "estimator_ablation.tex", estimator_manifest)
     headline = (
         "RC-PAG satisfied every predeclared claim gate."
         if audit["headline_eligible"]

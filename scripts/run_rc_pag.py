@@ -94,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     if run_dir.exists() and any(run_dir.iterdir()) and not args.resume:
         parser.error(f"run directory already exists; pass --resume: {run_dir}")
     if args.mock:
-        runtime = MockRCPAGRuntime(calibration_repetitions=50)
+        runtime = MockRCPAGRuntime(calibration_repetitions=60)
 
         def runtime_factory(model: str) -> MockRCPAGRuntime:
             del model

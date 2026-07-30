@@ -30,11 +30,13 @@ block obtained by continuing refinement from the identical state. It is zero oth
 losses include changed-token fraction and task-correctness regression. The risk certificate is about
 premature commitment, not semantic correctness; task accuracy is measured separately.
 
-A finite, predeclared policy family is calibrated with Learn-then-Test (LTT). Invalid-policy
-selection is controlled at family-wise level \(\delta\). If no candidate is certified, RC-PAG uses a
-full-budget fallback. Under exchangeability of calibration and deployment prompts, this provides the
-paper's finite-sample guarantee: with probability at least \(1-\delta\) over calibration, the selected
-policy is either the fallback or has risk at most \(\alpha\).
+A finite, predeclared policy family is calibrated with Learn-then-Test (LTT). Each model--policy pair
+is a separate hypothesis (six policies times two models), and invalid-policy selection is controlled
+simultaneously over all 12 pairs at family-wise level \(\delta\). If either headline variant lacks a
+certificate for either model, RC-PAG uses a full-budget fallback. Under exchangeability of calibration
+and deployment prompts, this provides the paper's finite-sample guarantee: with probability at least
+\(1-\delta\) over calibration, every selected model-specific policy is either the fallback or has risk
+at most \(\alpha\).
 
 ## Runtime State and Policy
 
@@ -139,7 +141,8 @@ a positive headline when any required gate fails.
 The runner uses a staged funnel:
 
 1. `preflight`: validate CUDA, model access, data, storage, and revisions.
-2. `pilot`: run 32 prompts per model and estimate time, storage, and remaining GPU-hours.
+2. `pilot`: run 32 prompts per model, exercise a forced-stop same-state shadow, and estimate time,
+   storage, and remaining GPU-hours with the complete screening matrix counted.
 3. `collect`: create compact full-budget refinement traces for about 600 prompts per model.
 4. `fit`: train and evaluate risk scores on CPU.
 5. `screen`: evaluate broad policy and feature families offline and on a small development slice.

@@ -183,6 +183,19 @@ class _TracePolicy:
         self.history.append(block)
 
 
+class _PilotStopPolicy(_TracePolicy):
+    """Force one early decision so the pilot exercises the shadow/cache path."""
+
+    def observe(self, observation: StepObservation):
+        should_stop = observation.step_index >= 2
+        return SimpleNamespace(
+            should_stop=should_stop,
+            risk_score=0.0 if should_stop else 1.0,
+            safe_streak=1 if should_stop else 0,
+            reason="pilot_shadow_stop" if should_stop else "continue",
+        )
+
+
 class _HeuristicPolicy(_TracePolicy):
     def __init__(self, kind: str) -> None:
         self.kind = kind
@@ -201,9 +214,7 @@ class _HeuristicPolicy(_TracePolicy):
         churn = 1.0
         if self.previous is not None:
             churn = float(
-                np.mean(
-                    np.asarray(observation.token_ids) != np.asarray(self.previous.token_ids)
-                )
+                np.mean(np.asarray(observation.token_ids) != np.asarray(self.previous.token_ids))
             )
         progress = 1.0 - sum(observation.masked) / observation.block_size
         if self.kind == "fast_dllm_style":
@@ -371,8 +382,7 @@ class UnifiedRCPAGRuntime:
         elif ref.pool.startswith("mbpp"):
             description = row.get("text", row.get("prompt", ""))
             prompt = (
-                f"Write a correct Python solution for this task:\n{description}\n"
-                "Return code only."
+                f"Write a correct Python solution for this task:\n{description}\nReturn code only."
             )
             gold = "tests"
             kind = "code"
@@ -494,6 +504,9 @@ class UnifiedRCPAGRuntime:
             enforcement = "hard_cap"
         elif method == "oracle":
             policy = _TracePolicy()
+        elif method == "pilot_shadow":
+            policy = _PilotStopPolicy()
+            provenance = "pilot_forced_stop_shadow_smoke"
         elif method in {
             "fast_dllm",
             "sched",
@@ -664,7 +677,7 @@ class UnifiedRCPAGRuntime:
             candidate,
             estimator_paths or {},
         )
-        shadow = stage == "calibrate" and candidate is not None
+        shadow = (stage == "calibrate" and candidate is not None) or method == "pilot_shadow"
         if self.device.startswith("cuda"):
             torch.cuda.reset_peak_memory_stats()
             torch.cuda.synchronize()
@@ -718,7 +731,7 @@ class UnifiedRCPAGRuntime:
                 schedules,
                 history_window=self.config.history_window,
             )
-        if stage == "calibrate":
+        if shadow:
             payload["shadow_losses"] = [prompt_loss_from_schedules(schedules)]
         if resolved_method == "oracle":
             oracle_nfe = sum(
@@ -726,8 +739,7 @@ class UnifiedRCPAGRuntime:
                     (
                         int(step["step_index"])
                         for step in block.get("risk_steps", ())
-                        if tuple(step["proposed_tokens"])
-                        == tuple(block.get("final_tokens", ()))
+                        if tuple(step["proposed_tokens"]) == tuple(block.get("final_tokens", ()))
                     ),
                     default=int(block["actual_nfe_used"]),
                 )
@@ -735,6 +747,8 @@ class UnifiedRCPAGRuntime:
             )
             payload["oracle_counterfactual_nfe"] = oracle_nfe
             payload["total_nfe"] = oracle_nfe
+        if stage == "pilot":
+            payload["artifact_bytes"] = len(json.dumps(payload, sort_keys=True).encode("utf-8"))
         return payload
 
     def close(self) -> None:

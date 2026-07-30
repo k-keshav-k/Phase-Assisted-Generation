@@ -9,23 +9,24 @@ from pag.experiments.rc_pag_report import write_rc_pag_report
 
 def _certificate(*, certified: bool = True, mock: bool = False) -> dict:
     candidates = []
-    for name, risk, nfe in (
-        ("local_t025_p2", 0.01, 60.0),
-        ("history_t025_p2", 0.01, 55.0),
-    ):
-        candidates.append(
-            {
-                "name": name,
-                "failures": 2,
-                "count": 300,
-                "empirical_risk": risk,
-                "upper_risk_bound": 0.04,
-                "pvalue": 0.001 if certified else 0.5,
-                "corrected_cutoff": 0.0083,
-                "certified": certified,
-                "mean_nfe": nfe,
-            }
-        )
+    for model in ("llada", "dream"):
+        for name, risk, nfe in (
+            ("local_t025_p2", 0.01, 60.0),
+            ("history_t025_p2", 0.01, 55.0),
+        ):
+            candidates.append(
+                {
+                    "name": f"{model}/{name}",
+                    "failures": 2,
+                    "count": 300,
+                    "empirical_risk": risk,
+                    "upper_risk_bound": 0.04,
+                    "pvalue": 0.001 if certified else 0.5,
+                    "corrected_cutoff": 0.0042,
+                    "certified": certified,
+                    "mean_nfe": nfe,
+                }
+            )
     return {
         "alpha": 0.05,
         "familywise_delta": 0.05,

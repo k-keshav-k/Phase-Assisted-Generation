@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import numpy as np
+from sklearn.metrics import roc_auc_score
 
 from pag.experiments.config import canonical_config_hash, inclusive_range
 from pag.experiments.orchestrator import ControlledStop, environment_metadata
@@ -199,12 +200,8 @@ class RCPAGOrchestrator:
             {
                 "protocol": "risk_calibrated_pag_v1",
                 "config_hash": config.config_hash,
-                "models": {
-                    name: spec.revision for name, spec in sorted(config.models.items())
-                },
-                "datasets": {
-                    name: spec.revision for name, spec in sorted(config.datasets.items())
-                },
+                "models": {name: spec.revision for name, spec in sorted(config.models.items())},
+                "datasets": {name: spec.revision for name, spec in sorted(config.datasets.items())},
             },
         )
         self._runtimes: dict[str, RCPAGRuntime] = {}
@@ -282,9 +279,7 @@ class RCPAGOrchestrator:
     def _run_preflight(self) -> None:
         self._write_manifest("preflight", "running")
         results = {
-            model: dict(
-                self._runtime(model).preflight(model=model, spec=spec, device=self.device)
-            )
+            model: dict(self._runtime(model).preflight(model=model, spec=spec, device=self.device))
             for model, spec in self.config.models.items()
         }
         if not all(bool(result.get("ok")) for result in results.values()):
@@ -335,28 +330,48 @@ class RCPAGOrchestrator:
     def _run_pilot(self) -> None:
         self._write_manifest("pilot", "running")
         refs = self._refs("pilot")
-        self._run_records(stage="pilot", refs=refs, methods=(("full_budget", None),))
+        self._run_records(
+            stage="pilot",
+            refs=refs,
+            methods=(("full_budget", None), ("pilot_shadow", None)),
+        )
         records = [
             row
             for model in self.config.models
             for row in self.store.records(f"pilot/{model}", "full_budget")
         ]
+        shadow_records = [
+            row
+            for model in self.config.models
+            for row in self.store.records(f"pilot/{model}", "pilot_shadow")
+        ]
+        if len(shadow_records) != len(records):
+            raise RuntimeError("pilot shadow coverage does not match full-budget coverage")
+        if not all(bool(row.get("mock")) for row in shadow_records) and any(
+            not row.get("shadow_losses") for row in shadow_records
+        ):
+            raise RuntimeError("real pilot did not exercise a same-state shadow continuation")
         seconds = float(np.mean([float(row["elapsed_sec"]) for row in records]))
         artifact_bytes = float(np.mean([float(row.get("artifact_bytes", 0)) for row in records]))
-        full_gpu_runs = (
-            len(self.config.models)
-            * (
-                self.config.stage_sizes.traces_per_model
-                + len(self.config.candidates) * self.config.stage_sizes.tuning_per_model
-                + len(self.config.candidates) * self.config.stage_sizes.calibration_per_model
-                + sum(self.config.confirmatory_counts.values())
-                * len(self.config.confirmatory_methods)
-            )
+        baseline_screen_methods = sum(
+            method not in {"rc_pag_local", "rc_pag_history"}
+            for method in self.config.development_methods
         )
+        runs_per_model = {
+            "collect": self.config.stage_sizes.traces_per_model,
+            "screen": (baseline_screen_methods + len(self.config.candidates))
+            * self.config.stage_sizes.tuning_per_model,
+            "calibrate": len(self.config.candidates)
+            * self.config.stage_sizes.calibration_per_model,
+            "confirm": sum(self.config.confirmatory_counts.values())
+            * len(self.config.confirmatory_methods),
+        }
+        full_gpu_runs = len(self.config.models) * sum(runs_per_model.values())
         projection = {
             "basis": "pilot wall time; rerun after the 32-prompt real A100 pilot",
             "seconds_per_sample": seconds,
             "bytes_per_sample": artifact_bytes,
+            "projected_runs_per_model_by_stage": runs_per_model,
             "projected_gpu_runs": full_gpu_runs,
             "projected_a100_hours": seconds * full_gpu_runs / 3600,
             "projected_storage_bytes": int(math.ceil(artifact_bytes * full_gpu_runs)),
@@ -381,35 +396,92 @@ class RCPAGOrchestrator:
             rows = self.store.records(f"collect/{model}", "full_budget_shadow")
             if not rows:
                 raise ValueError(f"no collected examples for {model}")
-            examples = tuple(
-                TrainingExample(
-                    features=example["features"],
-                    unsafe=bool(example["unsafe"]),
-                    prompt_id=f"{row['sample_id']}:{example_index}",
-                )
-                for row in rows
-                for example_index, example in enumerate(
-                    row["training_examples"]
-                    if "training_examples" in row
-                    else (
-                        {"features": row["features"], "unsafe": row["unsafe"]},
+            grouped_examples = tuple(
+                tuple(
+                    TrainingExample(
+                        features=example["features"],
+                        unsafe=bool(example["unsafe"]),
+                        prompt_id=f"{row['sample_id']}:{example_index}",
+                    )
+                    for example_index, example in enumerate(
+                        row["training_examples"]
+                        if "training_examples" in row
+                        else ({"features": row["features"], "unsafe": row["unsafe"]},)
                     )
                 )
+                for row in rows
             )
+            examples = tuple(example for group in grouped_examples for example in group)
+            if len(grouped_examples) > 1:
+                validation_groups = grouped_examples[::5]
+                training_groups = tuple(
+                    group for index, group in enumerate(grouped_examples) if index % 5 != 0
+                )
+                if not training_groups:
+                    training_groups = grouped_examples
+                evaluation_split = "deterministic_prompt_holdout_mod5"
+            else:
+                training_groups = validation_groups = grouped_examples
+                evaluation_split = "in_sample_small_run_fallback"
+            training_examples = tuple(example for group in training_groups for example in group)
+            validation_examples = tuple(example for group in validation_groups for example in group)
             metadata[model] = {}
             for variant, include_history in (
                 ("rc_pag_local", False),
                 ("rc_pag_history", True),
             ):
-                estimator = RiskEstimator.fit(
-                    examples,
-                    kind=self.config.estimator_kinds[0],
-                    include_history=include_history,
-                    history_window=self.config.history_window,
-                    seed=self.config.seed,
-                )
-                path = self.run_dir / "estimators" / f"{model}_{variant}.joblib"
-                metadata[model][variant] = estimator.save(path)
+                ablations: dict[str, object] = {}
+                for kind in self.config.estimator_kinds:
+                    evaluation_estimator = RiskEstimator.fit(
+                        training_examples,
+                        kind=kind,
+                        include_history=include_history,
+                        history_window=self.config.history_window,
+                        seed=self.config.seed,
+                    )
+                    scores = np.asarray(
+                        [
+                            evaluation_estimator.predict_risk(example.features)
+                            for example in validation_examples
+                        ],
+                        dtype=np.float64,
+                    )
+                    labels = np.asarray(
+                        [int(example.unsafe) for example in validation_examples],
+                        dtype=np.int64,
+                    )
+                    final_estimator = RiskEstimator.fit(
+                        examples,
+                        kind=kind,
+                        include_history=include_history,
+                        history_window=self.config.history_window,
+                        seed=self.config.seed,
+                    )
+                    is_primary = kind == self.config.estimator_kinds[0]
+                    suffix = "" if is_primary else f"_{kind}"
+                    path = self.run_dir / "estimators" / f"{model}_{variant}{suffix}.joblib"
+                    saved = final_estimator.save(path)
+                    validation_auc = (
+                        float(roc_auc_score(labels, scores))
+                        if np.unique(labels).size == 2
+                        else None
+                    )
+                    ablations[kind] = {
+                        **saved,
+                        "path": str(path.relative_to(self.run_dir)),
+                        "deployment_estimator": is_primary,
+                        "validation": {
+                            "split": evaluation_split,
+                            "examples": len(validation_examples),
+                            "positive_fraction": float(np.mean(labels)),
+                            "brier": float(np.mean((scores - labels) ** 2)),
+                            "roc_auc": validation_auc,
+                        },
+                    }
+                metadata[model][variant] = {
+                    "primary_kind": self.config.estimator_kinds[0],
+                    "estimators": ablations,
+                }
         self.store.write_named("estimators/manifest.json", {"models": metadata})
         self._write_manifest("fit", "completed", estimators=metadata)
 
@@ -420,6 +492,8 @@ class RCPAGOrchestrator:
             "alpha": self.config.risk.alpha,
             "delta": self.config.risk.delta,
             "loss": self.config.risk.loss,
+            "multiplicity_unit": "model_policy_pair",
+            "models": list(self.config.models),
             "candidates": [asdict(candidate) for candidate in self.config.candidates],
         }
         return {**core, "protocol_identity": canonical_config_hash(core)}
@@ -473,8 +547,7 @@ class RCPAGOrchestrator:
             for method in sorted(nonlearned)
         }
         count = sum(
-            len(self.store.records(f"screen/{model}", "adablock"))
-            for model in self.config.models
+            len(self.store.records(f"screen/{model}", "adablock")) for model in self.config.models
         )
         allowed_loss = max(2, math.floor(0.02 * count))
         baseline_correct = method_correct["adablock"]
@@ -511,29 +584,22 @@ class RCPAGOrchestrator:
             methods=tuple((candidate.name, candidate) for candidate in self.config.candidates),
         )
         candidates: list[CandidateRisk] = []
-        for candidate in self.config.candidates:
-            rows = [
-                row
-                for model in self.config.models
-                for row in self.store.records(f"calibrate/{model}", candidate.name)
-            ]
-            losses: tuple[int, ...] = tuple(
-                int(loss)
-                for row in rows
-                for loss in (
-                    row["shadow_losses"]
-                    if "shadow_losses" in row
-                    else (row["loss"],)
+        for model in self.config.models:
+            for candidate in self.config.candidates:
+                rows = self.store.records(f"calibrate/{model}", candidate.name)
+                losses: tuple[int, ...] = tuple(
+                    int(loss)
+                    for row in rows
+                    for loss in (row["shadow_losses"] if "shadow_losses" in row else (row["loss"],))
                 )
-            )
-            candidates.append(
-                CandidateRisk(
-                    candidate.name,
-                    losses,
-                    mean_nfe=float(np.mean([float(row["total_nfe"]) for row in rows])),
-                    protocol_identity=str(family["protocol_identity"]),
+                candidates.append(
+                    CandidateRisk(
+                        f"{model}/{candidate.name}",
+                        losses,
+                        mean_nfe=float(np.mean([float(row["total_nfe"]) for row in rows])),
+                        protocol_identity=str(family["protocol_identity"]),
+                    )
                 )
-            )
         certificate = certify_candidates(
             candidates,
             alpha=self.config.risk.alpha,
@@ -548,11 +614,12 @@ class RCPAGOrchestrator:
         self.store.write_named("risk_certificate.json", payload)
         self._write_manifest("calibrate", "completed", certificate=payload)
 
-    def _selected_by_variant(self, certificate: Mapping[str, Any]) -> dict[str, str]:
+    def _selected_by_variant(self, certificate: Mapping[str, Any], *, model: str) -> dict[str, str]:
+        prefix = f"{model}/"
         certified = {
-            str(item["name"]): float(item["mean_nfe"])
+            str(item["name"])[len(prefix) :]: float(item["mean_nfe"])
             for item in certificate["candidates"]
-            if bool(item["certified"])
+            if bool(item["certified"]) and str(item["name"]).startswith(prefix)
         }
         selected: dict[str, str] = {}
         for variant in ("rc_pag_local", "rc_pag_history"):
@@ -571,16 +638,29 @@ class RCPAGOrchestrator:
         )
         if bool(certificate["fallback"]):
             raise ControlledStop("no certified policy; confirmation was not started")
-        selected_by_variant = self._selected_by_variant(certificate)
-        if set(selected_by_variant) != {"rc_pag_local", "rc_pag_history"}:
-            raise ControlledStop("no certified policy for both headline variants")
+        selected_by_model = {
+            model: self._selected_by_variant(certificate, model=model)
+            for model in self.config.models
+        }
+        required_variants = {"rc_pag_local", "rc_pag_history"}
+        if any(set(selected) != required_variants for selected in selected_by_model.values()):
+            raise ControlledStop(
+                "no simultaneously certified local and history policy for every model"
+            )
         screening = json.loads(
             (self.run_dir / "screening_summary.json").read_text(encoding="utf-8")
         )
-        selected_nfe = next(
-            float(item["mean_nfe"])
-            for item in certificate["candidates"]
-            if item["name"] == certificate["selected"]
+        selected_names = {
+            f"{model}/{selected_by_model[model]['rc_pag_history']}" for model in self.config.models
+        }
+        selected_nfe = float(
+            np.mean(
+                [
+                    float(item["mean_nfe"])
+                    for item in certificate["candidates"]
+                    if item["name"] in selected_names
+                ]
+            )
         )
         if selected_nfe >= float(screening["best_nonlearned_mean_nfe"]):
             raise ControlledStop(
@@ -589,16 +669,17 @@ class RCPAGOrchestrator:
             )
         self._write_manifest("confirm", "running")
         candidate_lookup = {candidate.name: candidate for candidate in self.config.candidates}
-        methods = (
-            ("adablock", None),
-            ("best_nonlearned", None),
-            ("rc_pag_local", candidate_lookup[selected_by_variant["rc_pag_local"]]),
-            ("rc_pag_history", candidate_lookup[selected_by_variant["rc_pag_history"]]),
-        )
         estimator_paths = {
             path.stem: str(path) for path in sorted((self.run_dir / "estimators").glob("*.joblib"))
         }
         for model in self.config.models:
+            selected = selected_by_model[model]
+            methods = (
+                ("adablock", None),
+                ("best_nonlearned", None),
+                ("rc_pag_local", candidate_lookup[selected["rc_pag_local"]]),
+                ("rc_pag_history", candidate_lookup[selected["rc_pag_history"]]),
+            )
             runtime = self._runtime(model)
             for dataset in self.config.confirmatory_counts:
                 stage = f"confirm/{dataset}/{model}"
@@ -623,14 +704,12 @@ class RCPAGOrchestrator:
         self.store.write_named(
             "frozen_confirmatory_policy.json",
             {
-                "selected_by_variant": selected_by_variant,
+                "selected_by_model": selected_by_model,
                 "best_nonlearned": screening["best_nonlearned"],
                 "config_hash": self.config.config_hash,
             },
         )
-        self._write_manifest(
-            "confirm", "completed", selected_by_variant=selected_by_variant
-        )
+        self._write_manifest("confirm", "completed", selected_by_model=selected_by_model)
 
     def _run_report(self) -> None:
         self._write_manifest("report", "running")
@@ -655,10 +734,14 @@ class RCPAGOrchestrator:
         certificate = json.loads(
             (self.run_dir / "risk_certificate.json").read_text(encoding="utf-8")
         )
+        estimator_manifest = json.loads(
+            (self.run_dir / "estimators" / "manifest.json").read_text(encoding="utf-8")
+        )
         payload = {
             "config_hash": self.config.config_hash,
             "certificate": certificate,
             "coverage": counts,
+            "estimator_manifest": "estimators/manifest.json",
             "mock": bool(certificate.get("mock", False)),
         }
         self.store.write_named("report/inputs.json", payload)
@@ -669,6 +752,7 @@ class RCPAGOrchestrator:
             bootstrap_samples=self.config.statistics.bootstrap_samples,
             seed=self.config.seed,
             minimum_accuracy_lower_ci=self.config.claim_gates.minimum_accuracy_lower_ci,
+            estimator_manifest=estimator_manifest,
         )
         self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 

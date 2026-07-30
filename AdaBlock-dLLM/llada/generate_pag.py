@@ -21,6 +21,38 @@ from pag.experiments.rc_pag_adapter import (
 from pag.experiments.rc_pag_features import RealizedBlock
 
 
+def _compute_block_length(
+    logits: torch.Tensor,
+    predicted_tokens: torch.Tensor,
+    prompt: torch.Tensor,
+    gen_length: int,
+    generated_length: int,
+    default_block_length: int,
+    *,
+    delimiter_ids: list[int],
+    delimiter_threshold: float,
+) -> int:
+    """AdaBlock delimiter rule without importing its heavyweight CLI module."""
+    prompt_length = prompt.shape[1]
+    block_start = prompt_length + generated_length
+    remaining_length = gen_length - generated_length
+    window_size = min(int(0.25 * gen_length), remaining_length)
+    window_tokens = predicted_tokens[0, block_start : block_start + window_size]
+    delimiter_mask = torch.zeros_like(window_tokens, dtype=torch.bool)
+    for token_id in delimiter_ids:
+        delimiter_mask |= window_tokens == token_id
+    if not torch.any(delimiter_mask):
+        return min(default_block_length, remaining_length)
+    delimiter_pos = block_start + torch.nonzero(delimiter_mask).squeeze(-1)
+    delimiter_logits = logits[0, delimiter_pos, predicted_tokens[0, delimiter_pos]]
+    log_sum_exp = torch.logsumexp(logits[0, delimiter_pos, :], dim=-1)
+    delimiter_confidences = torch.exp(delimiter_logits - log_sum_exp)
+    max_confidence, best_index = torch.max(delimiter_confidences, dim=0)
+    if max_confidence.item() < delimiter_threshold:
+        return min(default_block_length, remaining_length)
+    return int(delimiter_pos[best_index].item() - block_start + 1)
+
+
 def _rc_pag_observation(
     logits: torch.Tensor,
     current_tokens: torch.Tensor,
@@ -334,8 +366,6 @@ def generate_pag(
         stable=False,
         complete=True,
     )
-    from generate_adablock import compute_block_length
-
     x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
         model.device
     )
@@ -358,7 +388,7 @@ def generate_pag(
         logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
-        block_length = compute_block_length(
+        block_length = _compute_block_length(
             logits,
             predicted_tokens,
             prompt,
@@ -627,8 +657,6 @@ def generate_pag_prefix_cache(
         stable=False,
         complete=True,
     )
-    from generate_adablock import compute_block_length
-
     x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
         model.device
     )
@@ -652,7 +680,7 @@ def generate_pag_prefix_cache(
         logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
-        block_length = compute_block_length(
+        block_length = _compute_block_length(
             logits,
             predicted_tokens,
             prompt,
@@ -937,8 +965,6 @@ def generate_pag_dual_cache(
         stable=False,
         complete=True,
     )
-    from generate_adablock import compute_block_length
-
     x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(
         model.device
     )
@@ -962,7 +988,7 @@ def generate_pag_dual_cache(
         logits_with_noise = add_gumbel_noise(logits, temperature=temperature)
         predicted_tokens = torch.argmax(logits_with_noise, dim=-1)
 
-        block_length = compute_block_length(
+        block_length = _compute_block_length(
             logits,
             predicted_tokens,
             prompt,

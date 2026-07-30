@@ -16,7 +16,7 @@ def config():
 
 
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
-    runtime = MockRCPAGRuntime(calibration_repetitions=50)
+    runtime = MockRCPAGRuntime(calibration_repetitions=60)
     runner = RCPAGOrchestrator(
         config,
         tmp_path,
@@ -32,6 +32,14 @@ def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
     assert (tmp_path / "risk_certificate.json").is_file()
     assert (tmp_path / "policy_family.json").is_file()
     assert (tmp_path / "report" / "inputs.json").is_file()
+    assert (tmp_path / "report" / "tables" / "estimator_ablation.tex").is_file()
+    estimator_manifest = json.loads((tmp_path / "estimators" / "manifest.json").read_text())
+    for model in ("llada", "dream"):
+        for variant in ("rc_pag_local", "rc_pag_history"):
+            assert set(estimator_manifest["models"][model][variant]["estimators"]) == {
+                "hist_gradient_boosting",
+                "logistic",
+            }
     for stage in runner.STAGES[: runner.STAGES.index("report") + 1]:
         manifest = json.loads((tmp_path / "manifests" / f"{stage}.json").read_text())
         assert manifest["status"] == "completed"
@@ -39,7 +47,7 @@ def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
 
 
 def test_confirmation_requires_certificate(tmp_path, config):
-    runtime = MockRCPAGRuntime(unsafe=True, calibration_repetitions=50)
+    runtime = MockRCPAGRuntime(unsafe=True, calibration_repetitions=60)
     runner = RCPAGOrchestrator(
         config,
         tmp_path,
@@ -54,10 +62,8 @@ def test_confirmation_requires_certificate(tmp_path, config):
     assert not (tmp_path / "manifests" / "confirm.json").is_file()
 
 
-def test_confirmation_stops_when_certified_policy_loses_compute_futility_gate(
-    tmp_path, config
-):
-    runtime = MockRCPAGRuntime(candidate_nfe_offset=20.0, calibration_repetitions=50)
+def test_confirmation_stops_when_certified_policy_loses_compute_futility_gate(tmp_path, config):
+    runtime = MockRCPAGRuntime(candidate_nfe_offset=20.0, calibration_repetitions=60)
     runner = RCPAGOrchestrator(
         config,
         tmp_path,
@@ -85,3 +91,10 @@ def test_pilot_writes_compute_projection(tmp_path, config):
     assert projection["seconds_per_sample"] > 0
     assert projection["projected_a100_hours"] > 0
     assert projection["projected_storage_bytes"] > 0
+    assert projection["projected_runs_per_model_by_stage"] == {
+        "calibrate": 1800,
+        "collect": 600,
+        "confirm": 8960,
+        "screen": 2700,
+    }
+    assert projection["projected_gpu_runs"] == 28120
