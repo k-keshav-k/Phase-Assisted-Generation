@@ -10,13 +10,17 @@ def test_workshop_paper_defers_numbers_and_states_strict_risk() -> None:
     assert "generated/headline.tex" in paper
     assert "Confirmatory results pending" in paper
     assert "RC-PAG-MAIN-PAGES" in paper
+    assert "500 GSM8K" in paper
+    assert "300 MATH-500" in paper
+    assert "100 sanitized MBPP" in paper
+    assert "100 HumanEval" in paper
 
 
 def test_paper_builder_guards_mock_results_and_page_limit() -> None:
     builder = Path("scripts/build_rc_pag_paper.sh").read_text(encoding="utf-8")
 
     assert "refusing to build numerical paper results from mock evidence" in builder
-    assert 'len(names) != 12' in builder
+    assert "len(names) != 12" in builder
     assert "MAIN_PAGES > 8" in builder
     assert "neurips_2026.sty" in builder
 

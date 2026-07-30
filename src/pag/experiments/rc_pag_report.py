@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 _MODELS = ("llada", "dream")
 _DATASETS = ("gsm8k_test", "math500", "mbpp_sanitized", "humaneval")
 _IN_DOMAIN = _DATASETS[:3]
-_METHODS = ("adablock", "best_nonlearned", "rc_pag_local", "rc_pag_history")
+_DEFAULT_METHODS = ("adablock", "best_nonlearned", "rc_pag_local", "rc_pag_history")
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -97,6 +97,7 @@ def _pair_summary(
 
 def _validate_coverage(
     records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
+    expected_methods: Sequence[str],
 ) -> None:
     if set(records) != set(_MODELS):
         raise ValueError("report coverage must contain exactly LLaDA and Dream")
@@ -105,9 +106,11 @@ def _validate_coverage(
             raise ValueError(f"report coverage is incomplete for {model}")
         for dataset in _DATASETS:
             methods = records[model][dataset]
-            if set(methods) != set(_METHODS):
+            if set(methods) != set(expected_methods):
                 raise ValueError(f"method coverage is incomplete for {model}/{dataset}")
-            id_sets = [{str(row["sample_id"]) for row in methods[method]} for method in _METHODS]
+            id_sets = [
+                {str(row["sample_id"]) for row in methods[method]} for method in expected_methods
+            ]
             if not id_sets[0] or any(ids != id_sets[0] for ids in id_sets[1:]):
                 raise ValueError(f"paired coverage is incomplete for {model}/{dataset}")
 
@@ -161,6 +164,8 @@ def _audit(
     bootstrap_samples: int,
     seed: int,
     records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
+    primary_method: str,
+    require_history_frontier_ci: bool,
 ) -> dict[str, Any]:
     risk_rows = _risk_rows(certificate)
     selected_risks = {
@@ -176,7 +181,7 @@ def _audit(
         candidate_values = [
             float(row["total_nfe"])
             for dataset in _IN_DOMAIN
-            for row in records[model][dataset]["rc_pag_history"]
+            for row in records[model][dataset][primary_method]
         ]
         baseline_values = [
             float(row["total_nfe"])
@@ -190,7 +195,7 @@ def _audit(
         float(row["total_nfe"])
         for model in _MODELS
         for dataset in _IN_DOMAIN
-        for row in records[model][dataset]["rc_pag_history"]
+        for row in records[model][dataset][primary_method]
     ]
     heuristic_all = [
         float(row["total_nfe"])
@@ -200,43 +205,64 @@ def _audit(
     ]
     accuracy_lowers = [
         float(
-            summary[model][dataset]["comparisons"]["rc_pag_history_vs_adablock"][
+            summary[model][dataset]["comparisons"][f"{primary_method}_vs_adablock"][
                 "accuracy_difference"
             ]["lower"]
         )
         for model in _MODELS
         for dataset in _IN_DOMAIN
     ]
-    history_nfe: list[float] = []
-    local_nfe: list[float] = []
-    for model in _MODELS:
-        for dataset in _IN_DOMAIN:
-            pairs = pair_records(
-                records[model][dataset]["rc_pag_history"],
-                records[model][dataset]["rc_pag_local"],
-            )
-            history_nfe.extend(float(left["total_nfe"]) for left, _ in pairs)
-            local_nfe.extend(float(right["total_nfe"]) for _, right in pairs)
-    history_interval = paired_bootstrap(
-        history_nfe,
-        local_nfe,
-        samples=bootstrap_samples,
-        seed=seed + 37,
-    )
-    history_risk_not_worse = all(
-        selected_risks[(model, "local")] is not None
-        and selected_risks[(model, "history")] is not None
-        and float(selected_risks[(model, "history")]["empirical_risk"])
-        <= float(selected_risks[(model, "local")]["empirical_risk"])
-        for model in _MODELS
-    )
     gates = {
         "risk_certificate": risk_ok,
         "beat_adablock_both_models": all(beat_adablock_models.values()),
         "beat_best_nonlearned": float(np.mean(candidate_all)) < float(np.mean(heuristic_all)),
         "accuracy_noninferiority": min(accuracy_lowers) >= minimum_accuracy_lower_ci,
-        "history_frontier": history_interval.upper < 0 and history_risk_not_worse,
     }
+    details: dict[str, Any] = {
+        "primary_method": primary_method,
+        "beat_adablock_models": beat_adablock_models,
+        "minimum_accuracy_lower_ci": min(accuracy_lowers),
+        "required_accuracy_lower_ci": minimum_accuracy_lower_ci,
+        "history_frontier_required": require_history_frontier_ci,
+    }
+    if require_history_frontier_ci:
+        if any(
+            "rc_pag_local" not in records[model][dataset]
+            or "rc_pag_history" not in records[model][dataset]
+            for model in _MODELS
+            for dataset in _IN_DOMAIN
+        ):
+            raise ValueError("history frontier requires paired local and history records")
+        history_nfe: list[float] = []
+        local_nfe: list[float] = []
+        for model in _MODELS:
+            for dataset in _IN_DOMAIN:
+                pairs = pair_records(
+                    records[model][dataset]["rc_pag_history"],
+                    records[model][dataset]["rc_pag_local"],
+                )
+                history_nfe.extend(float(left["total_nfe"]) for left, _ in pairs)
+                local_nfe.extend(float(right["total_nfe"]) for _, right in pairs)
+        history_interval = paired_bootstrap(
+            history_nfe,
+            local_nfe,
+            samples=bootstrap_samples,
+            seed=seed + 37,
+        )
+        history_risk_not_worse = all(
+            selected_risks[(model, "local")] is not None
+            and selected_risks[(model, "history")] is not None
+            and float(selected_risks[(model, "history")]["empirical_risk"])
+            <= float(selected_risks[(model, "local")]["empirical_risk"])
+            for model in _MODELS
+        )
+        gates["history_frontier"] = history_interval.upper < 0 and history_risk_not_worse
+        details.update(
+            {
+                "history_minus_local_nfe": asdict(history_interval),
+                "history_risk_not_worse": history_risk_not_worse,
+            }
+        )
     if bool(certificate.get("mock", False)):
         gates["non_mock_evidence"] = False
     failed = [name for name, passed in gates.items() if not passed]
@@ -244,13 +270,7 @@ def _audit(
         "headline_eligible": not failed,
         "failed_gates": failed,
         "gates": gates,
-        "details": {
-            "beat_adablock_models": beat_adablock_models,
-            "minimum_accuracy_lower_ci": min(accuracy_lowers),
-            "required_accuracy_lower_ci": minimum_accuracy_lower_ci,
-            "history_minus_local_nfe": asdict(history_interval),
-            "history_risk_not_worse": history_risk_not_worse,
-        },
+        "details": details,
     }
 
 
@@ -258,7 +278,7 @@ def _latex_name(value: str) -> str:
     return value.replace("_", "\\_")
 
 
-def _write_main_table(path: Path, summary: Mapping[str, Any]) -> None:
+def _write_main_table(path: Path, summary: Mapping[str, Any], methods: Sequence[str]) -> None:
     lines = [
         "\\begin{tabular}{lllrr}",
         "\\toprule",
@@ -267,7 +287,7 @@ def _write_main_table(path: Path, summary: Mapping[str, Any]) -> None:
     ]
     for model in _MODELS:
         for dataset in _DATASETS:
-            for method in _METHODS:
+            for method in methods:
                 values = summary[model][dataset]["methods"][method]
                 lines.append(
                     f"{_latex_name(model)} & {_latex_name(dataset)} & {_latex_name(method)} & "
@@ -296,7 +316,7 @@ def _write_calibration_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> N
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _write_ablation_table(path: Path, summary: Mapping[str, Any]) -> None:
+def _write_ablation_table(path: Path, summary: Mapping[str, Any], methods: Sequence[str]) -> None:
     aggregate = summary["normalized_cross_model"]
     lines = [
         "\\begin{tabular}{lrr}",
@@ -304,7 +324,7 @@ def _write_ablation_table(path: Path, summary: Mapping[str, Any]) -> None:
         "Variant & Normalized NFE & $\\Delta$ vs. AdaBlock \\\\",
         "\\midrule",
     ]
-    for method in _METHODS:
+    for method in methods:
         ratio = float(aggregate[method])
         lines.append(f"{_latex_name(method)} & {ratio:.3f} & {100 * (ratio - 1):+.1f}\\% \\\\ ")
     lines.extend(("\\bottomrule", "\\end{tabular}"))
@@ -340,11 +360,12 @@ def _write_figures(
     output: Path,
     summary: Mapping[str, Any],
     risk_rows: Sequence[Mapping[str, Any]],
+    methods: Sequence[str],
 ) -> None:
     figure, axis = plt.subplots(figsize=(6.2, 4.0))
     markers = {"llada": "o", "dream": "s"}
     for model in _MODELS:
-        for method in _METHODS:
+        for method in methods:
             nfe = np.mean(
                 [summary[model][dataset]["methods"][method]["mean_nfe"] for dataset in _IN_DOMAIN]
             )
@@ -398,6 +419,7 @@ def _write_figures(
 def _write_failures(
     path: Path,
     records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
+    methods: Sequence[str],
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as file_obj:
@@ -412,7 +434,7 @@ def _write_failures(
                     str(row["sample_id"]): _is_correct(row)
                     for row in records[model][dataset]["adablock"]
                 }
-                for method in _METHODS[1:]:
+                for method in methods[1:]:
                     for row in records[model][dataset][method]:
                         candidate = _is_correct(row)
                         reference = baseline[str(row["sample_id"])]
@@ -438,32 +460,38 @@ def write_rc_pag_report(
     seed: int,
     minimum_accuracy_lower_ci: float = -0.02,
     estimator_manifest: Mapping[str, Any] | None = None,
+    methods: Sequence[str] = _DEFAULT_METHODS,
+    primary_method: str = "rc_pag_history",
+    require_history_frontier_ci: bool = True,
 ) -> dict[str, Any]:
     if bootstrap_samples < 1:
         raise ValueError("bootstrap_samples must be positive")
-    _validate_coverage(records)
+    methods = tuple(methods)
+    if not methods or methods[0] != "adablock" or primary_method not in methods:
+        raise ValueError("report methods must start with AdaBlock and include the primary method")
+    _validate_coverage(records, methods)
     risk_rows = _risk_rows(certificate)
     summary: dict[str, Any] = {}
     for model_index, model in enumerate(_MODELS):
         summary[model] = {}
         for dataset_index, dataset in enumerate(_DATASETS):
-            methods = records[model][dataset]
-            method_summary = {method: _summary(methods[method]) for method in _METHODS}
+            method_records = records[model][dataset]
+            method_summary = {method: _summary(method_records[method]) for method in methods}
             comparisons = {
                 f"{method}_vs_adablock": _pair_summary(
-                    list(methods[method]),
-                    list(methods["adablock"]),
+                    list(method_records[method]),
+                    list(method_records["adablock"]),
                     bootstrap_samples=bootstrap_samples,
                     seed=seed + 100 * model_index + 10 * dataset_index,
                 )
-                for method in _METHODS[1:]
+                for method in methods[1:]
             }
             summary[model][dataset] = {
                 "methods": method_summary,
                 "comparisons": comparisons,
             }
     normalized = {}
-    for method in _METHODS:
+    for method in methods:
         ratios = [
             summary[model][dataset]["methods"][method]["mean_nfe"]
             / summary[model][dataset]["methods"]["adablock"]["mean_nfe"]
@@ -479,6 +507,8 @@ def write_rc_pag_report(
         bootstrap_samples=bootstrap_samples,
         seed=seed,
         records=records,
+        primary_method=primary_method,
+        require_history_frontier_ci=require_history_frontier_ci,
     )
     output = Path(run_dir) / "report"
     figures = output / "figures"
@@ -486,9 +516,9 @@ def write_rc_pag_report(
     _write_json(output / "summary.json", summary)
     _write_json(output / "claim_audit.json", audit)
     _write_json(output / "risk_diagnostics.json", {"candidates": risk_rows})
-    _write_main_table(output / "tables" / "main_results.tex", summary)
+    _write_main_table(output / "tables" / "main_results.tex", summary, methods)
     _write_calibration_table(output / "tables" / "calibration.tex", risk_rows)
-    _write_ablation_table(output / "tables" / "ablations.tex", summary)
+    _write_ablation_table(output / "tables" / "ablations.tex", summary, methods)
     if estimator_manifest is not None:
         _write_estimator_table(output / "tables" / "estimator_ablation.tex", estimator_manifest)
     headline = (
@@ -498,6 +528,6 @@ def write_rc_pag_report(
     )
     (output / "tables" / "headline.tex").write_text(headline + "\n", encoding="utf-8")
     (output / "headline.tex").write_text(headline + "\n", encoding="utf-8")
-    _write_figures(figures, summary, risk_rows)
-    _write_failures(output / "failure_taxonomy.csv", records)
+    _write_figures(figures, summary, risk_rows, methods)
+    _write_failures(output / "failure_taxonomy.csv", records, methods)
     return audit

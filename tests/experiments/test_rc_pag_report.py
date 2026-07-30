@@ -62,6 +62,14 @@ def _records(*, history_nfe: float = 55.0) -> dict:
     return result
 
 
+def _workshop_records() -> dict:
+    records = _records()
+    for model in records.values():
+        for dataset in model.values():
+            dataset.pop("rc_pag_local")
+    return records
+
+
 def test_failed_risk_certificate_blocks_headline(tmp_path):
     audit = write_rc_pag_report(
         tmp_path,
@@ -119,3 +127,19 @@ def test_missing_paired_coverage_is_an_error(tmp_path):
             bootstrap_samples=100,
             seed=7,
         )
+
+
+def test_workshop_report_accepts_single_certified_variant(tmp_path):
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=_workshop_records(),
+        certificate=_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_history"),
+        primary_method="rc_pag_history",
+        require_history_frontier_ci=False,
+    )
+
+    assert audit["headline_eligible"]
+    assert "history_frontier" not in audit["gates"]

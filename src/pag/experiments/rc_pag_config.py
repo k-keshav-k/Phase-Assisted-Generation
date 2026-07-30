@@ -76,6 +76,13 @@ class ClaimGateSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class ConfirmatorySamplingSpec:
+    strategy: str
+    strata: int
+    population_sizes: dict[str, int]
+
+
+@dataclass(frozen=True, slots=True)
 class RCPAGConfig:
     schema_version: int
     seed: int
@@ -89,7 +96,9 @@ class RCPAGConfig:
     candidates: tuple[PolicyCandidateSpec, ...]
     risk: RiskSpec
     statistics: StatisticsSpec
+    confirmation_profile: str
     confirmatory_counts: dict[str, int]
+    confirmatory_sampling: ConfirmatorySamplingSpec
     development_methods: tuple[str, ...]
     confirmatory_methods: tuple[str, ...]
     claim_gates: ClaimGateSpec
@@ -107,11 +116,17 @@ _EXPECTED_DATASETS = {
     "mbpp_sanitized",
     "humaneval",
 }
-_EXPECTED_CONFIRMATORY = {
+_FULL_CONFIRMATORY = {
     "gsm8k_test": 1319,
     "math500": 500,
     "mbpp_sanitized": 257,
     "humaneval": 164,
+}
+_WORKSHOP_CONFIRMATORY = {
+    "gsm8k_test": 500,
+    "math500": 300,
+    "mbpp_sanitized": 100,
+    "humaneval": 100,
 }
 _EXPECTED_STAGES = {
     "pilot": 32,
@@ -190,9 +205,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
             role_count += len(indices)
             for previous_role, previous_indices in claimed.setdefault(pool, []):
                 if indices & previous_indices:
-                    raise ValueError(
-                        f"split overlap for {pool}: {previous_role} and {role}"
-                    )
+                    raise ValueError(f"split overlap for {pool}: {previous_role} and {role}")
             claimed[pool].append((role, indices))
         if role_count != _EXPECTED_STAGES[role]:
             raise ValueError(
@@ -260,22 +273,39 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if float(statistics.get("confidence", 0)) != 0.95:
         raise ValueError("confidence must remain 0.95")
 
-    confirmatory = {
-        name: int(value) for name, value in payload.get("confirmatory", {}).items()
+    confirmation_profile = str(payload.get("confirmation_profile", "full"))
+    confirmatory = {name: int(value) for name, value in payload.get("confirmatory", {}).items()}
+    expected_confirmatory = {
+        "full": _FULL_CONFIRMATORY,
+        "workshop_48h": _WORKSHOP_CONFIRMATORY,
     }
-    if confirmatory != _EXPECTED_CONFIRMATORY:
-        raise ValueError("confirmatory counts do not match the frozen benchmarks")
+    if confirmation_profile not in expected_confirmatory:
+        raise ValueError("unknown confirmation profile")
+    if confirmatory != expected_confirmatory[confirmation_profile]:
+        raise ValueError(f"confirmatory counts do not match the {confirmation_profile} profile")
+
+    sampling = payload.get("confirmatory_sampling")
+    if confirmation_profile == "full":
+        if sampling is not None:
+            raise ValueError("the full confirmation profile uses every benchmark row")
+    else:
+        expected_sampling = {
+            "strategy": "index_stratified",
+            "strata": 10,
+            "population_sizes": _FULL_CONFIRMATORY,
+        }
+        if sampling != expected_sampling:
+            raise ValueError("workshop confirmation must use the frozen stratified sampler")
 
     methods = payload.get("methods", {})
     development = set(methods.get("development", ()))
     if development != _REQUIRED_DEVELOPMENT_METHODS:
         raise ValueError("development method family does not match the frozen protocol")
-    if tuple(methods.get("confirmatory", ())) != (
-        "adablock",
-        "best_nonlearned",
-        "rc_pag_local",
-        "rc_pag_history",
-    ):
+    expected_methods = {
+        "full": ("adablock", "best_nonlearned", "rc_pag_local", "rc_pag_history"),
+        "workshop_48h": ("adablock", "best_nonlearned", "rc_pag_history"),
+    }
+    if tuple(methods.get("confirmatory", ())) != expected_methods[confirmation_profile]:
         raise ValueError("confirmatory methods do not match the frozen protocol")
 
     gates = payload.get("claim_gates", {})
@@ -284,7 +314,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "beat_adablock_both_models": True,
         "beat_best_nonlearned": True,
         "minimum_accuracy_lower_ci": -0.02,
-        "require_history_frontier_ci": True,
+        "require_history_frontier_ci": confirmation_profile == "full",
     }
     if gates != expected_gates:
         raise ValueError("claim gates do not match the frozen protocol")
@@ -322,6 +352,22 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
     risk = payload["risk"]
     statistics = payload["statistics"]
     gates = payload["claim_gates"]
+    confirmation_profile = str(payload.get("confirmation_profile", "full"))
+    raw_sampling = payload.get("confirmatory_sampling")
+    if raw_sampling is None:
+        confirmatory_sampling = ConfirmatorySamplingSpec(
+            strategy="full",
+            strata=1,
+            population_sizes=dict(_FULL_CONFIRMATORY),
+        )
+    else:
+        confirmatory_sampling = ConfirmatorySamplingSpec(
+            strategy=str(raw_sampling["strategy"]),
+            strata=int(raw_sampling["strata"]),
+            population_sizes={
+                name: int(value) for name, value in raw_sampling["population_sizes"].items()
+            },
+        )
     return RCPAGConfig(
         schema_version=int(payload["schema_version"]),
         seed=int(payload["seed"]),
@@ -360,9 +406,9 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             bootstrap_samples=int(statistics["bootstrap_samples"]),
             confidence=float(statistics["confidence"]),
         ),
-        confirmatory_counts={
-            name: int(value) for name, value in payload["confirmatory"].items()
-        },
+        confirmation_profile=confirmation_profile,
+        confirmatory_counts={name: int(value) for name, value in payload["confirmatory"].items()},
+        confirmatory_sampling=confirmatory_sampling,
         development_methods=tuple(payload["methods"]["development"]),
         confirmatory_methods=tuple(payload["methods"]["confirmatory"]),
         claim_gates=ClaimGateSpec(**gates),

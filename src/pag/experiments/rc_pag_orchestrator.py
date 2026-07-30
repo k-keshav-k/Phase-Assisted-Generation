@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
+import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -35,6 +37,32 @@ class SampleRef:
     @property
     def sample_id(self) -> str:
         return f"{self.pool}-{self.index:05d}"
+
+
+def _index_stratified_indices(
+    *, population: int, count: int, strata: int, seed: int, pool: str
+) -> tuple[int, ...]:
+    if population < 1 or not 0 < count <= population:
+        raise ValueError("stratified sample count must be within the population")
+    if not 0 < strata <= count:
+        raise ValueError("strata must be positive and no larger than the sample")
+    per_stratum, remainder = divmod(count, strata)
+    selected: list[list[int]] = []
+    for stratum in range(strata):
+        lower = population * stratum // strata
+        upper = population * (stratum + 1) // strata
+        take = per_stratum + int(stratum < remainder)
+        if take > upper - lower:
+            raise ValueError("stratified sample exceeds a stratum's population")
+        digest = hashlib.sha256(f"{seed}:{pool}:{stratum}".encode()).digest()
+        rng = random.Random(int.from_bytes(digest[:8], "big"))
+        selected.append(sorted(rng.sample(range(lower, upper), take)))
+    return tuple(
+        values[position]
+        for position in range(max(map(len, selected)))
+        for values in selected
+        if position < len(values)
+    )
 
 
 class RCPAGRuntime(Protocol):
@@ -249,7 +277,20 @@ class RCPAGOrchestrator:
 
     def _confirm_refs(self, dataset: str) -> tuple[SampleRef, ...]:
         count = self.config.confirmatory_counts[dataset]
-        refs = tuple(SampleRef(dataset, index) for index in range(count))
+        sampling = self.config.confirmatory_sampling
+        if sampling.strategy == "full":
+            indices = tuple(range(count))
+        elif sampling.strategy == "index_stratified":
+            indices = _index_stratified_indices(
+                population=sampling.population_sizes[dataset],
+                count=count,
+                strata=sampling.strata,
+                seed=self.config.seed,
+                pool=dataset,
+            )
+        else:  # pragma: no cover - config validation owns the strategy set
+            raise ValueError(f"unknown confirmatory sampling strategy: {sampling.strategy}")
+        refs = tuple(SampleRef(dataset, index) for index in indices)
         if self.development_limit is None:
             return refs
         is_mock = self.mock_mode
@@ -650,8 +691,13 @@ class RCPAGOrchestrator:
         screening = json.loads(
             (self.run_dir / "screening_summary.json").read_text(encoding="utf-8")
         )
+        primary_method = (
+            "rc_pag_history"
+            if "rc_pag_history" in self.config.confirmatory_methods
+            else "rc_pag_local"
+        )
         selected_names = {
-            f"{model}/{selected_by_model[model]['rc_pag_history']}" for model in self.config.models
+            f"{model}/{selected_by_model[model][primary_method]}" for model in self.config.models
         }
         selected_nfe = float(
             np.mean(
@@ -674,11 +720,13 @@ class RCPAGOrchestrator:
         }
         for model in self.config.models:
             selected = selected_by_model[model]
-            methods = (
-                ("adablock", None),
-                ("best_nonlearned", None),
-                ("rc_pag_local", candidate_lookup[selected["rc_pag_local"]]),
-                ("rc_pag_history", candidate_lookup[selected["rc_pag_history"]]),
+            candidate_by_method = {
+                "rc_pag_local": candidate_lookup[selected["rc_pag_local"]],
+                "rc_pag_history": candidate_lookup[selected["rc_pag_history"]],
+            }
+            methods = tuple(
+                (method, candidate_by_method.get(method))
+                for method in self.config.confirmatory_methods
             )
             runtime = self._runtime(model)
             for dataset in self.config.confirmatory_counts:
@@ -705,6 +753,7 @@ class RCPAGOrchestrator:
             "frozen_confirmatory_policy.json",
             {
                 "selected_by_model": selected_by_model,
+                "primary_rc_pag_method": primary_method,
                 "best_nonlearned": screening["best_nonlearned"],
                 "config_hash": self.config.config_hash,
             },
@@ -753,6 +802,13 @@ class RCPAGOrchestrator:
             seed=self.config.seed,
             minimum_accuracy_lower_ci=self.config.claim_gates.minimum_accuracy_lower_ci,
             estimator_manifest=estimator_manifest,
+            methods=self.config.confirmatory_methods,
+            primary_method=(
+                "rc_pag_history"
+                if "rc_pag_history" in self.config.confirmatory_methods
+                else "rc_pag_local"
+            ),
+            require_history_frontier_ci=(self.config.claim_gates.require_history_frontier_ci),
         )
         self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 

@@ -18,6 +18,7 @@ set -euo pipefail
 {
     printf 'stage=%s\\n' "$RC_PAG_STAGE"
     printf 'confirm=%s\\n' "$RC_PAG_ALLOW_CONFIRMATORY"
+    printf 'config=%s\\n' "$RC_PAG_CONFIG"
     printf 'args='
     printf '%s ' "$@"
     printf '\\n'
@@ -60,6 +61,8 @@ def test_one_command_submits_all_stages_with_confirmation(tmp_path):
     submitted = capture.read_text(encoding="utf-8")
     assert "stage=all" in submitted
     assert "confirm=1" in submitted
+    assert "config=" in submitted
+    assert "rc_pag_neurips_workshop.yaml" in submitted
     assert "--time=48:00:00" in submitted
     assert "rc_pag_a100.sbatch" in submitted
 

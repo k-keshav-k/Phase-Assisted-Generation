@@ -55,7 +55,8 @@ The paper should lead with three distinctions:
 ## Required experiments and honest exclusions
 
 The high-value experiment set is: LLaDA and Dream; AdaBlock; the best broad nonlearned rule;
-local vs. history RC-PAG; HGB vs. logistic estimator; full calibration diagnostics; paired
+history RC-PAG in workshop confirmation; local vs. history RC-PAG during development and
+calibration; HGB vs. logistic estimator; full calibration diagnostics; paired
 NFE/accuracy/latency; and HumanEval transfer. Development-only Fast-dLLM/SchED-style rules
 must be called reproductions. SemBlock, APD, SOAR, and LESS should be discussed as highly
 relevant contemporaneous work. Unless their official code is integrated under identical

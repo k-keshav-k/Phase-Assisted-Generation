@@ -7,12 +7,21 @@ import pytest
 
 from pag.experiments.orchestrator import ControlledStop
 from pag.experiments.rc_pag_config import load_rc_pag_config
-from pag.experiments.rc_pag_orchestrator import MockRCPAGRuntime, RCPAGOrchestrator
+from pag.experiments.rc_pag_orchestrator import (
+    MockRCPAGRuntime,
+    RCPAGOrchestrator,
+    _index_stratified_indices,
+)
 
 
 @pytest.fixture
 def config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips.yaml"))
+
+
+@pytest.fixture
+def workshop_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop.yaml"))
 
 
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
@@ -98,3 +107,42 @@ def test_pilot_writes_compute_projection(tmp_path, config):
         "screen": 2700,
     }
     assert projection["projected_gpu_runs"] == 28120
+
+
+def test_workshop_confirmation_is_stratified_and_uses_three_methods(tmp_path, workshop_config):
+    runtime = MockRCPAGRuntime(calibration_repetitions=60)
+    runner = RCPAGOrchestrator(
+        workshop_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+    )
+
+    gsm8k_refs = runner._confirm_refs("gsm8k_test")
+    assert len(gsm8k_refs) == 2
+    assert gsm8k_refs[0].index < 131
+    assert 131 <= gsm8k_refs[1].index < 263
+
+    runner.run_through("confirm")
+
+    confirm_methods = {method for stage, _, _, method in runtime.calls if stage == "confirm"}
+    assert confirm_methods == {"adablock", "best_nonlearned", "rc_pag_history"}
+    projection = json.loads((tmp_path / "compute_projection.json").read_text())
+    assert projection["projected_runs_per_model_by_stage"]["confirm"] == 3000
+    assert projection["projected_gpu_runs"] == 16200
+
+
+def test_workshop_gsm8k_sample_has_equal_decile_coverage() -> None:
+    indices = _index_stratified_indices(
+        population=1319,
+        count=500,
+        strata=10,
+        seed=20260729,
+        pool="gsm8k_test",
+    )
+
+    assert len(indices) == len(set(indices)) == 500
+    for stratum in range(10):
+        lower = 1319 * stratum // 10
+        upper = 1319 * (stratum + 1) // 10
+        assert sum(lower <= index < upper for index in indices) == 50

@@ -8,6 +8,7 @@ import pytest
 from pag.experiments.rc_pag_config import load_rc_pag_config, validate_rc_pag_config
 
 CONFIG_PATH = Path("configs/experiments/rc_pag_neurips.yaml")
+WORKSHOP_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop.yaml")
 
 
 def _valid_payload() -> dict:
@@ -31,6 +32,29 @@ def test_frozen_config_loads_with_declared_family_and_counts():
         "rc_pag_history",
     }
     assert len(config.config_hash) == 64
+
+
+def test_workshop_config_reduces_only_confirmation() -> None:
+    full = load_rc_pag_config(CONFIG_PATH)
+    workshop = load_rc_pag_config(WORKSHOP_CONFIG_PATH)
+
+    assert workshop.confirmation_profile == "workshop_48h"
+    assert workshop.confirmatory_counts == {
+        "gsm8k_test": 500,
+        "math500": 300,
+        "mbpp_sanitized": 100,
+        "humaneval": 100,
+    }
+    assert workshop.confirmatory_methods == (
+        "adablock",
+        "best_nonlearned",
+        "rc_pag_history",
+    )
+    assert workshop.confirmatory_sampling.strategy == "index_stratified"
+    assert workshop.confirmatory_sampling.strata == 10
+    assert workshop.risk == full.risk
+    assert workshop.candidates == full.candidates
+    assert workshop.stage_sizes == full.stage_sizes
 
 
 def test_config_rejects_split_overlap():

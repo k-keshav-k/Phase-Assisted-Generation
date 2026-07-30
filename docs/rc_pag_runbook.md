@@ -12,7 +12,9 @@ each of two models as a separate hypothesis and controls all 12 simultaneously.
 
 For an unattended run that executes every GPU and CPU stage inside one A100 allocation, use
 the concise [one-command guide](rc_pag_one_command.md). The gated steps below remain useful
-when each stage should be inspected manually.
+when each stage should be inspected manually. The one-command launcher defaults to the
+workshop-sized confirmation profile; the stage-by-stage commands below retain the larger
+four-method protocol.
 
 ## 1. Local verification
 
