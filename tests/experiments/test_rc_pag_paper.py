@@ -21,10 +21,12 @@ def test_paper_builder_guards_mock_results_and_page_limit() -> None:
     assert "neurips_2026.sty" in builder
 
 
-def test_runbook_keeps_cpu_stages_off_a100() -> None:
+def test_runbook_documents_manual_and_one_command_execution() -> None:
     runbook = Path("docs/rc_pag_runbook.md").read_text(encoding="utf-8")
 
     assert "CPU estimator fit" in runbook
     assert "CPU report and paper manifest" in runbook
-    assert "Never submit `all`" in runbook
+    assert "Prefer the stage-by-stage commands" in runbook
+    assert "submit_rc_pag_all.sh" in runbook
+    assert "CPU-only stages on the allocated node" in runbook
     assert "RC_PAG_ALLOW_CONFIRMATORY=1" in runbook

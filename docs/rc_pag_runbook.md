@@ -10,6 +10,10 @@ The default config is `configs/experiments/rc_pag_neurips.yaml`. Its current con
 `artifacts/rc_pag/rc-pag-c855954c1a30`. The certificate now treats each of six policies on
 each of two models as a separate hypothesis and controls all 12 simultaneously.
 
+For an unattended run that executes every GPU and CPU stage inside one A100 allocation, use
+the concise [one-command guide](rc_pag_one_command.md). The gated steps below remain useful
+when each stage should be inspected manually.
+
 ## 1. Local verification
 
 From the repository root:
@@ -168,8 +172,9 @@ The PDF is `writeup/build/rc_pag_workshop.pdf`.
 
 ## 5. Compute-minimization rules
 
-- Never submit `all`; the A100 wrapper rejects mixed and CPU-only stages so failures remain
-  diagnosable and GPU hours are not wasted.
+- Prefer the stage-by-stage commands when manual pilot inspection or minimum A100 reservation
+  time matters. Use `submit_rc_pag_all.sh` when one unattended, resumable allocation is more
+  important; it also runs CPU-only stages on the allocated node.
 - Cache pinned weights/datasets on scratch, keep one model resident, and resume the same run.
 - Stop after pilot on backend or budget failure; stop after calibration on certificate or
   NFE futility failure.
