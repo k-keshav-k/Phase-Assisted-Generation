@@ -45,6 +45,25 @@ def _ensure_llada_config_compatibility(config: Any) -> Any:
     return config
 
 
+def _import_llada_model_class_without_compile() -> Any:
+    """Import LLaDA with eager SDPA so Triton is not a runtime requirement."""
+    original_compile = getattr(torch, "compile", None)
+    if original_compile is None:
+        return importlib.import_module("model.modeling_llada").LLaDAModelLM
+
+    def _identity_torch_compile(fn=None, *args, **kwargs):
+        del args, kwargs
+        if fn is None:
+            return _identity_torch_compile
+        return fn
+
+    torch.compile = _identity_torch_compile
+    try:
+        return importlib.import_module("model.modeling_llada").LLaDAModelLM
+    finally:
+        torch.compile = original_compile
+
+
 def _observation(payload: Mapping[str, Any]) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=int(payload["step_index"]),
@@ -413,7 +432,7 @@ class UnifiedRCPAGRuntime:
             _activate_model_package(LLADA_DIR)
             from transformers import AutoConfig, AutoTokenizer
 
-            model_class = importlib.import_module("model.modeling_llada").LLaDAModelLM
+            model_class = _import_llada_model_class_without_compile()
             model_config = AutoConfig.from_pretrained(
                 spec.repository, revision=spec.revision, trust_remote_code=True
             )
