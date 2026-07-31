@@ -36,6 +36,15 @@ DREAM_DIR = REPO_ROOT / "AdaBlock-dLLM" / "dream"
 MASK_IDS = {"llada": 126336, "dream": 151666}
 
 
+def _ensure_llada_config_compatibility(config: Any) -> Any:
+    """Bridge fields added by the bundled AdaBlock LLaDA model fork."""
+    if not hasattr(config, "train_max_sequence_length"):
+        if not hasattr(config, "max_sequence_length"):
+            raise ValueError("LLaDA config has no maximum sequence length")
+        config.train_max_sequence_length = int(config.max_sequence_length)
+    return config
+
+
 def _observation(payload: Mapping[str, Any]) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=int(payload["step_index"]),
@@ -408,6 +417,7 @@ class UnifiedRCPAGRuntime:
             model_config = AutoConfig.from_pretrained(
                 spec.repository, revision=spec.revision, trust_remote_code=True
             )
+            _ensure_llada_config_compatibility(model_config)
             model_config.flash_attention = True
             self.model = (
                 model_class.from_pretrained(

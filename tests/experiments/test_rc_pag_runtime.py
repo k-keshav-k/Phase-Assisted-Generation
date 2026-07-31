@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from pag.experiments.rc_pag_runtime import (
+    _ensure_llada_config_compatibility,
     prompt_loss_from_schedules,
     training_examples_from_schedules,
 )
@@ -49,3 +52,20 @@ def test_prompt_loss_is_any_on_policy_shadow_disagreement():
     schedule = _schedule()
     schedule[0]["shadow_losses"] = [0]
     assert prompt_loss_from_schedules(schedule) == 0
+
+
+def test_llada_config_compatibility_aliases_missing_training_length() -> None:
+    config = SimpleNamespace(max_sequence_length=4096)
+
+    result = _ensure_llada_config_compatibility(config)
+
+    assert result is config
+    assert config.train_max_sequence_length == 4096
+
+
+def test_llada_config_compatibility_preserves_checkpoint_value() -> None:
+    config = SimpleNamespace(max_sequence_length=4096, train_max_sequence_length=2048)
+
+    _ensure_llada_config_compatibility(config)
+
+    assert config.train_max_sequence_length == 2048
