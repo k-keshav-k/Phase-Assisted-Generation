@@ -10,6 +10,7 @@ from pag.experiments.rc_pag_config import load_rc_pag_config
 from pag.experiments.rc_pag_orchestrator import (
     MockRCPAGRuntime,
     RCPAGOrchestrator,
+    _index_stratified_complement_indices,
     _index_stratified_indices,
 )
 
@@ -22,6 +23,11 @@ def config():
 @pytest.fixture
 def workshop_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop.yaml"))
+
+
+@pytest.fixture
+def v2_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v2.yaml"))
 
 
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
@@ -146,3 +152,101 @@ def test_workshop_gsm8k_sample_has_equal_decile_coverage() -> None:
         lower = 1319 * stratum // 10
         upper = 1319 * (stratum + 1) // 10
         assert sum(lower <= index < upper for index in indices) == 50
+
+
+def test_v2_confirmation_is_a_fresh_complement(v2_config) -> None:
+    old = set(
+        _index_stratified_indices(
+            population=1319,
+            count=500,
+            strata=10,
+            seed=v2_config.seed,
+            pool="gsm8k_test",
+        )
+    )
+    fresh = set(
+        _index_stratified_complement_indices(
+            population=1319,
+            count=500,
+            excluded_count=500,
+            strata=10,
+            seed=v2_config.seed,
+            pool="gsm8k_test",
+        )
+    )
+
+    assert len(fresh) == 500
+    assert old.isdisjoint(fresh)
+
+
+def test_v2_pipeline_freezes_two_policies_and_calibrates_end_to_end_harm(tmp_path, v2_config):
+    runtime = MockRCPAGRuntime(calibration_repetitions=300)
+    runner = RCPAGOrchestrator(
+        v2_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("report")
+
+    parity = json.loads((tmp_path / "parity_audit.json").read_text())
+    assert parity["passed"]
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["loss"] == "adablock_correct_candidate_wrong"
+    assert len(certificate["candidates"]) == 2
+    assert set(certificate["selected_by_model"]) == {"llada", "dream"}
+    assert all(row["certified"] for row in certificate["candidates"])
+    frozen = json.loads((tmp_path / "frozen_confirmatory_policy.json").read_text())
+    assert frozen["primary_rc_pag_method"] == "rc_pag_selected"
+    assert set(frozen["best_nonlearned"]) == {"llada", "dream"}
+    methods = {method for stage, _, _, method in runtime.calls if stage == "confirm"}
+    assert methods == {"adablock", "best_nonlearned", "rc_pag_selected"}
+
+
+def test_v2_reuses_only_validated_llada_local_estimator(tmp_path, config, v2_config):
+    source = tmp_path / "v1"
+    old_runtime = MockRCPAGRuntime()
+    old_runner = RCPAGOrchestrator(
+        config,
+        source,
+        runtime_factory=lambda model: old_runtime,
+        development_limit=2,
+    )
+    old_runner.run_through("fit")
+
+    destination = tmp_path / "v2"
+    new_runtime = MockRCPAGRuntime()
+    new_runner = RCPAGOrchestrator(
+        v2_config,
+        destination,
+        runtime_factory=lambda model: new_runtime,
+        development_limit=2,
+        reuse_development_from=source,
+    )
+    new_runner.run_through("fit")
+
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    assert reuse["reused_models"] == ["llada"]
+    assert reuse["excluded_models"] == ["dream"]
+    collect_calls = {model for stage, model, _, _ in new_runtime.calls if stage == "collect"}
+    assert collect_calls == {"dream"}
+    manifest = json.loads((destination / "estimators" / "manifest.json").read_text())
+    assert manifest["models"]["llada"]["rc_pag_local"]["reused"]
+    assert set(manifest["models"]["dream"]) == {"rc_pag_local"}
+
+
+def test_v2_harmful_policy_stops_before_confirmation(tmp_path, v2_config):
+    runtime = MockRCPAGRuntime(unsafe=True, calibration_repetitions=300)
+    runner = RCPAGOrchestrator(
+        v2_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+    runner.run_through("calibrate")
+
+    with pytest.raises(ControlledStop, match="end-to-end harm certificate"):
+        runner.run_stage("confirm")

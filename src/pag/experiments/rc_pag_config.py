@@ -31,6 +31,7 @@ class PolicyCandidateSpec:
     threshold: float
     min_steps: int
     patience: int
+    max_remaining_fraction: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,11 +81,13 @@ class ConfirmatorySamplingSpec:
     strategy: str
     strata: int
     population_sizes: dict[str, int]
+    excluded_counts: dict[str, int]
 
 
 @dataclass(frozen=True, slots=True)
 class RCPAGConfig:
     schema_version: int
+    protocol_version: str
     seed: int
     models: dict[str, ModelSpec]
     datasets: dict[str, DatasetSpec]
@@ -128,6 +131,12 @@ _WORKSHOP_CONFIRMATORY = {
     "mbpp_sanitized": 100,
     "humaneval": 100,
 }
+_WORKSHOP_V2_CONFIRMATORY = {
+    "gsm8k_test": 500,
+    "math500": 200,
+    "mbpp_sanitized": 100,
+    "humaneval": 64,
+}
 _EXPECTED_STAGES = {
     "pilot": 32,
     "training": 600,
@@ -149,6 +158,12 @@ _REQUIRED_DEVELOPMENT_METHODS = {
     "rc_pag_local",
     "rc_pag_history",
     "oracle",
+}
+_REQUIRED_V2_DEVELOPMENT_METHODS = {
+    "adablock",
+    "entropy_sum_gate",
+    "mutual_stability_gate",
+    "rc_pag_local",
 }
 
 
@@ -236,6 +251,10 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if decoding != expected_decoding:
         raise ValueError("decoding settings do not match the frozen deterministic protocol")
 
+    protocol_version = str(payload.get("protocol_version", "v1"))
+    if protocol_version not in {"v1", "v2"}:
+        raise ValueError("protocol_version must be v1 or v2")
+
     policy = payload.get("policy", {})
     if tuple(policy.get("estimator_kinds", ())) != (
         "hist_gradient_boosting",
@@ -245,27 +264,43 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if int(policy.get("history_window", 0)) != 4:
         raise ValueError("history_window must remain 4")
     candidates = tuple(policy.get("candidates", ()))
-    if len(candidates) != 6:
-        raise ValueError("policy family must contain exactly six candidates")
+    expected_candidates = 6 if protocol_version == "v1" else 3
+    if len(candidates) != expected_candidates:
+        if protocol_version == "v1":
+            raise ValueError("policy family must contain exactly six candidates")
+        raise ValueError("v2 policy family must contain exactly three candidates")
     names = tuple(str(item.get("name", "")) for item in candidates)
     if len(set(names)) != len(names) or any(not name for name in names):
         raise ValueError("policy candidate names must be non-empty and unique")
     variants = [str(item.get("variant", "")) for item in candidates]
-    if variants.count("rc_pag_local") != 3 or variants.count("rc_pag_history") != 3:
-        raise ValueError("policy family must contain three local and three history candidates")
+    if protocol_version == "v1":
+        if variants.count("rc_pag_local") != 3 or variants.count("rc_pag_history") != 3:
+            raise ValueError("policy family must contain three local and three history candidates")
+    elif set(variants) != {"rc_pag_local"}:
+        raise ValueError("v2 policy candidates must use the local estimator")
     for item in candidates:
-        if not 0 < float(item.get("threshold", 0)) <= 0.05:
-            raise ValueError("candidate thresholds must be in (0, 0.05]")
+        threshold_limit = 0.05 if protocol_version == "v1" else 1.0
+        if not 0 < float(item.get("threshold", 0)) <= threshold_limit:
+            raise ValueError(f"candidate thresholds must be in (0, {threshold_limit}]")
         if int(item.get("min_steps", 0)) < 1 or int(item.get("patience", 0)) < 1:
             raise ValueError("candidate min_steps and patience must be positive")
+        remaining = float(item.get("max_remaining_fraction", 1.0))
+        if not 0 < remaining <= 1:
+            raise ValueError("candidate max_remaining_fraction must be in (0, 1]")
 
     risk = payload.get("risk", {})
-    if float(risk.get("alpha", -1)) != 0.05:
-        raise ValueError("risk alpha must remain 0.05")
+    expected_alpha = 0.05 if protocol_version == "v1" else 0.02
+    if float(risk.get("alpha", -1)) != expected_alpha:
+        raise ValueError(f"risk alpha must remain {expected_alpha}")
     if float(risk.get("delta", -1)) != 0.05:
         raise ValueError("risk delta must remain 0.05")
-    if risk.get("loss") != "any_shadow_token_disagreement":
-        raise ValueError("risk loss must remain the strict prompt-level shadow disagreement")
+    expected_loss = (
+        "any_shadow_token_disagreement"
+        if protocol_version == "v1"
+        else "adablock_correct_candidate_wrong"
+    )
+    if risk.get("loss") != expected_loss:
+        raise ValueError(f"risk loss must remain {expected_loss}")
 
     statistics = payload.get("statistics", {})
     if int(statistics.get("bootstrap_samples", 0)) != 10_000:
@@ -278,6 +313,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     expected_confirmatory = {
         "full": _FULL_CONFIRMATORY,
         "workshop_48h": _WORKSHOP_CONFIRMATORY,
+        "workshop_v2_fresh": _WORKSHOP_V2_CONFIRMATORY,
     }
     if confirmation_profile not in expected_confirmatory:
         raise ValueError("unknown confirmation profile")
@@ -288,7 +324,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if confirmation_profile == "full":
         if sampling is not None:
             raise ValueError("the full confirmation profile uses every benchmark row")
-    else:
+    elif confirmation_profile == "workshop_48h":
         expected_sampling = {
             "strategy": "index_stratified",
             "strata": 10,
@@ -296,14 +332,29 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         }
         if sampling != expected_sampling:
             raise ValueError("workshop confirmation must use the frozen stratified sampler")
+    else:
+        expected_sampling = {
+            "strategy": "index_stratified_complement",
+            "strata": 10,
+            "population_sizes": _FULL_CONFIRMATORY,
+            "excluded_counts": _WORKSHOP_CONFIRMATORY,
+        }
+        if sampling != expected_sampling:
+            raise ValueError("v2 confirmation must use the untouched v1 complement")
 
     methods = payload.get("methods", {})
     development = set(methods.get("development", ()))
-    if development != _REQUIRED_DEVELOPMENT_METHODS:
+    expected_development = (
+        _REQUIRED_DEVELOPMENT_METHODS
+        if protocol_version == "v1"
+        else _REQUIRED_V2_DEVELOPMENT_METHODS
+    )
+    if development != expected_development:
         raise ValueError("development method family does not match the frozen protocol")
     expected_methods = {
         "full": ("adablock", "best_nonlearned", "rc_pag_local", "rc_pag_history"),
         "workshop_48h": ("adablock", "best_nonlearned", "rc_pag_history"),
+        "workshop_v2_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
     }
     if tuple(methods.get("confirmatory", ())) != expected_methods[confirmation_profile]:
         raise ValueError("confirmatory methods do not match the frozen protocol")
@@ -314,7 +365,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "beat_adablock_both_models": True,
         "beat_best_nonlearned": True,
         "minimum_accuracy_lower_ci": -0.02,
-        "require_history_frontier_ci": confirmation_profile == "full",
+        "require_history_frontier_ci": protocol_version == "v1" and confirmation_profile == "full",
     }
     if gates != expected_gates:
         raise ValueError("claim gates do not match the frozen protocol")
@@ -359,6 +410,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             strategy="full",
             strata=1,
             population_sizes=dict(_FULL_CONFIRMATORY),
+            excluded_counts={},
         )
     else:
         confirmatory_sampling = ConfirmatorySamplingSpec(
@@ -367,9 +419,13 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             population_sizes={
                 name: int(value) for name, value in raw_sampling["population_sizes"].items()
             },
+            excluded_counts={
+                name: int(value) for name, value in raw_sampling.get("excluded_counts", {}).items()
+            },
         )
     return RCPAGConfig(
         schema_version=int(payload["schema_version"]),
+        protocol_version=str(payload.get("protocol_version", "v1")),
         seed=int(payload["seed"]),
         models=models,
         datasets=datasets,
@@ -394,6 +450,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
                 threshold=float(item["threshold"]),
                 min_steps=int(item["min_steps"]),
                 patience=int(item["patience"]),
+                max_remaining_fraction=float(item.get("max_remaining_fraction", 1.0)),
             )
             for item in policy["candidates"]
         ),

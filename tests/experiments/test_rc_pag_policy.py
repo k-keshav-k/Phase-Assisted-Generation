@@ -12,11 +12,13 @@ from pag.experiments.rc_pag_policy import (
 )
 
 
-def observation(*, step: int, top1: float = 0.9) -> StepObservation:
+def observation(
+    *, step: int, top1: float = 0.9, masked: list[bool] | None = None
+) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=step,
         block_size=2,
-        masked=[True, False],
+        masked=masked or [True, False],
         top1_probs=[top1, 0.95],
         top2_probs=[0.05, 0.03],
         entropies=[0.4, 0.1],
@@ -55,6 +57,23 @@ def test_policy_resets_streak_after_risky_step() -> None:
     assert policy.observe(observation(step=2)).safe_streak == 0
     assert not policy.observe(observation(step=3)).should_stop
     assert policy.observe(observation(step=4)).should_stop
+
+
+def test_policy_only_stops_in_declared_tail() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.0),
+        threshold=0.5,
+        min_steps=1,
+        patience=1,
+        include_history=False,
+        max_remaining_fraction=0.5,
+    )
+
+    early = policy.observe(observation(step=2, masked=[True, True]))
+    tail = policy.observe(observation(step=3, masked=[True, False]))
+
+    assert not early.should_stop
+    assert tail.should_stop
 
 
 def test_policy_fallback_never_stops_early() -> None:

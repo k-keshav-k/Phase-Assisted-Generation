@@ -9,6 +9,7 @@ from pag.experiments.rc_pag_config import load_rc_pag_config, validate_rc_pag_co
 
 CONFIG_PATH = Path("configs/experiments/rc_pag_neurips.yaml")
 WORKSHOP_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop.yaml")
+WORKSHOP_V2_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v2.yaml")
 
 
 def _valid_payload() -> dict:
@@ -55,6 +56,30 @@ def test_workshop_config_reduces_only_confirmation() -> None:
     assert workshop.risk == full.risk
     assert workshop.candidates == full.candidates
     assert workshop.stage_sizes == full.stage_sizes
+
+
+def test_v2_config_uses_fresh_confirmation_and_end_to_end_harm() -> None:
+    config = load_rc_pag_config(WORKSHOP_V2_CONFIG_PATH)
+
+    assert config.protocol_version == "v2"
+    assert config.risk.alpha == 0.02
+    assert config.risk.loss == "adablock_correct_candidate_wrong"
+    assert config.confirmatory_counts == {
+        "gsm8k_test": 500,
+        "math500": 200,
+        "mbpp_sanitized": 100,
+        "humaneval": 64,
+    }
+    assert config.confirmatory_sampling.strategy == "index_stratified_complement"
+    assert config.confirmatory_sampling.excluded_counts["gsm8k_test"] == 500
+    assert config.confirmatory_methods == (
+        "adablock",
+        "best_nonlearned",
+        "rc_pag_selected",
+    )
+    assert len(config.candidates) == 3
+    assert all(candidate.max_remaining_fraction == 0.25 for candidate in config.candidates)
+    assert max(candidate.threshold for candidate in config.candidates) == 0.5
 
 
 def test_config_rejects_split_overlap():

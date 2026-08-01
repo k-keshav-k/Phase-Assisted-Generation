@@ -9,7 +9,7 @@ Phase-Adaptive Generation (PAG) is a research codebase for **adaptive compute sc
 
 The current workshop track is **Risk-Calibrated PAG (RC-PAG)**: finite-sample control of
 premature block commitment with a one-A100, claim-gated evaluation. Start with the
-[RC-PAG runbook](docs/rc_pag_runbook.md), the
+[one-command v2 guide](docs/rc_pag_one_command.md), the
 [mathematical workshop draft](writeup/rc_pag_workshop.tex), and the
 [literature positioning](docs/literature/2026-07-29-rc-pag-positioning.md). The earlier course
 report remains at `writeup/final_report.pdf` as historical context, not current evidence.

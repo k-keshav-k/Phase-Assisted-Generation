@@ -67,6 +67,9 @@ fi
 if [[ -n "${RC_PAG_LIMIT:-}" ]]; then
     args+=(--limit "$RC_PAG_LIMIT")
 fi
+if [[ -n "${RC_PAG_REUSE_FROM:-}" ]]; then
+    args+=(--reuse-development-from "$RC_PAG_REUSE_FROM")
+fi
 exec uv run --group phase_cpd_dream python scripts/run_rc_pag.py "${args[@]}"
 ' &
 child_pid=$!

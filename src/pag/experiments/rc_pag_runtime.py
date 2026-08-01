@@ -251,10 +251,14 @@ class _HeuristicPolicy(_TracePolicy):
             safe = progress >= 0.75 and mean_entropy <= 1.0
         elif self.kind == "entropy_sum":
             safe = sum(entropies) <= max(0.5, 0.25 * observation.block_size)
+        elif self.kind == "entropy_sum_gate":
+            safe = sum(entropies) <= max(0.5, 0.25 * observation.block_size)
         elif self.kind == "confidence_gate":
             safe = min_confidence >= 0.95
         elif self.kind == "stability_gate":
             safe = churn == 0.0
+        elif self.kind == "mutual_stability_gate":
+            safe = min_confidence >= 0.90 and churn == 0.0 and mean_entropy <= 1.0
         elif self.kind == "pag":
             safe = min_confidence >= 0.88 and churn <= 0.10 and observation.step_index >= 2
         elif self.kind == "residual_pag":
@@ -264,7 +268,8 @@ class _HeuristicPolicy(_TracePolicy):
             raise ValueError(f"unsupported heuristic policy: {self.kind}")
         self.safe_streak = self.safe_streak + 1 if safe else 0
         self.previous = observation
-        stop = self.safe_streak >= (2 if self.kind == "stability_gate" else 1)
+        needs_patience = self.kind in {"stability_gate", "mutual_stability_gate"}
+        stop = self.safe_streak >= (2 if needs_patience else 1)
         return SimpleNamespace(
             should_stop=stop,
             risk_score=float(max(0.0, min(1.0, 1 - min_confidence))),
@@ -409,9 +414,14 @@ class UnifiedRCPAGRuntime:
             kind = "math"
         elif ref.pool.startswith("mbpp"):
             description = row.get("text", row.get("prompt", ""))
-            prompt = (
-                f"Write a correct Python solution for this task:\n{description}\nReturn code only."
+            examples = "\n".join(str(value) for value in row.get("test_list", ()))
+            examples_prompt = (
+                f"\nThe function must satisfy these examples:\n{examples}"
+                if self.config.protocol_version == "v2" and examples
+                else ""
             )
+            prompt = f"Write a correct Python solution for this task:\n{description}"
+            prompt += f"{examples_prompt}\nReturn code only."
             gold = "tests"
             kind = "code"
             row["tests"] = "\n".join(row.get("test_list", ()))
@@ -505,6 +515,7 @@ class UnifiedRCPAGRuntime:
             patience=candidate.patience,
             include_history=candidate.variant == "rc_pag_history",
             history_window=self.config.history_window,
+            max_remaining_fraction=candidate.max_remaining_fraction,
         )
 
     def _method_components(
@@ -544,6 +555,8 @@ class UnifiedRCPAGRuntime:
             "stability_gate",
             "pag",
             "residual_pag",
+            "entropy_sum_gate",
+            "mutual_stability_gate",
         }:
             style_name = {"fast_dllm": "fast_dllm_style", "sched": "sched_style"}.get(
                 method, method
@@ -564,9 +577,9 @@ class UnifiedRCPAGRuntime:
         enforcement: str,
         shadow: bool,
     ):
-        if method == "adablock":
+        if method == "adablock" or self.config.protocol_version == "v2":
             module = importlib.import_module("generate_adablock")
-            output, nfes, blocks = module.generate_adablock_dual_cache(
+            result = module.generate_adablock_dual_cache(
                 self.model,
                 input_ids,
                 steps=self.config.decoding.max_refinement_steps,
@@ -577,7 +590,14 @@ class UnifiedRCPAGRuntime:
                 threshold=self.config.decoding.transfer_threshold,
                 delimiter_ids=self.delimiter_ids.tolist(),
                 delimiter_threshold=self.config.decoding.delimiter_threshold,
+                risk_policy=policy if self.config.protocol_version == "v2" else None,
+                digit_ids_tensor=self.digit_ids,
+                delimiter_ids_tensor=self.delimiter_ids,
+                return_schedule_history=self.config.protocol_version == "v2",
             )
+            if self.config.protocol_version == "v2":
+                return result
+            output, nfes, blocks = result
             schedules = [
                 {
                     "applied_block_size": block,
@@ -633,14 +653,16 @@ class UnifiedRCPAGRuntime:
         del enforcement
         adablock = importlib.import_module("model.generation_utils_adablock")
         pag = importlib.import_module("model.generation_utils_pag")
+        use_exact_adablock_loop = self.config.protocol_version == "v2"
+        generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(
-            (adablock if method == "adablock" else pag).DreamGenerationMixin.diffusion_generate,
+            generation_module.DreamGenerationMixin.diffusion_generate,
             self.model,
         )
         self.model._sample = types.MethodType(
             (
                 adablock.DreamGenerationMixin._sample_adablock_cache
-                if method == "adablock"
+                if method == "adablock" or use_exact_adablock_loop
                 else pag.DreamGenerationMixin._sample_pag_cache
             ),
             self.model,
@@ -700,13 +722,18 @@ class UnifiedRCPAGRuntime:
         if method == "best_nonlearned":
             summary_path = self.run_dir / "screening_summary.json"
             if summary_path.is_file():
-                resolved_method = str(json.loads(summary_path.read_text())["best_nonlearned"])
+                selected = json.loads(summary_path.read_text())["best_nonlearned"]
+                resolved_method = (
+                    str(selected[self.model_name]) if isinstance(selected, dict) else str(selected)
+                )
         scheduler, policy, enforcement, provenance = self._method_components(
             resolved_method,
             candidate,
             estimator_paths or {},
         )
-        shadow = (stage == "calibrate" and candidate is not None) or method == "pilot_shadow"
+        shadow = (
+            self.config.protocol_version == "v1" and stage == "calibrate" and candidate is not None
+        ) or method == "pilot_shadow"
         if self.device.startswith("cuda"):
             torch.cuda.reset_peak_memory_stats()
             torch.cuda.synchronize()
@@ -744,6 +771,7 @@ class UnifiedRCPAGRuntime:
         )
         payload: dict[str, Any] = {
             "generated_text": text,
+            "generated_ids": [int(value) for value in generated_ids.tolist()],
             "grade": asdict(grade),
             "is_correct": grade.is_correct,
             "total_nfe": int(sum(int(value) for value in nfes)),

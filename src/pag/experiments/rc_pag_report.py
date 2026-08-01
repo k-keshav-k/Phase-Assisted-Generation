@@ -66,6 +66,17 @@ def _pair_summary(
     baseline_accuracy = [float(_is_correct(right)) for _, right in pairs]
     candidate_latency = [float(left["elapsed_sec"]) for left, _ in pairs]
     baseline_latency = [float(right["elapsed_sec"]) for _, right in pairs]
+    harmful_regressions = sum(
+        _is_correct(reference) and not _is_correct(policy) for policy, reference in pairs
+    )
+    beneficial_changes = sum(
+        not _is_correct(reference) and _is_correct(policy) for policy, reference in pairs
+    )
+    sequence_disagreements = sum(
+        policy.get("generated_ids") != reference.get("generated_ids")
+        for policy, reference in pairs
+        if "generated_ids" in policy and "generated_ids" in reference
+    )
     nfe = paired_bootstrap(
         candidate_nfe,
         baseline_nfe,
@@ -74,6 +85,9 @@ def _pair_summary(
     )
     return {
         "count": len(pairs),
+        "harmful_regressions": harmful_regressions,
+        "beneficial_changes": beneficial_changes,
+        "sequence_disagreements": sequence_disagreements,
         "nfe_difference": asdict(nfe),
         "nfe_reduction": -nfe.estimate / float(np.mean(baseline_nfe)),
         "accuracy_difference": asdict(
@@ -168,11 +182,27 @@ def _audit(
     require_history_frontier_ci: bool,
 ) -> dict[str, Any]:
     risk_rows = _risk_rows(certificate)
-    selected_risks = {
-        (model, variant): _selected_risk(risk_rows, variant, model=model)
-        for model in _MODELS
-        for variant in ("local", "history")
-    }
+    selected_risks: dict[tuple[str, str], Mapping[str, Any] | None]
+    if primary_method == "rc_pag_selected":
+        frozen_names = certificate.get("selected_by_model", {})
+        selected_risks = {
+            (model, "selected"): next(
+                (
+                    row
+                    for row in risk_rows
+                    if row["name"] == f"{model}/{frozen_names.get(model, '')}"
+                    and bool(row["certified"])
+                ),
+                None,
+            )
+            for model in _MODELS
+        }
+    else:
+        selected_risks = {
+            (model, variant): _selected_risk(risk_rows, variant, model=model)
+            for model in _MODELS
+            for variant in ("local", "history")
+        }
     risk_ok = not bool(certificate.get("fallback", True)) and all(
         selected is not None for selected in selected_risks.values()
     )
@@ -361,6 +391,8 @@ def _write_figures(
     summary: Mapping[str, Any],
     risk_rows: Sequence[Mapping[str, Any]],
     methods: Sequence[str],
+    *,
+    alpha: float,
 ) -> None:
     figure, axis = plt.subplots(figsize=(6.2, 4.0))
     markers = {"llada": "o", "dream": "s"}
@@ -391,7 +423,7 @@ def _write_figures(
     axis.scatter(nfe, risks)
     for name, x_value, y_value in zip(names, nfe, risks, strict=True):
         axis.annotate(name, (x_value, y_value), fontsize=6)
-    axis.axhline(0.05, color="black", linestyle="--", linewidth=1)
+    axis.axhline(alpha, color="black", linestyle="--", linewidth=1)
     axis.set_xlabel("Calibration mean NFE")
     axis.set_ylabel("Empirical strict prompt risk")
     figure.tight_layout()
@@ -407,7 +439,13 @@ def _write_figures(
         fmt="o",
         capsize=3,
     )
-    axis.axhline(0.05, color="black", linestyle="--", linewidth=1, label=r"$\alpha=0.05$")
+    axis.axhline(
+        alpha,
+        color="black",
+        linestyle="--",
+        linewidth=1,
+        label=rf"$\alpha={alpha:g}$",
+    )
     axis.set_xticks(positions, names, rotation=35, ha="right", fontsize=7)
     axis.set_ylabel("Risk with simultaneous upper bound")
     axis.legend()
@@ -528,6 +566,12 @@ def write_rc_pag_report(
     )
     (output / "tables" / "headline.tex").write_text(headline + "\n", encoding="utf-8")
     (output / "headline.tex").write_text(headline + "\n", encoding="utf-8")
-    _write_figures(figures, summary, risk_rows, methods)
+    _write_figures(
+        figures,
+        summary,
+        risk_rows,
+        methods,
+        alpha=float(certificate.get("alpha", 0.05)),
+    )
     _write_failures(output / "failure_taxonomy.csv", records, methods)
     return audit

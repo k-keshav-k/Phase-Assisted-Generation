@@ -52,6 +52,9 @@ sys.modules.setdefault("model", model_pkg)
 DreamGenerationConfig = importlib.import_module(
     "model.generation_utils_adablock",
 ).DreamGenerationConfig
+AdaBlockDreamGenerationMixin = importlib.import_module(
+    "model.generation_utils_adablock",
+).DreamGenerationMixin
 dream_pag_module = importlib.import_module("model.generation_utils_pag")
 DreamGenerationMixin = dream_pag_module.DreamGenerationMixin
 PhaseTuple = importlib.import_module("phase_predict.schema").PhaseTuple
@@ -141,6 +144,17 @@ class FakeRiskPolicy:
         self.realized.append(block)
 
 
+class NeverStopPolicy(FakeRiskPolicy):
+    def observe(self, observation):
+        self.observations.append(observation)
+        return SimpleNamespace(
+            should_stop=False,
+            risk_score=1.0,
+            safe_streak=0,
+            reason="continue",
+        )
+
+
 def _make_schedule(block_size: int, refinement_steps: int) -> SimpleNamespace:
     return SimpleNamespace(
         predicted_tuple=PhaseTuple(block_size, refinement_steps),
@@ -158,6 +172,57 @@ def _make_logits(
     for position, (token_id, score) in predictions.items():
         logits[0, position, token_id] = score
     return logits
+
+
+def test_instrumented_dream_adablock_is_exact_when_policy_never_stops() -> None:
+    logits_plan = [
+        _make_logits(6, 8, {1: (3, 8.0)}),
+        _make_logits(2, 8, {0: (4, 8.0)}),
+        _make_logits(6, 8, {3: (5, 8.0)}),
+        _make_logits(2, 8, {0: (6, 8.0)}),
+    ]
+    config = DreamGenerationConfig(
+        max_length=6,
+        steps=4,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+    input_ids = torch.tensor([[1, 2]], dtype=torch.long)
+
+    baseline = FakeModel([value.clone() for value in logits_plan], FakeScheduler([]))
+    baseline._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        baseline, FakeModel
+    )
+    expected = baseline._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=0.8,
+        block_length=2,
+        dual_cache=True,
+    )
+
+    instrumented = FakeModel([value.clone() for value in logits_plan], FakeScheduler([]))
+    instrumented.pag_risk_policy = NeverStopPolicy()
+    instrumented._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        instrumented, FakeModel
+    )
+    actual = instrumented._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=0.8,
+        block_length=2,
+        dual_cache=True,
+    )
+
+    assert actual.sequences.tolist() == expected.sequences.tolist()
+    assert actual.nfe_history == expected.nfe_history == [2, 2]
+    assert actual.block_history == expected.block_history == [2, 2]
+    assert len(actual.schedule_history) == 2
 
 
 def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> None:

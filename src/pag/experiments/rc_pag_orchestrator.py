@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import random
+import shutil
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -63,6 +64,66 @@ def _index_stratified_indices(
         for values in selected
         if position < len(values)
     )
+
+
+def _index_stratified_complement_indices(
+    *,
+    population: int,
+    count: int,
+    excluded_count: int,
+    strata: int,
+    seed: int,
+    pool: str,
+) -> tuple[int, ...]:
+    excluded = set(
+        _index_stratified_indices(
+            population=population,
+            count=excluded_count,
+            strata=strata,
+            seed=seed,
+            pool=pool,
+        )
+    )
+    remaining_by_stratum = [
+        [
+            index
+            for index in range(population * stratum // strata, population * (stratum + 1) // strata)
+            if index not in excluded
+        ]
+        for stratum in range(strata)
+    ]
+    remaining_count = sum(map(len, remaining_by_stratum))
+    if not 0 < count <= remaining_count:
+        raise ValueError("complement sample count must be within the unused population")
+    quotas = [count * len(values) / remaining_count for values in remaining_by_stratum]
+    allocations = [math.floor(quota) for quota in quotas]
+    unallocated = count - sum(allocations)
+    order = sorted(
+        range(strata),
+        key=lambda stratum: (-(quotas[stratum] - allocations[stratum]), stratum),
+    )
+    for stratum in order[:unallocated]:
+        allocations[stratum] += 1
+    selected: list[list[int]] = []
+    for stratum, values in enumerate(remaining_by_stratum):
+        take = allocations[stratum]
+        digest = hashlib.sha256(f"{seed}:{pool}:v2:{stratum}".encode()).digest()
+        rng = random.Random(int.from_bytes(digest[:8], "big"))
+        selected.append(sorted(rng.sample(values, take)))
+    return tuple(
+        values[position]
+        for position in range(max(map(len, selected)))
+        for values in selected
+        if position < len(values)
+    )
+
+
+def _sha256_path(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file_obj:
+        for chunk in iter(lambda: file_obj.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 class RCPAGRuntime(Protocol):
@@ -139,6 +200,9 @@ class MockRCPAGRuntime:
             "best_nonlearned": 66.0,
             "rc_pag_local": 60.0,
             "rc_pag_history": 57.0,
+            "entropy_sum_gate": 72.0,
+            "mutual_stability_gate": 69.0,
+            "rc_pag_selected": 58.0,
         }
         return values.get(method, 80.0)
 
@@ -156,7 +220,17 @@ class MockRCPAGRuntime:
         self.calls.append((stage, model, sample.sample_id, method))
         elapsed = 0.02 + (sample.index % 3) * 0.001
         if stage == "pilot":
-            return {"elapsed_sec": elapsed, "artifact_bytes": 2048, "mock": True}
+            return {
+                "elapsed_sec": elapsed,
+                "artifact_bytes": 2048,
+                "generated_text": f"mock-{sample.sample_id}",
+                "generated_ids": [sample.index, 1, 2],
+                "nfe_history": [4, 3],
+                "block_history": [2, 2],
+                "total_nfe": 7,
+                "is_correct": True,
+                "mock": True,
+            }
         if stage == "collect":
             previous = _mock_observation(sample.index, step=1)
             current = _mock_observation(sample.index, step=2)
@@ -174,14 +248,20 @@ class MockRCPAGRuntime:
             }
         if candidate is not None:
             variant_base = 64.0 if candidate.variant == "rc_pag_local" else 61.0
-            threshold_rank = {0.010: 0.0, 0.025: -2.0, 0.050: -4.0}[candidate.threshold]
+            threshold_rank = -8.0 * candidate.threshold
             nfe = variant_base + threshold_rank + self.candidate_nfe_offset
         else:
             nfe = self._method_nfe(method)
         payload: dict[str, Any] = {
             "elapsed_sec": elapsed,
             "total_nfe": nfe + (sample.index % 3) * 0.1,
-            "is_correct": sample.index % 11 != 0,
+            "is_correct": (
+                False
+                if stage == "calibrate" and candidate is not None and self.unsafe
+                else sample.index % 11 != 0
+            ),
+            "generated_text": f"mock-{sample.sample_id}",
+            "generated_ids": [sample.index, 1, 2],
             "mock": True,
         }
         if stage == "calibrate":
@@ -212,6 +292,7 @@ class RCPAGOrchestrator:
         runtime_factory: Callable[[str], RCPAGRuntime] | None = None,
         development_limit: int | None = None,
         mock_mode: bool | None = None,
+        reuse_development_from: str | Path | None = None,
     ) -> None:
         if development_limit is not None and development_limit < 1:
             raise ValueError("development_limit must be positive")
@@ -220,13 +301,18 @@ class RCPAGOrchestrator:
         self.device = device
         self.development_limit = development_limit
         self.mock_mode = mock_mode
+        self.reuse_development_from = (
+            None if reuse_development_from is None else Path(reuse_development_from).resolve()
+        )
+        if self.reuse_development_from is not None and config.protocol_version != "v2":
+            raise ValueError("development artifact reuse is only defined for the v2 protocol")
         self.runtime_factory = runtime_factory
         if runtime_factory is None:
             raise ValueError("a runtime_factory is required until a model runtime is configured")
         self.store = RecordStore(
             self.run_dir,
             {
-                "protocol": "risk_calibrated_pag_v1",
+                "protocol": f"risk_calibrated_pag_{config.protocol_version}",
                 "config_hash": config.config_hash,
                 "models": {name: spec.revision for name, spec in sorted(config.models.items())},
                 "datasets": {name: spec.revision for name, spec in sorted(config.datasets.items())},
@@ -288,6 +374,15 @@ class RCPAGOrchestrator:
                 seed=self.config.seed,
                 pool=dataset,
             )
+        elif sampling.strategy == "index_stratified_complement":
+            indices = _index_stratified_complement_indices(
+                population=sampling.population_sizes[dataset],
+                count=count,
+                excluded_count=sampling.excluded_counts[dataset],
+                strata=sampling.strata,
+                seed=self.config.seed,
+                pool=dataset,
+            )
         else:  # pragma: no cover - config validation owns the strategy set
             raise ValueError(f"unknown confirmatory sampling strategy: {sampling.strategy}")
         refs = tuple(SampleRef(dataset, index) for index in indices)
@@ -342,11 +437,12 @@ class RCPAGOrchestrator:
         stage: str,
         refs: Sequence[SampleRef],
         methods: Sequence[tuple[str, PolicyCandidateSpec | None]],
+        models: Sequence[str] | None = None,
     ) -> None:
         estimator_paths = {
             path.stem: str(path) for path in sorted((self.run_dir / "estimators").glob("*.joblib"))
         }
-        for model in self.config.models:
+        for model in models or tuple(self.config.models):
             runtime = self._runtime(model)
             model_stage = f"{stage}/{model}"
             for sample in refs:
@@ -371,25 +467,76 @@ class RCPAGOrchestrator:
     def _run_pilot(self) -> None:
         self._write_manifest("pilot", "running")
         refs = self._refs("pilot")
+        pilot_methods = (
+            (("adablock", None), ("full_budget_shadow", None))
+            if self.config.protocol_version == "v2"
+            else (("full_budget", None), ("pilot_shadow", None))
+        )
         self._run_records(
             stage="pilot",
             refs=refs,
-            methods=(("full_budget", None), ("pilot_shadow", None)),
+            methods=pilot_methods,
         )
+        primary_pilot_method = "adablock" if self.config.protocol_version == "v2" else "full_budget"
         records = [
             row
             for model in self.config.models
-            for row in self.store.records(f"pilot/{model}", "full_budget")
+            for row in self.store.records(f"pilot/{model}", primary_pilot_method)
         ]
+        if self.config.protocol_version == "v2":
+            parity_fields = (
+                "generated_ids",
+                "generated_text",
+                "nfe_history",
+                "block_history",
+                "total_nfe",
+            )
+            mismatches: list[dict[str, object]] = []
+            for model in self.config.models:
+                baseline = {
+                    row["sample_id"]: row
+                    for row in self.store.records(f"pilot/{model}", "adablock")
+                }
+                instrumented = {
+                    row["sample_id"]: row
+                    for row in self.store.records(f"pilot/{model}", "full_budget_shadow")
+                }
+                if set(baseline) != set(instrumented):
+                    raise RuntimeError(f"v2 parity coverage differs for {model}")
+                for sample_id in sorted(baseline):
+                    different = [
+                        field
+                        for field in parity_fields
+                        if baseline[sample_id].get(field) != instrumented[sample_id].get(field)
+                    ]
+                    if different:
+                        mismatches.append(
+                            {"model": model, "sample_id": sample_id, "fields": different}
+                        )
+            parity = {
+                "checked_records": len(records),
+                "fields": list(parity_fields),
+                "mismatches": mismatches,
+                "passed": not mismatches,
+            }
+            self.store.write_named("parity_audit.json", parity)
+            if mismatches:
+                self._write_manifest("pilot", "failed", parity=parity)
+                raise ControlledStop("exact AdaBlock parity gate failed")
         shadow_records = [
             row
             for model in self.config.models
-            for row in self.store.records(f"pilot/{model}", "pilot_shadow")
+            for row in self.store.records(
+                f"pilot/{model}",
+                "full_budget_shadow" if self.config.protocol_version == "v2" else "pilot_shadow",
+            )
         ]
         if len(shadow_records) != len(records):
             raise RuntimeError("pilot shadow coverage does not match full-budget coverage")
-        if not all(bool(row.get("mock")) for row in shadow_records) and any(
-            not row.get("shadow_losses") for row in shadow_records
+        if (
+            self.config.protocol_version == "v1"
+            and not all(bool(row.get("mock")) for row in shadow_records)
+            and any(not row.get("shadow_losses") for row in shadow_records)
         ):
             raise RuntimeError("real pilot did not exercise a same-state shadow continuation")
         seconds = float(np.mean([float(row["elapsed_sec"]) for row in records]))
@@ -402,17 +549,24 @@ class RCPAGOrchestrator:
             "collect": self.config.stage_sizes.traces_per_model,
             "screen": (baseline_screen_methods + len(self.config.candidates))
             * self.config.stage_sizes.tuning_per_model,
-            "calibrate": len(self.config.candidates)
-            * self.config.stage_sizes.calibration_per_model,
+            "calibrate": (
+                2 * self.config.stage_sizes.calibration_per_model
+                if self.config.protocol_version == "v2"
+                else len(self.config.candidates) * self.config.stage_sizes.calibration_per_model
+            ),
             "confirm": sum(self.config.confirmatory_counts.values())
             * len(self.config.confirmatory_methods),
         }
-        full_gpu_runs = len(self.config.models) * sum(runs_per_model.values())
+        collect_models = len(self.config.models) - int(self.reuse_development_from is not None)
+        full_gpu_runs = collect_models * runs_per_model["collect"] + len(self.config.models) * sum(
+            value for stage, value in runs_per_model.items() if stage != "collect"
+        )
         projection = {
             "basis": "pilot wall time; rerun after the 32-prompt real A100 pilot",
             "seconds_per_sample": seconds,
             "bytes_per_sample": artifact_bytes,
             "projected_runs_per_model_by_stage": runs_per_model,
+            "projected_collect_models": collect_models,
             "projected_gpu_runs": full_gpu_runs,
             "projected_a100_hours": seconds * full_gpu_runs / 3600,
             "projected_storage_bytes": int(math.ceil(artifact_bytes * full_gpu_runs)),
@@ -423,17 +577,123 @@ class RCPAGOrchestrator:
 
     def _run_collect(self) -> None:
         self._write_manifest("collect", "running")
+        reused_models = self._prepare_development_reuse()
         self._run_records(
             stage="collect",
             refs=self._refs("training"),
             methods=(("full_budget_shadow", None),),
+            models=tuple(model for model in self.config.models if model not in reused_models),
         )
-        self._write_manifest("collect", "completed")
+        self._write_manifest("collect", "completed", reused_models=sorted(reused_models))
+
+    def _prepare_development_reuse(self) -> set[str]:
+        if self.reuse_development_from is None:
+            return set()
+        source = self.reuse_development_from
+        if source == self.run_dir.resolve():
+            raise ValueError("reuse source must be a different run directory")
+        fit_manifest_path = source / "manifests" / "fit.json"
+        estimator_manifest_path = source / "estimators" / "manifest.json"
+        if not fit_manifest_path.is_file() or not estimator_manifest_path.is_file():
+            raise ValueError(
+                "reuse source must contain a completed fit stage and estimator manifest"
+            )
+        fit_manifest = json.loads(fit_manifest_path.read_text(encoding="utf-8"))
+        if fit_manifest.get("status") != "completed":
+            raise ValueError("reuse source fit stage is not complete")
+        source_identity = fit_manifest.get("identity", {})
+        if source_identity.get("protocol") != "risk_calibrated_pag_v1":
+            raise ValueError("reuse source must be a completed v1 RC-PAG run")
+        for field in ("models", "datasets"):
+            if source_identity.get(field) != self.store.identity[field]:
+                raise ValueError(f"reuse source {field} identity differs from the v2 run")
+        estimator_manifest = json.loads(estimator_manifest_path.read_text(encoding="utf-8"))
+        try:
+            local_metadata = estimator_manifest["models"]["llada"]["rc_pag_local"]
+        except KeyError as exc:
+            raise ValueError("reuse source has no LLaDA local risk estimator") from exc
+        copied: list[dict[str, str]] = []
+        for estimator in local_metadata["estimators"].values():
+            relative = Path(str(estimator["path"]))
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError("reuse estimator path must be relative to its run directory")
+            source_model = source / relative
+            source_metadata = source_model.with_suffix(".json")
+            if not source_model.is_file() or not source_metadata.is_file():
+                raise ValueError(f"reuse estimator is incomplete: {relative}")
+            loaded = RiskEstimator.load(source_model)
+            if loaded.include_history or loaded.history_window != self.config.history_window:
+                raise ValueError("reuse estimator feature protocol differs from v2 local policy")
+            if loaded.kind not in self.config.estimator_kinds:
+                raise ValueError("reuse estimator kind is not registered in v2")
+            destination = self.run_dir / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_model, destination)
+            shutil.copy2(source_metadata, destination.with_suffix(".json"))
+            if _sha256_path(source_model) != _sha256_path(destination):
+                raise RuntimeError(f"copied estimator hash differs: {relative}")
+            copied.append({"path": str(relative), "sha256": _sha256_path(destination)})
+        evidence_files = (
+            "screening_summary.json",
+            "risk_certificate.json",
+            "frozen_confirmatory_policy.json",
+            "report/summary.json",
+            "report/claim_audit.json",
+        )
+        evidence: list[dict[str, str]] = []
+        for relative_text in evidence_files:
+            relative = Path(relative_text)
+            source_path = source / relative
+            if not source_path.is_file():
+                continue
+            destination = self.run_dir / "prior_evidence" / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, destination)
+            evidence.append(
+                {
+                    "path": str(Path("prior_evidence") / relative),
+                    "sha256": _sha256_path(destination),
+                }
+            )
+        reuse_payload = {
+            "schema_version": 1,
+            "source": str(source),
+            "source_config_hash": fit_manifest.get("config_hash"),
+            "reused_models": ["llada"],
+            "reused_variants": ["rc_pag_local"],
+            "excluded_models": ["dream"],
+            "reason": (
+                "Dream changed decoding semantics; only the parity-compatible LLaDA "
+                "estimator is reused."
+            ),
+            "estimators": copied,
+            "estimator_metadata": local_metadata,
+            "prior_evidence": evidence,
+        }
+        self.store.write_named("reuse/manifest.json", reuse_payload)
+        return {"llada"}
 
     def _run_fit(self) -> None:
         self._write_manifest("fit", "running")
         metadata: dict[str, dict[str, object]] = {}
-        for model in self.config.models:
+        reused_models: set[str] = set()
+        reuse_manifest_path = self.run_dir / "reuse" / "manifest.json"
+        if reuse_manifest_path.is_file():
+            reuse_manifest = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
+            reused_models = set(reuse_manifest["reused_models"])
+            metadata["llada"] = {
+                "rc_pag_local": {
+                    **reuse_manifest["estimator_metadata"],
+                    "reused": True,
+                    "source_run": reuse_manifest["source"],
+                }
+            }
+        variants = (
+            (("rc_pag_local", False),)
+            if self.config.protocol_version == "v2"
+            else (("rc_pag_local", False), ("rc_pag_history", True))
+        )
+        for model in (name for name in self.config.models if name not in reused_models):
             rows = self.store.records(f"collect/{model}", "full_budget_shadow")
             if not rows:
                 raise ValueError(f"no collected examples for {model}")
@@ -467,10 +727,7 @@ class RCPAGOrchestrator:
             training_examples = tuple(example for group in training_groups for example in group)
             validation_examples = tuple(example for group in validation_groups for example in group)
             metadata[model] = {}
-            for variant, include_history in (
-                ("rc_pag_local", False),
-                ("rc_pag_history", True),
-            ):
+            for variant, include_history in variants:
                 ablations: dict[str, object] = {}
                 for kind in self.config.estimator_kinds:
                     evaluation_estimator = RiskEstimator.fit(
@@ -556,6 +813,107 @@ class RCPAGOrchestrator:
             refs=self._refs("tuning"),
             methods=baseline_methods + candidate_methods,
         )
+        if self.config.protocol_version == "v2":
+            nonlearned = {"adablock", "entropy_sum_gate", "mutual_stability_gate"}
+            best_nonlearned: dict[str, str] = {}
+            best_nonlearned_mean_nfe: dict[str, float] = {}
+            selected_candidate: dict[str, str] = {}
+            models_summary: dict[str, dict[str, object]] = {}
+            candidate_lookup = {candidate.name: candidate for candidate in self.config.candidates}
+            for model in self.config.models:
+                baseline_rows = self.store.records(f"screen/{model}", "adablock")
+                baseline_by_id = {row["sample_id"]: row for row in baseline_rows}
+                allowed_harm = max(1, math.floor(0.02 * len(baseline_rows)))
+
+                def method_stats(
+                    name: str,
+                    *,
+                    model: str = model,
+                    baseline_by_id: dict[str, dict[str, Any]] = baseline_by_id,
+                    allowed_harm: int = allowed_harm,
+                ) -> dict[str, object]:
+                    rows = self.store.records(f"screen/{model}", name)
+                    by_id = {row["sample_id"]: row for row in rows}
+                    if set(by_id) != set(baseline_by_id):
+                        raise RuntimeError(f"incomplete v2 screening coverage for {model}/{name}")
+                    harmful = sum(
+                        bool(baseline_by_id[sample_id].get("is_correct"))
+                        and not bool(by_id[sample_id].get("is_correct"))
+                        for sample_id in baseline_by_id
+                    )
+                    return {
+                        "mean_nfe": float(np.mean([float(row["total_nfe"]) for row in rows])),
+                        "correct": sum(bool(row.get("is_correct")) for row in rows),
+                        "harmful_regressions": harmful,
+                        "accuracy_eligible": harmful <= allowed_harm,
+                    }
+
+                nonlearned_stats = {name: method_stats(name) for name in sorted(nonlearned)}
+                eligible_nonlearned = [
+                    name
+                    for name, stats in nonlearned_stats.items()
+                    if bool(stats["accuracy_eligible"])
+                ]
+                if not eligible_nonlearned:
+                    raise ControlledStop(
+                        f"no accuracy-eligible nonlearned method survived for {model}"
+                    )
+                best = min(
+                    eligible_nonlearned,
+                    key=lambda name: (
+                        float(nonlearned_stats[name]["mean_nfe"]),
+                        -int(nonlearned_stats[name]["correct"]),
+                        name,
+                    ),
+                )
+                best_nonlearned[model] = best
+                best_nonlearned_mean_nfe[model] = float(nonlearned_stats[best]["mean_nfe"])
+
+                candidate_stats = {
+                    candidate.name: method_stats(candidate.name)
+                    for candidate in self.config.candidates
+                }
+                eligible_candidates = [
+                    name
+                    for name, stats in candidate_stats.items()
+                    if bool(stats["accuracy_eligible"])
+                ]
+                if not eligible_candidates:
+                    raise ControlledStop(f"no v2 risk policy survived tuning for {model}")
+                selected_candidate[model] = min(
+                    eligible_candidates,
+                    key=lambda name: (
+                        float(candidate_stats[name]["mean_nfe"]),
+                        -int(candidate_stats[name]["correct"]),
+                        name,
+                    ),
+                )
+                models_summary[model] = {
+                    "allowed_harmful_regressions": allowed_harm,
+                    "nonlearned": nonlearned_stats,
+                    "candidates": candidate_stats,
+                }
+            summary = {
+                "protocol_version": "v2",
+                "best_nonlearned": best_nonlearned,
+                "best_nonlearned_mean_nfe": best_nonlearned_mean_nfe,
+                "selected_candidate": selected_candidate,
+                "models": models_summary,
+            }
+            frozen = {
+                "schema_version": 1,
+                "config_hash": self.config.config_hash,
+                "risk_loss": self.config.risk.loss,
+                "selected_by_model": {
+                    model: asdict(candidate_lookup[name])
+                    for model, name in selected_candidate.items()
+                },
+            }
+            frozen["protocol_identity"] = canonical_config_hash(frozen)
+            self.store.write_named("screening_summary.json", summary)
+            self.store.write_named("frozen_policy.json", frozen)
+            self._write_manifest("screen", "completed", summary=summary, frozen_policy=frozen)
+            return
         nonlearned = {
             "fixed",
             "adablock",
@@ -616,6 +974,101 @@ class RCPAGOrchestrator:
 
     def _run_calibrate(self) -> None:
         self._write_manifest("calibrate", "running")
+        if self.config.protocol_version == "v2":
+            frozen = json.loads((self.run_dir / "frozen_policy.json").read_text(encoding="utf-8"))
+            selected = {
+                model: PolicyCandidateSpec(**payload)
+                for model, payload in frozen["selected_by_model"].items()
+            }
+            family = {
+                "schema_version": 2,
+                "config_hash": self.config.config_hash,
+                "alpha": self.config.risk.alpha,
+                "delta": self.config.risk.delta,
+                "loss": self.config.risk.loss,
+                "multiplicity_unit": "frozen_model_policy_pair",
+                "selected_by_model": {
+                    model: asdict(candidate) for model, candidate in selected.items()
+                },
+                "selection_source": "development_screen_only",
+            }
+            family["protocol_identity"] = canonical_config_hash(family)
+            self.store.write_named("calibration_family.json", family)
+            refs = self._refs("calibration")
+            for model, candidate in selected.items():
+                self._run_records(
+                    stage="calibrate",
+                    refs=refs,
+                    methods=(("adablock", None), (candidate.name, candidate)),
+                    models=(model,),
+                )
+            candidates: list[CandidateRisk] = []
+            diagnostics: dict[str, dict[str, object]] = {}
+            for model, candidate in selected.items():
+                baseline_rows = {
+                    row["sample_id"]: row
+                    for row in self.store.records(f"calibrate/{model}", "adablock")
+                }
+                candidate_rows = {
+                    row["sample_id"]: row
+                    for row in self.store.records(f"calibrate/{model}", candidate.name)
+                }
+                if set(baseline_rows) != set(candidate_rows):
+                    raise RuntimeError(f"incomplete paired v2 calibration for {model}")
+                losses: list[int] = []
+                disagreements = 0
+                for sample_id in sorted(baseline_rows):
+                    baseline = baseline_rows[sample_id]
+                    policy = candidate_rows[sample_id]
+                    harmful = int(
+                        bool(baseline.get("is_correct")) and not bool(policy.get("is_correct"))
+                    )
+                    repetitions = int(policy.get("synthetic_repetitions", 1))
+                    losses.extend([harmful] * repetitions)
+                    disagreements += int(
+                        baseline.get("generated_ids") != policy.get("generated_ids")
+                    )
+                candidates.append(
+                    CandidateRisk(
+                        f"{model}/{candidate.name}",
+                        tuple(losses),
+                        mean_nfe=float(
+                            np.mean([float(row["total_nfe"]) for row in candidate_rows.values()])
+                        ),
+                        protocol_identity=str(family["protocol_identity"]),
+                    )
+                )
+                diagnostics[model] = {
+                    "candidate": candidate.name,
+                    "paired_prompts": len(baseline_rows),
+                    "sequence_disagreements": disagreements,
+                    "harmful_regressions": sum(losses),
+                    "effective_calibration_count": len(losses),
+                }
+            certificate = certify_candidates(
+                candidates,
+                alpha=self.config.risk.alpha,
+                delta=self.config.risk.delta,
+            )
+            payload = certificate.to_dict()
+            payload.update(
+                {
+                    "schema_version": 2,
+                    "loss": self.config.risk.loss,
+                    "selected_by_model": {
+                        model: candidate.name for model, candidate in selected.items()
+                    },
+                    "diagnostics": diagnostics,
+                    "mock": (
+                        self.mock_mode
+                        if self.mock_mode is not None
+                        else all(self._runtime(model).is_mock for model in self.config.models)
+                    ),
+                }
+            )
+            self.store.write_named("risk_certificate.json", payload)
+            self._write_manifest("calibrate", "completed", certificate=payload)
+            return
         family = json.loads((self.run_dir / "policy_family.json").read_text(encoding="utf-8"))
         if family != self._policy_family_payload():
             raise ValueError("frozen policy family differs from the current configuration")
@@ -677,6 +1130,77 @@ class RCPAGOrchestrator:
         certificate = json.loads(
             (self.run_dir / "risk_certificate.json").read_text(encoding="utf-8")
         )
+        if self.config.protocol_version == "v2":
+            frozen = json.loads((self.run_dir / "frozen_policy.json").read_text(encoding="utf-8"))
+            selected = {
+                model: PolicyCandidateSpec(**payload)
+                for model, payload in frozen["selected_by_model"].items()
+            }
+            certified_names = {
+                str(item["name"]) for item in certificate["candidates"] if bool(item["certified"])
+            }
+            required = {f"{model}/{candidate.name}" for model, candidate in selected.items()}
+            if certified_names & required != required:
+                raise ControlledStop(
+                    "not every frozen model policy has an end-to-end harm certificate"
+                )
+            screening = json.loads(
+                (self.run_dir / "screening_summary.json").read_text(encoding="utf-8")
+            )
+            calibrated_nfe = {
+                str(item["name"]): float(item["mean_nfe"]) for item in certificate["candidates"]
+            }
+            for model, candidate in selected.items():
+                if calibrated_nfe[f"{model}/{candidate.name}"] >= float(
+                    screening["best_nonlearned_mean_nfe"][model]
+                ):
+                    raise ControlledStop(
+                        f"calibration futility gate: {model} policy did not beat its comparator"
+                    )
+            self._write_manifest("confirm", "running")
+            estimator_paths = {
+                path.stem: str(path)
+                for path in sorted((self.run_dir / "estimators").glob("*.joblib"))
+            }
+            for model, candidate in selected.items():
+                runtime = self._runtime(model)
+                methods = (
+                    ("adablock", None),
+                    ("best_nonlearned", None),
+                    ("rc_pag_selected", candidate),
+                )
+                for dataset in self.config.confirmatory_counts:
+                    stage = f"confirm/{dataset}/{model}"
+                    for sample in self._confirm_refs(dataset):
+                        for method, method_candidate in methods:
+                            if self.store.is_complete(stage, method, sample.sample_id):
+                                continue
+                            payload = runtime.run(
+                                stage="confirm",
+                                model=model,
+                                sample=sample,
+                                method=method,
+                                candidate=method_candidate,
+                                estimator_paths=estimator_paths,
+                            )
+                            self.store.write(stage, method, sample.sample_id, payload)
+                if not runtime.is_mock:
+                    close = getattr(runtime, "close", None)
+                    if close is not None:
+                        close()
+                    self._runtimes.pop(model, None)
+            policy_payload = {
+                "selected_by_model": {
+                    model: asdict(candidate) for model, candidate in selected.items()
+                },
+                "primary_rc_pag_method": "rc_pag_selected",
+                "best_nonlearned": screening["best_nonlearned"],
+                "config_hash": self.config.config_hash,
+                "risk_loss": self.config.risk.loss,
+            }
+            self.store.write_named("frozen_confirmatory_policy.json", policy_payload)
+            self._write_manifest("confirm", "completed", **policy_payload)
+            return
         if bool(certificate["fallback"]):
             raise ControlledStop("no certified policy; confirmation was not started")
         selected_by_model = {
@@ -804,7 +1328,9 @@ class RCPAGOrchestrator:
             estimator_manifest=estimator_manifest,
             methods=self.config.confirmatory_methods,
             primary_method=(
-                "rc_pag_history"
+                "rc_pag_selected"
+                if self.config.protocol_version == "v2"
+                else "rc_pag_history"
                 if "rc_pag_history" in self.config.confirmatory_methods
                 else "rc_pag_local"
             ),

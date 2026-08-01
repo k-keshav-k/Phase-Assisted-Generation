@@ -90,9 +90,7 @@ class RiskEstimator:
         if history_window < 1:
             raise ValueError("history_window must be positive")
         names = feature_names(include_history=include_history)
-        features = np.stack(
-            [vectorize_features(example.features, names) for example in examples]
-        )
+        features = np.stack([vectorize_features(example.features, names) for example in examples])
         labels = np.asarray([int(example.unsafe) for example in examples], dtype=np.int64)
         unique = np.unique(labels)
         if unique.size == 1:
@@ -201,18 +199,22 @@ class RiskStoppingPolicy:
         patience: int,
         include_history: bool = True,
         history_window: int = 8,
+        max_remaining_fraction: float = 1.0,
         force_full_budget: bool = False,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("threshold must be in [0, 1]")
         if min_steps < 1 or patience < 1 or history_window < 1:
             raise ValueError("min_steps, patience, and history_window must be positive")
+        if not 0.0 < max_remaining_fraction <= 1.0:
+            raise ValueError("max_remaining_fraction must be in (0, 1]")
         self.scorer = scorer
         self.threshold = float(threshold)
         self.min_steps = int(min_steps)
         self.patience = int(patience)
         self.include_history = bool(include_history)
         self.history_window = int(history_window)
+        self.max_remaining_fraction = float(max_remaining_fraction)
         self.force_full_budget = bool(force_full_budget)
         self.reset_prompt()
 
@@ -224,6 +226,7 @@ class RiskStoppingPolicy:
             min_steps=1,
             patience=1,
             include_history=False,
+            max_remaining_fraction=1.0,
             force_full_budget=True,
         )
 
@@ -264,7 +267,12 @@ class RiskStoppingPolicy:
         score = float(self.scorer.predict_risk(selected_features))
         if not math.isfinite(score) or not 0.0 <= score <= 1.0:
             raise ValueError("risk scorer must return a probability in [0, 1]")
-        eligible = observation.step_index >= self.min_steps and score <= self.threshold
+        remaining_fraction = sum(observation.masked) / observation.block_size
+        eligible = (
+            observation.step_index >= self.min_steps
+            and remaining_fraction <= self.max_remaining_fraction
+            and score <= self.threshold
+        )
         self._safe_streak = self._safe_streak + 1 if eligible else 0
         should_stop = self._safe_streak >= self.patience
         decision = StopDecision(

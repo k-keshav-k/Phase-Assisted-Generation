@@ -26,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--allow-confirmatory", action="store_true")
+    parser.add_argument(
+        "--reuse-development-from",
+        type=Path,
+        help="Reuse the validated LLaDA local estimator from a completed v1 run.",
+    )
     return parser
 
 
@@ -71,6 +76,8 @@ def _resume_command(args: argparse.Namespace, *, run_id: str) -> str:
         command.extend(("--limit", str(args.limit)))
     if args.allow_confirmatory:
         command.append("--allow-confirmatory")
+    if args.reuse_development_from is not None:
+        command.extend(("--reuse-development-from", str(args.reuse_development_from)))
     return shlex.join(command)
 
 
@@ -94,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     if run_dir.exists() and any(run_dir.iterdir()) and not args.resume:
         parser.error(f"run directory already exists; pass --resume: {run_dir}")
     if args.mock:
-        runtime = MockRCPAGRuntime(calibration_repetitions=60)
+        runtime = MockRCPAGRuntime(calibration_repetitions=300)
 
         def runtime_factory(model: str) -> MockRCPAGRuntime:
             del model
@@ -113,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         runtime_factory=runtime_factory,
         development_limit=development_limit,
         mock_mode=args.mock,
+        reuse_development_from=args.reuse_development_from,
     )
     print(f"Run ID: {run_id}")
     print(f"Config hash: {config.config_hash}")

@@ -240,7 +240,8 @@ def generate_adablock_prefix_cache(model, prompt, steps=128, gen_length=128, ini
 
 @torch.no_grad()
 def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_block_length=128, temperature=0.,
-            remasking='low_confidence', mask_id=126336, threshold=None, delimiter_ids=[198], delimiter_threshold=float('inf')): 
+            remasking='low_confidence', mask_id=126336, threshold=None, delimiter_ids=[198], delimiter_threshold=float('inf'),
+            risk_policy=None, digit_ids_tensor=None, delimiter_ids_tensor=None, return_schedule_history=False):
     '''
     Args:
         model: Mask predictor.
@@ -267,6 +268,9 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
     generated_length = 0
     nfe_history = []  
     block_history = []
+    schedule_history = []
+    if risk_policy is not None:
+        risk_policy.reset_prompt()
     
     while generated_length < gen_length: 
         nfe = 0
@@ -285,6 +289,9 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         block_start = prompt.shape[1] + generated_length
         block_end = block_start + block_length
         generated_length += block_length
+        risk_steps = []
+        if risk_policy is not None:
+            risk_policy.start_block()
         
         # only allow transfer tokens in current block
         mask_index = (x == mask_id)
@@ -292,6 +299,34 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         
         x0, transfer_index = get_transfer_index(logits, predicted_tokens, remasking, mask_index, x, None, threshold)
         x[transfer_index] = x0[transfer_index]
+        final_block_logits = logits[:, block_start:block_end]
+
+        if risk_policy is not None:
+            from pag.experiments.rc_pag_adapter import observe_policy_step, serialize_policy_step
+
+            policy_step = observe_policy_step(
+                risk_policy,
+                logits=final_block_logits,
+                current_tokens=x[:, block_start:block_end],
+                mask_token_id=mask_id,
+                step_index=nfe,
+                full_tokens=x,
+                block_start=block_start,
+                block_end=block_end,
+                digit_ids=digit_ids_tensor,
+                delimiter_ids=delimiter_ids_tensor,
+                cache=full_cache,
+            )
+            risk_steps.append(serialize_policy_step(policy_step))
+            if policy_step.decision.should_stop:
+                proposed = torch.tensor(
+                    policy_step.proposed_tokens,
+                    dtype=x.dtype,
+                    device=x.device,
+                ).reshape(1, -1)
+                active = x[:, block_start:block_end]
+                remaining = active == mask_id
+                active[remaining] = proposed[remaining]
 
         replace_position = torch.zeros_like(x, dtype=torch.bool)
         replace_position[:, block_start:block_end] = 1
@@ -302,14 +337,91 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
             mask_index = (x[:, block_start:block_end] == mask_id)
             block_output = model(x[:, block_start:block_end], past_key_values=full_cache, use_cache=True, replace_position=replace_position)
             block_logits = block_output.logits
+            final_block_logits = block_logits
             block_logits_with_noise = add_gumbel_noise(block_logits, temperature=temperature)
             block_predicted_tokens = torch.argmax(block_logits_with_noise, dim=-1)
             nfe += 1
-            x0, transfer_index = get_transfer_index(block_logits, block_predicted_tokens, remasking, mask_index, 
-                                            x[:, block_start:block_end], None, threshold)
-            x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+            force_commit = False
+            if risk_policy is not None:
+                from pag.experiments.rc_pag_adapter import observe_policy_step, serialize_policy_step
+
+                policy_step = observe_policy_step(
+                    risk_policy,
+                    logits=block_logits,
+                    current_tokens=x[:, block_start:block_end],
+                    mask_token_id=mask_id,
+                    step_index=nfe,
+                    full_tokens=x,
+                    block_start=block_start,
+                    block_end=block_end,
+                    digit_ids=digit_ids_tensor,
+                    delimiter_ids=delimiter_ids_tensor,
+                    cache=full_cache,
+                )
+                risk_steps.append(serialize_policy_step(policy_step))
+                force_commit = bool(policy_step.decision.should_stop)
+                if force_commit:
+                    proposed = torch.tensor(
+                        policy_step.proposed_tokens,
+                        dtype=x.dtype,
+                        device=x.device,
+                    ).reshape(1, -1)
+                    active = x[:, block_start:block_end]
+                    active[mask_index] = proposed[mask_index]
+            if not force_commit:
+                x0, transfer_index = get_transfer_index(block_logits, block_predicted_tokens, remasking, mask_index,
+                                                x[:, block_start:block_end], None, threshold)
+                x[:, block_start:block_end][transfer_index] = x0[transfer_index]
         nfe_history.append(nfe)
 
+        if risk_policy is not None or return_schedule_history:
+            from pag.experiments.rc_pag_features import RealizedBlock
+
+            block_tokens = x[:, block_start:block_end]
+            probabilities = torch.softmax(final_block_logits.float(), dim=-1)
+            token_confidence = probabilities.gather(
+                -1, block_tokens.unsqueeze(-1)
+            ).squeeze(-1)
+            digit_fraction = (
+                torch.isin(block_tokens, digit_ids_tensor.to(x.device)).float().mean().item()
+                if digit_ids_tensor is not None
+                else 0.0
+            )
+            delimiter_fraction = (
+                torch.isin(block_tokens, delimiter_ids_tensor.to(x.device)).float().mean().item()
+                if delimiter_ids_tensor is not None
+                else 0.0
+            )
+            if risk_policy is not None:
+                risk_policy.record_realized(
+                    RealizedBlock(
+                        block_size=block_length,
+                        nfe=nfe,
+                        mean_confidence=token_confidence.mean().item(),
+                        min_confidence=token_confidence.min().item(),
+                        digit_fraction=digit_fraction,
+                        delimiter_fraction=delimiter_fraction,
+                    )
+                )
+            schedule_history.append(
+                {
+                    "block_index": len(schedule_history),
+                    "applied_block_size": int(block_length),
+                    "budgeted_refinement_steps": int(steps),
+                    "actual_nfe_used": int(nfe),
+                    "mean_top1_confidence": token_confidence.mean().item(),
+                    "min_top1_confidence": token_confidence.min().item(),
+                    "digit_fraction": digit_fraction,
+                    "delimiter_fraction": delimiter_fraction,
+                    "block_start": int(block_start),
+                    "block_end": int(block_end),
+                    "risk_steps": risk_steps,
+                    "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
+                }
+            )
+
+    if return_schedule_history:
+        return x, nfe_history, block_history, schedule_history
     return x, nfe_history, block_history
 
 def get_transfer_index(

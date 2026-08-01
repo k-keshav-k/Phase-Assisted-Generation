@@ -61,8 +61,12 @@ if any(int(count) < 1 for count in inputs.get("coverage", {}).values()):
 
 names = {str(row.get("name", "")) for row in certificate.get("candidates", ())}
 models = {name.split("/", 1)[0] for name in names if "/" in name}
-if models != {"llada", "dream"} or len(names) != 12:
-    raise SystemExit("certificate must cover all 12 frozen model-policy pairs")
+if (
+    certificate.get("loss") != "adablock_correct_candidate_wrong"
+    or models != {"llada", "dream"}
+    or len(names) != 2
+):
+    raise SystemExit("v2 certificate must cover exactly two frozen model-policy pairs")
 
 tables = run_dir / "report" / "tables"
 figures = run_dir / "report" / "figures"

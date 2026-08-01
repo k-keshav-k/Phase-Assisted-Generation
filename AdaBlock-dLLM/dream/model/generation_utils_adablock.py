@@ -99,6 +99,7 @@ class DreamModelOutput(ModelOutput):
     history: Optional[Tuple[torch.FloatTensor]] = None
     nfe_history: Optional[list] = None
     block_history: Optional[list] = None
+    schedule_history: Optional[list] = None
 
 
 class DreamGenerationConfig(GenerationConfig):
@@ -697,7 +698,11 @@ class DreamGenerationMixin:
         generated_length = 0
         nfe_history = []
         block_history = []
+        schedule_history = []
         past_key_values = None
+        risk_policy = getattr(self, "pag_risk_policy", None)
+        if risk_policy is not None:
+            risk_policy.reset_prompt()
         # Process each block
         while generated_length < gen_length:
             nfe = 0
@@ -714,10 +719,14 @@ class DreamGenerationMixin:
             block_history.append(current_block_length)
             generated_length += current_block_length
             block_end = block_start + current_block_length
+            risk_steps = []
+            if risk_policy is not None:
+                risk_policy.start_block()
 
             # mandatory decode first token
             confidence, x0 = sample_tokens(logits, temperature=temperature, top_p=top_p, top_k=top_k)
             x[:, block_start] = x0[:, block_start]
+            final_block_logits = logits[:, block_start:block_end]
 
             replace_position = torch.zeros_like(x, dtype=torch.bool)
             replace_position[:, block_start:block_end] = 1
@@ -741,10 +750,44 @@ class DreamGenerationMixin:
                                     past_key_values=past_key_values, use_cache=True, dual_cache=dual_cache, replace_position=replace_position)
                 logits = model_output.logits
                 logits = torch.cat([logits[:,:1], logits[:, :-1]], dim=1)
+                final_block_logits = logits
                 nfe += 1
 
+                risk_force_commit = False
+                if risk_policy is not None:
+                    from pag.experiments.rc_pag_adapter import (
+                        observe_policy_step,
+                        serialize_policy_step,
+                    )
+
+                    policy_step = observe_policy_step(
+                        risk_policy,
+                        logits=logits,
+                        current_tokens=x[:, block_start:block_end],
+                        mask_token_id=mask_token_id,
+                        step_index=nfe,
+                        full_tokens=x,
+                        block_start=block_start,
+                        block_end=block_end,
+                        digit_ids=getattr(self, "pag_digit_ids", None),
+                        delimiter_ids=getattr(self, "pag_delimiter_ids", None),
+                        cache=past_key_values,
+                    )
+                    risk_steps.append(serialize_policy_step(policy_step))
+                    risk_force_commit = bool(policy_step.decision.should_stop)
+                    if risk_force_commit:
+                        proposed = torch.tensor(
+                            policy_step.proposed_tokens,
+                            dtype=x.dtype,
+                            device=x.device,
+                        ).reshape(1, -1)
+                        active = x[:, block_start:block_end]
+                        active[mask_index] = proposed[mask_index]
+
                 # sample
-                if alg == 'confidence_threshold':
+                if risk_force_commit:
+                    pass
+                elif alg == 'confidence_threshold':
                     x = _confidence_threshold_sample(
                         logits=logits,
                         mask_index=mask_index,
@@ -761,13 +804,60 @@ class DreamGenerationMixin:
                     raise NotImplementedError(alg)
             
             nfe_history.append(nfe)
+            if risk_policy is not None:
+                from pag.experiments.rc_pag_features import RealizedBlock
+
+                block_tokens = x[:, block_start:block_end]
+                probabilities = torch.softmax(final_block_logits.float(), dim=-1)
+                token_confidence = probabilities.gather(
+                    -1, block_tokens.unsqueeze(-1)
+                ).squeeze(-1)
+                digit_ids = getattr(self, "pag_digit_ids", None)
+                delimiter_ids = getattr(self, "pag_delimiter_ids", None)
+                digit_fraction = (
+                    torch.isin(block_tokens, digit_ids.to(x.device)).float().mean().item()
+                    if digit_ids is not None
+                    else 0.0
+                )
+                delimiter_fraction = (
+                    torch.isin(block_tokens, delimiter_ids.to(x.device)).float().mean().item()
+                    if delimiter_ids is not None
+                    else 0.0
+                )
+                risk_policy.record_realized(
+                    RealizedBlock(
+                        block_size=current_block_length,
+                        nfe=nfe,
+                        mean_confidence=token_confidence.mean().item(),
+                        min_confidence=token_confidence.min().item(),
+                        digit_fraction=digit_fraction,
+                        delimiter_fraction=delimiter_fraction,
+                    )
+                )
+                schedule_history.append(
+                    {
+                        "block_index": len(schedule_history),
+                        "applied_block_size": int(current_block_length),
+                        "budgeted_refinement_steps": int(steps),
+                        "actual_nfe_used": int(nfe),
+                        "mean_top1_confidence": token_confidence.mean().item(),
+                        "min_top1_confidence": token_confidence.min().item(),
+                        "digit_fraction": digit_fraction,
+                        "delimiter_fraction": delimiter_fraction,
+                        "block_start": int(block_start),
+                        "block_end": int(block_end),
+                        "risk_steps": risk_steps,
+                        "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
+                    }
+                )
         
         if return_dict_in_generate:
             return DreamModelOutput(
                 sequences=x,
                 history=histories,
                 nfe_history=nfe_history,
-                block_history=block_history
+                block_history=block_history,
+                schedule_history=schedule_history,
             )
         else:
             return x

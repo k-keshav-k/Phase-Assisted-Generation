@@ -70,6 +70,44 @@ def _workshop_records() -> dict:
     return records
 
 
+def _v2_certificate(*, certified: bool = True) -> dict:
+    selected = {"llada": "local_q20_tail25_p2", "dream": "local_q05_tail25_p2"}
+    return {
+        "alpha": 0.02,
+        "familywise_delta": 0.05,
+        "selected": "per_model_frozen_policy" if certified else "full_budget",
+        "fallback": not certified,
+        "selected_by_model": selected,
+        "candidates": [
+            {
+                "name": f"{model}/{name}",
+                "failures": 0,
+                "count": 300,
+                "empirical_risk": 0.0,
+                "upper_risk_bound": 0.018,
+                "pvalue": 0.002 if certified else 0.5,
+                "corrected_cutoff": 0.025,
+                "certified": certified,
+                "mean_nfe": 55.0,
+            }
+            for model, name in selected.items()
+        ],
+    }
+
+
+def _v2_records() -> dict:
+    records = _records()
+    for model in records.values():
+        for dataset in model.values():
+            dataset["rc_pag_selected"] = dataset.pop("rc_pag_history")
+            dataset.pop("rc_pag_local")
+            for index, row in enumerate(dataset["adablock"]):
+                row["generated_ids"] = [index, 1]
+            for index, row in enumerate(dataset["rc_pag_selected"]):
+                row["generated_ids"] = [index, 1]
+    return records
+
+
 def test_failed_risk_certificate_blocks_headline(tmp_path):
     audit = write_rc_pag_report(
         tmp_path,
@@ -143,3 +181,22 @@ def test_workshop_report_accepts_single_certified_variant(tmp_path):
 
     assert audit["headline_eligible"]
     assert "history_frontier" not in audit["gates"]
+
+
+def test_v2_report_audits_frozen_per_model_policies_and_end_to_end_harm(tmp_path):
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=_v2_records(),
+        certificate=_v2_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_selected"),
+        primary_method="rc_pag_selected",
+        require_history_frontier_ci=False,
+    )
+
+    assert audit["headline_eligible"]
+    summary = json.loads((tmp_path / "report" / "summary.json").read_text())
+    comparison = summary["llada"]["gsm8k_test"]["comparisons"]
+    assert comparison["rc_pag_selected_vs_adablock"]["harmful_regressions"] == 0
+    assert comparison["rc_pag_selected_vs_adablock"]["sequence_disagreements"] == 0
