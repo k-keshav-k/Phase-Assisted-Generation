@@ -21,7 +21,7 @@
 \newcommand{\pending}[1]{\fcolorbox{orange!70!black}{orange!8}{\parbox{0.92\linewidth}{#1}}}
 \newtheorem{proposition}{Proposition}
 
-\title{Risk-Calibrated Adaptive Stopping for Diffusion Language Models}
+\title{Jointly Certified Accuracy--Compute Stopping for Diffusion Language Models}
 \author{Anonymous Authors}
 \date{}
 
@@ -34,11 +34,12 @@ stop refining a token block early, reducing neural function evaluations (NFEs), 
 mistimed stop may irreversibly change the generated continuation. Existing adaptive
 decoders use confidence, entropy, token stability, or learned schedules, yet generally do
 not control this failure probability. We introduce Risk-Calibrated Phase-Adaptive
-Generation (\method), which learns a lightweight instability score from compact online
-features, permits stopping only in the final quarter of a block, and calibrates the resulting
-policies with exact binomial tests. For a fixed model, prompt distribution, and decoding
-protocol, the frozen policy controls the probability of a harmful regression---AdaBlock is
-correct but \method is wrong---at level $\alpha=0.02$ with familywise confidence. Both
+Generation (\method), which uses one compact online risk score and calibrates frozen policies
+with two simultaneous tests. For a fixed model, prompt distribution, and decoding protocol,
+the policy controls the probability of a harmful regression---AdaBlock is correct but
+\method is wrong---at level $\alpha=0.02$, while also certifying at least $\kappa=0.05$
+expected paired NFE reduction. Harm uses an exact binomial test and compute uses a bounded
+Hoeffding--Bentkus test, with familywise correction across both claims and both models. Both
 decoders are implemented as optional hooks in the native AdaBlock loop, with bit-parity
 required when the hook never stops. We define a preregistered two-model evaluation and a compute-aware
 experimental funnel designed to distinguish genuine scheduling gains from accuracy loss.
@@ -61,18 +62,17 @@ and searching many thresholds amplifies this selection bias. We therefore ask:
 \emph{Can an adaptive dLM decoder minimize refinement compute while controlling the
 probability of changing a full-refinement block?}
 
-Our answer, \method, separates prediction from certification. A small CPU estimator predicts
-the instability of stopping from statistics already available in the denoising loop. A
-finite policy family turns those scores into tail-only stopping rules. Tuning data freeze
-exactly one policy per model before calibration. On a held-out calibration split, each frozen
-policy is run end-to-end and paired with AdaBlock. Exact one-sided binomial tests and a
-Bonferroni correction certify only policies whose harmful-regression risk is below $\alpha$;
-otherwise confirmation is not started and AdaBlock remains the fallback.
+Our answer, \method, separates prediction from certification. One small CPU estimator predicts
+the instability of stopping from statistics already available in the denoising loop. Three
+thresholds form the entire policy family. Tuning data freeze exactly one policy per model
+before calibration. On a held-out split, each frozen policy is run end-to-end and paired with
+AdaBlock. A joint Bonferroni certificate requires both low harmful-regression risk and useful
+paired NFE reduction; otherwise confirmation is not started and AdaBlock remains the fallback.
 
 Our contributions are:
 (i) an exact AdaBlock-compatible stopping hook with a mandatory no-stop parity gate;
-(ii) a tail-only learned policy with no deployment-time auxiliary-model forward pass;
-(iii) a finite-sample certificate for end-to-end harmful-regression risk after policy freezing; and
+(ii) a single-score, three-threshold policy with no benefit model or auxiliary-model forward pass;
+(iii) a finite-sample joint certificate for end-to-end harmful-regression risk and NFE reduction; and
 (iv) an auditable evaluation over LLaDA and Dream with paired accuracy, NFE, runtime,
 regression risk, out-of-domain transfer, and explicit positive-claim gates.
 
@@ -90,8 +90,14 @@ distillation and schedule optimization, respectively \citep{luo2026dico,cao2026s
 Very recent work predicts semantic block boundaries (SemBlock), combines confidence with
 token and distribution persistence (LESS), or coordinates simultaneous commits through a
 mean-field objective \citep{song2026semblock,mohamed2026less,zoabi2026meanfield}.
-These approaches motivate a broad baseline suite, but their efficiency rules do not provide
-the finite-sample prompt-risk control considered here. Concurrent theory analyzes efficiency
+Stability-Weighted Decoding gives a temporal-distribution view of unsafe commits, STDec combines
+spatial and temporal consistency, and Just-on-Time studies independent token convergence
+\citep{wu2026swd,chen2026stdec,kohut2026jit}. Prophet commits early from answer-region confidence,
+while the concurrent LATCH framework verifies sustained stability over a parsed candidate span
+\citep{li2025prophet,lee2026latch}. We therefore use temporal JS only as an input feature and do
+not claim stability itself as our contribution. These approaches motivate transparent controls,
+but their main contribution is the efficiency rule rather than a joint accuracy--compute
+certificate. Concurrent theory analyzes efficiency
 conditions for confidence decoding \citep{cai2026confidence}; our guarantee instead treats
 the decoder as a black box and controls an observed operational loss. A contemporaneous
 re-evaluation also finds that confidence-based remasking gains can depend strongly on the
@@ -103,7 +109,10 @@ Learn-then-Test (LTT) converts a fixed collection of predictors into risk-contro
 using valid hypothesis tests \citep{angelopoulos2021ltt}; conformal risk control extends this
 perspective to general bounded losses \citep{angelopoulos2022crc}. We apply the LTT principle
 to adaptive inference. Unlike ordinary post-hoc confidence intervals, simultaneous testing
-remains valid after selecting the lowest-compute certified policy.
+remains valid after selecting the lowest-compute certified policy. RC-Jot concurrently applies
+conformal risk control to dLM early exit in an automated technical report
+\citep{fars2026rcjot}. In contrast, our calibration unit is a frozen native-AdaBlock policy and
+our certificate simultaneously rejects an excess-harm null and an insufficient-saving null.
 
 \section{Risk-calibrated adaptive stopping}
 
@@ -127,10 +136,18 @@ the hooked stopping policy. If $A(Y,X)\in\{0,1\}$ is the task grader, define
 \end{equation}
 This asymmetric loss counts only regressions on prompts that AdaBlock solves. It directly
 matches the operational failure the acceleration must avoid while allowing benign sequence
-changes and recoveries; we report both separately. Our constrained objective is
+changes and recoveries; we report both separately. Define the paired normalized saving
+\begin{equation}
+ S_\lambda(X)=1-\frac{C_\lambda(X)}{C_0(X)}\in[0,1],
+ \qquad \mathcal{S}(\lambda)=\mathbb{E}[S_\lambda(X)],
+ \label{eq:saving}
+\end{equation}
+where $C_0$ is AdaBlock compute. The native hook enforces
+$C_\lambda(X)\le C_0(X)$ prompt-wise. Our feasibility objective is
 \begin{equation}
  \min_{\lambda\in\family}\ \nfe(\pi_\lambda)
- \quad\text{subject to}\quad \risk(\lambda)\le\alpha.
+ \quad\text{subject to}\quad \risk(\lambda)\le\alpha,
+ \quad \mathcal{S}(\lambda)>\kappa.
  \label{eq:objective}
 \end{equation}
 
@@ -139,46 +156,75 @@ changes and recoveries; we report both separately. Our constrained objective is
 The decoder compresses each logits tensor on device and transfers only scalar summaries:
 masked fraction; block step and size; entropy, top-one probability, and top-one/top-two
 margin quantiles; token churn; changes in these quantities; delimiter and special-token
-rates; and a four-step history. No logits or hidden states are retained on CPU.
+rates; and temporal-instability summaries. No logits or hidden states are retained on CPU.
+For masked position $j$, let $p_{t,j}=\mathrm{softmax}(\ell_{t,j})$. We measure normalized
+temporal instability between consecutive native AdaBlock steps as
+\begin{equation}
+ d_{t,j}=\frac{\operatorname{JS}(p_{t,j}\,\|\,p_{t-1,j})}{\log 2}\in[0,1],\qquad
+ \bar D_t=\frac{\sum_{j:\,m_{t,j}=1}d_{t,j}}{\lVert m_t\rVert_1},\quad
+ D_t=\max_{j:\,m_{t,j}=1}d_{t,j}.
+ \label{eq:temporal-js}
+\end{equation}
 An estimator $\widehat r_\theta(S_{b,t})\in[0,1]$ predicts the probability that the tokens
 proposed at that state differ from the eventual full-trajectory block. This local label is a
-training surrogate, not the certified loss in Equation~\ref{eq:loss}. Histogram gradient boosting is the primary
-estimator and logistic regression is a capacity ablation. Both are trained offline using
-full trajectories from the training split.
+training surrogate, not the certified loss in Equation~\ref{eq:loss}. One histogram
+gradient-boosting classifier is trained offline using full trajectories from the training
+split. Temporal JS is part of this score; it is not a separately tuned veto. There is no
+remaining-NFE regressor.
 
-A policy stops when $t\ge t_{\min}$, at most one quarter of the block remains masked, and
-$\widehat r_\theta(S_{b,t})\le q$ for $p$ consecutive steps. We tune three local candidates,
-$q\in\{0.05,0.20,0.50\}$ with $t_{\min}=p=2$. For each model, the accuracy-eligible candidate
+A policy $\lambda=q$ stops after the following event holds for two consecutive steps:
+\begin{equation}
+ t\ge2,\qquad \widehat r_\theta(S_{b,t})\le q.
+ \label{eq:stopping-rule}
+\end{equation}
+We tune only $q\in\{0.05,0.20,0.50\}$.
+For each model, the accuracy-eligible candidate
 with the lowest tuning NFE is frozen. Calibration therefore evaluates two already-selected
 model--policy pairs and performs no threshold search.
 
 \subsection{Finite-sample calibration}
 
-Let $X_1,\ldots,X_n$ be an untouched calibration sample and
-$K_\lambda=\sum_i L_\lambda(X_i)$. There is one frozen policy for each model, hence $M=2$
-simultaneous hypotheses. For each pair, test
-$H_\lambda:\risk(\lambda)>\alpha$ using the boundary-null lower-tail value
+Let $X_1,\ldots,X_n$ be an untouched calibration sample,
+$K_\lambda=\sum_i L_\lambda(X_i)$, and
+$\bar S_\lambda=n^{-1}\sum_i S_\lambda(X_i)$. There is one frozen policy for each model and
+two claims per policy, hence $J=4$ simultaneous hypotheses. The harm null
+$H_\lambda^H:\risk(\lambda)\ge\alpha$ uses the boundary-null lower-tail value
 \begin{equation}
- p_\lambda=\Pr_{Z\sim\mathrm{Binomial}(n,\alpha)}[Z\le K_\lambda].
- \label{eq:pvalue}
+ p_\lambda^H=\Pr_{Z\sim\mathrm{Binomial}(n,\alpha)}[Z\le K_\lambda].
+ \label{eq:harm-pvalue}
 \end{equation}
-Candidate $\lambda$ is certified if $p_\lambda\le\delta/M$. Both model-specific policies must
-certify and retain a calibration-time compute advantage over their frozen nonlearned
-comparators before confirmation begins. We also report simultaneous one-sided
-Clopper--Pearson bounds.
+For the insufficient-saving null $H_\lambda^C:\mathcal S(\lambda)\le\kappa$, boundedness
+of Equation~\ref{eq:saving} gives the Hoeffding--Bentkus value
+\citep{bentkus2004hoeffding}
+\begin{equation}
+ p_\lambda^C =
+ \begin{cases}
+  1, & \bar S_\lambda\le\kappa,\\
+  \min\!\left\{e^{-2n(\bar S_\lambda-\kappa)^2},
+  e\Pr_{B\sim\mathrm{Binomial}(n,\kappa)}
+  [B\ge\lfloor n\bar S_\lambda\rfloor],1\right\}, & \text{otherwise}.
+ \end{cases}
+ \label{eq:compute-pvalue}
+\end{equation}
+Candidate $\lambda$ is jointly certified iff
+$p_\lambda^H\le\delta/J$ and $p_\lambda^C\le\delta/J$. Both model-specific policies must
+certify before confirmation begins. We report simultaneous Clopper--Pearson harm upper bounds
+and inverted bounded-mean saving lower bounds.
 
-\begin{proposition}[Selection-safe prompt-risk control]
+\begin{proposition}[Selection-safe joint control]
 Assume the calibration prompts are exchangeable draws from the deployment distribution,
 the model and decoding protocol are fixed, and $\family$ is independent of calibration
 outcomes. With probability at least $1-\delta$ over calibration, every policy certified by
-Equation~\ref{eq:pvalue} has $\risk(\lambda)\le\alpha$.
+Equations~\ref{eq:harm-pvalue}--\ref{eq:compute-pvalue} satisfies both
+$\risk(\lambda)\le\alpha$ and $\mathcal S(\lambda)>\kappa$.
 \end{proposition}
 
 \noindent\textit{Proof sketch.}
 For any unsafe candidate with $\risk(\lambda)>\alpha$, the lower tail of its binomial count is
 stochastically no larger than the boundary distribution, so its test rejects with probability
-at most $\delta/M$. A union bound over the fixed family makes the probability of certifying
-any unsafe candidate at most $\delta$. A full proof appears in Appendix~\ref{app:proof}.
+at most $\delta/J$. Under $\mathcal S(\lambda)\le\kappa$, Hoeffding's inequality and Bentkus's
+binomial comparison each upper-bound the saving tail; their minimum is therefore valid.
+A union bound over the four fixed nulls completes the claim. Appendix~\ref{app:proof} gives details.
 
 \paragraph{Calibration cost and deployment cost.}
 Local surrogate labels are amortized from one full trajectory per training prompt.
@@ -204,10 +250,10 @@ the code.
 \paragraph{Comparators and ablations.}
 The confirmatory comparison includes AdaBlock, the per-model best accuracy-eligible
 nonlearned rule chosen on tuning data, and the frozen certified \method policy. The two
-nonlearned candidates are an entropy-sum gate and a mutual confidence--entropy--stability
-gate, both executed through the same AdaBlock hook. HGB and logistic estimators are evaluated
-on the same deterministic, prompt-grouped trace holdout using Brier score and AUROC; HGB
-remains the frozen deployment estimator regardless of that comparison.
+development controls are clearly labeled style reproductions of distribution-stability and
+token-convergence stopping rules; they are not claimed as official implementations of prior
+methods. Every control uses the same AdaBlock hook. The single HGB estimator is evaluated on
+a deterministic, prompt-grouped trace holdout using Brier score and AUROC.
 
 \paragraph{Metrics and inference.}
 Primary metrics are mean NFE, exact task accuracy, elapsed time, harmful regressions, and
@@ -222,11 +268,13 @@ in-domain accuracy-difference lower bound versus AdaBlock is at least $-0.02$.
 \paragraph{Compute-aware funnel.}
 We first run 32 prompts/model and require exact generated-token, NFE-history, and block-history
 parity between native AdaBlock and a never-stop instrumented hook. Only if this gate passes do
-we collect 600 training traces/model, tune on 150 prompts/model, and calibrate on 300
-prompts/model. A prior LLaDA local estimator may be reused only after revision and file-hash
-validation; Dream is always recollected because its decoder implementation changed.
-Confirmation cannot start without an explicit flag, both certificates, and per-model
-calibration-time compute advantages. All records are atomic and resumable; models are loaded
+we collect 600 training traces/model and tune on 150 prompts/model. Calibration on 300
+prompts/model is launched only when an accuracy-eligible policy saves at least 5\% NFE and
+beats the best eligible nonlearned control on \emph{each} model. V1 artifacts are retained as
+prior evidence but are not reused for fitting because they lack the temporal-JS feature schema.
+Only native-loop v3/v4 raw traces with complete temporal evidence may be reused, and v4 always
+refits its estimator. Confirmation cannot start without an explicit flag and both joint
+certificates. All records are atomic and resumable; models are loaded
 one at a time on one A100.
 
 \section{Results}
@@ -267,11 +315,12 @@ positive headline is emitted.}
 \toprule
 Decision & Frozen rule \\
 \midrule
-Risk target & $\alpha=0.02$, familywise $\delta=0.05$ over 2 frozen model--policy pairs \\
+Joint target & harm $\alpha=0.02$ and paired saving $\kappa=0.05$ \\
+Multiplicity & familywise $\delta=0.05$ over 4 fixed null hypotheses \\
 Accuracy noninferiority & paired 95\% lower bound $\ge-0.02$ \\
 Compute & below AdaBlock on both models; below best heuristic overall \\
-Adaptive method & one tail-only local policy frozen separately per model \\
-Fallback & AdaBlock if either model policy is not certified \\
+Adaptive method & one local risk score; three thresholds; patience two \\
+Fallback & AdaBlock if either half of either joint certificate fails \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -296,10 +345,10 @@ aggregate use. We release exact compute and failure records to make both effects
 
 \section{Conclusion}
 
-\method reframes adaptive diffusion decoding as constrained risk minimization. It combines
-compact phase-aware features with full-trajectory surrogate labels and a selection-safe
-finite-sample certificate on end-to-end harm. The result is a decoder that either deploys a
-pre-frozen lower-compute policy under an explicit regression-risk target or falls back
+\method reframes adaptive diffusion decoding as jointly constrained risk minimization. It combines
+one compact state-risk model with full-trajectory surrogate labels and selection-safe
+finite-sample tests for end-to-end harm and useful compute reduction. The result is a decoder
+that either deploys a pre-frozen policy under both targets or falls back
 transparently. The frozen
 evaluation is designed so the strength of the paper follows the evidence rather than the
 other way around.
@@ -315,20 +364,22 @@ other way around.
 \label{app:proof}
 
 Fix an unsafe candidate $\lambda$ with $r=\risk(\lambda)>\alpha$. Under the assumptions,
-$K_\lambda\sim\mathrm{Binomial}(n,r)$. For every integer $k$, the binomial lower-tail
-probability $\Pr_r(K_\lambda\le k)$ is nonincreasing in $r$. Therefore the rejection region
-defined by $p_\lambda\le\delta/M$, whose critical value is computed at $\alpha$, has
-probability at most $\delta/M$ under every $r>\alpha$. By the union bound, the event that at
-least one of at most $M$ unsafe candidates is certified has probability at most $\delta$.
-On the complement, both frozen policies are safe whenever they certify. If either fails,
-confirmation is not started and no statistical assertion about that adaptive policy is made.
+$K_\lambda\sim\mathrm{Binomial}(n,r)$. The binomial lower tail is nonincreasing in $r$, so
+the rejection region defined by $p_\lambda^H\le\delta/J$ has probability at most $\delta/J$.
+For compute, $S_i\in[0,1]$. Under $\mathbb E[S_i]\le\kappa$, Hoeffding gives
+$\Pr(\bar S-\kappa\ge u)\le e^{-2nu^2}$, and the Hoeffding--Bentkus comparison gives the
+second bound in Equation~\ref{eq:compute-pvalue}; rounding the binomial threshold downward
+is conservative. Thus an insufficient-saving null is also rejected with probability at most
+$\delta/J$. A union bound over the two nulls for two frozen policies yields $\delta$.
+If any test fails, confirmation is not started and no joint assertion is made.
 
 \section{Online algorithm}
 
 For each AdaBlock block, \method repeats: (1) execute the unchanged native denoising step;
-(2) summarize logits and token changes on device; (3) obtain $\widehat r_\theta$ from the CPU
-estimator; and (4) force-commit the current top-one proposals only when the candidate's
-minimum-step, tail-fraction, score, and patience conditions all hold. With a never-stop hook,
+(2) summarize logits, distribution change, and token change on device; (3) obtain
+$\widehat r_\theta$ from one CPU estimator; and (4) force-commit the current
+top-one proposals only when Equation~\ref{eq:stopping-rule} holds for two
+steps. With a never-stop hook,
 the original token transfers, cache updates, block boundaries, and model calls are unchanged.
 Calibration runs this complete candidate trajectory and a paired AdaBlock trajectory, then
 records Equation~\ref{eq:loss} from their task grades.
@@ -340,6 +391,9 @@ records Equation~\ref{eq:loss} from their task grades.
   \begin{center}\scriptsize\input{generated/main_results.tex}\end{center}
   \begin{center}\scriptsize\input{generated/calibration.tex}\end{center}
   \begin{center}\scriptsize\input{generated/estimator_ablation.tex}\end{center}
+  \IfFileExists{generated/screening_ablation.tex}{
+    \begin{center}\scriptsize\input{generated/screening_ablation.tex}\end{center}
+  }{}
   \begin{figure}[h]
     \centering
     \includegraphics[width=0.75\linewidth]{generated/reliability.pdf}
@@ -353,7 +407,8 @@ records Equation~\ref{eq:loss} from their task grades.
 
 The artifact records repository and dataset revisions, the config and protocol hashes,
 prompt IDs, raw outputs, correctness, NFE, elapsed time, per-block compact traces, selected
-policy, parity audits, harmful regressions, calibration counts and $p$-values, paired intervals, and every failed
+policy, parity and readiness audits, harmful regressions, paired NFE savings, both calibration
+$p$-values and simultaneous bounds, paired confirmation intervals, and every failed
 claim gate. Code execution grading uses a separate subprocess with a timeout. Secrets are
 read from the environment and never written to the command line or artifacts. Exact local
 and Slurm commands are provided in \texttt{docs/rc\_pag\_runbook.md}.

@@ -29,7 +29,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--reuse-development-from",
         type=Path,
-        help="Reuse the validated LLaDA local estimator from a completed v1 run.",
+        help=(
+            "Reuse compatible development artifacts. v4 accepts only exact-loop v3/v4 raw "
+            "traces and always refits its estimator."
+        ),
     )
     return parser
 

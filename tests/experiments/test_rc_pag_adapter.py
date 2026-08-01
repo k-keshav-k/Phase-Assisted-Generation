@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import astuple
 from types import SimpleNamespace
 
+import pytest
 import torch
 
 from pag.experiments.rc_pag_adapter import (
@@ -56,6 +57,28 @@ def test_tensor_adapter_emits_compact_finite_online_observation():
     assert all(0 <= value <= 1 for value in observation.top1_probs)
     assert all(value >= 0 for value in observation.entropies)
     assert not any(isinstance(value, torch.Tensor) for value in astuple(observation))
+
+
+def test_tensor_adapter_measures_normalized_temporal_js_divergence():
+    logits, tokens = _inputs()
+    stable = observation_from_tensors(
+        logits=logits,
+        previous_logits=logits.clone(),
+        current_tokens=tokens,
+        mask_token_id=99,
+        step_index=2,
+    )
+    shifted = observation_from_tensors(
+        logits=logits,
+        previous_logits=-logits,
+        current_tokens=tokens,
+        mask_token_id=99,
+        step_index=2,
+    )
+
+    assert stable.temporal_js == pytest.approx((0.0, 0.0), abs=1e-7)
+    assert all(0.0 <= value <= 1.0 for value in shifted.temporal_js)
+    assert max(shifted.temporal_js) > 0.1
 
 
 def test_policy_shadow_request_clones_state_and_labels_disagreement():

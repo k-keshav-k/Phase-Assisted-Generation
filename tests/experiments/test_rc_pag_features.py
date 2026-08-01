@@ -14,7 +14,9 @@ from pag.experiments.rc_pag_features import (
 )
 
 
-def observation(*, step: int, token_ids: list[int]) -> StepObservation:
+def observation(
+    *, step: int, token_ids: list[int], temporal_js: list[float] | None = None
+) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=step,
         block_size=4,
@@ -23,6 +25,7 @@ def observation(*, step: int, token_ids: list[int]) -> StepObservation:
         top2_probs=[0.2, 0.3, 0.1, 0.2],
         entropies=[1.0, 0.8, 0.2, 0.4],
         token_ids=token_ids,
+        temporal_js=temporal_js,
         digit_ids={9},
         delimiter_ids={4},
     )
@@ -66,7 +69,11 @@ def test_step_observation_rejects_shape_and_probability_order() -> None:
 
 def test_feature_vector_contains_local_and_history_fields() -> None:
     previous = observation(step=1, token_ids=[1, 2, 3, 4])
-    current = observation(step=2, token_ids=[1, 9, 3, 4])
+    current = observation(
+        step=2,
+        token_ids=[1, 9, 3, 4],
+        temporal_js=[0.10, 0.30, 0.90, 0.80],
+    )
     history = [RealizedBlock(4, 3, 0.9, 0.6, 0.25, 0.0)]
     features = extract_features(current, previous=previous, history=history, history_window=4)
 
@@ -76,6 +83,10 @@ def test_feature_vector_contains_local_and_history_fields() -> None:
     assert features["local.margin_min"] == pytest.approx(0.4)
     assert features["local.digit_fraction"] == 0.25
     assert features["local.delimiter_fraction"] == 0.25
+    assert features["local.temporal_js_mean"] == pytest.approx(0.20)
+    assert features["local.temporal_js_max"] == pytest.approx(0.30)
+    assert features["local.temporal_js_q50"] == pytest.approx(0.20)
+    assert features["local.temporal_js_q90"] == pytest.approx(0.28)
     assert features["history.length"] == 1.0
     assert features["history.nfe_last"] == 3.0
     assert all(math.isfinite(value) for value in features.values())
@@ -106,5 +117,7 @@ def test_empty_mask_and_history_produce_finite_zero_summaries() -> None:
     features = extract_features(current, previous=None, history=(), history_window=4)
     assert features["local.remaining_count"] == 0.0
     assert features["local.entropy_mean"] == 0.0
+    assert features["local.temporal_js_mean"] == 0.0
+    assert features["local.temporal_js_max"] == 0.0
     assert features["history.length"] == 0.0
     assert all(math.isfinite(value) for value in features.values())

@@ -12,6 +12,7 @@ from pag.experiments.rc_pag_orchestrator import (
     RCPAGOrchestrator,
     _index_stratified_complement_indices,
     _index_stratified_indices,
+    _mock_observation,
 )
 
 
@@ -28,6 +29,16 @@ def workshop_config():
 @pytest.fixture
 def v2_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v2.yaml"))
+
+
+@pytest.fixture
+def v3_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v3.yaml"))
+
+
+@pytest.fixture
+def v4_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml"))
 
 
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
@@ -250,3 +261,181 @@ def test_v2_harmful_policy_stops_before_confirmation(tmp_path, v2_config):
 
     with pytest.raises(ControlledStop, match="end-to-end harm certificate"):
         runner.run_stage("confirm")
+
+
+def test_v3_fits_benefit_models_and_passes_readiness_gate(tmp_path, v3_config):
+    runtime = MockRCPAGRuntime(calibration_repetitions=300)
+    runner = RCPAGOrchestrator(
+        v3_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("report")
+
+    estimators = json.loads((tmp_path / "estimators" / "manifest.json").read_text())
+    assert set(estimators["benefit_models"]) == {"llada", "dream"}
+    assert (tmp_path / "report" / "tables" / "screening_ablation.tex").is_file()
+    assert (tmp_path / "report" / "tables" / "benefit_ablation.tex").is_file()
+    readiness = json.loads((tmp_path / "readiness_audit.json").read_text())
+    assert readiness["passed"]
+    assert all(row["nfe_reduction"] >= 0.05 for row in readiness["models"].values())
+    projection = json.loads((tmp_path / "compute_projection.json").read_text())
+    assert projection["projected_plain_runs"] == 2628
+    assert projection["projected_instrumented_runs"] == 9156
+    screen_methods = {method for stage, _, _, method in runtime.calls if stage == "screen"}
+    assert {"stability_weighted_style", "token_convergence_style"} <= screen_methods
+
+
+def test_v3_stops_before_calibration_when_frontier_is_too_weak(tmp_path, v3_config):
+    runtime = MockRCPAGRuntime(candidate_nfe_offset=20.0)
+    runner = RCPAGOrchestrator(
+        v3_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    with pytest.raises(ControlledStop, match="workshop-readiness gate"):
+        runner.run_through("screen")
+
+    readiness = json.loads((tmp_path / "readiness_audit.json").read_text())
+    assert not readiness["passed"]
+    assert not (tmp_path / "manifests" / "calibrate.json").exists()
+
+
+def test_v3_reuses_llada_risk_and_trace_artifacts_for_benefit(tmp_path, config, v3_config):
+    source = tmp_path / "v1"
+    old_runner = RCPAGOrchestrator(
+        config,
+        source,
+        runtime_factory=lambda model: MockRCPAGRuntime(),
+        development_limit=2,
+    )
+    old_runner.run_through("fit")
+
+    destination = tmp_path / "v3"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v3_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        reuse_development_from=source,
+    )
+    runner.run_through("fit")
+
+    estimators = json.loads((destination / "estimators" / "manifest.json").read_text())
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    assert estimators["models"]["llada"]["rc_pag_local"]["reused"]
+    assert len(reuse["benefit_trace_sha256"]) == 64
+    assert estimators["benefit_models"]["llada"]["source"] == "validated_v1_full_budget_traces"
+    projection = json.loads((destination / "compute_projection.json").read_text())
+    assert projection["projected_instrumented_runs"] == 8556
+    collect_models = {model for stage, model, _, _ in runtime.calls if stage == "collect"}
+    assert collect_models == {"dream"}
+
+
+def test_v4_calibration_jointly_certifies_harm_and_compute(tmp_path, v4_config):
+    runtime = MockRCPAGRuntime(calibration_repetitions=150)
+    runner = RCPAGOrchestrator(
+        v4_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("calibrate")
+
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["certificate_mode"] == "joint_harm_and_compute"
+    assert certificate["minimum_nfe_reduction"] == 0.05
+    assert certificate["hypotheses"] == 4
+    assert not certificate["fallback"]
+    assert all(row["harm_certified"] for row in certificate["candidates"])
+    assert all(row["compute_certified"] for row in certificate["candidates"])
+    assert all(row["lower_nfe_reduction_bound"] > 0.05 for row in certificate["candidates"])
+    manifest = json.loads((tmp_path / "estimators" / "manifest.json").read_text())
+    for model in ("llada", "dream"):
+        assert set(manifest["models"][model]["rc_pag_local"]["estimators"]) == {
+            "hist_gradient_boosting"
+        }
+    screen_methods = {method for stage, _, _, method in runtime.calls if stage == "screen"}
+    assert len({name for name in screen_methods if name.startswith("local_q")}) == 3
+
+
+class ExactTraceMockRuntime(MockRCPAGRuntime):
+    def run(self, **kwargs):
+        payload = super().run(**kwargs)
+        if kwargs["stage"] != "collect":
+            return payload
+        sample = kwargs["sample"]
+        observation = _mock_observation(sample.index, step=2)
+        proposed = list(observation.token_ids)
+        payload["schedule_history"] = [
+            {
+                "applied_block_size": observation.block_size,
+                "actual_nfe_used": 3,
+                "mean_top1_confidence": 0.8,
+                "min_top1_confidence": 0.6,
+                "digit_fraction": 0.25,
+                "delimiter_fraction": 0.25,
+                "final_tokens": proposed,
+                "risk_steps": [
+                    {
+                        "observation": {
+                            "step_index": observation.step_index,
+                            "block_size": observation.block_size,
+                            "masked": list(observation.masked),
+                            "top1_probs": list(observation.top1_probs),
+                            "top2_probs": list(observation.top2_probs),
+                            "entropies": list(observation.entropies),
+                            "token_ids": proposed,
+                            "temporal_js": [0.01] * observation.block_size,
+                            "digit_ids": sorted(observation.digit_ids),
+                            "delimiter_ids": sorted(observation.delimiter_ids),
+                        },
+                        "proposed_tokens": proposed,
+                    }
+                ],
+            }
+        ]
+        return payload
+
+
+def test_v4_reuses_compatible_raw_traces_but_refits_estimators(tmp_path, v3_config, v4_config):
+    source = tmp_path / "v3"
+    source_runtime = ExactTraceMockRuntime()
+    source_runner = RCPAGOrchestrator(
+        v3_config,
+        source,
+        runtime_factory=lambda model: source_runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+    source_runner.run_through("fit")
+
+    destination = tmp_path / "v4"
+    destination_runtime = MockRCPAGRuntime()
+    destination_runner = RCPAGOrchestrator(
+        v4_config,
+        destination,
+        runtime_factory=lambda model: destination_runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    destination_runner.run_through("fit")
+
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    estimators = json.loads((destination / "estimators" / "manifest.json").read_text())
+    assert reuse["reuse_scope"] == "raw_exact_loop_traces_only"
+    assert set(reuse["reused_models"]) == {"llada", "dream"}
+    assert not any(stage == "collect" for stage, _, _, _ in destination_runtime.calls)
+    assert all(
+        estimators["models"][model]["rc_pag_local"]["trace_reused"] for model in ("llada", "dream")
+    )

@@ -141,6 +141,16 @@ def _risk_rows(certificate: Mapping[str, Any]) -> list[dict[str, Any]]:
         "certified",
         "mean_nfe",
     }
+    joint_required = {
+        "harm_pvalue",
+        "compute_pvalue",
+        "harm_certified",
+        "compute_certified",
+        "empirical_nfe_reduction",
+        "lower_nfe_reduction_bound",
+    }
+    if certificate.get("minimum_nfe_reduction") is not None:
+        required |= joint_required
     values = []
     for candidate in certificate.get("candidates", ()):
         row = dict(candidate)
@@ -329,6 +339,31 @@ def _write_main_table(path: Path, summary: Mapping[str, Any], methods: Sequence[
 
 
 def _write_calibration_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+    joint = all(row.get("compute_pvalue") is not None for row in rows)
+    if joint:
+        lines = [
+            "\\begin{tabular}{lrrrrrrrr}",
+            "\\toprule",
+            (
+                "Candidate & Errors/$n$ & Risk & Risk UCB & $p_H$ & Saving & "
+                "Saving LCB & $p_C$ & Joint \\\\"
+            ),
+            "\\midrule",
+        ]
+        for row in sorted(rows, key=lambda item: str(item["name"])):
+            lines.append(
+                f"{_latex_name(str(row['name']))} & {row['failures']}/{row['count']} & "
+                f"{float(row['empirical_risk']):.3f} & {float(row['upper_risk_bound']):.3f} & "
+                f"{float(row['harm_pvalue']):.4g} & "
+                f"{100 * float(row['empirical_nfe_reduction']):.1f}\\% & "
+                f"{100 * float(row['lower_nfe_reduction_bound']):.1f}\\% & "
+                f"{float(row['compute_pvalue']):.4g} & "
+                f"{'yes' if row['certified'] else 'no'} \\\\"
+            )
+        lines.extend(("\\bottomrule", "\\end{tabular}"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return
     lines = [
         "\\begin{tabular}{lrrrrr}",
         "\\toprule",
@@ -381,6 +416,58 @@ def _write_estimator_table(path: Path, manifest: Mapping[str, Any]) -> None:
                     f"{_latex_name(kind)} & {split} & {float(validation['brier']):.3f} & "
                     f"{auc_text} \\\\"
                 )
+    lines.extend(("\\bottomrule", "\\end{tabular}"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_screening_table(path: Path, screening: Mapping[str, Any]) -> None:
+    selected = screening.get("selected_candidate", {})
+    models = screening.get("models", {})
+    if not isinstance(selected, Mapping) or not isinstance(models, Mapping):
+        raise ValueError("screening summary is missing per-model candidate results")
+    lines = [
+        "\\begin{tabular}{llrrrl}",
+        "\\toprule",
+        "Model & Candidate & Mean NFE & Correct & Harm & Status \\\\",
+        "\\midrule",
+    ]
+    for model, payload in sorted(models.items()):
+        candidates = payload.get("candidates", {})
+        for name, stats in sorted(candidates.items()):
+            status = (
+                "selected"
+                if selected.get(model) == name
+                else ("eligible" if stats["accuracy_eligible"] else "rejected")
+            )
+            lines.append(
+                f"{_latex_name(str(model))} & {_latex_name(str(name))} & "
+                f"{float(stats['mean_nfe']):.2f} & {int(stats['correct'])} & "
+                f"{int(stats['harmful_regressions'])} & {status} \\\\"
+            )
+    lines.extend(("\\bottomrule", "\\end{tabular}"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_benefit_table(path: Path, manifest: Mapping[str, Any]) -> None:
+    models = manifest.get("benefit_models", {})
+    if not models:
+        return
+    lines = [
+        "\\begin{tabular}{llllrr}",
+        "\\toprule",
+        "Model & Target & Source & Split & MAE & RMSE \\\\ ",
+        "\\midrule",
+    ]
+    for model, payload in sorted(models.items()):
+        validation = payload["validation"]
+        split = "holdout" if "holdout" in validation["split"] else "small-run"
+        lines.append(
+            f"{_latex_name(str(model))} & remaining NFE & "
+            f"{_latex_name(str(payload['source']))} & {split} & "
+            f"{float(validation['mae']):.2f} & {float(validation['rmse']):.2f} \\\\"
+        )
     lines.extend(("\\bottomrule", "\\end{tabular}"))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -498,6 +585,7 @@ def write_rc_pag_report(
     seed: int,
     minimum_accuracy_lower_ci: float = -0.02,
     estimator_manifest: Mapping[str, Any] | None = None,
+    screening_summary: Mapping[str, Any] | None = None,
     methods: Sequence[str] = _DEFAULT_METHODS,
     primary_method: str = "rc_pag_history",
     require_history_frontier_ci: bool = True,
@@ -559,6 +647,10 @@ def write_rc_pag_report(
     _write_ablation_table(output / "tables" / "ablations.tex", summary, methods)
     if estimator_manifest is not None:
         _write_estimator_table(output / "tables" / "estimator_ablation.tex", estimator_manifest)
+        if estimator_manifest.get("benefit_models"):
+            _write_benefit_table(output / "tables" / "benefit_ablation.tex", estimator_manifest)
+    if screening_summary is not None:
+        _write_screening_table(output / "tables" / "screening_ablation.tex", screening_summary)
     headline = (
         "RC-PAG satisfied every predeclared claim gate."
         if audit["headline_eligible"]

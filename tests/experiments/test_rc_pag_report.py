@@ -95,6 +95,25 @@ def _v2_certificate(*, certified: bool = True) -> dict:
     }
 
 
+def _v4_certificate(*, certified: bool = True) -> dict:
+    payload = _v2_certificate(certified=certified)
+    payload["minimum_nfe_reduction"] = 0.05
+    payload["hypotheses"] = 4
+    payload["certificate_mode"] = "joint_harm_and_compute"
+    for row in payload["candidates"]:
+        row.update(
+            {
+                "harm_pvalue": row["pvalue"],
+                "compute_pvalue": 0.001 if certified else 0.5,
+                "harm_certified": certified,
+                "compute_certified": certified,
+                "empirical_nfe_reduction": 0.15,
+                "lower_nfe_reduction_bound": 0.08 if certified else 0.01,
+            }
+        )
+    return payload
+
+
 def _v2_records() -> dict:
     records = _records()
     for model in records.values():
@@ -200,3 +219,23 @@ def test_v2_report_audits_frozen_per_model_policies_and_end_to_end_harm(tmp_path
     comparison = summary["llada"]["gsm8k_test"]["comparisons"]
     assert comparison["rc_pag_selected_vs_adablock"]["harmful_regressions"] == 0
     assert comparison["rc_pag_selected_vs_adablock"]["sequence_disagreements"] == 0
+
+
+def test_v4_report_writes_joint_harm_and_compute_certificate(tmp_path):
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=_v2_records(),
+        certificate=_v4_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_selected"),
+        primary_method="rc_pag_selected",
+        require_history_frontier_ci=False,
+    )
+
+    table = (tmp_path / "report" / "tables" / "calibration.tex").read_text()
+    diagnostics = json.loads((tmp_path / "report" / "risk_diagnostics.json").read_text())
+    assert audit["headline_eligible"]
+    assert "Saving LCB" in table
+    assert "$p_H$" in table
+    assert diagnostics["candidates"][0]["compute_certified"]

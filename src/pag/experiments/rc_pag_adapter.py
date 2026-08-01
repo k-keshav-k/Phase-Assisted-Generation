@@ -58,6 +58,7 @@ def clone_tensor_tree(value: Any) -> Any:
 def observation_from_tensors(
     *,
     logits: torch.Tensor,
+    previous_logits: torch.Tensor | None = None,
     current_tokens: torch.Tensor,
     mask_token_id: int,
     step_index: int,
@@ -75,6 +76,26 @@ def observation_from_tensors(
     probabilities = log_probs.exp()
     top_values, top_ids = torch.topk(probabilities, k=2, dim=-1)
     entropies = -(probabilities * log_probs).sum(dim=-1)
+    if previous_logits is None:
+        temporal_js = torch.zeros_like(entropies)
+    else:
+        if previous_logits.shape != logits.shape:
+            raise ValueError("previous logits must match current logits")
+        temporal_js = torch.zeros_like(entropies)
+        active_mask = current_tokens == int(mask_token_id)
+        if bool(active_mask.any()):
+            current_log_probs = log_probs[active_mask]
+            current_probabilities = probabilities[active_mask]
+            previous_log_probs = torch.log_softmax(previous_logits[active_mask].float(), dim=-1)
+            previous_probabilities = previous_log_probs.exp()
+            mixture_log_probs = torch.logaddexp(current_log_probs, previous_log_probs) - math.log(
+                2.0
+            )
+            active_js = 0.5 * (
+                (current_probabilities * (current_log_probs - mixture_log_probs)).sum(dim=-1)
+                + (previous_probabilities * (previous_log_probs - mixture_log_probs)).sum(dim=-1)
+            )
+            temporal_js[active_mask] = (active_js / math.log(2.0)).clamp(0.0, 1.0)
 
     def frozen_ids(values: torch.Tensor | Sequence[int] | None) -> frozenset[int]:
         if values is None:
@@ -91,6 +112,7 @@ def observation_from_tensors(
         top2_probs=top_values[..., 1].detach().cpu().reshape(-1).tolist(),
         entropies=entropies.detach().cpu().reshape(-1).tolist(),
         token_ids=top_ids[..., 0].detach().cpu().reshape(-1).tolist(),
+        temporal_js=temporal_js.detach().cpu().reshape(-1).tolist(),
         digit_ids=frozen_ids(digit_ids),
         delimiter_ids=frozen_ids(delimiter_ids),
     )
@@ -128,9 +150,10 @@ def continue_shadow_refinement(
     cache = clone_tensor_tree(request.cache)
     additional_nfe = 0
     step = int(request.step_index)
-    while bool(
-        (tokens[:, request.block_start : request.block_end] == int(mask_token_id)).any()
-    ) and step < max_steps:
+    while (
+        bool((tokens[:, request.block_start : request.block_end] == int(mask_token_id)).any())
+        and step < max_steps
+    ):
         local_logits, cache = forward(
             tokens,
             cache,
@@ -165,6 +188,7 @@ def observe_policy_step(
     policy: OnlineRiskPolicy | None,
     *,
     logits: torch.Tensor,
+    previous_logits: torch.Tensor | None = None,
     current_tokens: torch.Tensor,
     mask_token_id: int,
     step_index: int,
@@ -181,6 +205,7 @@ def observe_policy_step(
         return None
     observation = observation_from_tensors(
         logits=logits,
+        previous_logits=previous_logits,
         current_tokens=current_tokens,
         mask_token_id=mask_token_id,
         step_index=step_index,
@@ -227,6 +252,8 @@ def serialize_policy_step(step: PolicyStep) -> dict[str, Any]:
         "safe_streak": int(step.decision.safe_streak),
         "should_stop": bool(step.decision.should_stop),
         "reason": str(step.decision.reason),
+        "predicted_nfe_savings": float(getattr(step.decision, "predicted_nfe_savings", 0.0)),
+        "temporal_js": float(getattr(step.decision, "temporal_js", 0.0)),
         "shadow_loss": step.shadow_loss,
         "proposed_tokens": list(step.proposed_tokens),
         "observation": {
@@ -237,6 +264,7 @@ def serialize_policy_step(step: PolicyStep) -> dict[str, Any]:
             "top2_probs": list(step.observation.top2_probs),
             "entropies": list(step.observation.entropies),
             "token_ids": list(step.observation.token_ids),
+            "temporal_js": list(step.observation.temporal_js),
             "digit_ids": sorted(step.observation.digit_ids),
             "delimiter_ids": sorted(step.observation.delimiter_ids),
         },

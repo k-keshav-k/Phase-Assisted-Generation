@@ -32,6 +32,8 @@ class PolicyCandidateSpec:
     min_steps: int
     patience: int
     max_remaining_fraction: float = 1.0
+    min_predicted_nfe_savings: float = 0.0
+    max_temporal_js: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +41,7 @@ class RiskSpec:
     alpha: float
     delta: float
     loss: str
+    minimum_nfe_reduction: float | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +80,12 @@ class ClaimGateSpec:
 
 
 @dataclass(frozen=True, slots=True)
+class ReadinessSpec:
+    minimum_tuning_nfe_reduction_per_model: float
+    require_candidate_beats_nonlearned: bool
+
+
+@dataclass(frozen=True, slots=True)
 class ConfirmatorySamplingSpec:
     strategy: str
     strata: int
@@ -105,6 +114,7 @@ class RCPAGConfig:
     development_methods: tuple[str, ...]
     confirmatory_methods: tuple[str, ...]
     claim_gates: ClaimGateSpec
+    readiness: ReadinessSpec
     config_hash: str
     raw: dict[str, Any]
 
@@ -163,6 +173,20 @@ _REQUIRED_V2_DEVELOPMENT_METHODS = {
     "adablock",
     "entropy_sum_gate",
     "mutual_stability_gate",
+    "rc_pag_local",
+}
+_REQUIRED_V3_DEVELOPMENT_METHODS = {
+    "adablock",
+    "entropy_sum_gate",
+    "mutual_stability_gate",
+    "stability_weighted_style",
+    "token_convergence_style",
+    "rc_pag_local",
+}
+_REQUIRED_V4_DEVELOPMENT_METHODS = {
+    "adablock",
+    "stability_weighted_style",
+    "token_convergence_style",
     "rc_pag_local",
 }
 
@@ -252,23 +276,25 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         raise ValueError("decoding settings do not match the frozen deterministic protocol")
 
     protocol_version = str(payload.get("protocol_version", "v1"))
-    if protocol_version not in {"v1", "v2"}:
-        raise ValueError("protocol_version must be v1 or v2")
+    if protocol_version not in {"v1", "v2", "v3", "v4"}:
+        raise ValueError("protocol_version must be v1, v2, v3, or v4")
 
     policy = payload.get("policy", {})
-    if tuple(policy.get("estimator_kinds", ())) != (
-        "hist_gradient_boosting",
-        "logistic",
-    ):
-        raise ValueError("estimator kinds must remain histogram boosting and logistic")
+    expected_estimators = (
+        ("hist_gradient_boosting",)
+        if protocol_version == "v4"
+        else ("hist_gradient_boosting", "logistic")
+    )
+    if tuple(policy.get("estimator_kinds", ())) != expected_estimators:
+        raise ValueError("estimator kinds do not match the frozen protocol")
     if int(policy.get("history_window", 0)) != 4:
         raise ValueError("history_window must remain 4")
     candidates = tuple(policy.get("candidates", ()))
-    expected_candidates = 6 if protocol_version == "v1" else 3
+    expected_candidates = {"v1": 6, "v2": 3, "v3": 9, "v4": 3}[protocol_version]
     if len(candidates) != expected_candidates:
         if protocol_version == "v1":
             raise ValueError("policy family must contain exactly six candidates")
-        raise ValueError("v2 policy family must contain exactly three candidates")
+        raise ValueError(f"{protocol_version} policy family has the wrong candidate count")
     names = tuple(str(item.get("name", "")) for item in candidates)
     if len(set(names)) != len(names) or any(not name for name in names):
         raise ValueError("policy candidate names must be non-empty and unique")
@@ -277,7 +303,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         if variants.count("rc_pag_local") != 3 or variants.count("rc_pag_history") != 3:
             raise ValueError("policy family must contain three local and three history candidates")
     elif set(variants) != {"rc_pag_local"}:
-        raise ValueError("v2 policy candidates must use the local estimator")
+        raise ValueError(f"{protocol_version} policy candidates must use the local estimator")
     for item in candidates:
         threshold_limit = 0.05 if protocol_version == "v1" else 1.0
         if not 0 < float(item.get("threshold", 0)) <= threshold_limit:
@@ -287,6 +313,18 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         remaining = float(item.get("max_remaining_fraction", 1.0))
         if not 0 < remaining <= 1:
             raise ValueError("candidate max_remaining_fraction must be in (0, 1]")
+        min_savings = float(item.get("min_predicted_nfe_savings", 0.0))
+        if min_savings < 0:
+            raise ValueError("candidate min_predicted_nfe_savings must be nonnegative")
+        max_temporal_js = float(item.get("max_temporal_js", 1.0))
+        if not 0 <= max_temporal_js <= 1:
+            raise ValueError("candidate max_temporal_js must be in [0, 1]")
+        if protocol_version == "v3" and (min_savings != 2.0 or max_temporal_js != 0.05):
+            raise ValueError("v3 candidates require the frozen benefit and stability gates")
+        if protocol_version == "v4" and (
+            remaining != 1.0 or min_savings != 0.0 or max_temporal_js != 1.0
+        ):
+            raise ValueError("v4 candidates use only the learned risk score and patience")
 
     risk = payload.get("risk", {})
     expected_alpha = 0.05 if protocol_version == "v1" else 0.02
@@ -301,6 +339,12 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     )
     if risk.get("loss") != expected_loss:
         raise ValueError(f"risk loss must remain {expected_loss}")
+    minimum_nfe_reduction = risk.get("minimum_nfe_reduction")
+    if protocol_version == "v4":
+        if float(minimum_nfe_reduction or 0.0) != 0.05:
+            raise ValueError("v4 minimum NFE reduction must remain 0.05")
+    elif minimum_nfe_reduction is not None:
+        raise ValueError("minimum NFE reduction is only defined for v4")
 
     statistics = payload.get("statistics", {})
     if int(statistics.get("bootstrap_samples", 0)) != 10_000:
@@ -314,6 +358,8 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "full": _FULL_CONFIRMATORY,
         "workshop_48h": _WORKSHOP_CONFIRMATORY,
         "workshop_v2_fresh": _WORKSHOP_V2_CONFIRMATORY,
+        "workshop_v3_fresh": _WORKSHOP_V2_CONFIRMATORY,
+        "workshop_v4_fresh": _WORKSHOP_V2_CONFIRMATORY,
     }
     if confirmation_profile not in expected_confirmatory:
         raise ValueError("unknown confirmation profile")
@@ -340,21 +386,24 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
             "excluded_counts": _WORKSHOP_CONFIRMATORY,
         }
         if sampling != expected_sampling:
-            raise ValueError("v2 confirmation must use the untouched v1 complement")
+            raise ValueError("fresh confirmation must use the untouched v1 complement")
 
     methods = payload.get("methods", {})
     development = set(methods.get("development", ()))
-    expected_development = (
-        _REQUIRED_DEVELOPMENT_METHODS
-        if protocol_version == "v1"
-        else _REQUIRED_V2_DEVELOPMENT_METHODS
-    )
+    expected_development = {
+        "v1": _REQUIRED_DEVELOPMENT_METHODS,
+        "v2": _REQUIRED_V2_DEVELOPMENT_METHODS,
+        "v3": _REQUIRED_V3_DEVELOPMENT_METHODS,
+        "v4": _REQUIRED_V4_DEVELOPMENT_METHODS,
+    }[protocol_version]
     if development != expected_development:
         raise ValueError("development method family does not match the frozen protocol")
     expected_methods = {
         "full": ("adablock", "best_nonlearned", "rc_pag_local", "rc_pag_history"),
         "workshop_48h": ("adablock", "best_nonlearned", "rc_pag_history"),
         "workshop_v2_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
+        "workshop_v3_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
+        "workshop_v4_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
     }
     if tuple(methods.get("confirmatory", ())) != expected_methods[confirmation_profile]:
         raise ValueError("confirmatory methods do not match the frozen protocol")
@@ -369,6 +418,17 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     }
     if gates != expected_gates:
         raise ValueError("claim gates do not match the frozen protocol")
+
+    readiness = payload.get("readiness")
+    if protocol_version in {"v3", "v4"}:
+        expected_readiness = {
+            "minimum_tuning_nfe_reduction_per_model": 0.05,
+            "require_candidate_beats_nonlearned": True,
+        }
+        if readiness != expected_readiness:
+            raise ValueError("v3 readiness gate does not match the frozen protocol")
+    elif readiness is not None:
+        raise ValueError("readiness is only defined for the v3 and v4 protocols")
 
 
 def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
@@ -403,6 +463,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
     risk = payload["risk"]
     statistics = payload["statistics"]
     gates = payload["claim_gates"]
+    readiness = payload.get("readiness", {})
     confirmation_profile = str(payload.get("confirmation_profile", "full"))
     raw_sampling = payload.get("confirmatory_sampling")
     if raw_sampling is None:
@@ -451,6 +512,8 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
                 min_steps=int(item["min_steps"]),
                 patience=int(item["patience"]),
                 max_remaining_fraction=float(item.get("max_remaining_fraction", 1.0)),
+                min_predicted_nfe_savings=float(item.get("min_predicted_nfe_savings", 0.0)),
+                max_temporal_js=float(item.get("max_temporal_js", 1.0)),
             )
             for item in policy["candidates"]
         ),
@@ -458,6 +521,11 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             alpha=float(risk["alpha"]),
             delta=float(risk["delta"]),
             loss=str(risk["loss"]),
+            minimum_nfe_reduction=(
+                None
+                if risk.get("minimum_nfe_reduction") is None
+                else float(risk["minimum_nfe_reduction"])
+            ),
         ),
         statistics=StatisticsSpec(
             bootstrap_samples=int(statistics["bootstrap_samples"]),
@@ -469,6 +537,14 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
         development_methods=tuple(payload["methods"]["development"]),
         confirmatory_methods=tuple(payload["methods"]["confirmatory"]),
         claim_gates=ClaimGateSpec(**gates),
+        readiness=ReadinessSpec(
+            minimum_tuning_nfe_reduction_per_model=float(
+                readiness.get("minimum_tuning_nfe_reduction_per_model", 0.0)
+            ),
+            require_candidate_beats_nonlearned=bool(
+                readiness.get("require_candidate_beats_nonlearned", False)
+            ),
+        ),
         config_hash=canonical_config_hash(payload),
         raw=payload,
     )

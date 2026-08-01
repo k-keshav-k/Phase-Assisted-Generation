@@ -6,6 +6,8 @@ import pytest
 
 from pag.experiments.rc_pag_features import RealizedBlock, StepObservation, extract_features
 from pag.experiments.rc_pag_policy import (
+    BenefitExample,
+    RemainingNFEEstimator,
     RiskEstimator,
     RiskStoppingPolicy,
     TrainingExample,
@@ -13,7 +15,11 @@ from pag.experiments.rc_pag_policy import (
 
 
 def observation(
-    *, step: int, top1: float = 0.9, masked: list[bool] | None = None
+    *,
+    step: int,
+    top1: float = 0.9,
+    masked: list[bool] | None = None,
+    temporal_js: list[float] | None = None,
 ) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=step,
@@ -23,6 +29,7 @@ def observation(
         top2_probs=[0.05, 0.03],
         entropies=[0.4, 0.1],
         token_ids=[10, 11],
+        temporal_js=temporal_js or [0.0, 0.0],
     )
 
 
@@ -59,6 +66,25 @@ def test_policy_resets_streak_after_risky_step() -> None:
     assert policy.observe(observation(step=4)).should_stop
 
 
+def test_single_score_policy_needs_no_separate_tail_stability_or_benefit_gate() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.01),
+        threshold=0.05,
+        min_steps=2,
+        patience=2,
+        include_history=False,
+    )
+
+    assert not policy.observe(
+        observation(step=2, masked=[True, True], temporal_js=[0.9, 0.8])
+    ).should_stop
+    decision = policy.observe(observation(step=3, masked=[True, True], temporal_js=[0.9, 0.8]))
+
+    assert decision.should_stop
+    assert decision.predicted_nfe_savings == 0.0
+    assert decision.temporal_js == pytest.approx(0.9)
+
+
 def test_policy_only_stops_in_declared_tail() -> None:
     policy = RiskStoppingPolicy(
         FixedScorer(0.0),
@@ -74,6 +100,30 @@ def test_policy_only_stops_in_declared_tail() -> None:
 
     assert not early.should_stop
     assert tail.should_stop
+
+
+def test_policy_requires_stability_and_predicted_compute_benefit() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.01),
+        benefit_scorer=FixedBenefitScorer(1.0, 3.0, 3.0),
+        threshold=0.05,
+        min_steps=1,
+        patience=1,
+        include_history=False,
+        max_remaining_fraction=0.75,
+        min_predicted_nfe_savings=2.0,
+        max_temporal_js=0.05,
+    )
+
+    too_little_benefit = policy.observe(observation(step=1))
+    unstable = policy.observe(observation(step=2, temporal_js=[0.2, 0.0]))
+    accepted = policy.observe(observation(step=3, temporal_js=[0.01, 0.0]))
+
+    assert not too_little_benefit.should_stop
+    assert not unstable.should_stop
+    assert accepted.should_stop
+    assert accepted.predicted_nfe_savings == 3.0
+    assert accepted.temporal_js == pytest.approx(0.01)
 
 
 def test_policy_fallback_never_stops_early() -> None:
@@ -135,6 +185,42 @@ def test_estimator_round_trip_and_constant_labels(tmp_path) -> None:
         seed=7,
     )
     assert constant.predict_risk(rows[0].features) == 0.0
+
+
+def test_remaining_nfe_estimator_round_trip(tmp_path) -> None:
+    examples = [
+        BenefitExample(
+            features=extract_features(
+                observation(step=step),
+                previous=None,
+                history=(),
+                history_window=4,
+            ),
+            remaining_nfe=float(5 - step),
+            prompt_id=f"p-{step}",
+        )
+        for step in range(1, 5)
+    ]
+    estimator = RemainingNFEEstimator.fit(
+        examples,
+        include_history=False,
+        history_window=4,
+        seed=7,
+    )
+    path = tmp_path / "remaining.joblib"
+    estimator.save(path)
+
+    prediction = RemainingNFEEstimator.load(path).predict_remaining_nfe(examples[0].features)
+    assert prediction >= 0.0
+
+
+class FixedBenefitScorer:
+    def __init__(self, *scores: float) -> None:
+        self.scores = list(scores)
+
+    def predict_remaining_nfe(self, features: dict[str, float]) -> float:
+        del features
+        return self.scores.pop(0) if len(self.scores) > 1 else self.scores[0]
 
 
 def test_policy_rejects_invalid_parameters_and_scorer_output() -> None:

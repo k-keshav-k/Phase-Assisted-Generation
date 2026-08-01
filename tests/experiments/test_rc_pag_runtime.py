@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 import torch
 
+from pag.experiments.rc_pag_config import load_rc_pag_config
 from pag.experiments.rc_pag_runtime import (
+    UnifiedRCPAGRuntime,
     _ensure_llada_config_compatibility,
     _import_llada_model_class_without_compile,
     prompt_loss_from_schedules,
@@ -49,6 +52,7 @@ def test_training_examples_label_proposals_against_full_trajectory_final_tokens(
     assert examples[0]["unsafe"]
     assert examples[0]["features"]["local.step_index"] == 1.0
     assert examples[0]["features"]["history.length"] == 0.0
+    assert examples[0]["remaining_nfe"] == 2.0
 
 
 def test_prompt_loss_is_any_on_policy_shadow_disagreement():
@@ -124,3 +128,23 @@ def test_llada_model_import_restores_compile_after_import_error(monkeypatch) -> 
         _import_llada_model_class_without_compile()
 
     assert torch.compile is original_compile
+
+
+def test_v4_rejects_an_estimator_without_temporal_js_schema(monkeypatch) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml"))
+    runtime.model_name = "llada"
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.RiskEstimator.load",
+        lambda path: SimpleNamespace(
+            names=("local.top1_mean",),
+            include_history=False,
+            kind="hist_gradient_boosting",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="temporal-JS feature schema"):
+        runtime._risk_policy(
+            runtime.config.candidates[0],
+            {"llada_rc_pag_local": "old-estimator.joblib"},
+        )

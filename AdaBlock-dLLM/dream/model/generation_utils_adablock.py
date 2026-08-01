@@ -727,6 +727,7 @@ class DreamGenerationMixin:
             confidence, x0 = sample_tokens(logits, temperature=temperature, top_p=top_p, top_k=top_k)
             x[:, block_start] = x0[:, block_start]
             final_block_logits = logits[:, block_start:block_end]
+            previous_policy_logits = final_block_logits.detach() if risk_policy is not None else None
 
             replace_position = torch.zeros_like(x, dtype=torch.bool)
             replace_position[:, block_start:block_end] = 1
@@ -772,8 +773,10 @@ class DreamGenerationMixin:
                         digit_ids=getattr(self, "pag_digit_ids", None),
                         delimiter_ids=getattr(self, "pag_delimiter_ids", None),
                         cache=past_key_values,
+                        previous_logits=previous_policy_logits,
                     )
                     risk_steps.append(serialize_policy_step(policy_step))
+                    previous_policy_logits = logits.detach()
                     risk_force_commit = bool(policy_step.decision.should_stop)
                     if risk_force_commit:
                         proposed = torch.tensor(

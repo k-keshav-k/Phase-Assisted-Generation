@@ -1,12 +1,18 @@
 from pathlib import Path
 
 
-def test_workshop_paper_defers_numbers_and_states_v2_harm_risk() -> None:
+def test_workshop_paper_defers_numbers_and_states_v4_joint_certificate() -> None:
     paper = Path("writeup/rc_pag_workshop.tex").read_text(encoding="utf-8")
 
-    assert "hence $M=2$" in paper
+    assert "hence $J=4$" in paper
     assert "A(G_0(X),X)=1" in paper
-    assert "at most one quarter of the block remains masked" in paper
+    assert "S_\\lambda(X)=1-\\frac{C_\\lambda(X)}{C_0(X)}" in paper
+    assert "p_\\lambda^H" in paper
+    assert "p_\\lambda^C" in paper
+    assert "There is no" in paper and "remaining-NFE regressor" in paper
+    assert "\\widehat g_\\phi" not in paper
+    assert "D_t\\le0.05" not in paper
+    assert "saves at least 5\\% NFE" in paper
     assert "generated/headline.tex" in paper
     assert "Confirmatory results pending" in paper
     assert "RC-PAG-MAIN-PAGES" in paper
@@ -22,6 +28,8 @@ def test_paper_builder_guards_mock_results_and_page_limit() -> None:
     assert "refusing to build numerical paper results from mock evidence" in builder
     assert "len(names) != 2" in builder
     assert "adablock_correct_candidate_wrong" in builder
+    assert 'certificate.get("certificate_mode") != "joint_harm_and_compute"' in builder
+    assert 'certificate.get("minimum_nfe_reduction", -1.0)' in builder
     assert "MAIN_PAGES > 8" in builder
     assert "neurips_2026.sty" in builder
 

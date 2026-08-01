@@ -1,40 +1,41 @@
-# Run RC-PAG with one command
+# Run the complete RC-PAG v4 experiment
 
-From the repository on the NYU cluster, set the shared paths once:
-
-```bash
-export PROJECT_DIR="$PWD"
-export RC_PAG_OUTPUT_ROOT="/scratch/${USER}/rc_pag/artifacts"
-export OVERLAY_PATH="/scratch/${USER}/overlay-25GB-500K.ext3"
-export SIF_PATH="/scratch/${USER}/ubuntu-20.04.3.sif"
-export RC_PAG_REUSE_FROM="/scratch/${USER}/rc_pag/artifacts/rc-pag-5197d981c0bf"
-```
-
-Submit the complete pipeline:
+From the repository on the NYU cluster, submit everything with:
 
 ```bash
 scripts/slurm/submit_rc_pag_all.sh
 ```
 
-This single resumable A100 job runs `preflight`, `pilot`, `collect`, `fit`, `screen`,
-`calibrate`, `confirm`, `report`, and `paper`. It stops if a required safety or statistical
-gate fails. Monitor it with `squeue -u "$USER"` and `ls -lt logs/rc_pag`.
+The command runs every CPU and GPU stage in one resumable A100 job: preflight, parity pilot,
+trace collection, estimator fitting, tuning, joint calibration, fresh confirmation, reporting, and
+paper generation. Run the same command after interruption; completed records are reused.
 
-The v2 profile first checks exact no-stop AdaBlock parity. It reuses only the hash-validated
-LLaDA local risk estimator; Dream traces are recollected because its decoder changed. It freezes
-one tail-only policy per model, calibrates the two policies on end-to-end task harm, and evaluates
-AdaBlock, the per-model best nonlearned method, and RC-PAG on fresh complements of the v1 sample:
-500 GSM8K, 200 MATH-500, 100 MBPP, and 64 HumanEval prompts (5,184 generations).
+Set cluster paths only when they differ from the defaults:
 
-The log prints the config hash and exact results directory under:
-
-```text
-/scratch/$USER/rc_pag/artifacts/rc-pag-e2d98174c4f9
+```bash
+export RC_PAG_OUTPUT_ROOT="/scratch/${USER}/rc_pag/artifacts"
+export OVERLAY_PATH="/scratch/${USER}/overlay-25GB-500K.ext3"
+export SIF_PATH="/scratch/${USER}/ubuntu-20.04.3.sif"
+scripts/slurm/submit_rc_pag_all.sh
 ```
 
-If interrupted, run the same command again; completed prompt records are reused. Override the
-per-attempt Slurm limit with `RC_PAG_ALL_TIME=24:00:00` if required by the partition.
-The pilot's `compute_projection.json` is the authoritative hardware-specific runtime estimate;
-48 hours is the default Slurm attempt length, and the same job requeues if more time is needed.
+V4 uses one risk estimator and three thresholds. It proceeds to the fresh 5,184-generation
+confirmation only if both LLaDA and Dream pass tuning and held-out calibration jointly certifies
+at most 2% harmful regression and at least 5% mean paired NFE reduction. Otherwise it stops with
+the scientifically valid AdaBlock fallback.
 
-If the old run is elsewhere, change `RC_PAG_REUSE_FROM`. Omit it to retrain both estimators.
+The fixed post-pilot workload is 9,384 prompt-method generations: 2,628 plain AdaBlock runs and
+6,756 instrumented runs. This is about 16% fewer generations than the prior v3 reuse profile;
+the real A100-hour estimate still comes from the measured pilot rather than a guessed throughput.
+
+Do not point `RC_PAG_REUSE_FROM` at the completed v1 run: v1 lacks the temporal-JS feature
+evidence. Compatible v3/v4 exact-loop raw traces may be reused explicitly; v4 always refits the
+single estimator. The pilot writes `compute_projection.json`, which is the hardware-specific GPU
+hour estimate.
+
+Monitor with:
+
+```bash
+squeue -u "$USER"
+ls -lt logs/rc_pag
+```

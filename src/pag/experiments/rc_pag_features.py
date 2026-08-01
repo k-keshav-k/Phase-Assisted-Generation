@@ -16,10 +16,13 @@ class StepObservation:
     top2_probs: tuple[float, ...]
     entropies: tuple[float, ...]
     token_ids: tuple[int, ...]
+    temporal_js: tuple[float, ...] = ()
     digit_ids: frozenset[int] = frozenset()
     delimiter_ids: frozenset[int] = frozenset()
 
     def __post_init__(self) -> None:
+        if not self.temporal_js:
+            object.__setattr__(self, "temporal_js", (0.0,) * self.block_size)
         if self.step_index < 1:
             raise ValueError("step_index must be positive")
         if self.block_size < 1:
@@ -30,6 +33,7 @@ class StepObservation:
             self.top2_probs,
             self.entropies,
             self.token_ids,
+            self.temporal_js,
         )
         if any(len(values) != self.block_size for values in arrays):
             raise ValueError("step observation arrays must match block_size")
@@ -42,6 +46,8 @@ class StepObservation:
             raise ValueError("top2 probabilities cannot exceed top1")
         if any(not math.isfinite(value) or value < 0.0 for value in self.entropies):
             raise ValueError("entropies must be finite and non-negative")
+        if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in self.temporal_js):
+            raise ValueError("temporal JS values must be finite and in [0, 1]")
 
     @classmethod
     def from_arrays(
@@ -54,9 +60,11 @@ class StepObservation:
         top2_probs: Sequence[float],
         entropies: Sequence[float],
         token_ids: Sequence[int],
+        temporal_js: Sequence[float] | None = None,
         digit_ids: Iterable[int] = (),
         delimiter_ids: Iterable[int] = (),
     ) -> StepObservation:
+        normalized_js = [0.0] * int(block_size) if temporal_js is None else temporal_js
         return cls(
             step_index=int(step_index),
             block_size=int(block_size),
@@ -65,6 +73,7 @@ class StepObservation:
             top2_probs=tuple(float(value) for value in top2_probs),
             entropies=tuple(float(value) for value in entropies),
             token_ids=tuple(int(value) for value in token_ids),
+            temporal_js=tuple(float(value) for value in normalized_js),
             digit_ids=frozenset(int(value) for value in digit_ids),
             delimiter_ids=frozenset(int(value) for value in delimiter_ids),
         )
@@ -116,6 +125,10 @@ _LOCAL_FEATURE_NAMES = (
     "local.margin_q10",
     "local.margin_q50",
     "local.margin_q90",
+    "local.temporal_js_mean",
+    "local.temporal_js_max",
+    "local.temporal_js_q50",
+    "local.temporal_js_q90",
     "local.token_churn",
     "local.entropy_delta",
     "local.top1_delta",
@@ -229,15 +242,19 @@ def extract_features(
         for first, second in zip(observation.top1_probs, observation.top2_probs, strict=True)
     )
     masked_margins = _selected(margins, observation.masked)
+    masked_temporal_js = _selected(observation.temporal_js, observation.masked)
     remaining_count = sum(observation.masked)
     churn = 0.0
     entropy_delta = 0.0
     top1_delta = 0.0
     if previous is not None:
-        churn = sum(
-            left != right
-            for left, right in zip(observation.token_ids, previous.token_ids, strict=True)
-        ) / observation.block_size
+        churn = (
+            sum(
+                left != right
+                for left, right in zip(observation.token_ids, previous.token_ids, strict=True)
+            )
+            / observation.block_size
+        )
         entropy_delta = _masked_mean(observation.entropies, observation.masked) - _masked_mean(
             previous.entropies, previous.masked
         )
@@ -249,6 +266,9 @@ def extract_features(
     entropy_summary.pop("local.entropy_min")
     top1_summary = _summary(masked_top1, prefix="local.top1")
     margin_summary = _summary(masked_margins, prefix="local.margin")
+    temporal_js_summary = _summary(masked_temporal_js, prefix="local.temporal_js")
+    temporal_js_summary.pop("local.temporal_js_min")
+    temporal_js_summary.pop("local.temporal_js_q10")
     features = {
         "local.step_index": float(observation.step_index),
         "local.block_size": float(observation.block_size),
@@ -257,6 +277,7 @@ def extract_features(
         **entropy_summary,
         **top1_summary,
         **margin_summary,
+        **temporal_js_summary,
         "local.token_churn": float(churn),
         "local.entropy_delta": float(entropy_delta),
         "local.top1_delta": float(top1_delta),

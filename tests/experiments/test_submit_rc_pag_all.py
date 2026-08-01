@@ -62,7 +62,7 @@ def test_one_command_submits_all_stages_with_confirmation(tmp_path):
     assert "stage=all" in submitted
     assert "confirm=1" in submitted
     assert "config=" in submitted
-    assert "rc_pag_neurips_workshop_v2.yaml" in submitted
+    assert "rc_pag_neurips_workshop_v4.yaml" in submitted
     assert "--time=48:00:00" in submitted
     assert "rc_pag_a100.sbatch" in submitted
 

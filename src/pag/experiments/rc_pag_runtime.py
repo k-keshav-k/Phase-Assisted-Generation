@@ -28,7 +28,11 @@ from pag.experiments.rc_pag_features import (
     extract_features,
 )
 from pag.experiments.rc_pag_orchestrator import SampleRef
-from pag.experiments.rc_pag_policy import RiskEstimator, RiskStoppingPolicy
+from pag.experiments.rc_pag_policy import (
+    RemainingNFEEstimator,
+    RiskEstimator,
+    RiskStoppingPolicy,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
@@ -73,6 +77,7 @@ def _observation(payload: Mapping[str, Any]) -> StepObservation:
         top2_probs=payload["top2_probs"],
         entropies=payload["entropies"],
         token_ids=payload["token_ids"],
+        temporal_js=payload.get("temporal_js"),
         digit_ids=payload.get("digit_ids", ()),
         delimiter_ids=payload.get("delimiter_ids", ()),
     )
@@ -102,6 +107,9 @@ def training_examples_from_schedules(
                         history_window=history_window,
                     ),
                     "unsafe": proposed != final_tokens,
+                    "remaining_nfe": float(
+                        max(0, int(block["actual_nfe_used"]) - observation.step_index)
+                    ),
                 }
             )
             previous = observation
@@ -239,6 +247,8 @@ class _HeuristicPolicy(_TracePolicy):
         entropies = [observation.entropies[index] for index in masked]
         min_confidence = min(confidences, default=1.0)
         mean_entropy = float(np.mean(entropies)) if entropies else 0.0
+        temporal_js = [observation.temporal_js[index] for index in masked]
+        max_temporal_js = max(temporal_js, default=0.0)
         churn = 1.0
         if self.previous is not None:
             churn = float(
@@ -259,6 +269,15 @@ class _HeuristicPolicy(_TracePolicy):
             safe = churn == 0.0
         elif self.kind == "mutual_stability_gate":
             safe = min_confidence >= 0.90 and churn == 0.0 and mean_entropy <= 1.0
+        elif self.kind == "stability_weighted_style":
+            safe = progress >= 0.50 and min_confidence >= 0.80 and max_temporal_js <= 0.05
+        elif self.kind == "token_convergence_style":
+            safe = (
+                progress >= 0.50
+                and min_confidence >= 0.75
+                and churn == 0.0
+                and max_temporal_js <= 0.02
+            )
         elif self.kind == "pag":
             safe = min_confidence >= 0.88 and churn <= 0.10 and observation.step_index >= 2
         elif self.kind == "residual_pag":
@@ -268,7 +287,12 @@ class _HeuristicPolicy(_TracePolicy):
             raise ValueError(f"unsupported heuristic policy: {self.kind}")
         self.safe_streak = self.safe_streak + 1 if safe else 0
         self.previous = observation
-        needs_patience = self.kind in {"stability_gate", "mutual_stability_gate"}
+        needs_patience = self.kind in {
+            "stability_gate",
+            "mutual_stability_gate",
+            "stability_weighted_style",
+            "token_convergence_style",
+        }
         stop = self.safe_streak >= (2 if needs_patience else 1)
         return SimpleNamespace(
             should_stop=stop,
@@ -417,7 +441,7 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version == "v2" and examples
+                if self.config.protocol_version in {"v2", "v3", "v4"} and examples
                 else ""
             )
             prompt = f"Write a correct Python solution for this task:\n{description}"
@@ -508,6 +532,18 @@ class UnifiedRCPAGRuntime:
         if key not in estimator_paths:
             raise ValueError(f"missing fitted estimator for {key}")
         estimator = RiskEstimator.load(estimator_paths[key])
+        if self.config.protocol_version == "v4":
+            required_features = {"local.temporal_js_mean", "local.temporal_js_max"}
+            if not required_features.issubset(estimator.names):
+                raise ValueError("v4 estimator is missing the frozen temporal-JS feature schema")
+            if estimator.include_history or estimator.kind != "hist_gradient_boosting":
+                raise ValueError("v4 requires the frozen local histogram-boosting estimator")
+        benefit = None
+        if candidate.min_predicted_nfe_savings > 0:
+            benefit_key = f"{self.model_name}_remaining_nfe"
+            if benefit_key not in estimator_paths:
+                raise ValueError(f"missing fitted benefit estimator for {benefit_key}")
+            benefit = RemainingNFEEstimator.load(estimator_paths[benefit_key])
         return RiskStoppingPolicy(
             estimator,
             threshold=candidate.threshold,
@@ -516,6 +552,9 @@ class UnifiedRCPAGRuntime:
             include_history=candidate.variant == "rc_pag_history",
             history_window=self.config.history_window,
             max_remaining_fraction=candidate.max_remaining_fraction,
+            benefit_scorer=benefit,
+            min_predicted_nfe_savings=candidate.min_predicted_nfe_savings,
+            max_temporal_js=candidate.max_temporal_js,
         )
 
     def _method_components(
@@ -557,6 +596,8 @@ class UnifiedRCPAGRuntime:
             "residual_pag",
             "entropy_sum_gate",
             "mutual_stability_gate",
+            "stability_weighted_style",
+            "token_convergence_style",
         }:
             style_name = {"fast_dllm": "fast_dllm_style", "sched": "sched_style"}.get(
                 method, method
@@ -577,7 +618,8 @@ class UnifiedRCPAGRuntime:
         enforcement: str,
         shadow: bool,
     ):
-        if method == "adablock" or self.config.protocol_version == "v2":
+        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4"}
+        if method == "adablock" or modern_protocol:
             module = importlib.import_module("generate_adablock")
             result = module.generate_adablock_dual_cache(
                 self.model,
@@ -590,12 +632,12 @@ class UnifiedRCPAGRuntime:
                 threshold=self.config.decoding.transfer_threshold,
                 delimiter_ids=self.delimiter_ids.tolist(),
                 delimiter_threshold=self.config.decoding.delimiter_threshold,
-                risk_policy=policy if self.config.protocol_version == "v2" else None,
+                risk_policy=policy if modern_protocol else None,
                 digit_ids_tensor=self.digit_ids,
                 delimiter_ids_tensor=self.delimiter_ids,
-                return_schedule_history=self.config.protocol_version == "v2",
+                return_schedule_history=modern_protocol,
             )
-            if self.config.protocol_version == "v2":
+            if modern_protocol:
                 return result
             output, nfes, blocks = result
             schedules = [
@@ -653,7 +695,7 @@ class UnifiedRCPAGRuntime:
         del enforcement
         adablock = importlib.import_module("model.generation_utils_adablock")
         pag = importlib.import_module("model.generation_utils_pag")
-        use_exact_adablock_loop = self.config.protocol_version == "v2"
+        use_exact_adablock_loop = self.config.protocol_version in {"v2", "v3", "v4"}
         generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(
             generation_module.DreamGenerationMixin.diffusion_generate,

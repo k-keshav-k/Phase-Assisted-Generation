@@ -10,6 +10,8 @@ from pag.experiments.rc_pag_config import load_rc_pag_config, validate_rc_pag_co
 CONFIG_PATH = Path("configs/experiments/rc_pag_neurips.yaml")
 WORKSHOP_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop.yaml")
 WORKSHOP_V2_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v2.yaml")
+WORKSHOP_V3_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v3.yaml")
+WORKSHOP_V4_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml")
 
 
 def _valid_payload() -> dict:
@@ -80,6 +82,41 @@ def test_v2_config_uses_fresh_confirmation_and_end_to_end_harm() -> None:
     assert len(config.candidates) == 3
     assert all(candidate.max_remaining_fraction == 0.25 for candidate in config.candidates)
     assert max(candidate.threshold for candidate in config.candidates) == 0.5
+
+
+def test_v3_config_registers_stability_benefit_grid_and_readiness_gate() -> None:
+    config = load_rc_pag_config(WORKSHOP_V3_CONFIG_PATH)
+
+    assert config.protocol_version == "v3"
+    assert len(config.candidates) == 9
+    assert {candidate.max_remaining_fraction for candidate in config.candidates} == {
+        0.25,
+        0.5,
+        0.75,
+    }
+    assert all(candidate.min_predicted_nfe_savings == 2.0 for candidate in config.candidates)
+    assert all(candidate.max_temporal_js == 0.05 for candidate in config.candidates)
+    assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.05
+    assert "stability_weighted_style" in config.development_methods
+
+
+def test_v4_config_is_single_estimator_three_threshold_joint_protocol() -> None:
+    config = load_rc_pag_config(WORKSHOP_V4_CONFIG_PATH)
+
+    assert config.protocol_version == "v4"
+    assert config.estimator_kinds == ("hist_gradient_boosting",)
+    assert len(config.candidates) == 3
+    assert {candidate.threshold for candidate in config.candidates} == {0.05, 0.20, 0.50}
+    assert all(candidate.max_remaining_fraction == 1.0 for candidate in config.candidates)
+    assert all(candidate.min_predicted_nfe_savings == 0.0 for candidate in config.candidates)
+    assert all(candidate.max_temporal_js == 1.0 for candidate in config.candidates)
+    assert config.risk.minimum_nfe_reduction == 0.05
+    assert config.development_methods == (
+        "adablock",
+        "stability_weighted_style",
+        "token_convergence_style",
+        "rc_pag_local",
+    )
 
 
 def test_config_rejects_split_overlap():

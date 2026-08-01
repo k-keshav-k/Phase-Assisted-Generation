@@ -10,7 +10,7 @@ from typing import Any, Protocol
 
 import joblib
 import numpy as np
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -28,6 +28,10 @@ class RiskScorer(Protocol):
     def predict_risk(self, features: Mapping[str, float]) -> float: ...
 
 
+class BenefitScorer(Protocol):
+    def predict_remaining_nfe(self, features: Mapping[str, float]) -> float: ...
+
+
 @dataclass(frozen=True, slots=True)
 class TrainingExample:
     features: Mapping[str, float]
@@ -40,11 +44,26 @@ class TrainingExample:
 
 
 @dataclass(frozen=True, slots=True)
+class BenefitExample:
+    features: Mapping[str, float]
+    remaining_nfe: float
+    prompt_id: str
+
+    def __post_init__(self) -> None:
+        if not self.prompt_id:
+            raise ValueError("benefit example prompt_id must be non-empty")
+        if not math.isfinite(self.remaining_nfe) or self.remaining_nfe < 0.0:
+            raise ValueError("remaining NFE target must be finite and non-negative")
+
+
+@dataclass(frozen=True, slots=True)
 class StopDecision:
     should_stop: bool
     risk_score: float
     safe_streak: int
     reason: str
+    predicted_nfe_savings: float = 0.0
+    temporal_js: float = 0.0
 
 
 def _sha256_file(path: Path) -> str:
@@ -189,6 +208,100 @@ class RiskEstimator:
         )
 
 
+class RemainingNFEEstimator:
+    def __init__(
+        self,
+        *,
+        include_history: bool,
+        history_window: int,
+        names: Sequence[str],
+        model: Any,
+    ) -> None:
+        self.include_history = bool(include_history)
+        self.history_window = int(history_window)
+        self.names = tuple(str(name) for name in names)
+        self.model = model
+
+    @classmethod
+    def fit(
+        cls,
+        examples: Sequence[BenefitExample],
+        *,
+        include_history: bool,
+        history_window: int,
+        seed: int,
+    ) -> RemainingNFEEstimator:
+        if not examples:
+            raise ValueError("remaining-NFE estimator requires training examples")
+        names = feature_names(include_history=include_history)
+        features = np.stack([vectorize_features(example.features, names) for example in examples])
+        targets = np.asarray([example.remaining_nfe for example in examples], dtype=np.float64)
+        model = HistGradientBoostingRegressor(
+            max_iter=200,
+            max_depth=8,
+            learning_rate=0.05,
+            l2_regularization=0.1,
+            random_state=seed,
+            loss="squared_error",
+        )
+        model.fit(features, targets)
+        return cls(
+            include_history=include_history,
+            history_window=history_window,
+            names=names,
+            model=model,
+        )
+
+    def predict_remaining_nfe(self, features: Mapping[str, float]) -> float:
+        value = float(self.model.predict(vectorize_features(features, self.names)[None, :])[0])
+        if not math.isfinite(value):
+            raise ValueError("remaining-NFE estimator produced a non-finite value")
+        return max(0.0, value)
+
+    def save(self, path: str | Path) -> dict[str, object]:
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(
+            {
+                "include_history": self.include_history,
+                "history_window": self.history_window,
+                "names": self.names,
+                "model": self.model,
+            },
+            destination,
+        )
+        metadata: dict[str, object] = {
+            "schema_version": 1,
+            "sha256": _sha256_file(destination),
+            "kind": "hist_gradient_boosting_regressor",
+            "target": "remaining_nfe",
+            "include_history": self.include_history,
+            "history_window": self.history_window,
+            "feature_names": list(self.names),
+        }
+        destination.with_suffix(".json").write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return metadata
+
+    @classmethod
+    def load(cls, path: str | Path) -> RemainingNFEEstimator:
+        source = Path(path)
+        metadata_path = source.with_suffix(".json")
+        if metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("sha256") != _sha256_file(source):
+                raise ValueError("remaining-NFE estimator hash does not match metadata")
+        payload: dict[str, Any] = joblib.load(source)
+        return cls(
+            include_history=bool(payload["include_history"]),
+            history_window=int(payload["history_window"]),
+            names=tuple(str(name) for name in payload["names"]),
+            model=payload["model"],
+        )
+
+
 class RiskStoppingPolicy:
     def __init__(
         self,
@@ -200,6 +313,9 @@ class RiskStoppingPolicy:
         include_history: bool = True,
         history_window: int = 8,
         max_remaining_fraction: float = 1.0,
+        benefit_scorer: BenefitScorer | None = None,
+        min_predicted_nfe_savings: float = 0.0,
+        max_temporal_js: float = 1.0,
         force_full_budget: bool = False,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
@@ -208,6 +324,10 @@ class RiskStoppingPolicy:
             raise ValueError("min_steps, patience, and history_window must be positive")
         if not 0.0 < max_remaining_fraction <= 1.0:
             raise ValueError("max_remaining_fraction must be in (0, 1]")
+        if not math.isfinite(min_predicted_nfe_savings) or min_predicted_nfe_savings < 0.0:
+            raise ValueError("min_predicted_nfe_savings must be finite and non-negative")
+        if not 0.0 <= max_temporal_js <= 1.0:
+            raise ValueError("max_temporal_js must be in [0, 1]")
         self.scorer = scorer
         self.threshold = float(threshold)
         self.min_steps = int(min_steps)
@@ -215,6 +335,9 @@ class RiskStoppingPolicy:
         self.include_history = bool(include_history)
         self.history_window = int(history_window)
         self.max_remaining_fraction = float(max_remaining_fraction)
+        self.benefit_scorer = benefit_scorer
+        self.min_predicted_nfe_savings = float(min_predicted_nfe_savings)
+        self.max_temporal_js = float(max_temporal_js)
         self.force_full_budget = bool(force_full_budget)
         self.reset_prompt()
 
@@ -268,10 +391,25 @@ class RiskStoppingPolicy:
         if not math.isfinite(score) or not 0.0 <= score <= 1.0:
             raise ValueError("risk scorer must return a probability in [0, 1]")
         remaining_fraction = sum(observation.masked) / observation.block_size
+        predicted_savings = (
+            float(self.benefit_scorer.predict_remaining_nfe(selected_features))
+            if self.benefit_scorer is not None
+            else 0.0
+        )
+        if not math.isfinite(predicted_savings) or predicted_savings < 0.0:
+            raise ValueError("benefit scorer must return a finite non-negative value")
+        masked_js = [
+            value
+            for value, masked in zip(observation.temporal_js, observation.masked, strict=True)
+            if masked
+        ]
+        temporal_js = max(masked_js, default=0.0)
         eligible = (
             observation.step_index >= self.min_steps
             and remaining_fraction <= self.max_remaining_fraction
             and score <= self.threshold
+            and temporal_js <= self.max_temporal_js
+            and (self.benefit_scorer is None or predicted_savings >= self.min_predicted_nfe_savings)
         )
         self._safe_streak = self._safe_streak + 1 if eligible else 0
         should_stop = self._safe_streak >= self.patience
@@ -280,6 +418,8 @@ class RiskStoppingPolicy:
             risk_score=score,
             safe_streak=self._safe_streak,
             reason="risk_certified_candidate" if should_stop else "continue",
+            predicted_nfe_savings=predicted_savings,
+            temporal_js=temporal_js,
         )
         self._previous = observation
         self._decision_trace.append(decision)

@@ -4,7 +4,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 
-from scipy.stats import beta, binomtest
+from scipy.stats import beta, binom, binomtest
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,6 +13,7 @@ class CandidateRisk:
     losses: tuple[int, ...]
     mean_nfe: float
     protocol_identity: str = "default"
+    nfe_savings: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,9 +24,15 @@ class CandidateAudit:
     empirical_risk: float
     upper_risk_bound: float
     pvalue: float
+    harm_pvalue: float
+    compute_pvalue: float | None
     corrected_cutoff: float
+    harm_certified: bool
+    compute_certified: bool
     certified: bool
     mean_nfe: float
+    empirical_nfe_reduction: float | None
+    lower_nfe_reduction_bound: float | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +41,8 @@ class RiskCertificate:
     alpha: float
     familywise_delta: float
     correction: str
+    hypotheses: int
+    minimum_nfe_reduction: float | None
     protocol_identity: str
     selected: str
     fallback: bool
@@ -81,14 +90,77 @@ def one_sided_upper_bound(
     return float(beta.ppf(1.0 - gamma, failures + 1, total - failures))
 
 
+def _validate_bounded(values: Sequence[float]) -> tuple[float, ...]:
+    normalized = tuple(float(value) for value in values)
+    if not normalized:
+        raise ValueError("bounded mean test requires observations")
+    if any(not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in normalized):
+        raise ValueError("bounded mean observations must be finite and in [0, 1]")
+    return normalized
+
+
+def bounded_mean_upper_tail_pvalue(
+    values: Sequence[float],
+    *,
+    null_mean: float,
+) -> float:
+    """Conservative Hoeffding--Bentkus p-value for H0: E[X] <= null_mean.
+
+    Observations must be independent and lie in [0, 1]. The integer binomial threshold is rounded
+    down, which is conservative for non-integer sums.
+    """
+
+    observations = _validate_bounded(values)
+    target = float(null_mean)
+    if not math.isfinite(target) or not 0.0 <= target < 1.0:
+        raise ValueError("null_mean must be finite and in [0, 1)")
+    count = len(observations)
+    empirical = float(sum(observations) / count)
+    if empirical <= target:
+        return 1.0
+    hoeffding = math.exp(-2.0 * count * (empirical - target) ** 2)
+    threshold = max(0, min(count, math.floor(sum(observations) + 1e-12)))
+    bentkus = math.e * float(binom.sf(threshold - 1, count, target))
+    return float(min(1.0, hoeffding, bentkus))
+
+
+def bounded_mean_lower_bound(
+    values: Sequence[float],
+    *,
+    error_level: float,
+) -> float:
+    """Invert the bounded-mean test to obtain a one-sided lower confidence bound."""
+
+    observations = _validate_bounded(values)
+    gamma = _validate_probability(error_level, name="error_level")
+    empirical = float(sum(observations) / len(observations))
+    if bounded_mean_upper_tail_pvalue(observations, null_mean=0.0) > gamma:
+        return 0.0
+    lower = 0.0
+    upper = empirical
+    for _ in range(64):
+        midpoint = (lower + upper) / 2.0
+        if bounded_mean_upper_tail_pvalue(observations, null_mean=midpoint) <= gamma:
+            lower = midpoint
+        else:
+            upper = midpoint
+    return float(lower)
+
+
 def certify_candidates(
     candidates: Sequence[CandidateRisk],
     *,
     alpha: float,
     delta: float,
+    minimum_nfe_reduction: float | None = None,
 ) -> RiskCertificate:
     risk_level = _validate_probability(alpha, name="alpha")
     familywise_delta = _validate_probability(delta, name="delta")
+    compute_target = None if minimum_nfe_reduction is None else float(minimum_nfe_reduction)
+    if compute_target is not None and (
+        not math.isfinite(compute_target) or not 0.0 < compute_target < 1.0
+    ):
+        raise ValueError("minimum_nfe_reduction must be finite and in (0, 1)")
     if not candidates:
         raise ValueError("risk certification requires a predeclared candidate family")
     names = [candidate.name for candidate in candidates]
@@ -106,13 +178,37 @@ def certify_candidates(
             raise ValueError("prompt losses must be binary")
         if not math.isfinite(candidate.mean_nfe) or candidate.mean_nfe <= 0.0:
             raise ValueError("candidate mean_nfe must be finite and positive")
+        if compute_target is not None:
+            savings = _validate_bounded(candidate.nfe_savings)
+            if len(savings) != len(candidate.losses):
+                raise ValueError("paired harm and NFE observations must have equal counts")
 
     ordered = tuple(sorted(candidates, key=lambda item: item.name))
-    corrected_cutoff = familywise_delta / len(ordered)
+    hypotheses = len(ordered) * (2 if compute_target is not None else 1)
+    corrected_cutoff = familywise_delta / hypotheses
     audits: list[CandidateAudit] = []
     for candidate in ordered:
         failures = int(sum(candidate.losses))
-        pvalue = binomial_null_pvalue(candidate.losses, alpha=risk_level)
+        harm_pvalue = binomial_null_pvalue(candidate.losses, alpha=risk_level)
+        harm_certified = harm_pvalue <= corrected_cutoff
+        compute_pvalue = (
+            bounded_mean_upper_tail_pvalue(
+                candidate.nfe_savings,
+                null_mean=compute_target,
+            )
+            if compute_target is not None
+            else None
+        )
+        compute_certified = compute_pvalue is None or compute_pvalue <= corrected_cutoff
+        lower_reduction = (
+            bounded_mean_lower_bound(
+                candidate.nfe_savings,
+                error_level=corrected_cutoff,
+            )
+            if compute_target is not None
+            else None
+        )
+        joint_pvalue = harm_pvalue if compute_pvalue is None else max(harm_pvalue, compute_pvalue)
         audits.append(
             CandidateAudit(
                 name=candidate.name,
@@ -124,10 +220,20 @@ def certify_candidates(
                     len(candidate.losses),
                     error_level=corrected_cutoff,
                 ),
-                pvalue=pvalue,
+                pvalue=joint_pvalue,
+                harm_pvalue=harm_pvalue,
+                compute_pvalue=compute_pvalue,
                 corrected_cutoff=corrected_cutoff,
-                certified=pvalue <= corrected_cutoff,
+                harm_certified=harm_certified,
+                compute_certified=compute_certified,
+                certified=harm_certified and compute_certified,
                 mean_nfe=float(candidate.mean_nfe),
+                empirical_nfe_reduction=(
+                    float(sum(candidate.nfe_savings) / len(candidate.nfe_savings))
+                    if compute_target is not None
+                    else None
+                ),
+                lower_nfe_reduction_bound=lower_reduction,
             )
         )
     certified = [candidate for candidate in audits if candidate.certified]
@@ -137,10 +243,12 @@ def certify_candidates(
         else "full_budget"
     )
     return RiskCertificate(
-        schema_version=1,
+        schema_version=2 if compute_target is not None else 1,
         alpha=risk_level,
         familywise_delta=familywise_delta,
         correction="bonferroni",
+        hypotheses=hypotheses,
+        minimum_nfe_reduction=compute_target,
         protocol_identity=next(iter(identities)),
         selected=selected,
         fallback=not certified,

@@ -300,6 +300,7 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         x0, transfer_index = get_transfer_index(logits, predicted_tokens, remasking, mask_index, x, None, threshold)
         x[transfer_index] = x0[transfer_index]
         final_block_logits = logits[:, block_start:block_end]
+        previous_policy_logits = None
 
         if risk_policy is not None:
             from pag.experiments.rc_pag_adapter import observe_policy_step, serialize_policy_step
@@ -316,8 +317,10 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                 digit_ids=digit_ids_tensor,
                 delimiter_ids=delimiter_ids_tensor,
                 cache=full_cache,
+                previous_logits=previous_policy_logits,
             )
             risk_steps.append(serialize_policy_step(policy_step))
+            previous_policy_logits = final_block_logits.detach()
             if policy_step.decision.should_stop:
                 proposed = torch.tensor(
                     policy_step.proposed_tokens,
@@ -357,8 +360,10 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                     digit_ids=digit_ids_tensor,
                     delimiter_ids=delimiter_ids_tensor,
                     cache=full_cache,
+                    previous_logits=previous_policy_logits,
                 )
                 risk_steps.append(serialize_policy_step(policy_step))
+                previous_policy_logits = block_logits.detach()
                 force_commit = bool(policy_step.decision.should_stop)
                 if force_commit:
                     proposed = torch.tensor(

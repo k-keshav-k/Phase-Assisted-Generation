@@ -61,12 +61,23 @@ if any(int(count) < 1 for count in inputs.get("coverage", {}).values()):
 
 names = {str(row.get("name", "")) for row in certificate.get("candidates", ())}
 models = {name.split("/", 1)[0] for name in names if "/" in name}
+joint_rows = all(
+    row.get("harm_pvalue") is not None
+    and row.get("compute_pvalue") is not None
+    and row.get("harm_certified") is not None
+    and row.get("compute_certified") is not None
+    and row.get("lower_nfe_reduction_bound") is not None
+    for row in certificate.get("candidates", ())
+)
 if (
     certificate.get("loss") != "adablock_correct_candidate_wrong"
+    or certificate.get("certificate_mode") != "joint_harm_and_compute"
+    or float(certificate.get("minimum_nfe_reduction", -1.0)) != 0.05
     or models != {"llada", "dream"}
     or len(names) != 2
+    or not joint_rows
 ):
-    raise SystemExit("v2 certificate must cover exactly two frozen model-policy pairs")
+    raise SystemExit("certificate must jointly cover harm and compute for two model policies")
 
 tables = run_dir / "report" / "tables"
 figures = run_dir / "report" / "figures"
@@ -81,6 +92,12 @@ for name in (
     if not source.is_file():
         raise SystemExit(f"missing generated table: {source}")
     shutil.copy2(source, generated / name)
+screening = tables / "screening_ablation.tex"
+if screening.is_file():
+    shutil.copy2(screening, generated / screening.name)
+benefit = tables / "benefit_ablation.tex"
+if benefit.is_file():
+    shutil.copy2(benefit, generated / benefit.name)
 for name in ("nfe_accuracy.pdf", "risk_compute.pdf", "reliability.pdf"):
     source = figures / name
     if not source.is_file():
