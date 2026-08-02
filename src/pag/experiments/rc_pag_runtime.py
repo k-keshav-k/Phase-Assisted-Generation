@@ -29,6 +29,7 @@ from pag.experiments.rc_pag_features import (
 )
 from pag.experiments.rc_pag_orchestrator import SampleRef
 from pag.experiments.rc_pag_policy import (
+    NormalizedNFEReductionEstimator,
     RemainingNFEEstimator,
     RiskEstimator,
     RiskStoppingPolicy,
@@ -441,7 +442,7 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version in {"v2", "v3", "v4"} and examples
+                if self.config.protocol_version in {"v2", "v3", "v4", "v5"} and examples
                 else ""
             )
             prompt = f"Write a correct Python solution for this task:\n{description}"
@@ -528,18 +529,40 @@ class UnifiedRCPAGRuntime:
         candidate: PolicyCandidateSpec,
         estimator_paths: Mapping[str, str],
     ) -> RiskStoppingPolicy:
-        key = f"{self.model_name}_{candidate.variant}"
-        if key not in estimator_paths:
-            raise ValueError(f"missing fitted estimator for {key}")
-        estimator = RiskEstimator.load(estimator_paths[key])
+        if self.config.protocol_version == "v5":
+            harm_key = f"{self.model_name}_rc_pag_advantage_harm"
+            gain_key = f"{self.model_name}_rc_pag_advantage_gain"
+            missing = [key for key in (harm_key, gain_key) if key not in estimator_paths]
+            if missing:
+                raise ValueError(f"missing fitted v5 advantage estimators: {', '.join(missing)}")
+            estimator = RiskEstimator.load(estimator_paths[harm_key])
+            benefit = NormalizedNFEReductionEstimator.load(estimator_paths[gain_key])
+            required_features = {"local.temporal_js_mean", "local.temporal_js_max"}
+            if not required_features.issubset(estimator.names) or not required_features.issubset(
+                benefit.names
+            ):
+                raise ValueError("v5 advantage estimator is missing the temporal-JS feature schema")
+            if (
+                estimator.include_history
+                or benefit.include_history
+                or estimator.kind != "hist_gradient_boosting"
+            ):
+                raise ValueError("v5 requires frozen local histogram-boosting advantage heads")
+            if tuple(estimator.names) != tuple(benefit.names):
+                raise ValueError("v5 harm and gain estimator feature schemas differ")
+        else:
+            key = f"{self.model_name}_{candidate.variant}"
+            if key not in estimator_paths:
+                raise ValueError(f"missing fitted estimator for {key}")
+            estimator = RiskEstimator.load(estimator_paths[key])
+            benefit = None
         if self.config.protocol_version == "v4":
             required_features = {"local.temporal_js_mean", "local.temporal_js_max"}
             if not required_features.issubset(estimator.names):
                 raise ValueError("v4 estimator is missing the frozen temporal-JS feature schema")
             if estimator.include_history or estimator.kind != "hist_gradient_boosting":
                 raise ValueError("v4 requires the frozen local histogram-boosting estimator")
-        benefit = None
-        if candidate.min_predicted_nfe_savings > 0:
+        if self.config.protocol_version != "v5" and candidate.min_predicted_nfe_savings > 0:
             benefit_key = f"{self.model_name}_remaining_nfe"
             if benefit_key not in estimator_paths:
                 raise ValueError(f"missing fitted benefit estimator for {benefit_key}")
@@ -555,6 +578,7 @@ class UnifiedRCPAGRuntime:
             benefit_scorer=benefit,
             min_predicted_nfe_savings=candidate.min_predicted_nfe_savings,
             max_temporal_js=candidate.max_temporal_js,
+            require_exact_agreement=candidate.require_exact_agreement,
         )
 
     def _method_components(
@@ -618,7 +642,7 @@ class UnifiedRCPAGRuntime:
         enforcement: str,
         shadow: bool,
     ):
-        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4"}
+        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4", "v5"}
         if method == "adablock" or modern_protocol:
             module = importlib.import_module("generate_adablock")
             result = module.generate_adablock_dual_cache(
@@ -695,7 +719,7 @@ class UnifiedRCPAGRuntime:
         del enforcement
         adablock = importlib.import_module("model.generation_utils_adablock")
         pag = importlib.import_module("model.generation_utils_pag")
-        use_exact_adablock_loop = self.config.protocol_version in {"v2", "v3", "v4"}
+        use_exact_adablock_loop = self.config.protocol_version in {"v2", "v3", "v4", "v5"}
         generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(
             generation_module.DreamGenerationMixin.diffusion_generate,

@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run the registered risk-calibrated PAG experiment funnel."
     )
-    parser.add_argument("stage", choices=(*RCPAGOrchestrator.STAGES, "all"))
+    parser.add_argument("stage", choices=(*RCPAGOrchestrator.ALL_STAGES, "all"))
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--output-root", type=Path, default=Path("artifacts/rc_pag"))
     parser.add_argument("--run-id")
@@ -30,8 +30,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--reuse-development-from",
         type=Path,
         help=(
-            "Reuse compatible development artifacts. v4 accepts only exact-loop v3/v4 raw "
-            "traces and always refits its estimator."
+            "Reuse compatible development artifacts. v5 accepts exact-loop v4 traces plus "
+            "complete paired q500/AdaBlock screen rows and always refits its estimators."
         ),
     )
     return parser

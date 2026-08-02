@@ -10,6 +10,7 @@ from pag.experiments.rc_pag_config import load_rc_pag_config
 from pag.experiments.rc_pag_orchestrator import (
     MockRCPAGRuntime,
     RCPAGOrchestrator,
+    _counterfactual_examples_from_pair,
     _index_stratified_complement_indices,
     _index_stratified_indices,
     _mock_observation,
@@ -39,6 +40,11 @@ def v3_config():
 @pytest.fixture
 def v4_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml"))
+
+
+@pytest.fixture
+def v5_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml"))
 
 
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
@@ -439,3 +445,156 @@ def test_v4_reuses_compatible_raw_traces_but_refits_estimators(tmp_path, v3_conf
     assert all(
         estimators["models"][model]["rc_pag_local"]["trace_reused"] for model in ("llada", "dream")
     )
+
+
+def _stopped_rollout_row(*, correct: bool, total_nfe: float) -> dict:
+    first = _mock_observation(3, step=2)
+    second = _mock_observation(3, step=3)
+
+    def serialized(observation, *, should_stop: bool) -> dict:
+        return {
+            "should_stop": should_stop,
+            "observation": {
+                "step_index": observation.step_index,
+                "block_size": observation.block_size,
+                "masked": list(observation.masked),
+                "top1_probs": list(observation.top1_probs),
+                "top2_probs": list(observation.top2_probs),
+                "entropies": list(observation.entropies),
+                "token_ids": list(observation.token_ids),
+                "temporal_js": list(observation.temporal_js),
+                "digit_ids": sorted(observation.digit_ids),
+                "delimiter_ids": sorted(observation.delimiter_ids),
+            },
+        }
+
+    return {
+        "sample_id": "gsm8k_train-00003",
+        "is_correct": correct,
+        "total_nfe": total_nfe,
+        "schedule_history": [
+            {
+                "applied_block_size": 4,
+                "actual_nfe_used": 3,
+                "mean_top1_confidence": 0.8,
+                "min_top1_confidence": 0.6,
+                "digit_fraction": 0.25,
+                "delimiter_fraction": 0.25,
+                "final_tokens": list(second.token_ids),
+                "risk_steps": [
+                    serialized(first, should_stop=False),
+                    serialized(second, should_stop=True),
+                ],
+            }
+        ],
+    }
+
+
+def test_counterfactual_pair_uses_prompt_harm_and_normalized_saving() -> None:
+    baseline = {"sample_id": "gsm8k_train-00003", "is_correct": True, "total_nfe": 100.0}
+    seed = _stopped_rollout_row(correct=False, total_nfe=75.0)
+
+    harm, gain = _counterfactual_examples_from_pair(
+        baseline,
+        seed,
+        history_window=4,
+    )
+
+    assert len(harm) == len(gain) == 1
+    assert harm[0].unsafe
+    assert harm[0].prompt_id == "gsm8k_train-00003"
+    assert gain[0].nfe_reduction == pytest.approx(0.25)
+
+    with pytest.raises(ValueError, match="cannot exceed"):
+        _counterfactual_examples_from_pair(
+            baseline,
+            _stopped_rollout_row(correct=True, total_nfe=101.0),
+            history_window=4,
+        )
+
+
+def test_counterfactual_pair_skips_prompt_without_executed_stop() -> None:
+    baseline = {"sample_id": "gsm8k_train-00003", "is_correct": True, "total_nfe": 100.0}
+    seed = _stopped_rollout_row(correct=True, total_nfe=100.0)
+    for block in seed["schedule_history"]:
+        for step in block["risk_steps"]:
+            step["should_stop"] = False
+
+    harm, gain = _counterfactual_examples_from_pair(
+        baseline,
+        seed,
+        history_window=4,
+    )
+
+    assert harm == ()
+    assert gain == ()
+
+
+def test_v5_adds_rollout_refit_and_runs_mock_funnel(tmp_path, v4_config, v5_config) -> None:
+    old = RCPAGOrchestrator(
+        v4_config,
+        tmp_path / "v4",
+        runtime_factory=lambda model: MockRCPAGRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    new_runtime = MockRCPAGRuntime(calibration_repetitions=500)
+    new = RCPAGOrchestrator(
+        v5_config,
+        tmp_path / "v5",
+        runtime_factory=lambda model: new_runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    assert "rollout" not in old.active_stages
+    assert "refit" not in old.active_stages
+    assert new.active_stages[:7] == (
+        "preflight",
+        "pilot",
+        "collect",
+        "fit",
+        "rollout",
+        "refit",
+        "screen",
+    )
+
+    new.run_through("report")
+
+    advantage = json.loads((tmp_path / "v5" / "estimators" / "advantage_manifest.json").read_text())
+    assert set(advantage["models"]) == {"llada", "dream"}
+    assert {method for stage, _, _, method in new_runtime.calls if stage == "rollout"} == {
+        "adablock",
+        "seed_local_q500_p2",
+    }
+    assert json.loads((tmp_path / "v5" / "readiness_audit.json").read_text())["passed"]
+
+
+def test_v5_reuses_exact_v4_traces_and_paired_q500_rollouts(tmp_path, v4_config, v5_config) -> None:
+    source = tmp_path / "v4"
+    source_runner = RCPAGOrchestrator(
+        v4_config,
+        source,
+        runtime_factory=lambda model: ExactTraceMockRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    source_runner.run_through("screen")
+
+    destination = tmp_path / "v5"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v5_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    runner.run_through("refit")
+
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    assert reuse["reuse_scope"] == "raw_exact_loop_traces_and_paired_v4_q500_rollouts"
+    assert set(reuse["rollout"]) == {"llada", "dream"}
+    assert not any(stage in {"collect", "rollout"} for stage, _, _, _ in runtime.calls)
+    assert (destination / "estimators" / "advantage_manifest.json").is_file()

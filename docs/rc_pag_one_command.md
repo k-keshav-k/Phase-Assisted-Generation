@@ -1,37 +1,35 @@
-# Run the complete RC-PAG v4 experiment
+# Run the complete RC-PAG v5 experiment
 
-From the repository on the NYU cluster, submit everything with:
+From the repository on the NYU cluster:
 
 ```bash
 scripts/slurm/submit_rc_pag_all.sh
 ```
 
-The command runs every CPU and GPU stage in one resumable A100 job: preflight, parity pilot,
-trace collection, estimator fitting, tuning, joint calibration, fresh confirmation, reporting, and
-paper generation. Run the same command after interruption; completed records are reused.
+This one command runs every CPU and GPU stage in one resumable A100 job. Run it again after a
+timeout or preemption; completed prompt records are skipped.
 
-Set cluster paths only when they differ from the defaults:
+To reuse the compatible traces and paired q500/AdaBlock screen from the failed v4 run:
 
 ```bash
-export RC_PAG_OUTPUT_ROOT="/scratch/${USER}/rc_pag/artifacts"
-export OVERLAY_PATH="/scratch/${USER}/overlay-25GB-500K.ext3"
-export SIF_PATH="/scratch/${USER}/ubuntu-20.04.3.sif"
+export RC_PAG_REUSE_FROM="/gpfs/scratch/$USER/Phase-Assisted-Generation/artifacts/rc_pag/<V4_RUN_ID>"
 scripts/slurm/submit_rc_pag_all.sh
 ```
 
-V4 uses one risk estimator and three thresholds. It proceeds to the fresh 5,184-generation
-confirmation only if both LLaDA and Dream pass tuning and held-out calibration jointly certifies
-at most 2% harmful regression and at least 5% mean paired NFE reduction. Otherwise it stops with
-the scientifically valid AdaBlock fallback.
+V5 reuses only raw exact-loop traces and paired rollout rows. It refits both new advantage
+heads and uses a disjoint tuning split; no v4 policy selection, certificate, or confirmation
+result is reused.
 
-The fixed post-pilot workload is 9,384 prompt-method generations: 2,628 plain AdaBlock runs and
-6,756 instrumented runs. This is about 16% fewer generations than the prior v3 reuse profile;
-the real A100-hour estimate still comes from the measured pilot rather than a guessed throughput.
+```text
+preflight → pilot → collect → fit → rollout → refit → screen
+          → calibrate → confirm → report → paper
+```
 
-Do not point `RC_PAG_REUSE_FROM` at the completed v1 run: v1 lacks the temporal-JS feature
-evidence. Compatible v3/v4 exact-loop raw traces may be reused explicitly; v4 always refits the
-single estimator. The pilot writes `compute_projection.json`, which is the hardware-specific GPU
-hour estimate.
+The run stops deliberately if either model fails the 8% tuning-headroom gate or the held-out joint
+certificate (harm at most 2%, mean NFE saving above 5%). The pilot writes the machine-specific GPU
+estimate to `compute_projection.json`.
+
+Fresh workload: 10,784 prompt-method generations. With compatible v4 reuse: 8,984 generations.
 
 Monitor with:
 

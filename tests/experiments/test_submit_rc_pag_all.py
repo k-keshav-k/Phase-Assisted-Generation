@@ -19,6 +19,7 @@ set -euo pipefail
     printf 'stage=%s\\n' "$RC_PAG_STAGE"
     printf 'confirm=%s\\n' "$RC_PAG_ALLOW_CONFIRMATORY"
     printf 'config=%s\\n' "$RC_PAG_CONFIG"
+    printf 'reuse=%s\\n' "${RC_PAG_REUSE_FROM:-}"
     printf 'args='
     printf '%s ' "$@"
     printf '\\n'
@@ -62,9 +63,27 @@ def test_one_command_submits_all_stages_with_confirmation(tmp_path):
     assert "stage=all" in submitted
     assert "confirm=1" in submitted
     assert "config=" in submitted
-    assert "rc_pag_neurips_workshop_v4.yaml" in submitted
+    assert "rc_pag_neurips_workshop_v5.yaml" in submitted
     assert "--time=48:00:00" in submitted
     assert "rc_pag_a100.sbatch" in submitted
+
+
+def test_one_command_forwards_v4_reuse_source(tmp_path):
+    env, capture = _environment(tmp_path)
+    source = tmp_path / "failed-v4"
+    source.mkdir()
+    env["RC_PAG_REUSE_FROM"] = str(source)
+
+    result = subprocess.run(
+        ["bash", str(SCRIPT)],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"reuse={source}" in capture.read_text(encoding="utf-8")
 
 
 def test_one_command_rejects_development_limit(tmp_path):

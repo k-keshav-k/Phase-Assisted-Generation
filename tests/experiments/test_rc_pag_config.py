@@ -12,6 +12,7 @@ WORKSHOP_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop.yaml")
 WORKSHOP_V2_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v2.yaml")
 WORKSHOP_V3_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v3.yaml")
 WORKSHOP_V4_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml")
+WORKSHOP_V5_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml")
 
 
 def _valid_payload() -> dict:
@@ -117,6 +118,25 @@ def test_v4_config_is_single_estimator_three_threshold_joint_protocol() -> None:
         "token_convergence_style",
         "rc_pag_local",
     )
+
+
+def test_v5_config_registers_counterfactual_advantage_protocol() -> None:
+    config = load_rc_pag_config(WORKSHOP_V5_CONFIG_PATH)
+
+    assert config.protocol_version == "v5"
+    assert config.stage_sizes.rollout_per_model == 150
+    assert config.stage_sizes.tuning_per_model == 150
+    assert config.stage_sizes.calibration_per_model == 500
+    assert set(config.splits) == {"pilot", "training", "rollout", "tuning", "calibration"}
+    assert len(config.candidates) == 3
+    assert {
+        (candidate.threshold, candidate.min_predicted_nfe_savings)
+        for candidate in config.candidates
+    } == {(0.02, 0.05), (0.05, 0.08), (0.10, 0.10)}
+    assert all(candidate.variant == "rc_pag_advantage" for candidate in config.candidates)
+    assert all(candidate.require_exact_agreement for candidate in config.candidates)
+    assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.08
+    assert config.risk.minimum_nfe_reduction == 0.05
 
 
 def test_config_rejects_split_overlap():

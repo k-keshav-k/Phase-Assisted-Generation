@@ -27,6 +27,8 @@ from pag.experiments.rc_pag_features import (
 )
 from pag.experiments.rc_pag_policy import (
     BenefitExample,
+    NormalizedNFEReductionEstimator,
+    NormalizedNFEReductionExample,
     RemainingNFEEstimator,
     RiskEstimator,
     TrainingExample,
@@ -34,7 +36,7 @@ from pag.experiments.rc_pag_policy import (
 from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
 
-_MODERN_PROTOCOLS = {"v2", "v3", "v4"}
+_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +155,28 @@ def _raw_collection_rows(
     return sorted(rows, key=lambda row: str(row["sample_id"]))
 
 
+def _raw_stage_rows(
+    root: Path,
+    *,
+    stage: str,
+    model: str,
+    method: str,
+    expected_identity: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    directory = root / stage / model / method
+    rows: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("identity") != expected_identity:
+            raise ValueError(f"reuse row identity differs: {path}")
+        if payload.get("stage") != f"{stage}/{model}":
+            raise ValueError(f"reuse row has the wrong stage: {path}")
+        if payload.get("method") != method:
+            raise ValueError(f"reuse row has the wrong method: {path}")
+        rows.append(payload)
+    return sorted(rows, key=lambda row: str(row["sample_id"]))
+
+
 def _training_payloads(row: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
     raw_examples = (
         row["training_examples"]
@@ -237,6 +261,72 @@ def _v4_training_payloads(
     if not examples:
         raise ValueError("v4 generation produced no instrumented training observations")
     return tuple(examples)
+
+
+def _counterfactual_examples_from_pair(
+    baseline: Mapping[str, Any],
+    seed: Mapping[str, Any],
+    *,
+    history_window: int,
+) -> tuple[tuple[TrainingExample, ...], tuple[NormalizedNFEReductionExample, ...]]:
+    """Label executed seed stops with paired prompt harm and normalized NFE reduction."""
+
+    baseline_id = str(baseline.get("sample_id", ""))
+    seed_id = str(seed.get("sample_id", ""))
+    if not baseline_id or baseline_id != seed_id:
+        raise ValueError("counterfactual rollout requires a matching non-empty sample_id")
+    baseline_nfe = float(baseline.get("total_nfe", 0.0))
+    seed_nfe = float(seed.get("total_nfe", 0.0))
+    if baseline_nfe <= 0.0 or seed_nfe <= 0.0:
+        raise ValueError("counterfactual rollout NFE values must be positive")
+    if seed_nfe > baseline_nfe:
+        raise ValueError("seed rollout NFE cannot exceed paired AdaBlock NFE")
+    harmful = bool(baseline.get("is_correct")) and not bool(seed.get("is_correct"))
+    reduction = 1.0 - seed_nfe / baseline_nfe
+    harm_examples: list[TrainingExample] = []
+    gain_examples: list[NormalizedNFEReductionExample] = []
+    history: list[RealizedBlock] = []
+    for block in seed.get("schedule_history", ()):
+        previous: StepObservation | None = None
+        for raw_step in block.get("risk_steps", ()):
+            raw = raw_step.get("observation", {})
+            observation = StepObservation.from_arrays(
+                step_index=int(raw["step_index"]),
+                block_size=int(raw["block_size"]),
+                masked=raw["masked"],
+                top1_probs=raw["top1_probs"],
+                top2_probs=raw["top2_probs"],
+                entropies=raw["entropies"],
+                token_ids=raw["token_ids"],
+                temporal_js=raw.get("temporal_js"),
+                digit_ids=raw.get("digit_ids", ()),
+                delimiter_ids=raw.get("delimiter_ids", ()),
+            )
+            features = extract_features(
+                observation,
+                previous=previous,
+                history=history,
+                history_window=history_window,
+            )
+            if bool(raw_step.get("should_stop")):
+                harm_examples.append(TrainingExample(features, harmful, baseline_id))
+                gain_examples.append(
+                    NormalizedNFEReductionExample(features, reduction, baseline_id)
+                )
+            previous = observation
+        final_tokens = block.get("final_tokens", ())
+        if final_tokens:
+            history.append(
+                RealizedBlock(
+                    block_size=int(block["applied_block_size"]),
+                    nfe=int(block["actual_nfe_used"]),
+                    mean_confidence=float(block.get("mean_top1_confidence", 1.0)),
+                    min_confidence=float(block.get("min_top1_confidence", 1.0)),
+                    digit_fraction=float(block.get("digit_fraction", 0.0)),
+                    delimiter_fraction=float(block.get("delimiter_fraction", 0.0)),
+                )
+            )
+    return tuple(harm_examples), tuple(gain_examples)
 
 
 class RCPAGRuntime(Protocol):
@@ -380,6 +470,37 @@ class MockRCPAGRuntime:
             "generated_ids": [sample.index, 1, 2],
             "mock": True,
         }
+        if stage in {"rollout", "screen"} and candidate is not None:
+            observation = _mock_observation(sample.index, step=2)
+            payload["schedule_history"] = [
+                {
+                    "applied_block_size": observation.block_size,
+                    "actual_nfe_used": 3,
+                    "mean_top1_confidence": 0.8,
+                    "min_top1_confidence": 0.6,
+                    "digit_fraction": 0.25,
+                    "delimiter_fraction": 0.25,
+                    "final_tokens": list(observation.token_ids),
+                    "risk_steps": [
+                        {
+                            "should_stop": True,
+                            "proposed_tokens": list(observation.token_ids),
+                            "observation": {
+                                "step_index": observation.step_index,
+                                "block_size": observation.block_size,
+                                "masked": list(observation.masked),
+                                "top1_probs": list(observation.top1_probs),
+                                "top2_probs": list(observation.top2_probs),
+                                "entropies": list(observation.entropies),
+                                "token_ids": list(observation.token_ids),
+                                "temporal_js": list(observation.temporal_js),
+                                "digit_ids": sorted(observation.digit_ids),
+                                "delimiter_ids": sorted(observation.delimiter_ids),
+                            },
+                        }
+                    ],
+                }
+            ]
         if stage == "calibrate":
             payload["shadow_losses"] = [int(self.unsafe)] * self.calibration_repetitions
             payload["synthetic_repetitions"] = self.calibration_repetitions
@@ -398,6 +519,20 @@ class RCPAGOrchestrator:
         "report",
         "paper",
     )
+    V5_STAGES = (
+        "preflight",
+        "pilot",
+        "collect",
+        "fit",
+        "rollout",
+        "refit",
+        "screen",
+        "calibrate",
+        "confirm",
+        "report",
+        "paper",
+    )
+    ALL_STAGES = tuple(dict.fromkeys((*STAGES, *V5_STAGES)))
 
     def __init__(
         self,
@@ -446,6 +581,10 @@ class RCPAGOrchestrator:
 
     def _manifest_path(self, stage: str) -> Path:
         return self.run_dir / "manifests" / f"{stage}.json"
+
+    @property
+    def active_stages(self) -> tuple[str, ...]:
+        return self.V5_STAGES if self.config.protocol_version == "v5" else self.STAGES
 
     def _stage_complete(self, stage: str) -> bool:
         path = self._manifest_path(stage)
@@ -515,19 +654,21 @@ class RCPAGOrchestrator:
         return refs[: self.development_limit]
 
     def run_through(self, target: str) -> None:
-        if target not in self.STAGES:
+        stages = self.active_stages
+        if target not in stages:
             raise ValueError(f"unknown stage: {target}")
-        for stage in self.STAGES[: self.STAGES.index(target) + 1]:
+        for stage in stages[: stages.index(target) + 1]:
             self.run_stage(stage)
 
     def run_stage(self, stage: str) -> None:
-        if stage not in self.STAGES:
+        stages = self.active_stages
+        if stage not in stages:
             raise ValueError(f"unknown stage: {stage}")
         if self._stage_complete(stage):
             return
-        position = self.STAGES.index(stage)
-        if position and not self._stage_complete(self.STAGES[position - 1]):
-            raise ValueError(f"stage {stage} requires completed {self.STAGES[position - 1]}")
+        position = stages.index(stage)
+        if position and not self._stage_complete(stages[position - 1]):
+            raise ValueError(f"stage {stage} requires completed {stages[position - 1]}")
         handler = getattr(self, f"_run_{stage}")
         handler()
 
@@ -684,7 +825,13 @@ class RCPAGOrchestrator:
             "confirm": sum(self.config.confirmatory_counts.values())
             * len(self.config.confirmatory_methods),
         }
-        collect_models = len(self.config.models) - int(self.reuse_development_from is not None)
+        if self.config.protocol_version == "v5":
+            runs_per_model["rollout"] = 2 * self.config.stage_sizes.rollout_per_model
+        collect_models = (
+            0
+            if self.config.protocol_version == "v5" and self.reuse_development_from is not None
+            else len(self.config.models) - int(self.reuse_development_from is not None)
+        )
         full_gpu_runs = collect_models * runs_per_model["collect"] + len(self.config.models) * sum(
             value for stage, value in runs_per_model.items() if stage != "collect"
         )
@@ -695,6 +842,11 @@ class RCPAGOrchestrator:
                 self.config.stage_sizes.tuning_per_model
                 + self.config.stage_sizes.calibration_per_model
                 + confirm_prompts
+                + (
+                    self.config.stage_sizes.rollout_per_model
+                    if self.config.protocol_version == "v5"
+                    else 0
+                )
             )
             instrumented_runs = (
                 collect_models * self.config.stage_sizes.traces_per_model
@@ -704,6 +856,11 @@ class RCPAGOrchestrator:
                     * self.config.stage_sizes.tuning_per_model
                     + self.config.stage_sizes.calibration_per_model
                     + (len(self.config.confirmatory_methods) - 1) * confirm_prompts
+                    + (
+                        self.config.stage_sizes.rollout_per_model
+                        if self.config.protocol_version == "v5"
+                        else 0
+                    )
                 )
             )
             projected_seconds = plain_runs * seconds + instrumented_runs * instrumented_seconds
@@ -747,6 +904,8 @@ class RCPAGOrchestrator:
     def _prepare_development_reuse(self) -> set[str]:
         if self.reuse_development_from is None:
             return set()
+        if self.config.protocol_version == "v5":
+            return self._prepare_v5_reuse()
         if self.config.protocol_version == "v4":
             return self._prepare_v4_trace_reuse()
         source = self.reuse_development_from
@@ -947,6 +1106,100 @@ class RCPAGOrchestrator:
         )
         return set(reused_models)
 
+    def _prepare_v5_reuse(self) -> set[str]:
+        """Reuse exact v4 collection traces and paired q500 rollout rows only."""
+
+        assert self.reuse_development_from is not None
+        reused_models = self._prepare_v4_trace_reuse()
+        source = self.reuse_development_from
+        fit_manifest = json.loads((source / "manifests" / "fit.json").read_text(encoding="utf-8"))
+        source_identity = fit_manifest["identity"]
+        expected_ids = {ref.sample_id for ref in self._refs("rollout")}
+        record_metadata = {
+            "schema_version",
+            "identity",
+            "stage",
+            "method",
+            "sample_id",
+            "created_at",
+        }
+        rollout_evidence: dict[str, dict[str, object]] = {}
+        for model in self.config.models:
+            method_rows: dict[str, list[dict[str, Any]]] = {}
+            for source_method, target_method in (
+                ("adablock", "adablock"),
+                ("local_q500_p2", "seed_local_q500_p2"),
+            ):
+                rows = _raw_stage_rows(
+                    source,
+                    stage="screen",
+                    model=model,
+                    method=source_method,
+                    expected_identity=source_identity,
+                )
+                selected = [row for row in rows if str(row["sample_id"]) in expected_ids]
+                if {str(row["sample_id"]) for row in selected} != expected_ids:
+                    raise ValueError(
+                        f"v5 reuse source lacks complete {model}/{source_method} rollout pairs"
+                    )
+                if source_method == "local_q500_p2":
+                    executed_stop_count = 0
+                    for row in selected:
+                        stopped_steps = [
+                            step
+                            for block in row.get("schedule_history", ())
+                            for step in block.get("risk_steps", ())
+                            if bool(step.get("should_stop"))
+                        ]
+                        executed_stop_count += len(stopped_steps)
+                        for step in stopped_steps:
+                            observation = step.get("observation", {})
+                            if len(observation.get("temporal_js", ())) != int(
+                                observation.get("block_size", -1)
+                            ):
+                                raise ValueError("v5 reuse q500 stop lacks temporal-JS evidence")
+                    if executed_stop_count < 1:
+                        raise ValueError(
+                            f"v5 reuse q500 rollout has no executed serialized stops for {model}"
+                        )
+                for row in selected:
+                    payload = {
+                        key: value for key, value in row.items() if key not in record_metadata
+                    }
+                    self.store.write(
+                        f"rollout/{model}",
+                        target_method,
+                        str(row["sample_id"]),
+                        payload,
+                    )
+                method_rows[target_method] = selected
+            digest = hashlib.sha256()
+            for method in ("adablock", "seed_local_q500_p2"):
+                for row in method_rows[method]:
+                    digest.update(method.encode("utf-8"))
+                    digest.update(json.dumps(row, sort_keys=True).encode("utf-8"))
+            rollout_evidence[model] = {
+                "paired_prompts": len(expected_ids),
+                "sha256": digest.hexdigest(),
+            }
+        trace_manifest = json.loads(
+            (self.run_dir / "reuse" / "manifest.json").read_text(encoding="utf-8")
+        )
+        self.store.write_named(
+            "reuse/manifest.json",
+            {
+                **trace_manifest,
+                "schema_version": 3,
+                "reuse_scope": "raw_exact_loop_traces_and_paired_v4_q500_rollouts",
+                "reason": (
+                    "v5 refits both seed and advantage estimators; no v4 selection or "
+                    "certificate is reused"
+                ),
+                "rollout": rollout_evidence,
+            },
+        )
+        return reused_models
+
     def _run_fit(self) -> None:
         self._write_manifest("fit", "running")
         metadata: dict[str, dict[str, object]] = {}
@@ -954,7 +1207,7 @@ class RCPAGOrchestrator:
         reuse_manifest_path = self.run_dir / "reuse" / "manifest.json"
         if reuse_manifest_path.is_file():
             reuse_manifest = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
-            if self.config.protocol_version == "v4":
+            if self.config.protocol_version in {"v4", "v5"}:
                 reused_trace_models = set(reuse_manifest["reused_models"])
             else:
                 reused_trace_models = set()
@@ -989,7 +1242,7 @@ class RCPAGOrchestrator:
                             row,
                             history_window=self.config.history_window,
                         )
-                        if self.config.protocol_version == "v4"
+                        if self.config.protocol_version in {"v4", "v5"}
                         else row["training_examples"]
                         if "training_examples" in row
                         else ({"features": row["features"], "unsafe": row["unsafe"]},)
@@ -1159,6 +1412,138 @@ class RCPAGOrchestrator:
             benefit_estimators=benefit_metadata,
         )
 
+    def _run_rollout(self) -> None:
+        self._write_manifest("rollout", "running")
+        seed = PolicyCandidateSpec(
+            name="seed_local_q500_p2",
+            variant="rc_pag_local",
+            threshold=0.50,
+            min_steps=2,
+            patience=2,
+        )
+        self._run_records(
+            stage="rollout",
+            refs=self._refs("rollout"),
+            methods=(("adablock", None), (seed.name, seed)),
+        )
+        self._write_manifest("rollout", "completed", seed_policy=asdict(seed))
+
+    def _run_refit(self) -> None:
+        self._write_manifest("refit", "running")
+        manifest: dict[str, Any] = {
+            "schema_version": 1,
+            "label": "paired_prompt_harm_and_normalized_nfe_reduction",
+            "attribution": "all_executed_stops_receive_the_paired_prompt_outcome",
+            "seed_policy": "seed_local_q500_p2",
+            "models": {},
+        }
+        for model in self.config.models:
+            baseline_rows = {
+                row["sample_id"]: row for row in self.store.records(f"rollout/{model}", "adablock")
+            }
+            seed_rows = {
+                row["sample_id"]: row
+                for row in self.store.records(f"rollout/{model}", "seed_local_q500_p2")
+            }
+            if not baseline_rows or set(baseline_rows) != set(seed_rows):
+                raise ValueError(f"incomplete paired counterfactual rollout for {model}")
+            groups = tuple(
+                group
+                for sample_id in sorted(baseline_rows)
+                if (
+                    group := _counterfactual_examples_from_pair(
+                        baseline_rows[sample_id],
+                        seed_rows[sample_id],
+                        history_window=self.config.history_window,
+                    )
+                )[0]
+            )
+            if not groups:
+                raise ValueError(f"counterfactual rollout has no executed seed stops for {model}")
+            training_groups = (
+                tuple(group for index, group in enumerate(groups) if index % 5 != 0)
+                if len(groups) > 1
+                else groups
+            )
+            validation_groups = groups[::5] if len(groups) > 1 else groups
+            if not training_groups:
+                training_groups = groups
+
+            def flatten_harm(selected):
+                return tuple(example for harm, _ in selected for example in harm)
+
+            def flatten_gain(selected):
+                return tuple(example for _, gain in selected for example in gain)
+
+            harm_train = flatten_harm(training_groups)
+            gain_train = flatten_gain(training_groups)
+            harm_validation = flatten_harm(validation_groups)
+            gain_validation = flatten_gain(validation_groups)
+            harm_all = flatten_harm(groups)
+            gain_all = flatten_gain(groups)
+            evaluation_harm = RiskEstimator.fit(
+                harm_train,
+                kind="hist_gradient_boosting",
+                include_history=False,
+                history_window=self.config.history_window,
+                seed=self.config.seed,
+            )
+            evaluation_gain = NormalizedNFEReductionEstimator.fit(
+                gain_train,
+                include_history=False,
+                history_window=self.config.history_window,
+                seed=self.config.seed,
+            )
+            harm_scores = np.asarray(
+                [evaluation_harm.predict_risk(example.features) for example in harm_validation]
+            )
+            harm_targets = np.asarray([int(example.unsafe) for example in harm_validation])
+            gain_scores = np.asarray(
+                [
+                    evaluation_gain.predict_remaining_nfe(example.features)
+                    for example in gain_validation
+                ]
+            )
+            gain_targets = np.asarray([example.nfe_reduction for example in gain_validation])
+            final_harm = RiskEstimator.fit(
+                harm_all,
+                kind="hist_gradient_boosting",
+                include_history=False,
+                history_window=self.config.history_window,
+                seed=self.config.seed,
+            )
+            final_gain = NormalizedNFEReductionEstimator.fit(
+                gain_all,
+                include_history=False,
+                history_window=self.config.history_window,
+                seed=self.config.seed,
+            )
+            harm_path = self.run_dir / "estimators" / f"{model}_rc_pag_advantage_harm.joblib"
+            gain_path = self.run_dir / "estimators" / f"{model}_rc_pag_advantage_gain.joblib"
+            harm_saved = final_harm.save(harm_path)
+            gain_saved = final_gain.save(gain_path)
+            manifest["models"][model] = {
+                "prompt_groups": len(groups),
+                "executed_stops": len(harm_all),
+                "harm": {
+                    **harm_saved,
+                    "path": str(harm_path.relative_to(self.run_dir)),
+                    "validation_brier": float(np.mean((harm_scores - harm_targets) ** 2)),
+                    "validation_auc": (
+                        float(roc_auc_score(harm_targets, harm_scores))
+                        if np.unique(harm_targets).size == 2
+                        else None
+                    ),
+                },
+                "gain": {
+                    **gain_saved,
+                    "path": str(gain_path.relative_to(self.run_dir)),
+                    "validation_mae": float(np.mean(np.abs(gain_scores - gain_targets))),
+                },
+            }
+        self.store.write_named("estimators/advantage_manifest.json", manifest)
+        self._write_manifest("refit", "completed", advantage_estimators=manifest["models"])
+
     def _policy_family_payload(self) -> dict[str, Any]:
         core = {
             "schema_version": 1,
@@ -1181,7 +1566,7 @@ class RCPAGOrchestrator:
         baseline_methods = tuple(
             (method, None)
             for method in self.config.development_methods
-            if method not in {"rc_pag_local", "rc_pag_history"}
+            if method not in {"rc_pag_local", "rc_pag_history", "rc_pag_advantage"}
         )
         candidate_methods = tuple(
             (candidate.name, candidate) for candidate in self.config.candidates
@@ -1292,7 +1677,7 @@ class RCPAGOrchestrator:
             frozen["protocol_identity"] = canonical_config_hash(frozen)
             self.store.write_named("screening_summary.json", summary)
             self.store.write_named("frozen_policy.json", frozen)
-            if self.config.protocol_version in {"v3", "v4"}:
+            if self.config.protocol_version in {"v3", "v4", "v5"}:
                 readiness_models: dict[str, dict[str, object]] = {}
                 for model, selected_name in selected_candidate.items():
                     adablock_nfe = float(
@@ -1463,9 +1848,10 @@ class RCPAGOrchestrator:
                     if baseline_nfe <= 0.0:
                         raise ValueError("AdaBlock calibration NFE must be positive")
                     saving = 1.0 - policy_nfe / baseline_nfe
-                    if self.config.protocol_version == "v4" and not 0.0 <= saving <= 1.0:
+                    if self.config.protocol_version in {"v4", "v5"} and not 0.0 <= saving <= 1.0:
                         raise RuntimeError(
-                            f"v4 early-stop NFE invariant failed for {model}/{sample_id}: {saving}"
+                            "joint early-stop NFE invariant failed for "
+                            f"{model}/{sample_id}: {saving}"
                         )
                     nfe_savings.extend([saving] * repetitions)
                     disagreements += int(
@@ -1480,7 +1866,9 @@ class RCPAGOrchestrator:
                         ),
                         protocol_identity=str(family["protocol_identity"]),
                         nfe_savings=(
-                            tuple(nfe_savings) if self.config.protocol_version == "v4" else ()
+                            tuple(nfe_savings)
+                            if self.config.protocol_version in {"v4", "v5"}
+                            else ()
                         ),
                     )
                 )
@@ -1498,7 +1886,7 @@ class RCPAGOrchestrator:
                 delta=self.config.risk.delta,
                 minimum_nfe_reduction=(
                     self.config.risk.minimum_nfe_reduction
-                    if self.config.protocol_version == "v4"
+                    if self.config.protocol_version in {"v4", "v5"}
                     else None
                 ),
             )
@@ -1513,7 +1901,7 @@ class RCPAGOrchestrator:
                     "diagnostics": diagnostics,
                     "certificate_mode": (
                         "joint_harm_and_compute"
-                        if self.config.protocol_version == "v4"
+                        if self.config.protocol_version in {"v4", "v5"}
                         else "harm_only"
                     ),
                     "mock": (
@@ -1600,14 +1988,14 @@ class RCPAGOrchestrator:
             if certified_names & required != required:
                 certificate_name = (
                     "joint harm/compute certificate"
-                    if self.config.protocol_version == "v4"
+                    if self.config.protocol_version in {"v4", "v5"}
                     else "end-to-end harm certificate"
                 )
                 raise ControlledStop(f"not every frozen model policy has a {certificate_name}")
             screening = json.loads(
                 (self.run_dir / "screening_summary.json").read_text(encoding="utf-8")
             )
-            if self.config.protocol_version != "v4":
+            if self.config.protocol_version not in {"v4", "v5"}:
                 calibrated_nfe = {
                     str(item["name"]): float(item["mean_nfe"]) for item in certificate["candidates"]
                 }

@@ -57,6 +57,19 @@ class BenefitExample:
 
 
 @dataclass(frozen=True, slots=True)
+class NormalizedNFEReductionExample:
+    features: Mapping[str, float]
+    nfe_reduction: float
+    prompt_id: str
+
+    def __post_init__(self) -> None:
+        if not self.prompt_id:
+            raise ValueError("normalized NFE example prompt_id must be non-empty")
+        if not math.isfinite(self.nfe_reduction) or not 0.0 <= self.nfe_reduction <= 1.0:
+            raise ValueError("normalized NFE reduction target must be finite and in [0, 1]")
+
+
+@dataclass(frozen=True, slots=True)
 class StopDecision:
     should_stop: bool
     risk_score: float
@@ -302,6 +315,105 @@ class RemainingNFEEstimator:
         )
 
 
+class NormalizedNFEReductionEstimator:
+    """Predict prompt-normalized NFE reduction from compact online features."""
+
+    def __init__(
+        self,
+        *,
+        include_history: bool,
+        history_window: int,
+        names: Sequence[str],
+        model: Any,
+    ) -> None:
+        self.include_history = bool(include_history)
+        self.history_window = int(history_window)
+        self.names = tuple(str(name) for name in names)
+        self.model = model
+
+    @classmethod
+    def fit(
+        cls,
+        examples: Sequence[NormalizedNFEReductionExample],
+        *,
+        include_history: bool,
+        history_window: int,
+        seed: int,
+    ) -> NormalizedNFEReductionEstimator:
+        if not examples:
+            raise ValueError("normalized NFE estimator requires training examples")
+        names = feature_names(include_history=include_history)
+        features = np.stack([vectorize_features(example.features, names) for example in examples])
+        targets = np.asarray([example.nfe_reduction for example in examples], dtype=np.float64)
+        model = HistGradientBoostingRegressor(
+            max_iter=200,
+            max_depth=8,
+            learning_rate=0.05,
+            l2_regularization=0.1,
+            random_state=seed,
+            loss="squared_error",
+        )
+        model.fit(features, targets)
+        return cls(
+            include_history=include_history,
+            history_window=history_window,
+            names=names,
+            model=model,
+        )
+
+    def predict_remaining_nfe(self, features: Mapping[str, float]) -> float:
+        value = float(self.model.predict(vectorize_features(features, self.names)[None, :])[0])
+        if not math.isfinite(value):
+            raise ValueError("normalized NFE estimator produced a non-finite value")
+        return min(1.0, max(0.0, value))
+
+    def save(self, path: str | Path) -> dict[str, object]:
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(
+            {
+                "include_history": self.include_history,
+                "history_window": self.history_window,
+                "names": self.names,
+                "model": self.model,
+            },
+            destination,
+        )
+        metadata: dict[str, object] = {
+            "schema_version": 1,
+            "sha256": _sha256_file(destination),
+            "kind": "hist_gradient_boosting_regressor",
+            "target": "normalized_nfe_reduction",
+            "bounds": [0.0, 1.0],
+            "include_history": self.include_history,
+            "history_window": self.history_window,
+            "feature_names": list(self.names),
+        }
+        destination.with_suffix(".json").write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return metadata
+
+    @classmethod
+    def load(cls, path: str | Path) -> NormalizedNFEReductionEstimator:
+        source = Path(path)
+        metadata_path = source.with_suffix(".json")
+        if metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("sha256") != _sha256_file(source):
+                raise ValueError("normalized NFE estimator hash does not match metadata")
+            if metadata.get("target") != "normalized_nfe_reduction":
+                raise ValueError("normalized NFE estimator metadata has the wrong target")
+        payload: dict[str, Any] = joblib.load(source)
+        return cls(
+            include_history=bool(payload["include_history"]),
+            history_window=int(payload["history_window"]),
+            names=tuple(str(name) for name in payload["names"]),
+            model=payload["model"],
+        )
+
+
 class RiskStoppingPolicy:
     def __init__(
         self,
@@ -316,6 +428,7 @@ class RiskStoppingPolicy:
         benefit_scorer: BenefitScorer | None = None,
         min_predicted_nfe_savings: float = 0.0,
         max_temporal_js: float = 1.0,
+        require_exact_agreement: bool = False,
         force_full_budget: bool = False,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
@@ -338,6 +451,7 @@ class RiskStoppingPolicy:
         self.benefit_scorer = benefit_scorer
         self.min_predicted_nfe_savings = float(min_predicted_nfe_savings)
         self.max_temporal_js = float(max_temporal_js)
+        self.require_exact_agreement = bool(require_exact_agreement)
         self.force_full_budget = bool(force_full_budget)
         self.reset_prompt()
 
@@ -369,6 +483,7 @@ class RiskStoppingPolicy:
     def start_block(self) -> None:
         self._previous: StepObservation | None = None
         self._safe_streak = 0
+        self._pending_tokens: tuple[int, ...] | None = None
 
     def record_realized(self, block: RealizedBlock) -> None:
         self._history.append(block)
@@ -411,13 +526,45 @@ class RiskStoppingPolicy:
             and temporal_js <= self.max_temporal_js
             and (self.benefit_scorer is None or predicted_savings >= self.min_predicted_nfe_savings)
         )
-        self._safe_streak = self._safe_streak + 1 if eligible else 0
-        should_stop = self._safe_streak >= self.patience
+        reason = "continue"
+        if self.require_exact_agreement:
+            if not eligible:
+                self._safe_streak = 0
+                self._pending_tokens = None
+                should_stop = False
+            else:
+                proposed_tokens = tuple(observation.token_ids)
+                agreement = self._pending_tokens is not None and all(
+                    not is_masked or previous == current
+                    for is_masked, previous, current in zip(
+                        observation.masked,
+                        self._pending_tokens or (),
+                        proposed_tokens,
+                        strict=True,
+                    )
+                )
+                if agreement:
+                    self._safe_streak += 1
+                    should_stop = self._safe_streak >= self.patience
+                    reason = "agreement_verified" if should_stop else "pending_verification"
+                else:
+                    reason = (
+                        "proposal_changed"
+                        if self._pending_tokens is not None
+                        else "pending_verification"
+                    )
+                    self._safe_streak = 1
+                    should_stop = False
+                self._pending_tokens = proposed_tokens
+        else:
+            self._safe_streak = self._safe_streak + 1 if eligible else 0
+            should_stop = self._safe_streak >= self.patience
+            reason = "risk_certified_candidate" if should_stop else "continue"
         decision = StopDecision(
             should_stop=should_stop,
             risk_score=score,
             safe_streak=self._safe_streak,
-            reason="risk_certified_candidate" if should_stop else "continue",
+            reason=reason,
             predicted_nfe_savings=predicted_savings,
             temporal_js=temporal_js,
         )

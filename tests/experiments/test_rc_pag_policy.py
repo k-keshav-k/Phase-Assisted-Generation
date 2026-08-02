@@ -7,6 +7,8 @@ import pytest
 from pag.experiments.rc_pag_features import RealizedBlock, StepObservation, extract_features
 from pag.experiments.rc_pag_policy import (
     BenefitExample,
+    NormalizedNFEReductionEstimator,
+    NormalizedNFEReductionExample,
     RemainingNFEEstimator,
     RiskEstimator,
     RiskStoppingPolicy,
@@ -20,6 +22,7 @@ def observation(
     top1: float = 0.9,
     masked: list[bool] | None = None,
     temporal_js: list[float] | None = None,
+    token_ids: list[int] | None = None,
 ) -> StepObservation:
     return StepObservation.from_arrays(
         step_index=step,
@@ -28,7 +31,7 @@ def observation(
         top1_probs=[top1, 0.95],
         top2_probs=[0.05, 0.03],
         entropies=[0.4, 0.1],
-        token_ids=[10, 11],
+        token_ids=token_ids or [10, 11],
         temporal_js=temporal_js or [0.0, 0.0],
     )
 
@@ -212,6 +215,90 @@ def test_remaining_nfe_estimator_round_trip(tmp_path) -> None:
 
     prediction = RemainingNFEEstimator.load(path).predict_remaining_nfe(examples[0].features)
     assert prediction >= 0.0
+
+
+def test_normalized_nfe_reduction_estimator_is_bounded_and_persistent(tmp_path) -> None:
+    examples = [
+        NormalizedNFEReductionExample(
+            features=extract_features(
+                observation(step=step),
+                previous=None,
+                history=(),
+                history_window=4,
+            ),
+            nfe_reduction=reduction,
+            prompt_id=f"p-{step}",
+        )
+        for step, reduction in ((1, 0.0), (2, 0.1), (3, 0.8), (4, 1.0))
+    ]
+    estimator = NormalizedNFEReductionEstimator.fit(
+        examples,
+        include_history=False,
+        history_window=4,
+        seed=7,
+    )
+    path = tmp_path / "reduction.joblib"
+    estimator.save(path)
+
+    prediction = NormalizedNFEReductionEstimator.load(path).predict_remaining_nfe(
+        examples[0].features
+    )
+    assert 0.0 <= prediction <= 1.0
+
+    with pytest.raises(ValueError, match=r"\[0, 1\]"):
+        NormalizedNFEReductionExample(examples[0].features, 1.1, "invalid")
+
+
+def test_exact_agreement_policy_verifies_before_stopping() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.01),
+        benefit_scorer=FixedBenefitScorer(0.10),
+        threshold=0.05,
+        min_steps=2,
+        patience=2,
+        include_history=False,
+        min_predicted_nfe_savings=0.05,
+        require_exact_agreement=True,
+    )
+
+    pending = policy.observe(observation(step=2, token_ids=[10, 11]))
+    verified = policy.observe(observation(step=3, token_ids=[10, 11]))
+
+    assert not pending.should_stop
+    assert pending.reason == "pending_verification"
+    assert verified.should_stop
+    assert verified.reason == "agreement_verified"
+
+
+def test_exact_agreement_policy_restarts_after_disagreement_and_block_reset() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.01),
+        benefit_scorer=FixedBenefitScorer(0.10),
+        threshold=0.05,
+        min_steps=1,
+        patience=2,
+        include_history=False,
+        min_predicted_nfe_savings=0.05,
+        require_exact_agreement=True,
+    )
+
+    assert policy.observe(observation(step=1, token_ids=[10, 11])).reason == (
+        "pending_verification"
+    )
+    changed = policy.observe(observation(step=2, token_ids=[12, 11]))
+    assert not changed.should_stop
+    assert changed.reason == "proposal_changed"
+    assert policy.observe(observation(step=3, token_ids=[12, 11])).should_stop
+
+    policy.start_block()
+    after_block_reset = policy.observe(observation(step=1, token_ids=[12, 11]))
+    assert not after_block_reset.should_stop
+    assert after_block_reset.reason == "pending_verification"
+
+    policy.reset_prompt()
+    after_prompt_reset = policy.observe(observation(step=1, token_ids=[12, 11]))
+    assert not after_prompt_reset.should_stop
+    assert after_prompt_reset.reason == "pending_verification"
 
 
 class FixedBenefitScorer:

@@ -16,8 +16,8 @@ SIF_PATH="${SIF_PATH:-/scratch/${USER}/ubuntu-20.04.3.sif}"
 WORKER="${SCRIPT_DIR}/rc_pag_a100.sbatch"
 
 case "${RC_PAG_STAGE}" in
-    preflight|pilot|collect|screen|calibrate|confirm|all) ;;
-    fit|report|paper)
+    preflight|pilot|collect|rollout|screen|calibrate|confirm|all) ;;
+    fit|refit|report|paper)
         echo "${RC_PAG_STAGE} is CPU-only; run it with scripts/run_rc_pag.py instead of reserving an A100." >&2
         exit 2
         ;;

@@ -7,6 +7,7 @@ import pytest
 import torch
 
 from pag.experiments.rc_pag_config import load_rc_pag_config
+from pag.experiments.rc_pag_features import feature_names
 from pag.experiments.rc_pag_runtime import (
     UnifiedRCPAGRuntime,
     _ensure_llada_config_compatibility,
@@ -148,3 +149,42 @@ def test_v4_rejects_an_estimator_without_temporal_js_schema(monkeypatch) -> None
             runtime.config.candidates[0],
             {"llada_rc_pag_local": "old-estimator.joblib"},
         )
+
+
+def test_v5_loads_paired_advantage_heads_and_exact_verifier(monkeypatch) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml"))
+    runtime.model_name = "llada"
+    names = feature_names(include_history=False)
+    harm = SimpleNamespace(
+        names=names,
+        include_history=False,
+        kind="hist_gradient_boosting",
+        predict_risk=lambda features: 0.01,
+    )
+    gain = SimpleNamespace(
+        names=names,
+        include_history=False,
+        predict_remaining_nfe=lambda features: 0.20,
+    )
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.RiskEstimator.load",
+        lambda path: harm,
+    )
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.NormalizedNFEReductionEstimator.load",
+        lambda path: gain,
+    )
+
+    policy = runtime._risk_policy(
+        runtime.config.candidates[0],
+        {
+            "llada_rc_pag_advantage_harm": "harm.joblib",
+            "llada_rc_pag_advantage_gain": "gain.joblib",
+        },
+    )
+
+    assert policy.scorer is harm
+    assert policy.benefit_scorer is gain
+    assert policy.require_exact_agreement
+    assert policy.min_predicted_nfe_savings == 0.05
