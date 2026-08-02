@@ -529,7 +529,10 @@ class UnifiedRCPAGRuntime:
         candidate: PolicyCandidateSpec,
         estimator_paths: Mapping[str, str],
     ) -> RiskStoppingPolicy:
-        if self.config.protocol_version == "v5":
+        uses_advantage_heads = (
+            self.config.protocol_version == "v5" and candidate.variant == "rc_pag_advantage"
+        )
+        if uses_advantage_heads:
             harm_key = f"{self.model_name}_rc_pag_advantage_harm"
             gain_key = f"{self.model_name}_rc_pag_advantage_gain"
             missing = [key for key in (harm_key, gain_key) if key not in estimator_paths]
@@ -556,13 +559,15 @@ class UnifiedRCPAGRuntime:
                 raise ValueError(f"missing fitted estimator for {key}")
             estimator = RiskEstimator.load(estimator_paths[key])
             benefit = None
-        if self.config.protocol_version == "v4":
+        if self.config.protocol_version == "v4" or (
+            self.config.protocol_version == "v5" and candidate.variant == "rc_pag_local"
+        ):
             required_features = {"local.temporal_js_mean", "local.temporal_js_max"}
             if not required_features.issubset(estimator.names):
                 raise ValueError("v4 estimator is missing the frozen temporal-JS feature schema")
             if estimator.include_history or estimator.kind != "hist_gradient_boosting":
                 raise ValueError("v4 requires the frozen local histogram-boosting estimator")
-        if self.config.protocol_version != "v5" and candidate.min_predicted_nfe_savings > 0:
+        if not uses_advantage_heads and candidate.min_predicted_nfe_savings > 0:
             benefit_key = f"{self.model_name}_remaining_nfe"
             if benefit_key not in estimator_paths:
                 raise ValueError(f"missing fitted benefit estimator for {benefit_key}")

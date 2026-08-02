@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 
-from pag.experiments.rc_pag_config import load_rc_pag_config
+from pag.experiments.rc_pag_config import PolicyCandidateSpec, load_rc_pag_config
 from pag.experiments.rc_pag_features import feature_names
 from pag.experiments.rc_pag_runtime import (
     UnifiedRCPAGRuntime,
@@ -188,3 +188,37 @@ def test_v5_loads_paired_advantage_heads_and_exact_verifier(monkeypatch) -> None
     assert policy.benefit_scorer is gain
     assert policy.require_exact_agreement
     assert policy.min_predicted_nfe_savings == 0.05
+
+
+def test_v5_rollout_seed_loads_local_head_before_advantage_refit(monkeypatch) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml"))
+    runtime.model_name = "llada"
+    names = feature_names(include_history=False)
+    local = SimpleNamespace(
+        names=names,
+        include_history=False,
+        kind="hist_gradient_boosting",
+        predict_risk=lambda features: 0.01,
+    )
+    loaded: list[str] = []
+
+    def load_local(path: str):
+        loaded.append(path)
+        return local
+
+    monkeypatch.setattr("pag.experiments.rc_pag_runtime.RiskEstimator.load", load_local)
+    seed = PolicyCandidateSpec(
+        name="seed_local_q500_p2",
+        variant="rc_pag_local",
+        threshold=0.50,
+        min_steps=2,
+        patience=2,
+    )
+
+    policy = runtime._risk_policy(seed, {"llada_rc_pag_local": "local.joblib"})
+
+    assert loaded == ["local.joblib"]
+    assert policy.scorer is local
+    assert policy.benefit_scorer is None
+    assert not policy.require_exact_agreement
