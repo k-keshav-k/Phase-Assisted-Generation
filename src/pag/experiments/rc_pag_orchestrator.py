@@ -279,10 +279,8 @@ def _counterfactual_examples_from_pair(
     seed_nfe = float(seed.get("total_nfe", 0.0))
     if baseline_nfe <= 0.0 or seed_nfe <= 0.0:
         raise ValueError("counterfactual rollout NFE values must be positive")
-    if seed_nfe > baseline_nfe:
-        raise ValueError("seed rollout NFE cannot exceed paired AdaBlock NFE")
     harmful = bool(baseline.get("is_correct")) and not bool(seed.get("is_correct"))
-    reduction = 1.0 - seed_nfe / baseline_nfe
+    reduction = max(0.0, 1.0 - seed_nfe / baseline_nfe)
     harm_examples: list[TrainingExample] = []
     gain_examples: list[NormalizedNFEReductionExample] = []
     history: list[RealizedBlock] = []

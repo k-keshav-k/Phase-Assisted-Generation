@@ -117,8 +117,8 @@ certificate.
 
 - No executed seed stops: stop before fitting because counterfactual labels do not exist.
 - Missing paired AdaBlock/seed prompt: invalidate the rollout stage.
-- Candidate NFE exceeds paired AdaBlock NFE: clamp is forbidden; reject the row because the bounded
-  savings invariant would be false.
+- Candidate NFE exceeds paired AdaBlock NFE: retain the raw value for screening/reporting, but label
+  its bounded advantage-training target as zero, as defined by $G=\max(0,1-C_{seed}/C_{AdaBlock})$.
 - Single-class harm labels: save a constant harm head with explicit metadata; screening still
   decides whether the policy has enough compute value.
 - Failed v5 readiness or certificate: controlled AdaBlock fallback, exactly as in v4.

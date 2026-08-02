@@ -176,7 +176,7 @@ AdaBlock decode the same prompts. Every state at which the seed actually stops r
 paired prompt labels
 \begin{equation}
  Y^H=\indicator\{A(G_0(X),X)=1,\ A(G_{\rm seed}(X),X)=0\},\qquad
- Y^C=1-\frac{C_{\rm seed}(X)}{C_0(X)}.
+ Y^C=\max\!\left\{0,1-\frac{C_{\rm seed}(X)}{C_0(X)}\right\}.
  \label{eq:counterfactual-labels}
 \end{equation}
 This deliberately conservative attribution assigns the complete prompt outcome to every

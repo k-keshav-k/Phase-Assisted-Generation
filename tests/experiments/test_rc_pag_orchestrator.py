@@ -505,12 +505,12 @@ def test_counterfactual_pair_uses_prompt_harm_and_normalized_saving() -> None:
     assert harm[0].prompt_id == "gsm8k_train-00003"
     assert gain[0].nfe_reduction == pytest.approx(0.25)
 
-    with pytest.raises(ValueError, match="cannot exceed"):
-        _counterfactual_examples_from_pair(
-            baseline,
-            _stopped_rollout_row(correct=True, total_nfe=101.0),
-            history_window=4,
-        )
+    _, negative_gain = _counterfactual_examples_from_pair(
+        baseline,
+        _stopped_rollout_row(correct=True, total_nfe=101.0),
+        history_window=4,
+    )
+    assert negative_gain[0].nfe_reduction == 0.0
 
 
 def test_counterfactual_pair_skips_prompt_without_executed_stop() -> None:
