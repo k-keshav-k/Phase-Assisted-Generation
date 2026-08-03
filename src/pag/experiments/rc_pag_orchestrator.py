@@ -27,6 +27,7 @@ from pag.experiments.rc_pag_features import (
 )
 from pag.experiments.rc_pag_policy import (
     BenefitExample,
+    CalibratedRiskEstimator,
     NormalizedNFEReductionEstimator,
     NormalizedNFEReductionExample,
     RemainingNFEEstimator,
@@ -36,7 +37,7 @@ from pag.experiments.rc_pag_policy import (
 from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
 
-_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5"}
+_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -808,8 +809,7 @@ class RCPAGOrchestrator:
             np.mean([float(row.get("artifact_bytes", 0)) for row in shadow_records])
         )
         baseline_screen_methods = sum(
-            method not in {"rc_pag_local", "rc_pag_history"}
-            for method in self.config.development_methods
+            not method.startswith("rc_pag_") for method in self.config.development_methods
         )
         runs_per_model = {
             "collect": self.config.stage_sizes.traces_per_model,
@@ -827,7 +827,8 @@ class RCPAGOrchestrator:
             runs_per_model["rollout"] = 2 * self.config.stage_sizes.rollout_per_model
         collect_models = (
             0
-            if self.config.protocol_version == "v5" and self.reuse_development_from is not None
+            if self.config.protocol_version in {"v4", "v5", "v6"}
+            and self.reuse_development_from is not None
             else len(self.config.models) - int(self.reuse_development_from is not None)
         )
         full_gpu_runs = collect_models * runs_per_model["collect"] + len(self.config.models) * sum(
@@ -902,6 +903,8 @@ class RCPAGOrchestrator:
     def _prepare_development_reuse(self) -> set[str]:
         if self.reuse_development_from is None:
             return set()
+        if self.config.protocol_version == "v6":
+            return self._prepare_v6_reuse()
         if self.config.protocol_version == "v5":
             return self._prepare_v5_reuse()
         if self.config.protocol_version == "v4":
@@ -1008,28 +1011,38 @@ class RCPAGOrchestrator:
         self.store.write_named("reuse/manifest.json", reuse_payload)
         return {"llada"}
 
-    def _prepare_v4_trace_reuse(self) -> set[str]:
+    def _prepare_v4_trace_reuse(
+        self,
+        *,
+        allowed_source_protocols: set[str] | None = None,
+        target_protocol: str = "v4",
+    ) -> set[str]:
         """Reuse only native exact-loop traces containing the v4 temporal feature evidence."""
 
         assert self.reuse_development_from is not None
         source = self.reuse_development_from
+        if source == self.run_dir.resolve():
+            raise ValueError("reuse source must be a different run directory")
         fit_manifest_path = source / "manifests" / "fit.json"
         if not fit_manifest_path.is_file():
-            raise ValueError("v4 reuse source must contain a completed fit stage")
+            raise ValueError(f"{target_protocol} reuse source must contain a completed fit stage")
         fit_manifest = json.loads(fit_manifest_path.read_text(encoding="utf-8"))
         if fit_manifest.get("status") != "completed":
             raise ValueError("v4 reuse source fit stage is not complete")
         source_identity = fit_manifest.get("identity", {})
-        if source_identity.get("protocol") not in {
+        compatible_protocols = allowed_source_protocols or {
             "risk_calibrated_pag_v3",
             "risk_calibrated_pag_v4",
-        }:
+        }
+        if source_identity.get("protocol") not in compatible_protocols:
             raise ValueError(
-                "v4 reuse requires v3/v4 exact-loop traces; v1/v2 features are incompatible"
+                f"{target_protocol} reuse source does not use a compatible exact-loop protocol"
             )
         for field in ("models", "datasets"):
             if source_identity.get(field) != self.store.identity[field]:
-                raise ValueError(f"reuse source {field} identity differs from the v4 run")
+                raise ValueError(
+                    f"reuse source {field} identity differs from the {target_protocol} run"
+                )
 
         expected_traces = self.development_limit or self.config.stage_sizes.traces_per_model
         reused_models: list[str] = []
@@ -1052,7 +1065,8 @@ class RCPAGOrchestrator:
                 continue
             if len(rows) < expected_traces:
                 raise ValueError(
-                    f"v4 reuse source has {len(rows)} {model} traces; expected {expected_traces}"
+                    f"{target_protocol} reuse source has {len(rows)} {model} traces; "
+                    f"expected {expected_traces}"
                 )
             selected_rows = rows[:expected_traces]
             observation_count = 0
@@ -1064,7 +1078,8 @@ class RCPAGOrchestrator:
                         block_size = int(observation.get("block_size", 0))
                         if not isinstance(temporal_js, list) or len(temporal_js) != block_size:
                             raise ValueError(
-                                f"v4 reuse trace lacks temporal-JS evidence: {model}/"
+                                f"{target_protocol} reuse trace lacks temporal-JS evidence: "
+                                f"{model}/"
                                 f"{row.get('sample_id', 'unknown')}"
                             )
                         observation_count += 1
@@ -1076,7 +1091,9 @@ class RCPAGOrchestrator:
                     payload,
                 )
             if observation_count < 1:
-                raise ValueError(f"v4 reuse source has no instrumented observations for {model}")
+                raise ValueError(
+                    f"{target_protocol} reuse source has no instrumented observations for {model}"
+                )
             digest = hashlib.sha256()
             for row in selected_rows:
                 digest.update(str(row["sample_id"]).encode("utf-8"))
@@ -1088,7 +1105,9 @@ class RCPAGOrchestrator:
                 "sha256": digest.hexdigest(),
             }
         if not reused_models:
-            raise ValueError("v4 reuse source contains no compatible collected model traces")
+            raise ValueError(
+                f"{target_protocol} reuse source contains no compatible collected model traces"
+            )
         self.store.write_named(
             "reuse/manifest.json",
             {
@@ -1098,11 +1117,40 @@ class RCPAGOrchestrator:
                 "reused_models": reused_models,
                 "reused_variants": [],
                 "reuse_scope": "raw_exact_loop_traces_only",
-                "reason": "v4 refits its single estimator with the new temporal feature schema",
+                "reason": (
+                    f"{target_protocol} refits its estimators from native exact-loop observations"
+                ),
                 "traces": trace_evidence,
             },
         )
         return set(reused_models)
+
+    def _prepare_v6_reuse(self) -> set[str]:
+        """Reuse raw v4/v5 native traces while discarding their fitted policy heads."""
+
+        reused_models = self._prepare_v4_trace_reuse(
+            allowed_source_protocols={
+                "risk_calibrated_pag_v4",
+                "risk_calibrated_pag_v5",
+            },
+            target_protocol="v6",
+        )
+        path = self.run_dir / "reuse" / "manifest.json"
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        self.store.write_named(
+            "reuse/manifest.json",
+            {
+                **manifest,
+                "schema_version": 4,
+                "reuse_scope": "raw_native_exact_loop_traces_only",
+                "reused_variants": [],
+                "reason": (
+                    "v6 reuses only native full-budget observations and refits calibrated "
+                    "risk plus remaining-NFE estimators; v4/v5 fitted heads are discarded"
+                ),
+            },
+        )
+        return reused_models
 
     def _prepare_v5_reuse(self) -> set[str]:
         """Reuse exact v4 collection traces and paired q500 rollout rows only."""
@@ -1201,11 +1249,12 @@ class RCPAGOrchestrator:
     def _run_fit(self) -> None:
         self._write_manifest("fit", "running")
         metadata: dict[str, dict[str, object]] = {}
+        benefit_metadata: dict[str, dict[str, object]] = {}
         reused_models: set[str] = set()
         reuse_manifest_path = self.run_dir / "reuse" / "manifest.json"
         if reuse_manifest_path.is_file():
             reuse_manifest = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
-            if self.config.protocol_version in {"v4", "v5"}:
+            if self.config.protocol_version in {"v4", "v5", "v6"}:
                 reused_trace_models = set(reuse_manifest["reused_models"])
             else:
                 reused_trace_models = set()
@@ -1228,6 +1277,145 @@ class RCPAGOrchestrator:
             rows = self.store.records(f"collect/{model}", "full_budget_shadow")
             if not rows:
                 raise ValueError(f"no collected examples for {model}")
+            if self.config.protocol_version == "v6":
+                payload_groups = tuple(
+                    _v4_training_payloads(row, history_window=self.config.history_window)
+                    for row in rows
+                )
+                risk_groups = tuple(
+                    tuple(
+                        TrainingExample(
+                            features=example["features"],
+                            unsafe=bool(example["unsafe"]),
+                            prompt_id=str(row["sample_id"]),
+                        )
+                        for example in payloads
+                    )
+                    for row, payloads in zip(rows, payload_groups, strict=True)
+                )
+                benefit_groups = tuple(
+                    tuple(
+                        BenefitExample(
+                            features=example["features"],
+                            remaining_nfe=float(example["remaining_nfe"]),
+                            prompt_id=str(row["sample_id"]),
+                        )
+                        for example in payloads
+                    )
+                    for row, payloads in zip(rows, payload_groups, strict=True)
+                )
+                if len(risk_groups) < 2:
+                    raise ValueError(
+                        "v6 fitting requires at least two prompts for disjoint calibration"
+                    )
+                calibration_risk_groups = risk_groups[::5]
+                training_risk_groups = tuple(
+                    group for index, group in enumerate(risk_groups) if index % 5 != 0
+                )
+                calibration_benefit_groups = benefit_groups[::5]
+                training_benefit_groups = tuple(
+                    group for index, group in enumerate(benefit_groups) if index % 5 != 0
+                )
+                training_risk = tuple(
+                    example for group in training_risk_groups for example in group
+                )
+                calibration_risk = tuple(
+                    example for group in calibration_risk_groups for example in group
+                )
+                kind = self.config.estimator_kinds[0]
+                estimator = CalibratedRiskEstimator.fit(
+                    training_examples=training_risk,
+                    calibration_examples=calibration_risk,
+                    kind=kind,
+                    include_history=False,
+                    history_window=self.config.history_window,
+                    seed=self.config.seed,
+                )
+                scores = np.asarray(
+                    [estimator.predict_risk(example.features) for example in calibration_risk],
+                    dtype=np.float64,
+                )
+                labels = np.asarray(
+                    [int(example.unsafe) for example in calibration_risk],
+                    dtype=np.int64,
+                )
+                risk_path = self.run_dir / "estimators" / f"{model}_rc_pag_budgeted_risk.joblib"
+                saved_risk = estimator.save(risk_path)
+                metadata[model] = {
+                    "rc_pag_budgeted": {
+                        "primary_kind": kind,
+                        "estimators": {
+                            kind: {
+                                **saved_risk,
+                                "path": str(risk_path.relative_to(self.run_dir)),
+                                "deployment_estimator": True,
+                                "validation": {
+                                    "split": "prompt_holdout_isotonic_calibration_mod5",
+                                    "training_prompts": len(
+                                        {example.prompt_id for example in training_risk}
+                                    ),
+                                    "calibration_prompts": len(
+                                        {example.prompt_id for example in calibration_risk}
+                                    ),
+                                    "examples": len(calibration_risk),
+                                    "positive_fraction": float(np.mean(labels)),
+                                    "brier": float(np.mean((scores - labels) ** 2)),
+                                    "roc_auc": (
+                                        float(roc_auc_score(labels, scores))
+                                        if np.unique(labels).size == 2
+                                        else None
+                                    ),
+                                },
+                            }
+                        },
+                        "trace_reused": model in reused_trace_models,
+                    }
+                }
+
+                training_benefit = tuple(
+                    example for group in training_benefit_groups for example in group
+                )
+                calibration_benefit = tuple(
+                    example for group in calibration_benefit_groups for example in group
+                )
+                all_benefit = tuple(example for group in benefit_groups for example in group)
+                evaluation_benefit = RemainingNFEEstimator.fit(
+                    training_benefit,
+                    include_history=False,
+                    history_window=self.config.history_window,
+                    seed=self.config.seed,
+                )
+                predictions = np.asarray(
+                    [
+                        evaluation_benefit.predict_remaining_nfe(example.features)
+                        for example in calibration_benefit
+                    ],
+                    dtype=np.float64,
+                )
+                targets = np.asarray(
+                    [example.remaining_nfe for example in calibration_benefit],
+                    dtype=np.float64,
+                )
+                final_benefit = RemainingNFEEstimator.fit(
+                    all_benefit,
+                    include_history=False,
+                    history_window=self.config.history_window,
+                    seed=self.config.seed,
+                )
+                benefit_path = self.run_dir / "estimators" / f"{model}_remaining_nfe.joblib"
+                saved_benefit = final_benefit.save(benefit_path)
+                benefit_metadata[model] = {
+                    **saved_benefit,
+                    "path": str(benefit_path.relative_to(self.run_dir)),
+                    "source": "native_full_budget_exact_loop_traces",
+                    "validation": {
+                        "split": "deterministic_prompt_holdout_mod5",
+                        "examples": len(calibration_benefit),
+                        "mae": float(np.mean(np.abs(predictions - targets))),
+                        "rmse": float(np.sqrt(np.mean((predictions - targets) ** 2))),
+                    },
+                }
+                continue
             grouped_examples = tuple(
                 tuple(
                     TrainingExample(
@@ -1317,7 +1505,6 @@ class RCPAGOrchestrator:
                     "estimators": ablations,
                     "trace_reused": model in reused_trace_models,
                 }
-        benefit_metadata: dict[str, dict[str, object]] = {}
         if self.config.protocol_version == "v3":
             for model in self.config.models:
                 if model in reused_models:

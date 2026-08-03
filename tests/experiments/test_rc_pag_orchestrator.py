@@ -47,6 +47,11 @@ def v5_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml"))
 
 
+@pytest.fixture
+def v6_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml"))
+
+
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
     runtime = MockRCPAGRuntime(calibration_repetitions=60)
     runner = RCPAGOrchestrator(
@@ -598,3 +603,47 @@ def test_v5_reuses_exact_v4_traces_and_paired_q500_rollouts(tmp_path, v4_config,
     assert set(reuse["rollout"]) == {"llada", "dream"}
     assert not any(stage in {"collect", "rollout"} for stage, _, _, _ in runtime.calls)
     assert (destination / "estimators" / "advantage_manifest.json").is_file()
+
+
+def test_v6_refits_calibrated_risk_and_benefit_from_reused_v5_traces(
+    tmp_path,
+    v5_config,
+    v6_config,
+) -> None:
+    source = tmp_path / "v5"
+    source_runner = RCPAGOrchestrator(
+        v5_config,
+        source,
+        runtime_factory=lambda model: ExactTraceMockRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    source_runner.run_through("fit")
+
+    destination = tmp_path / "v6"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v6_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    runner.run_through("fit")
+
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    estimators = json.loads((destination / "estimators" / "manifest.json").read_text())
+    assert reuse["reuse_scope"] == "raw_native_exact_loop_traces_only"
+    assert set(reuse["reused_models"]) == {"llada", "dream"}
+    assert not any(stage == "collect" for stage, _, _, _ in runtime.calls)
+    assert "rollout" not in runner.active_stages
+    assert "refit" not in runner.active_stages
+    for model in ("llada", "dream"):
+        fitted = estimators["models"][model]["rc_pag_budgeted"]
+        validation = fitted["estimators"]["hist_gradient_boosting"]["validation"]
+        assert fitted["trace_reused"]
+        assert validation["training_prompts"] == 1
+        assert validation["calibration_prompts"] == 1
+        assert (destination / "estimators" / f"{model}_rc_pag_budgeted_risk.joblib").is_file()
+        assert (destination / "estimators" / f"{model}_remaining_nfe.joblib").is_file()
