@@ -61,23 +61,27 @@ if any(int(count) < 1 for count in inputs.get("coverage", {}).values()):
 
 names = {str(row.get("name", "")) for row in certificate.get("candidates", ())}
 models = {name.split("/", 1)[0] for name in names if "/" in name}
-joint_rows = all(
+harm_rows = all(
     row.get("harm_pvalue") is not None
-    and row.get("compute_pvalue") is not None
     and row.get("harm_certified") is not None
-    and row.get("compute_certified") is not None
-    and row.get("lower_nfe_reduction_bound") is not None
     for row in certificate.get("candidates", ())
+)
+model_compute = audit.get("details", {}).get("model_nfe_reduction", {})
+compute_evidence = (
+    audit.get("details", {}).get("required_model_nfe_reduction_lower_ci") == 0.05
+    and set(model_compute) == {"llada", "dream"}
+    and all(row.get("lower") is not None for row in model_compute.values())
 )
 if (
     certificate.get("loss") != "adablock_correct_candidate_wrong"
-    or certificate.get("certificate_mode") != "joint_harm_and_compute"
-    or float(certificate.get("minimum_nfe_reduction", -1.0)) != 0.05
+    or certificate.get("certificate_mode") != "harm_only_with_paired_compute_evidence"
+    or certificate.get("minimum_nfe_reduction") is not None
     or models != {"llada", "dream"}
     or len(names) != 2
-    or not joint_rows
+    or not harm_rows
+    or not compute_evidence
 ):
-    raise SystemExit("certificate must jointly cover harm and compute for two model policies")
+    raise SystemExit("v6 evidence must cover harm and paired compute for two model policies")
 
 tables = run_dir / "report" / "tables"
 figures = run_dir / "report" / "figures"

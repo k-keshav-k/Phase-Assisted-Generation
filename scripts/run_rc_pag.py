@@ -30,8 +30,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--reuse-development-from",
         type=Path,
         help=(
-            "Reuse compatible development artifacts. v5 accepts exact-loop v4 traces plus "
-            "complete paired q500/AdaBlock screen rows and always refits its estimators."
+            "Reuse compatible development artifacts. v6 accepts native exact-loop v4/v5 "
+            "full-budget traces, discards old policy heads, and refits both estimators."
         ),
     )
     return parser
