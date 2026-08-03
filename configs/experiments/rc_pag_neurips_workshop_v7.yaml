@@ -1,0 +1,143 @@
+schema_version: 1
+protocol_version: v7
+seed: 20260803
+confirmation_profile: workshop_v7_fresh
+
+models:
+  llada:
+    repository: GSAI-ML/LLaDA-8B-Instruct
+    revision: 08b83a6feb34df1a6011b80c3c00c7563e963b07
+    dtype: bfloat16
+  dream:
+    repository: Dream-org/Dream-v0-Instruct-7B
+    revision: 05334cb9faaf763692dcf9d8737c642be2b2a6ae
+    dtype: bfloat16
+
+datasets:
+  gsm8k_train:
+    path: openai/gsm8k
+    revision: 740312add88f781978c0658806c59bc2815b9866
+    split: train
+    configs: [main]
+  math_train:
+    path: EleutherAI/hendrycks_math
+    revision: 21a5633873b6a120296cce3e2df9d5550074f4a3
+    split: train
+    configs: [algebra, counting_and_probability, geometry, intermediate_algebra, number_theory, prealgebra, precalculus]
+  mbpp_train:
+    path: google-research-datasets/mbpp
+    revision: 4bb6404fdc6cacfda99d4ac4205087b89d32030c
+    split: train
+    configs: [full]
+  gsm8k_test:
+    path: openai/gsm8k
+    revision: 740312add88f781978c0658806c59bc2815b9866
+    split: test
+    configs: [main]
+  math500:
+    path: HuggingFaceH4/MATH-500
+    revision: 6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be
+    split: test
+    configs: [default]
+  mbpp_sanitized:
+    path: google-research-datasets/mbpp
+    revision: 4bb6404fdc6cacfda99d4ac4205087b89d32030c
+    split: test
+    configs: [sanitized]
+  humaneval:
+    path: openai/openai_humaneval
+    revision: 7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544
+    split: test
+    configs: [openai_humaneval]
+
+splits:
+  pilot:
+    gsm8k_train: [450, 465]
+    math_train: [350, 357]
+    mbpp_train: [250, 257]
+  training:
+    gsm8k_train: [0, 299]
+    math_train: [0, 199]
+    mbpp_train: [0, 99]
+  tuning:
+    gsm8k_train: [400, 449]
+    math_train: [300, 349]
+    mbpp_train: [200, 249]
+  calibration:
+    gsm8k_train: [854, 1241]
+    math_train: [433, 507]
+    mbpp_train: [295, 331]
+
+stage_sizes:
+  pilot_per_model: 32
+  traces_per_model: 600
+  tuning_per_model: 150
+  calibration_per_model: 500
+
+decoding:
+  temperature: 0.0
+  gen_length: 256
+  max_refinement_steps: 64
+  max_block_length: 64
+  transfer_threshold: 0.9
+  delimiter_threshold: 0.3
+  use_cache: true
+  dual_cache: true
+
+policy:
+  estimator_kinds: [hist_gradient_boosting]
+  history_window: 4
+  candidates:
+    - {name: rgate_t10_p3_v7, variant: rc_pag_budgeted, threshold: 0.10, min_steps: 2, patience: 3, min_predicted_nfe_savings: 0.0, require_exact_agreement: false, total_risk_budget: 1.0, max_prompt_stops: 3}
+    - {name: rgate_t15_p3_v7, variant: rc_pag_budgeted, threshold: 0.15, min_steps: 2, patience: 3, min_predicted_nfe_savings: 0.0, require_exact_agreement: false, total_risk_budget: 1.0, max_prompt_stops: 3}
+    - {name: rgate_t20_p3_v7, variant: rc_pag_budgeted, threshold: 0.20, min_steps: 2, patience: 3, min_predicted_nfe_savings: 0.0, require_exact_agreement: false, total_risk_budget: 1.0, max_prompt_stops: 3}
+
+risk:
+  alpha: 0.02
+  delta: 0.05
+  loss: adablock_correct_candidate_wrong
+  minimum_nfe_reduction: null
+
+statistics:
+  bootstrap_samples: 10000
+  confidence: 0.95
+
+confirmatory:
+  gsm8k_test: 500
+  math500: 200
+  mbpp_sanitized: 100
+  humaneval: 64
+
+confirmatory_sampling:
+  strategy: index_stratified_complement
+  strata: 10
+  population_sizes:
+    gsm8k_test: 1319
+    math500: 500
+    mbpp_sanitized: 257
+    humaneval: 164
+  excluded_counts:
+    gsm8k_test: 500
+    math500: 300
+    mbpp_sanitized: 100
+    humaneval: 100
+
+methods:
+  development:
+    - adablock
+    - stability_weighted_style
+    - token_convergence_style
+    - rc_pag_budgeted
+  confirmatory: [adablock, best_nonlearned, rc_pag_selected]
+
+readiness:
+  minimum_tuning_nfe_reduction_per_model: 0.08
+  require_candidate_beats_nonlearned: true
+
+claim_gates:
+  require_risk_certificate: true
+  beat_adablock_both_models: true
+  beat_best_nonlearned: true
+  minimum_accuracy_lower_ci: -0.02
+  require_history_frontier_ci: false
+  minimum_model_nfe_reduction_lower_ci: 0.05

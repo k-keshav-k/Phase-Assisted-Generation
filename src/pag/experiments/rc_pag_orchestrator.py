@@ -38,7 +38,7 @@ from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
 from pag.experiments.statistics import paired_bootstrap
 
-_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6"}
+_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6", "v7"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -828,7 +828,7 @@ class RCPAGOrchestrator:
             runs_per_model["rollout"] = 2 * self.config.stage_sizes.rollout_per_model
         collect_models = (
             0
-            if self.config.protocol_version in {"v4", "v5", "v6"}
+            if self.config.protocol_version in {"v4", "v5", "v6", "v7"}
             and self.reuse_development_from is not None
             else len(self.config.models) - int(self.reuse_development_from is not None)
         )
@@ -904,7 +904,7 @@ class RCPAGOrchestrator:
     def _prepare_development_reuse(self) -> set[str]:
         if self.reuse_development_from is None:
             return set()
-        if self.config.protocol_version == "v6":
+        if self.config.protocol_version in {"v6", "v7"}:
             return self._prepare_v6_reuse()
         if self.config.protocol_version == "v5":
             return self._prepare_v5_reuse()
@@ -1127,14 +1127,18 @@ class RCPAGOrchestrator:
         return set(reused_models)
 
     def _prepare_v6_reuse(self) -> set[str]:
-        """Reuse raw v4/v5 native traces while discarding their fitted policy heads."""
+        """Reuse raw v4/v5 (and, for v7, v6) native traces while discarding their fitted heads."""
 
+        protocol = self.config.protocol_version
+        allowed_sources = {
+            "risk_calibrated_pag_v4",
+            "risk_calibrated_pag_v5",
+        }
+        if protocol == "v7":
+            allowed_sources.add("risk_calibrated_pag_v6")
         reused_models = self._prepare_v4_trace_reuse(
-            allowed_source_protocols={
-                "risk_calibrated_pag_v4",
-                "risk_calibrated_pag_v5",
-            },
-            target_protocol="v6",
+            allowed_source_protocols=allowed_sources,
+            target_protocol=protocol,
         )
         path = self.run_dir / "reuse" / "manifest.json"
         manifest = json.loads(path.read_text(encoding="utf-8"))
@@ -1146,8 +1150,8 @@ class RCPAGOrchestrator:
                 "reuse_scope": "raw_native_exact_loop_traces_only",
                 "reused_variants": [],
                 "reason": (
-                    "v6 reuses only native full-budget observations and refits calibrated "
-                    "risk plus remaining-NFE estimators; v4/v5 fitted heads are discarded"
+                    f"{protocol} reuses only native full-budget observations and refits calibrated "
+                    "risk plus remaining-NFE estimators; older fitted heads are discarded"
                 ),
             },
         )
@@ -1255,7 +1259,7 @@ class RCPAGOrchestrator:
         reuse_manifest_path = self.run_dir / "reuse" / "manifest.json"
         if reuse_manifest_path.is_file():
             reuse_manifest = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
-            if self.config.protocol_version in {"v4", "v5", "v6"}:
+            if self.config.protocol_version in {"v4", "v5", "v6", "v7"}:
                 reused_trace_models = set(reuse_manifest["reused_models"])
             else:
                 reused_trace_models = set()
@@ -1278,7 +1282,7 @@ class RCPAGOrchestrator:
             rows = self.store.records(f"collect/{model}", "full_budget_shadow")
             if not rows:
                 raise ValueError(f"no collected examples for {model}")
-            if self.config.protocol_version == "v6":
+            if self.config.protocol_version in {"v6", "v7"}:
                 payload_groups = tuple(
                     _v4_training_payloads(row, history_window=self.config.history_window)
                     for row in rows
@@ -1863,7 +1867,7 @@ class RCPAGOrchestrator:
             frozen["protocol_identity"] = canonical_config_hash(frozen)
             self.store.write_named("screening_summary.json", summary)
             self.store.write_named("frozen_policy.json", frozen)
-            if self.config.protocol_version in {"v3", "v4", "v5", "v6"}:
+            if self.config.protocol_version in {"v3", "v4", "v5", "v6", "v7"}:
                 readiness_models: dict[str, dict[str, object]] = {}
                 for model, selected_name in selected_candidate.items():
                     adablock_nfe = float(
@@ -2112,7 +2116,7 @@ class RCPAGOrchestrator:
                         "joint_harm_and_compute"
                         if self.config.protocol_version in {"v4", "v5"}
                         else "harm_only_with_paired_compute_evidence"
-                        if self.config.protocol_version == "v6"
+                        if self.config.protocol_version in {"v6", "v7"}
                         else "harm_only"
                     ),
                     "mock": (

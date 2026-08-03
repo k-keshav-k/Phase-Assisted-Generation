@@ -443,7 +443,7 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6"} and examples
+                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7"} and examples
                 else ""
             )
             prompt = f"Write a correct Python solution for this task:\n{description}"
@@ -531,7 +531,7 @@ class UnifiedRCPAGRuntime:
         estimator_paths: Mapping[str, str],
     ) -> RiskStoppingPolicy:
         uses_budgeted_heads = (
-            self.config.protocol_version == "v6" and candidate.variant == "rc_pag_budgeted"
+            self.config.protocol_version in {"v6", "v7"} and candidate.variant == "rc_pag_budgeted"
         )
         uses_advantage_heads = (
             self.config.protocol_version == "v5" and candidate.variant == "rc_pag_advantage"
@@ -678,7 +678,7 @@ class UnifiedRCPAGRuntime:
         enforcement: str,
         shadow: bool,
     ):
-        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6"}
+        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7"}
         if method == "adablock" or modern_protocol:
             module = importlib.import_module("generate_adablock")
             result = module.generate_adablock_dual_cache(
@@ -761,6 +761,7 @@ class UnifiedRCPAGRuntime:
             "v4",
             "v5",
             "v6",
+            "v7",
         }
         generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(

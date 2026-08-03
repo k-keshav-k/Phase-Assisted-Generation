@@ -14,6 +14,7 @@ WORKSHOP_V3_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v3.y
 WORKSHOP_V4_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml")
 WORKSHOP_V5_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml")
 WORKSHOP_V6_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml")
+WORKSHOP_V7_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v7.yaml")
 
 
 def _valid_payload() -> dict:
@@ -168,6 +169,38 @@ def test_v6_config_freezes_ledger_family_and_fresh_splits() -> None:
     assert config.risk.minimum_nfe_reduction is None
     assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.08
     assert config.claim_gates.minimum_model_nfe_reduction_lower_ci == 0.05
+
+
+def test_v7_config_registers_risk_threshold_gating_family() -> None:
+    config = load_rc_pag_config(WORKSHOP_V7_CONFIG_PATH)
+
+    assert config.protocol_version == "v7"
+    assert set(config.splits) == {"pilot", "training", "tuning", "calibration"}
+    assert [
+        (candidate.threshold, candidate.patience, candidate.min_predicted_nfe_savings)
+        for candidate in config.candidates
+    ] == [(0.10, 3, 0.0), (0.15, 3, 0.0), (0.20, 3, 0.0)]
+    assert all(candidate.variant == "rc_pag_budgeted" for candidate in config.candidates)
+    assert all(not candidate.require_exact_agreement for candidate in config.candidates)
+    assert all(candidate.total_risk_budget == 1.0 for candidate in config.candidates)
+    assert all(candidate.max_prompt_stops == 3 for candidate in config.candidates)
+    assert config.risk.minimum_nfe_reduction is None
+    assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.08
+    assert config.claim_gates.minimum_model_nfe_reduction_lower_ci == 0.05
+
+
+def test_v7_config_rejects_exact_agreement_and_unbounded_thresholds() -> None:
+    payload = deepcopy(load_rc_pag_config(WORKSHOP_V7_CONFIG_PATH).raw)
+    payload["policy"]["candidates"][0]["require_exact_agreement"] = True
+
+    with pytest.raises(ValueError, match="risk-threshold gating"):
+        validate_rc_pag_config(payload)
+
+    payload = deepcopy(load_rc_pag_config(WORKSHOP_V7_CONFIG_PATH).raw)
+    payload["policy"]["candidates"][0]["threshold"] = 0.7
+
+    with pytest.raises(ValueError, match="risk-threshold gating"):
+        validate_rc_pag_config(payload)
 
 
 def test_config_rejects_split_overlap():
