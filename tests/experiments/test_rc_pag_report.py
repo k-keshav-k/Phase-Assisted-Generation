@@ -239,3 +239,48 @@ def test_v4_report_writes_joint_harm_and_compute_certificate(tmp_path):
     assert "Saving LCB" in table
     assert "$p_H$" in table
     assert diagnostics["candidates"][0]["compute_certified"]
+
+
+def test_v6_requires_positive_model_level_compute_lower_bounds(tmp_path):
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=_v2_records(),
+        certificate=_v2_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_selected"),
+        primary_method="rc_pag_selected",
+        require_history_frontier_ci=False,
+        minimum_model_nfe_reduction_lower_ci=0.05,
+    )
+
+    assert audit["gates"]["model_nfe_reduction_lower_ci"]
+    assert all(
+        interval["lower"] > 0.05 for interval in audit["details"]["model_nfe_reduction"].values()
+    )
+
+
+def test_v6_compute_gate_rejects_a_small_nfe_improvement(tmp_path):
+    records = _v2_records()
+    for model in records.values():
+        for dataset in model.values():
+            for candidate, baseline in zip(
+                dataset["rc_pag_selected"],
+                dataset["adablock"],
+                strict=True,
+            ):
+                candidate["total_nfe"] = float(baseline["total_nfe"]) - 2.0
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=records,
+        certificate=_v2_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_selected"),
+        primary_method="rc_pag_selected",
+        require_history_frontier_ci=False,
+        minimum_model_nfe_reduction_lower_ci=0.05,
+    )
+
+    assert not audit["headline_eligible"]
+    assert "model_nfe_reduction_lower_ci" in audit["failed_gates"]

@@ -418,6 +418,14 @@ class ExactTraceMockRuntime(MockRCPAGRuntime):
         return payload
 
 
+class CalibrationSlowMockRuntime(MockRCPAGRuntime):
+    def run(self, **kwargs):
+        payload = super().run(**kwargs)
+        if kwargs["stage"] == "calibrate" and kwargs["candidate"] is not None:
+            payload["total_nfe"] = float(payload["total_nfe"]) + 50.0
+        return payload
+
+
 def test_v4_reuses_compatible_raw_traces_but_refits_estimators(tmp_path, v3_config, v4_config):
     source = tmp_path / "v3"
     source_runtime = ExactTraceMockRuntime()
@@ -647,3 +655,45 @@ def test_v6_refits_calibrated_risk_and_benefit_from_reused_v5_traces(
         assert validation["calibration_prompts"] == 1
         assert (destination / "estimators" / f"{model}_rc_pag_budgeted_risk.joblib").is_file()
         assert (destination / "estimators" / f"{model}_remaining_nfe.joblib").is_file()
+
+
+def test_v6_certifies_only_harm_and_reports_raw_compute_evidence(tmp_path, v6_config) -> None:
+    runtime = MockRCPAGRuntime(calibration_repetitions=500)
+    runner = RCPAGOrchestrator(
+        v6_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("report")
+
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["certificate_mode"] == "harm_only_with_paired_compute_evidence"
+    assert certificate["minimum_nfe_reduction"] is None
+    assert certificate["hypotheses"] == 2
+    assert all(row["compute_pvalue"] is None for row in certificate["candidates"])
+    for diagnostic in certificate["diagnostics"].values():
+        assert diagnostic["raw_paired_nfe_reduction"]["lower"] > 0.0
+    audit = json.loads((tmp_path / "report" / "claim_audit.json").read_text())
+    assert audit["gates"]["model_nfe_reduction_lower_ci"]
+    assert set(audit["details"]["model_nfe_reduction"]) == {"llada", "dream"}
+
+
+def test_v6_calibration_keeps_negative_raw_nfe_savings(tmp_path, v6_config) -> None:
+    runtime = CalibrationSlowMockRuntime(calibration_repetitions=500)
+    runner = RCPAGOrchestrator(
+        v6_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("calibrate")
+
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    for diagnostic in certificate["diagnostics"].values():
+        assert diagnostic["negative_nfe_saving_prompts"] == 2
+        assert diagnostic["raw_paired_nfe_reduction"]["estimate"] < 0.0

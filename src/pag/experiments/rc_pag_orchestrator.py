@@ -36,6 +36,7 @@ from pag.experiments.rc_pag_policy import (
 )
 from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
+from pag.experiments.statistics import paired_bootstrap
 
 _MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6"}
 
@@ -1751,7 +1752,7 @@ class RCPAGOrchestrator:
         baseline_methods = tuple(
             (method, None)
             for method in self.config.development_methods
-            if method not in {"rc_pag_local", "rc_pag_history", "rc_pag_advantage"}
+            if not method.startswith("rc_pag_")
         )
         candidate_methods = tuple(
             (candidate.name, candidate) for candidate in self.config.candidates
@@ -1862,7 +1863,7 @@ class RCPAGOrchestrator:
             frozen["protocol_identity"] = canonical_config_hash(frozen)
             self.store.write_named("screening_summary.json", summary)
             self.store.write_named("frozen_policy.json", frozen)
-            if self.config.protocol_version in {"v3", "v4", "v5"}:
+            if self.config.protocol_version in {"v3", "v4", "v5", "v6"}:
                 readiness_models: dict[str, dict[str, object]] = {}
                 for model, selected_name in selected_candidate.items():
                     adablock_nfe = float(
@@ -2019,6 +2020,8 @@ class RCPAGOrchestrator:
                     raise RuntimeError(f"incomplete paired v2 calibration for {model}")
                 losses: list[int] = []
                 nfe_savings: list[float] = []
+                baseline_nfes: list[float] = []
+                candidate_nfes: list[float] = []
                 disagreements = 0
                 for sample_id in sorted(baseline_rows):
                     baseline = baseline_rows[sample_id]
@@ -2039,6 +2042,8 @@ class RCPAGOrchestrator:
                             f"{model}/{sample_id}: {saving}"
                         )
                     nfe_savings.extend([saving] * repetitions)
+                    baseline_nfes.append(baseline_nfe)
+                    candidate_nfes.append(policy_nfe)
                     disagreements += int(
                         baseline.get("generated_ids") != policy.get("generated_ids")
                     )
@@ -2057,6 +2062,13 @@ class RCPAGOrchestrator:
                         ),
                     )
                 )
+                nfe_difference = paired_bootstrap(
+                    candidate_nfes,
+                    baseline_nfes,
+                    samples=self.config.statistics.bootstrap_samples,
+                    seed=self.config.seed + len(diagnostics),
+                )
+                baseline_mean = float(np.mean(baseline_nfes))
                 diagnostics[model] = {
                     "candidate": candidate.name,
                     "paired_prompts": len(baseline_rows),
@@ -2064,6 +2076,18 @@ class RCPAGOrchestrator:
                     "harmful_regressions": sum(losses),
                     "effective_calibration_count": len(losses),
                     "mean_paired_nfe_reduction": float(np.mean(nfe_savings)),
+                    "negative_nfe_saving_prompts": sum(
+                        candidate_nfe > baseline_nfe
+                        for candidate_nfe, baseline_nfe in zip(
+                            candidate_nfes, baseline_nfes, strict=True
+                        )
+                    ),
+                    "raw_paired_nfe_difference": asdict(nfe_difference),
+                    "raw_paired_nfe_reduction": {
+                        "estimate": -nfe_difference.estimate / baseline_mean,
+                        "lower": -nfe_difference.upper / baseline_mean,
+                        "upper": -nfe_difference.lower / baseline_mean,
+                    },
                 }
             certificate = certify_candidates(
                 candidates,
@@ -2087,6 +2111,8 @@ class RCPAGOrchestrator:
                     "certificate_mode": (
                         "joint_harm_and_compute"
                         if self.config.protocol_version in {"v4", "v5"}
+                        else "harm_only_with_paired_compute_evidence"
+                        if self.config.protocol_version == "v6"
                         else "harm_only"
                     ),
                     "mock": (
@@ -2375,6 +2401,9 @@ class RCPAGOrchestrator:
                 else "rc_pag_local"
             ),
             require_history_frontier_ci=(self.config.claim_gates.require_history_frontier_ci),
+            minimum_model_nfe_reduction_lower_ci=(
+                self.config.claim_gates.minimum_model_nfe_reduction_lower_ci
+            ),
         )
         self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 

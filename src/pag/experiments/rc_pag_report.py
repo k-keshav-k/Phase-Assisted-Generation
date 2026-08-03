@@ -190,6 +190,7 @@ def _audit(
     records: Mapping[str, Mapping[str, Mapping[str, Sequence[dict[str, Any]]]]],
     primary_method: str,
     require_history_frontier_ci: bool,
+    minimum_model_nfe_reduction_lower_ci: float | None,
 ) -> dict[str, Any]:
     risk_rows = _risk_rows(certificate)
     selected_risks: dict[tuple[str, str], Mapping[str, Any] | None]
@@ -265,6 +266,40 @@ def _audit(
         "required_accuracy_lower_ci": minimum_accuracy_lower_ci,
         "history_frontier_required": require_history_frontier_ci,
     }
+    if minimum_model_nfe_reduction_lower_ci is not None:
+        model_compute: dict[str, dict[str, float]] = {}
+        for model_index, model in enumerate(_MODELS):
+            candidate_nfe: list[float] = []
+            baseline_nfe: list[float] = []
+            for dataset in _IN_DOMAIN:
+                pairs = pair_records(
+                    records[model][dataset][primary_method],
+                    records[model][dataset]["adablock"],
+                )
+                candidate_nfe.extend(float(left["total_nfe"]) for left, _ in pairs)
+                baseline_nfe.extend(float(right["total_nfe"]) for _, right in pairs)
+            difference = paired_bootstrap(
+                candidate_nfe,
+                baseline_nfe,
+                samples=bootstrap_samples,
+                seed=seed + 71 + model_index,
+            )
+            baseline_mean = float(np.mean(baseline_nfe))
+            model_compute[model] = {
+                "estimate": -difference.estimate / baseline_mean,
+                "lower": -difference.upper / baseline_mean,
+                "upper": -difference.lower / baseline_mean,
+            }
+        gates["model_nfe_reduction_lower_ci"] = all(
+            interval["lower"] > minimum_model_nfe_reduction_lower_ci
+            for interval in model_compute.values()
+        )
+        details.update(
+            {
+                "model_nfe_reduction": model_compute,
+                "required_model_nfe_reduction_lower_ci": (minimum_model_nfe_reduction_lower_ci),
+            }
+        )
     if require_history_frontier_ci:
         if any(
             "rc_pag_local" not in records[model][dataset]
@@ -589,6 +624,7 @@ def write_rc_pag_report(
     methods: Sequence[str] = _DEFAULT_METHODS,
     primary_method: str = "rc_pag_history",
     require_history_frontier_ci: bool = True,
+    minimum_model_nfe_reduction_lower_ci: float | None = None,
 ) -> dict[str, Any]:
     if bootstrap_samples < 1:
         raise ValueError("bootstrap_samples must be positive")
@@ -635,6 +671,7 @@ def write_rc_pag_report(
         records=records,
         primary_method=primary_method,
         require_history_frontier_ci=require_history_frontier_ci,
+        minimum_model_nfe_reduction_lower_ci=minimum_model_nfe_reduction_lower_ci,
     )
     output = Path(run_dir) / "report"
     figures = output / "figures"
