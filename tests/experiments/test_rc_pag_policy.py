@@ -346,6 +346,67 @@ def test_exact_agreement_policy_restarts_after_disagreement_and_block_reset() ->
     assert after_prompt_reset.reason == "pending_verification"
 
 
+def test_prompt_ledger_charges_only_verified_stops_and_persists_across_blocks() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.02),
+        benefit_scorer=FixedBenefitScorer(4.0),
+        threshold=1.0,
+        min_steps=2,
+        patience=2,
+        include_history=False,
+        min_predicted_nfe_savings=3.0,
+        require_exact_agreement=True,
+        total_risk_budget=0.05,
+        max_prompt_stops=2,
+    )
+
+    pending = policy.observe(observation(step=2, token_ids=[10, 11]))
+    stopped = policy.observe(observation(step=3, token_ids=[10, 11]))
+
+    assert not pending.should_stop
+    assert pending.risk_spent == 0.0
+    assert stopped.should_stop
+    assert stopped.risk_spent == pytest.approx(0.02)
+    assert stopped.prompt_stops == 1
+
+    policy.start_block()
+    assert not policy.observe(observation(step=2, token_ids=[12, 11])).should_stop
+    second = policy.observe(observation(step=3, token_ids=[12, 11]))
+    assert second.should_stop
+    assert second.risk_spent == pytest.approx(0.04)
+    assert second.prompt_stops == 2
+
+    policy.start_block()
+    assert not policy.observe(observation(step=2, token_ids=[13, 11])).should_stop
+    assert policy.risk_spent == pytest.approx(0.04)
+    assert policy.prompt_stops == 2
+
+    policy.reset_prompt()
+    assert policy.risk_spent == 0.0
+    assert policy.prompt_stops == 0
+
+
+def test_prompt_ledger_does_not_charge_changed_or_low_benefit_proposals() -> None:
+    policy = RiskStoppingPolicy(
+        FixedScorer(0.01),
+        benefit_scorer=FixedBenefitScorer(1.0, 4.0, 4.0),
+        threshold=1.0,
+        min_steps=1,
+        patience=2,
+        include_history=False,
+        min_predicted_nfe_savings=3.0,
+        require_exact_agreement=True,
+        total_risk_budget=0.05,
+        max_prompt_stops=1,
+    )
+
+    assert not policy.observe(observation(step=1, token_ids=[10, 11])).should_stop
+    assert not policy.observe(observation(step=2, token_ids=[12, 11])).should_stop
+    assert policy.risk_spent == 0.0
+    assert policy.observe(observation(step=3, token_ids=[12, 11])).should_stop
+    assert policy.risk_spent == pytest.approx(0.01)
+
+
 class FixedBenefitScorer:
     def __init__(self, *scores: float) -> None:
         self.scores = list(scores)

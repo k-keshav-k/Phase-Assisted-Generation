@@ -78,6 +78,8 @@ class StopDecision:
     reason: str
     predicted_nfe_savings: float = 0.0
     temporal_js: float = 0.0
+    risk_spent: float = 0.0
+    prompt_stops: int = 0
 
 
 def _sha256_file(path: Path) -> str:
@@ -566,6 +568,8 @@ class RiskStoppingPolicy:
         min_predicted_nfe_savings: float = 0.0,
         max_temporal_js: float = 1.0,
         require_exact_agreement: bool = False,
+        total_risk_budget: float | None = None,
+        max_prompt_stops: int | None = None,
         force_full_budget: bool = False,
     ) -> None:
         if not 0.0 <= threshold <= 1.0:
@@ -578,6 +582,12 @@ class RiskStoppingPolicy:
             raise ValueError("min_predicted_nfe_savings must be finite and non-negative")
         if not 0.0 <= max_temporal_js <= 1.0:
             raise ValueError("max_temporal_js must be in [0, 1]")
+        if (total_risk_budget is None) != (max_prompt_stops is None):
+            raise ValueError("total_risk_budget and max_prompt_stops must be provided together")
+        if total_risk_budget is not None and not 0.0 < total_risk_budget <= 1.0:
+            raise ValueError("total_risk_budget must be in (0, 1]")
+        if max_prompt_stops is not None and max_prompt_stops < 1:
+            raise ValueError("max_prompt_stops must be positive")
         self.scorer = scorer
         self.threshold = float(threshold)
         self.min_steps = int(min_steps)
@@ -589,6 +599,8 @@ class RiskStoppingPolicy:
         self.min_predicted_nfe_savings = float(min_predicted_nfe_savings)
         self.max_temporal_js = float(max_temporal_js)
         self.require_exact_agreement = bool(require_exact_agreement)
+        self.total_risk_budget = None if total_risk_budget is None else float(total_risk_budget)
+        self.max_prompt_stops = None if max_prompt_stops is None else int(max_prompt_stops)
         self.force_full_budget = bool(force_full_budget)
         self.reset_prompt()
 
@@ -612,9 +624,19 @@ class RiskStoppingPolicy:
     def decision_trace(self) -> tuple[StopDecision, ...]:
         return tuple(self._decision_trace)
 
+    @property
+    def risk_spent(self) -> float:
+        return self._risk_spent
+
+    @property
+    def prompt_stops(self) -> int:
+        return self._prompt_stops
+
     def reset_prompt(self) -> None:
         self._history: list[RealizedBlock] = []
         self._decision_trace: list[StopDecision] = []
+        self._risk_spent = 0.0
+        self._prompt_stops = 0
         self.start_block()
 
     def start_block(self) -> None:
@@ -656,12 +678,18 @@ class RiskStoppingPolicy:
             if masked
         ]
         temporal_js = max(masked_js, default=0.0)
+        ledger_eligible = self.total_risk_budget is None or (
+            self.max_prompt_stops is not None
+            and self._prompt_stops < self.max_prompt_stops
+            and self._risk_spent + score <= self.total_risk_budget + 1e-12
+        )
         eligible = (
             observation.step_index >= self.min_steps
             and remaining_fraction <= self.max_remaining_fraction
             and score <= self.threshold
             and temporal_js <= self.max_temporal_js
             and (self.benefit_scorer is None or predicted_savings >= self.min_predicted_nfe_savings)
+            and ledger_eligible
         )
         reason = "continue"
         if self.require_exact_agreement:
@@ -697,6 +725,9 @@ class RiskStoppingPolicy:
             self._safe_streak = self._safe_streak + 1 if eligible else 0
             should_stop = self._safe_streak >= self.patience
             reason = "risk_certified_candidate" if should_stop else "continue"
+        if should_stop and self.total_risk_budget is not None:
+            self._risk_spent += score
+            self._prompt_stops += 1
         decision = StopDecision(
             should_stop=should_stop,
             risk_score=score,
@@ -704,6 +735,8 @@ class RiskStoppingPolicy:
             reason=reason,
             predicted_nfe_savings=predicted_savings,
             temporal_js=temporal_js,
+            risk_spent=self._risk_spent,
+            prompt_stops=self._prompt_stops,
         )
         self._previous = observation
         self._decision_trace.append(decision)
