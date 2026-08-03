@@ -7,6 +7,7 @@ import pytest
 from pag.experiments.rc_pag_features import RealizedBlock, StepObservation, extract_features
 from pag.experiments.rc_pag_policy import (
     BenefitExample,
+    CalibratedRiskEstimator,
     NormalizedNFEReductionEstimator,
     NormalizedNFEReductionExample,
     RemainingNFEEstimator,
@@ -188,6 +189,50 @@ def test_estimator_round_trip_and_constant_labels(tmp_path) -> None:
         seed=7,
     )
     assert constant.predict_risk(rows[0].features) == 0.0
+
+
+def test_calibrated_risk_estimator_uses_disjoint_prompts_and_round_trips(tmp_path) -> None:
+    examples = [
+        TrainingExample(
+            extract_features(
+                observation(step=index + 1, top1=0.5 + 0.05 * index),
+                previous=None,
+                history=(),
+                history_window=4,
+            ),
+            unsafe=index % 2 == 0,
+            prompt_id=f"p-{index}",
+        )
+        for index in range(8)
+    ]
+    estimator = CalibratedRiskEstimator.fit(
+        training_examples=examples[:6],
+        calibration_examples=examples[6:],
+        kind="hist_gradient_boosting",
+        include_history=False,
+        history_window=4,
+        seed=7,
+    )
+    path = tmp_path / "calibrated.joblib"
+    metadata = estimator.save(path)
+
+    before = estimator.predict_risk(examples[0].features)
+    after = CalibratedRiskEstimator.load(path).predict_risk(examples[0].features)
+
+    assert 0.0 <= before <= 1.0
+    assert after == pytest.approx(before)
+    assert metadata["target"] == "local_full_trajectory_disagreement"
+    assert set(estimator.training_prompt_ids).isdisjoint(estimator.calibration_prompt_ids)
+
+    with pytest.raises(ValueError, match="prompt-disjoint"):
+        CalibratedRiskEstimator.fit(
+            training_examples=examples[:6],
+            calibration_examples=examples[5:],
+            kind="hist_gradient_boosting",
+            include_history=False,
+            history_window=4,
+            seed=7,
+        )
 
 
 def test_remaining_nfe_estimator_round_trip(tmp_path) -> None:

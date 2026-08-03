@@ -11,6 +11,7 @@ from typing import Any, Protocol
 import joblib
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -218,6 +219,142 @@ class RiskEstimator:
             constant_risk=(
                 None if payload["constant_risk"] is None else float(payload["constant_risk"])
             ),
+        )
+
+
+class CalibratedRiskEstimator:
+    """Local disagreement scorer with a prompt-disjoint isotonic calibration map."""
+
+    def __init__(
+        self,
+        *,
+        base: RiskEstimator,
+        calibrator: Any | None,
+        constant_risk: float | None,
+        training_prompt_ids: Sequence[str],
+        calibration_prompt_ids: Sequence[str],
+    ) -> None:
+        self.base = base
+        self.calibrator = calibrator
+        self.constant_risk = constant_risk
+        self.training_prompt_ids = tuple(str(value) for value in training_prompt_ids)
+        self.calibration_prompt_ids = tuple(str(value) for value in calibration_prompt_ids)
+        self.kind = base.kind
+        self.include_history = base.include_history
+        self.history_window = base.history_window
+        self.names = base.names
+
+    @classmethod
+    def fit(
+        cls,
+        *,
+        training_examples: Sequence[TrainingExample],
+        calibration_examples: Sequence[TrainingExample],
+        kind: str,
+        include_history: bool,
+        history_window: int,
+        seed: int,
+    ) -> CalibratedRiskEstimator:
+        if not training_examples or not calibration_examples:
+            raise ValueError("calibrated risk estimator requires training and calibration examples")
+        training_prompt_ids = tuple(sorted({example.prompt_id for example in training_examples}))
+        calibration_prompt_ids = tuple(
+            sorted({example.prompt_id for example in calibration_examples})
+        )
+        if set(training_prompt_ids) & set(calibration_prompt_ids):
+            raise ValueError("risk training and calibration must remain prompt-disjoint")
+        base = RiskEstimator.fit(
+            training_examples,
+            kind=kind,
+            include_history=include_history,
+            history_window=history_window,
+            seed=seed,
+        )
+        raw_scores = np.asarray(
+            [base.predict_risk(example.features) for example in calibration_examples],
+            dtype=np.float64,
+        )
+        labels = np.asarray(
+            [int(example.unsafe) for example in calibration_examples],
+            dtype=np.float64,
+        )
+        if np.unique(labels).size == 1:
+            calibrator = None
+            constant_risk = float(labels[0])
+        else:
+            calibrator = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip")
+            calibrator.fit(raw_scores, labels)
+            constant_risk = None
+        return cls(
+            base=base,
+            calibrator=calibrator,
+            constant_risk=constant_risk,
+            training_prompt_ids=training_prompt_ids,
+            calibration_prompt_ids=calibration_prompt_ids,
+        )
+
+    def predict_risk(self, features: Mapping[str, float]) -> float:
+        if self.constant_risk is not None:
+            return self.constant_risk
+        if self.calibrator is None:
+            raise RuntimeError("calibrated risk estimator has no calibration map")
+        raw = self.base.predict_risk(features)
+        risk = float(self.calibrator.predict(np.asarray([raw], dtype=np.float64))[0])
+        if not math.isfinite(risk) or not 0.0 <= risk <= 1.0:
+            raise ValueError("calibrated risk estimator produced an invalid probability")
+        return risk
+
+    def save(self, path: str | Path) -> dict[str, object]:
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(
+            {
+                "base": self.base,
+                "calibrator": self.calibrator,
+                "constant_risk": self.constant_risk,
+                "training_prompt_ids": self.training_prompt_ids,
+                "calibration_prompt_ids": self.calibration_prompt_ids,
+            },
+            destination,
+        )
+        metadata: dict[str, object] = {
+            "schema_version": 1,
+            "sha256": _sha256_file(destination),
+            "kind": self.kind,
+            "target": "local_full_trajectory_disagreement",
+            "calibration": "isotonic_prompt_holdout",
+            "constant_calibration": self.constant_risk,
+            "include_history": self.include_history,
+            "history_window": self.history_window,
+            "feature_names": list(self.names),
+            "training_prompts": len(self.training_prompt_ids),
+            "calibration_prompts": len(self.calibration_prompt_ids),
+        }
+        destination.with_suffix(".json").write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return metadata
+
+    @classmethod
+    def load(cls, path: str | Path) -> CalibratedRiskEstimator:
+        source = Path(path)
+        metadata_path = source.with_suffix(".json")
+        if metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("sha256") != _sha256_file(source):
+                raise ValueError("calibrated risk estimator hash does not match metadata")
+            if metadata.get("target") != "local_full_trajectory_disagreement":
+                raise ValueError("calibrated risk estimator metadata has the wrong target")
+        payload: dict[str, Any] = joblib.load(source)
+        return cls(
+            base=payload["base"],
+            calibrator=payload["calibrator"],
+            constant_risk=(
+                None if payload["constant_risk"] is None else float(payload["constant_risk"])
+            ),
+            training_prompt_ids=payload["training_prompt_ids"],
+            calibration_prompt_ids=payload["calibration_prompt_ids"],
         )
 
 
