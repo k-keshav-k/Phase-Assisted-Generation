@@ -13,6 +13,7 @@ WORKSHOP_V2_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v2.y
 WORKSHOP_V3_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v3.yaml")
 WORKSHOP_V4_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v4.yaml")
 WORKSHOP_V5_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml")
+WORKSHOP_V6_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml")
 
 
 def _valid_payload() -> dict:
@@ -137,6 +138,36 @@ def test_v5_config_registers_counterfactual_advantage_protocol() -> None:
     assert all(candidate.require_exact_agreement for candidate in config.candidates)
     assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.08
     assert config.risk.minimum_nfe_reduction == 0.05
+
+
+def test_v6_config_freezes_ledger_family_and_fresh_splits() -> None:
+    config = load_rc_pag_config(WORKSHOP_V6_CONFIG_PATH)
+
+    assert config.protocol_version == "v6"
+    assert set(config.splits) == {"pilot", "training", "tuning", "calibration"}
+    assert config.splits["tuning"] == {
+        "gsm8k_train": (400, 449),
+        "math_train": (300, 349),
+        "mbpp_train": (200, 249),
+    }
+    assert config.splits["calibration"] == {
+        "gsm8k_train": (854, 1241),
+        "math_train": (433, 507),
+        "mbpp_train": (295, 331),
+    }
+    assert [
+        (
+            candidate.total_risk_budget,
+            candidate.max_prompt_stops,
+            candidate.min_predicted_nfe_savings,
+        )
+        for candidate in config.candidates
+    ] == [(0.02, 1, 4.0), (0.05, 2, 3.0), (0.10, 3, 2.0)]
+    assert all(candidate.variant == "rc_pag_budgeted" for candidate in config.candidates)
+    assert all(candidate.require_exact_agreement for candidate in config.candidates)
+    assert config.risk.minimum_nfe_reduction is None
+    assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.08
+    assert config.claim_gates.minimum_model_nfe_reduction_lower_ci == 0.05
 
 
 def test_config_rejects_split_overlap():
