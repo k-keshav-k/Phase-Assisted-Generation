@@ -254,6 +254,8 @@ def serialize_policy_step(step: PolicyStep) -> dict[str, Any]:
         "reason": str(step.decision.reason),
         "predicted_nfe_savings": float(getattr(step.decision, "predicted_nfe_savings", 0.0)),
         "temporal_js": float(getattr(step.decision, "temporal_js", 0.0)),
+        "risk_spent": float(getattr(step.decision, "risk_spent", 0.0)),
+        "prompt_stops": int(getattr(step.decision, "prompt_stops", 0)),
         "shadow_loss": step.shadow_loss,
         "proposed_tokens": list(step.proposed_tokens),
         "observation": {

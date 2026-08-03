@@ -12,6 +12,7 @@ from pag.experiments.rc_pag_adapter import (
     continue_shadow_refinement,
     observation_from_tensors,
     observe_policy_step,
+    serialize_policy_step,
 )
 
 
@@ -27,6 +28,8 @@ class _StopPolicy:
             risk_score=0.01,
             safe_streak=2,
             reason="risk_certified_candidate" if self.should_stop else "continue",
+            risk_spent=0.01 if self.should_stop else 0.0,
+            prompt_stops=1 if self.should_stop else 0,
         )
 
 
@@ -113,6 +116,9 @@ def test_policy_shadow_request_clones_state_and_labels_disagreement():
     assert seen[0].block_end == 4
     assert seen[0].proposed_tokens.tolist() == [[1, 2]]
     assert seen[0].cache is not cache
+    serialized = serialize_policy_step(result)
+    assert serialized["risk_spent"] == pytest.approx(0.01)
+    assert serialized["prompt_stops"] == 1
 
 
 def test_clone_tensor_tree_preserves_structure_without_aliasing():

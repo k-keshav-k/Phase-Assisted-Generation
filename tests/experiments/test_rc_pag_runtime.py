@@ -222,3 +222,45 @@ def test_v5_rollout_seed_loads_local_head_before_advantage_refit(monkeypatch) ->
     assert policy.scorer is local
     assert policy.benefit_scorer is None
     assert not policy.require_exact_agreement
+
+
+def test_v6_loads_calibrated_risk_benefit_and_prompt_ledger(monkeypatch) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml"))
+    runtime.model_name = "llada"
+    names = feature_names(include_history=False)
+    risk = SimpleNamespace(
+        names=names,
+        include_history=False,
+        kind="hist_gradient_boosting",
+        predict_risk=lambda features: 0.01,
+    )
+    benefit = SimpleNamespace(
+        names=names,
+        include_history=False,
+        predict_remaining_nfe=lambda features: 4.0,
+    )
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.CalibratedRiskEstimator.load",
+        lambda path: risk,
+    )
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.RemainingNFEEstimator.load",
+        lambda path: benefit,
+    )
+
+    candidate = runtime.config.candidates[1]
+    policy = runtime._risk_policy(
+        candidate,
+        {
+            "llada_rc_pag_budgeted_risk": "risk.joblib",
+            "llada_remaining_nfe": "benefit.joblib",
+        },
+    )
+
+    assert policy.scorer is risk
+    assert policy.benefit_scorer is benefit
+    assert policy.require_exact_agreement
+    assert policy.total_risk_budget == pytest.approx(0.05)
+    assert policy.max_prompt_stops == 2
+    assert policy.min_predicted_nfe_savings == 3.0
