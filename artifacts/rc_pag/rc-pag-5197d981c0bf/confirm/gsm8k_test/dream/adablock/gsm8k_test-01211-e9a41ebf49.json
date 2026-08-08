@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    11,
+    32,
+    32,
+    32,
+    32,
+    21
+  ],
+  "created_at": "2026-08-01T06:58:12.194649+00:00",
+  "elapsed_sec": 2.63275745511055,
+  "generated_text": "1. Determine the amount of the second medicine needed for one dosage:\n   - The second medicine is 3 times the amount of the first medicine.\n   - First medicine = 14 mL.\n   - Second medicine = 3 * 14 mL = 42 mL.\n\n2. Calculate the total amount of medicine in one dosage:\n   - Total medicine in one dosage = First medicine + Second medicine.\n   - Total medicine in one dosage = 14 mL + 42 mL = 56 mL.\n\n3. Calculate the total amount of medicine in 8 doses:\n   - Total medicine in 8 doses = Total medicine in one dosage * Number of doses.\n   - Total medicine in 8 doses = 56 mL * 8 = 448 mL.\n\nFinal answer: 448",
+  "grade": {
+    "error": null,
+    "extracted_answer": "448",
+    "gold_answer": "448",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    18,
+    11,
+    2,
+    11,
+    10,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15669087744,
+  "sample_id": "gsm8k_test-01211",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 85
+}

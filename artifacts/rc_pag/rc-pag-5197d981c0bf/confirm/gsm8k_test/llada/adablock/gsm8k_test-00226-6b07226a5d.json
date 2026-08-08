@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    32,
+    8,
+    1,
+    32,
+    2,
+    1,
+    13,
+    16,
+    14,
+    16,
+    1,
+    10,
+    32,
+    3,
+    1,
+    64,
+    1,
+    9
+  ],
+  "created_at": "2026-08-01T04:49:26.859892+00:00",
+  "elapsed_sec": 3.6332992054522038,
+  "generated_text": "1. Determine the initial number of cards of each type:\n   - Fire type: 30\n   - Grass type: 20\n   - Water type: 40\n\n2. Account for the changes in the number of cards:\n   - Water type cards lost: 8\n   - Grass type cards bought: 14\n\n3. Calculate the new number of cards for each type:\n   - Fire type: 30 (unchanged)\n   - Grass type: 20 + 14 = 34\n   - Water type: 40 - 8 = 32\n\n4. Calculate the total number of cards:\n   - Total cards = Fire type + Grass type + Water type\n   - Total cards = 30 + 34 + 32 = 96\n\n5. Calculate the percentage chance of picking a water type card:\n   - Percentage chance = (Number of water type cards / Total number of cards) * 100\n   - Percentage chance = (32 / 96) * 100 ≈ 33.33%\n\nFinal answer: 33%",
+  "grade": {
+    "error": null,
+    "extracted_answer": "33%",
+    "gold_answer": "33",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    1,
+    1,
+    22,
+    1,
+    1,
+    11,
+    8,
+    5,
+    1,
+    1,
+    6,
+    10,
+    1,
+    1,
+    17,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17254858752,
+  "sample_id": "gsm8k_test-00226",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 64,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 106
+}

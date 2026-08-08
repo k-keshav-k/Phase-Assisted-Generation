@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    16,
+    1,
+    32,
+    32,
+    6,
+    1,
+    9,
+    32,
+    13,
+    1,
+    1,
+    5,
+    22,
+    29,
+    5,
+    43,
+    8
+  ],
+  "created_at": "2026-08-01T03:58:53.806116+00:00",
+  "elapsed_sec": 3.1429585367441177,
+  "generated_text": "To determine how much change Adam received, we need to follow these steps:\n\n1. Calculate the total cost of the candies of type A.\n2. Calculate the total cost of the candies of type B.\n3. Add the total costs from steps 1 and 2 to get the total amount spent.\n4. Subtract the total amount spent from the amount paid to the cashier to find the change.\n\nLet's start with step 1:\n- Adam bought 7 candies of type A, and each candy costs $0.5.\n- Total cost of type A candies = \\( 7 \\times 0.5 = 3.5 \\) dollars.\n\nStep 2:\n- Adam bought 10 candies of type B, and each candy costs $0.75.\n- Total cost of type B candies = \\( 10 \\times 0.75 = 7.5 \\) dollars.\n\nStep 3:\n- Total amount spent = \\( 3.5 + 7.5 = 11 \\) dollars.\n\nStep 4:\n- Adam paid the cashier a total of $15.\n\nFinal answer: 4.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "4.",
+    "gold_answer": "4",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    6,
+    1,
+    10,
+    14,
+    3,
+    1,
+    8,
+    19,
+    6,
+    1,
+    1,
+    2,
+    1,
+    2,
+    2,
+    13,
+    2
+  ],
+  "peak_allocated_bytes": 17246005248,
+  "sample_id": "gsm8k_test-00671",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 43,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 92
+}

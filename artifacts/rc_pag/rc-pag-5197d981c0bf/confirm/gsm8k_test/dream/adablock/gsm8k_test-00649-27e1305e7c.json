@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    21,
+    3,
+    32,
+    32,
+    8
+  ],
+  "created_at": "2026-08-01T08:00:23.650322+00:00",
+  "elapsed_sec": 3.6696630232036114,
+  "generated_text": "1. **Initial Number of Likes**: Fishio received 2000 likes after 1 week.\n\n2. **Number of Likes After 3 Weeks**: Three weeks later, the number of likes was 70 times as many as the initial number of likes. So, we calculate:\n   \\[\n   \\text{Likes after 3 weeks} = 70 \\times 2000 = 140000\n   \\]\n\n3. **Additional New Likes Received**: Fishio received 20000 more new likes recently.\n\n4. **Total Number of Likes**: To find the total number of likes, we add the likes after 3 weeks and the additional likes:\n   \\[\n   \\text{Total likes} = 140000 + 20000 = 160000\n   \\]\n\n5. **Final Answer**: The total number of Instagram likes Fishio has now is 160000.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "162000",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    13,
+    9,
+    25,
+    17,
+    2,
+    2,
+    24,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15702208512,
+  "sample_id": "gsm8k_test-00649",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 120
+}

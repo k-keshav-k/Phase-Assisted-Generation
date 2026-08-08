@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    6,
+    32,
+    32,
+    32,
+    32,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T09:16:42.315875+00:00",
+  "elapsed_sec": 3.9834127575159073,
+  "generated_text": "Here is a Python solution for the problem:\n\n```python\ndef parse_nested_parens(paren_string: str) -> List[int]:\n    result = []\n    stack = []\n    for group in paren_string.split():\n        depth = 0\n        for char in group:\n            if char == '(':\n                stack.append(char)\n                depth += 1\n            elif char == ')':\n                stack.pop()\n                depth -= 1\n        result.append(depth)\n    return result\n```\n\nThis function works by iterating over each group of parentheses in the input string. For each group, it uses a stack to keep track of the current depth of nesting. When it encounters an opening parenthesis '(', it pushes it onto the stack and increments the depth. When it encounters a closing parenthesis ')', it pops the top element from the stack and decrements the depth. At the end of the group, it appends the maximum depth to the result list.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_b6pmoj1y/candidate.py\", line 2, in <module>\n    def parse_nested_parens(paren_string: str) -> List[int]:\n                                                  ^^^^\nNameError: name 'List' is not defined. Did you mean: 'list'?\n",
+    "extracted_answer": "def parse_nested_parens(paren_string: str) -> List[int]:\n    result = []\n    stack = []\n    for group in paren_string.split():\n        depth = 0\n        for char in group:\n            if char == '(':\n                stack.append(char)\n                depth += 1\n            elif char == ')':\n                stack.pop()\n                depth -= 1\n        result.append(depth)\n    return result",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    15,
+    21,
+    2,
+    4,
+    19,
+    28,
+    20,
+    17,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15725142528,
+  "sample_id": "humaneval-00006",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 130
+}

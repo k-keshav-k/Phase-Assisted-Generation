@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:16:13.245816+00:00",
+  "elapsed_sec": 2.453141413629055,
+  "generated_text": "1. **Determine the number of blue squares:**\n   - The comforter has 4 more blue squares than red squares.\n   - There are 14 red squares.\n   - Therefore, the number of blue squares is \\(14 + 4 = 18\\).\n\n2. **Determine the number of green squares:**\n   - The comforter has 6 more green squares than blue squares.\n   - There are 18 blue squares.\n   - Therefore, the number of green squares is \\(18 + 6 = 24\\).\n\n3. **Determine the number of white squares:**\n   - The comforter has 12 fewer white squares than green squares.\n   - There are 24 green squares.\n   - Therefore, the number of white squares is \\(24 - 12 = 12\\).\n\n4. **Calculate the total number of squares:**\n   - Add the number of red, blue, green, and white squares.\n   - Total number of squares = \\(14 + 18 + 24 + 12 = 68\\).\n\n5. **Conclusion:**\n   - Brittany's comforter is \\(68 \\) square feet.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "68",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    12,
+    2,
+    1,
+    2,
+    7,
+    14,
+    20
+  ],
+  "peak_allocated_bytes": 15618309120,
+  "sample_id": "gsm8k_test-00693",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 142,
+      "block_index": 0,
+      "block_start": 110,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9817101359367371,
+      "min_top1_confidence": 0.6663636565208435,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 174,
+      "block_index": 1,
+      "block_start": 142,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9964901208877563,
+      "min_top1_confidence": 0.915481686592102,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 206,
+      "block_index": 2,
+      "block_start": 174,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9930124878883362,
+      "min_top1_confidence": 0.9034649729728699,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 238,
+      "block_index": 3,
+      "block_start": 206,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9873948097229004,
+      "min_top1_confidence": 0.9201952815055847,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 270,
+      "block_index": 4,
+      "block_start": 238,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9896965026855469,
+      "min_top1_confidence": 0.793586015701294,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 302,
+      "block_index": 5,
+      "block_start": 270,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.8998770117759705,
+      "min_top1_confidence": 0.3520117998123169,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 334,
+      "block_index": 6,
+      "block_start": 302,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9347672462463379,
+      "min_top1_confidence": 0.03215555474162102,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 366,
+      "block_index": 7,
+      "block_start": 334,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.928374707698822,
+      "min_top1_confidence": 0.20596745610237122,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 80
+}

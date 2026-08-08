@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:18:14.122035+00:00",
+  "elapsed_sec": 3.1267368756234646,
+  "generated_text": ".. **Calculate the total number of games played in four years:**\n   Ara plays 40 games each year, so in four years, she plays     \\[\n   4 \\times 40 = 160 \\text{ games}\n   \\]\n\n2. **Calculate the total points scored in four years:**\n   Ara scores 21 points per game, so in 160 games, she scores:\n   \\[\n   11 \\times 21 = 3360 \\text{ points}\n   \\]\n\n3. **Format the final answer:**\n   The number number of points Ara has scored in four years is 3360.",
+  "grade": {
+    "error": "not a strict numeric answer: '**'",
+    "extracted_answer": "**",
+    "gold_answer": "3360",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    24,
+    15,
+    20,
+    13,
+    27,
+    1,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 15595555840,
+  "sample_id": "gsm8k_test-01246",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 120,
+      "block_index": 0,
+      "block_start": 88,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.8853811025619507,
+      "min_top1_confidence": 0.3615856170654297,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 152,
+      "block_index": 1,
+      "block_start": 120,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.923136830329895,
+      "min_top1_confidence": 0.029122425243258476,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 184,
+      "block_index": 2,
+      "block_start": 152,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9150823950767517,
+      "min_top1_confidence": 0.24583451449871063,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 216,
+      "block_index": 3,
+      "block_start": 184,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9269049167633057,
+      "min_top1_confidence": 0.18005672097206116,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 248,
+      "block_index": 4,
+      "block_start": 216,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9434760212898254,
+      "min_top1_confidence": 0.5005658864974976,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 280,
+      "block_index": 5,
+      "block_start": 248,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9997827410697937,
+      "min_top1_confidence": 0.9982409477233887,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 312,
+      "block_index": 6,
+      "block_start": 280,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9885420799255371,
+      "min_top1_confidence": 0.967720627784729,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 344,
+      "block_index": 7,
+      "block_start": 312,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999960660934448,
+      "min_top1_confidence": 0.9999532699584961,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 103
+}

@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    5,
+    32,
+    32,
+    7,
+    32,
+    4,
+    32,
+    32,
+    6,
+    33,
+    9
+  ],
+  "created_at": "2026-08-01T05:20:52.407569+00:00",
+  "elapsed_sec": 6.236597176641226,
+  "generated_text": "1. The asymptotes of the hyperbola are given by the equations $y = 2x - 3$ and $y = 17 - 2x$.\n2. The hyperbola passes through the point $(4,7)$.\n3. To find the distance between the foci, we need to determine the center of the hyperbola and the slopes of the asymptotes.\n4. The slopes of the asymptotes are $2$ and $-2$, which are negative reciprocals of each other.\n5. The center of the hyperbola is the midpoint of the segment joining the points $(4,7)$ and $(4,7)$, which is $(4,7)$.\n6. The distance between the foci is given by the formula $2c$, where $c$ is the distance from the center to each focus.\n7. The distance from the center to each focus is the same as the distance from the center to each asymptote, which is $7 - (-3) = 10$.\n8. Therefore, the distance between the foci is $2c = 2 \\times 10 = 20$.\n\nSo, the answer is $\\boxed{20}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[20, '20']",
+    "gold_answer": "2 \\sqrt{5}",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    2,
+    24,
+    28,
+    5,
+    26,
+    2,
+    29,
+    27,
+    2,
+    12,
+    3
+  ],
+  "peak_allocated_bytes": 17204503040,
+  "sample_id": "math500-00409",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 33,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 181
+}

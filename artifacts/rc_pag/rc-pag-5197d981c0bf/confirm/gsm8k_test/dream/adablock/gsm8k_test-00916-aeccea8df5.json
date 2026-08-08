@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    32,
+    32,
+    30
+  ],
+  "created_at": "2026-08-01T07:59:11.356416+00:00",
+  "elapsed_sec": 4.790807198733091,
+  "generated_text": "1. Calculate the total cost of the cake and balloons:\n   - The cake costs $11.\n   - The cost of 1 dozen balloons (12 balloons) is calculated as follows: 12 balloons / 2 balloons per $0.5 = 6 sets * $0.5 = $3.\n   - Total cost for cake and balloons = $11 + $3 = $14.\n\n2. Calculate the total cost of the ice cream:\n   - 2 tubs of ice cream at $7 each = 2 * $7 = $14.\n\n3. Calculate the total amount spent:\n   - Total amount spent = $14 (cake and balloons) + $14 (ice cream) = $28.\n\n4. Determine the total allowance given by their mother:\n   - Since Julia and Nadine combined their allowance to buy these items, the total allowance given by their mother is $28.\n\n5. Calculate the allowance each girl received:\n   - Since Julia and Nadine were given the same amount of allowance, we divide the total allowance by 2: $28 / 2 = $14.\n\nFinal answer: 14",
+  "grade": {
+    "error": null,
+    "extracted_answer": "14",
+    "gold_answer": "14",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    26,
+    2,
+    18,
+    16,
+    14,
+    26,
+    19,
+    10
+  ],
+  "peak_allocated_bytes": 15739153920,
+  "sample_id": "gsm8k_test-00916",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 157
+}

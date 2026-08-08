@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    6,
+    32,
+    32,
+    2,
+    32,
+    3,
+    32,
+    5,
+    20,
+    8,
+    32,
+    20
+  ],
+  "created_at": "2026-08-01T06:56:22.705226+00:00",
+  "elapsed_sec": 4.201803285628557,
+  "generated_text": "1. Calculate the total number of guests invited by Kayla:\n   - Kayla invited 25 classmates, 7 girls from her dance class, and 13 family members.\n   - Total guests invited = 25 + 7 + 13 = 45 guests.\n\n2. Determine the number of guests who will actually attend the party:\n   - 4 people said they could not come.\n   - Number of guests attending = 45 - 4 = 41 guests.\n\n3. Calculate the cost to rent the theater:\n   - The fee is $125 for a party of 20, plus $6 for each additional guest.\n   - Additional guests = 41 - 20 = 21 guests.\n   - Cost for additional guests = 21 * $6 = $126.\n   - Total cost = $125 (base fee) + $126 (additional guests) = $251.\n\n4. Final answer:\n   - Final answer: 251",
+  "grade": {
+    "error": "not a strict numeric answer: '- Final answer: 251'",
+    "extracted_answer": "- Final answer: 251",
+    "gold_answer": "251",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    2,
+    16,
+    13,
+    2,
+    22,
+    2,
+    14,
+    2,
+    8,
+    3,
+    24,
+    2
+  ],
+  "peak_allocated_bytes": 15722590720,
+  "sample_id": "gsm8k_test-01071",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 136
+}

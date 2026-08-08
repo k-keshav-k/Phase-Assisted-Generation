@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:10:21.738244+00:00",
+  "elapsed_sec": 2.225930906832218,
+  "generated_text": "Here is a simple Python function that counts the number of occurrences of the string 'std' in a given string:\n\n```python\ndef count_std(string):\n    return string.count('std')\n```\n\nYou can use this function like this:\n\n```python\nprint(count_std('This is a standard string with multiple stds   # Output: 2\n```",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_jougbdwa/candidate.py\", line 2\n    print(count_std('This is a standard string with multiple stds   # Output: 2\n                    ^\nSyntaxError: unterminated string literal (detected at line 2)\n",
+    "extracted_answer": "print(count_std('This is a standard string with multiple stds   # Output: 2",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    24,
+    25,
+    18,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15559360512,
+  "sample_id": "mbpp_sanitized-00095",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 85,
+      "block_index": 0,
+      "block_start": 53,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8971657156944275,
+      "min_top1_confidence": 0.08357261121273041,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 117,
+      "block_index": 1,
+      "block_start": 85,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9135161638259888,
+      "min_top1_confidence": 0.45993664860725403,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 149,
+      "block_index": 2,
+      "block_start": 117,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9443934559822083,
+      "min_top1_confidence": 0.42947447299957275,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 181,
+      "block_index": 3,
+      "block_start": 149,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999509453773499,
+      "min_top1_confidence": 0.9997416138648987,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 213,
+      "block_index": 4,
+      "block_start": 181,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999774694442749,
+      "min_top1_confidence": 0.9999128580093384,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 5,
+      "block_start": 213,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999915361404419,
+      "min_top1_confidence": 0.9999767541885376,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 277,
+      "block_index": 6,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999892711639404,
+      "min_top1_confidence": 0.9999703168869019,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 309,
+      "block_index": 7,
+      "block_start": 277,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999247789382935,
+      "min_top1_confidence": 0.9997568726539612,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 72
+}

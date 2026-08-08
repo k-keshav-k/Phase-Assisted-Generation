@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    7,
+    32,
+    32,
+    32,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T06:53:35.121156+00:00",
+  "elapsed_sec": 4.167814668267965,
+  "generated_text": "1. In the first 6 hours, Debra sees 30 bees leave the hive.\n2. In the next 6 hours, she sees 1/2 of the bees that left in the first 6 hours return. So, 1/2 * 30 = 15 bees return.\n3. In the next 6 hours, she sees two times as many bees as she saw first leave the hive. So, 2 * 30 = 60 bees leave.\n4. In the next 6 hours, every bee that left before that hadn't already returned returns to the hive. So, the bees that left in the first 6 hours and hadn't returned yet return. That's 30 - 15 = 15 bees.\n5. Additionally, the bees that left in the second 6 hours and hadn't returned yet return. That's 60 - 15 = 45 bees.\n6. Therefore, the total number of bees that returned to the hive in the last 6 hours is 15 + 45 = 60 bees.\n\nFinal answer: 60",
+  "grade": {
+    "error": null,
+    "extracted_answer": "60",
+    "gold_answer": "75",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    12,
+    20,
+    1,
+    15,
+    3,
+    20,
+    23,
+    25,
+    10,
+    6
+  ],
+  "peak_allocated_bytes": 15776096768,
+  "sample_id": "gsm8k_test-00147",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 135
+}

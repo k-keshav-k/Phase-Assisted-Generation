@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    16,
+    3,
+    32,
+    13
+  ],
+  "created_at": "2026-08-01T08:39:03.963447+00:00",
+  "elapsed_sec": 4.479119431227446,
+  "generated_text": "To solve the congruence $n \\equiv -11213141 \\pmod{18}$, we first simplify the number $-11213141$ modulo 18.\n\n1. Calculate $-11213141 \\mod 18$:\n   \\[\n   -11213141 \\div 18 = -6229523.4444\\ldots\n   \\]\n   The remainder when $-11213141$ is divided by 18 is $-13$.\n\n2. Convert $-13$ to a positive equivalent modulo 18:\n   \\[\n   -13 \\equiv 13 \\pmod{18}\n   \\]\n   Since $18 - 13 = 5$, we have:\n   \\[\n   -13 \\equiv 5 \\pmod{18}\n   \\]\n\nThus, the integer $n$ that satisfies $0 \\le n < 18$ and $n \\equiv -11213141 \\mod 18$ is $5}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[5, '5}']",
+    "gold_answer": "13",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    17,
+    23,
+    15,
+    19,
+    25,
+    4,
+    2,
+    15,
+    8
+  ],
+  "peak_allocated_bytes": 15661444096,
+  "sample_id": "math500-00130",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 147
+}

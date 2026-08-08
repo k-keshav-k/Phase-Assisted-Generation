@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    13,
+    32,
+    32,
+    32,
+    32,
+    2,
+    32,
+    17
+  ],
+  "created_at": "2026-08-01T08:11:57.155876+00:00",
+  "elapsed_sec": 3.6635055541992188,
+  "generated_text": "To determine the number of different pizzas Mikka could order with two different toppings, we need to calculate the number of ways to choose 2 toppings out of 8. This is a combination problem, where the order of selection does not matter.\n\nThe formula for combinations is given by:\n\\[ C(n, k) = \\frac{n!}{k!(n-k)!} \\]\nwhere $n$ is the total number of items to choose from, and $k$ is the number of items to choose.\n\nIn this case, $n = 8$ and $k = 2$. Plugging these values into the formula, we get:\n\\[ C(8, 2) = \\frac{8!}{2!(8-2)!} = \\frac{8!}{2!6!} \\]\n\nCalculating the factorials:\n\\[ 8! = 8 \\times 7 \\times 6! \\]\n\\[ 2! = 2 \\times 1 = 2 \\]\n\nSo,\n\\[ C(8, 2) = \\frac{8 \\times 7}{2} = 28 \\]\n\nTherefore, Mikka could order $\\boxed{28}$ different pizzas with two different toppings each.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[28, '28']",
+    "gold_answer": "28",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    23,
+    4,
+    13,
+    8,
+    15,
+    17,
+    2,
+    10,
+    8
+  ],
+  "peak_allocated_bytes": 15649989632,
+  "sample_id": "math500-00207",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 121
+}

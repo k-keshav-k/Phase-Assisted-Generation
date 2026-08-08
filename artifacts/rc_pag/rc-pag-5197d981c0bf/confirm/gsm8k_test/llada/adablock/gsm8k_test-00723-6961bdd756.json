@@ -1,0 +1,176 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    1,
+    10,
+    8,
+    8,
+    1,
+    32,
+    1,
+    1,
+    32,
+    16,
+    1,
+    32,
+    6,
+    1,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T04:35:26.831050+00:00",
+  "elapsed_sec": 3.78427454829216,
+  "generated_text": "To determine the number of chairs left in the restaurant after some are sent for repair, we can follow these steps:\n\n1. Start with the total number of normal chairs and baby chairs.\n2. Subtract the number of normal chairs and baby chairs sent for repair.\n3. Sum the remaining chairs.\n\nLet's begin with the initial numbers:\n- Normal chairs: 170\n- Baby chairs: 23\n\nNext, we subtract the chairs sent for repair:\n- Normal chairs sent for repair: 20\n- Baby chairs sent for repair: 13\n\nNow, we perform the calculations:\n- Remaining normal chairs: \\( 170 - 20 = 150 \\)\n- Remaining baby chairs: \\( 23 - 13 = 10 \\)\n\nFinally, we add the remaining chairs to find the total number of chairs left:\n- Total remaining chairs: \\( 150 + 10 = 160 \\)\n\nFinal answer: 160.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "160.",
+    "gold_answer": "160",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    20,
+    1,
+    1,
+    10,
+    4,
+    1,
+    1,
+    10,
+    1,
+    1,
+    13,
+    1,
+    1,
+    19,
+    1,
+    1,
+    4,
+    1
+  ],
+  "peak_allocated_bytes": 17186916352,
+  "sample_id": "gsm8k_test-00723",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 110
+}

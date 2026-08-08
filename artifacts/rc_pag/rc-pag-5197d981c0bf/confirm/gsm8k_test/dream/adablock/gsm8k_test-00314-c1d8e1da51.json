@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    2,
+    30
+  ],
+  "created_at": "2026-08-01T07:12:34.403116+00:00",
+  "elapsed_sec": 3.050172623246908,
+  "generated_text": "1. Let's denote the number of players on the defense as \\( D \\).\n2. According to the problem, there are twice as many players on the offense as there are on the defense. Therefore, the number of players on the offense is \\( 2D \\).\n3. The number of players on the special teams is half the number of players on the defense. Therefore, the number of players on the special teams is \\( \\frac{D}{2} \\).\n4. The total number of players on the team is the sum of the players on the offense, defense, and special teams. Therefore, we can write the equation:\n   \\[\n   2D + D + \\frac{D}{2} = 105\n   \\]\n5. Combine the terms on the left side of the equation:\n   \\[\n   \\frac{7D}{2} = 105\n   \\]\n6. To solve for \\( D \\), multiply both sides of the equation by 2:\n   \\[\n   7D = 210\n   \\]\n7. Divide both sides by 7:\n   \\[\n   D = 30\n   \\]\n   Final answer: 30",
+  "grade": {
+    "error": null,
+    "extracted_answer": "30",
+    "gold_answer": "30",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    15,
+    11,
+    9,
+    19,
+    9,
+    14,
+    11,
+    2,
+    9
+  ],
+  "peak_allocated_bytes": 15685647872,
+  "sample_id": "gsm8k_test-00314",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 99
+}

@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    3,
+    1,
+    32,
+    9,
+    20,
+    32,
+    23,
+    32,
+    61,
+    11
+  ],
+  "created_at": "2026-08-01T04:12:28.667709+00:00",
+  "elapsed_sec": 3.37981079146266,
+  "generated_text": "To determine how far outside the reach of the dragon's flames Polly could stand and still hit the dragon with the gold javelin, we need to follow these steps:\n\n1. **Determine the distance Polly can throw the javelin without holding the gemstone:**\n   Polly can throw the javelin 400 feet without holding the gemstone.\n\n2. **Calculate the distance Polly can throw the javelin when holding the gemstone:**\n   When holding the gemstone, Polly can throw the javelin three times farther than when not holding the gemstone.\n   \\[\n   3 \\times 400 = 1200 \\text{ feet}\n   \\]\n\n3. **Determine how far outside the reach of the dragon's flames Polly can stand:**\n   The dragon's flames can reach up to 1000 feet. We need to find the difference between the reach distance and the distance Polly can throw the javelin when holding the gemstone.\n   \\[\n   1200 - 1000 = 200 \\text{ feet}\n   \\]\n\nFinal answer: 200 feet.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "200 feet.",
+    "gold_answer": "200",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    1,
+    1,
+    15,
+    3,
+    3,
+    13,
+    3,
+    19,
+    22,
+    1
+  ],
+  "peak_allocated_bytes": 17460244480,
+  "sample_id": "gsm8k_test-00041",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 61,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 97
+}

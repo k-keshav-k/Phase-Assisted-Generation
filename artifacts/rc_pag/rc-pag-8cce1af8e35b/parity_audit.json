@@ -1,0 +1,12 @@
+{
+  "checked_records": 64,
+  "fields": [
+    "generated_ids",
+    "generated_text",
+    "nfe_history",
+    "block_history",
+    "total_nfe"
+  ],
+  "mismatches": [],
+  "passed": true
+}

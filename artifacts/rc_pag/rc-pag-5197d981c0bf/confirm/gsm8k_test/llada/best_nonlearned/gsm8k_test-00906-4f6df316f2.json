@@ -1,0 +1,238 @@
+{
+  "block_history": [
+    32,
+    6,
+    12,
+    13,
+    1,
+    32,
+    25,
+    32,
+    4,
+    3,
+    30,
+    57,
+    9
+  ],
+  "created_at": "2026-08-01T04:58:35.744010+00:00",
+  "elapsed_sec": 2.7310621552169323,
+  "generated_text": "To determine how many red and blue shoe boxes are left in Tim's box, we need to follow these steps:\n\n1. **Calculate the number of blue shoe boxes left:**\n   - Tim initially has 7 blue shoe boxes.\n   - He uses 3 blue shoe boxes to go fishing.\n   - Therefore, the number of blue shoe boxes left is:\n     \\[\n     7 - 3 = 4\n     \\]\n\n2. **Calculate the number of red shoe boxes left:**\n   - Tim initially has 9 red shoe boxes.\n   - He uses \\(\\frac{1}{3}\\) of his red shoe boxes to go fishing.\n   - Therefore, the number of red shoe boxes left is:\n     \\[\n     9 - \\frac{1}{3} \\times 9 = 9 - 3 = 6\n     \\]\n\n3. **Calculate the total number of shoe boxes left:**\n   - Add the number of blue shoe boxes left to the number of red shoe boxes left:\n     \\[\n     4 + 6 = 10\n     \\]\n\nFinal answer: 10.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10.",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    17,
+    5,
+    5,
+    3,
+    1,
+    8,
+    2,
+    8,
+    2,
+    1,
+    7,
+    18,
+    3
+  ],
+  "peak_allocated_bytes": 17245347840,
+  "sample_id": "gsm8k_test-00906",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 124,
+      "block_index": 0,
+      "block_start": 92,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 130,
+      "block_index": 1,
+      "block_start": 124,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 142,
+      "block_index": 2,
+      "block_start": 130,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 155,
+      "block_index": 3,
+      "block_start": 142,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 156,
+      "block_index": 4,
+      "block_start": 155,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 188,
+      "block_index": 5,
+      "block_start": 156,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 213,
+      "block_index": 6,
+      "block_start": 188,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 7,
+      "block_start": 213,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 249,
+      "block_index": 8,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 252,
+      "block_index": 9,
+      "block_start": 249,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 282,
+      "block_index": 10,
+      "block_start": 252,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 339,
+      "block_index": 11,
+      "block_start": 282,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "block_end": 348,
+      "block_index": 12,
+      "block_start": 339,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 9,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 80
+}

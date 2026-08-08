@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    8,
+    1,
+    32,
+    2,
+    17,
+    1,
+    32,
+    7,
+    22,
+    1,
+    32,
+    58,
+    1,
+    10
+  ],
+  "created_at": "2026-08-01T04:51:28.626775+00:00",
+  "elapsed_sec": 3.9806798808276653,
+  "generated_text": "1. Determine the cost of each type of wood:\n   - 2 x 4 costs $4 per piece.\n   - 2 x 8 costs $6 per piece.\n\n2. Calculate the number of sticks Frederick can get from each type of wood:\n   - 2 x 4 yields 200 sticks per piece.\n   - 2 x 8 yields 400 sticks per piece.\n\n3. Determine the maximum number of pieces Frederick can buy with $24:\n   - For 2 x 4 wood: $24 / $4 = 6 pieces.\n   - For 2 x 8 wood: $24 / $6 = 4 pieces.\n\n4. Calculate the total number of sticks Frederick can get from the cheapest option:\n   - With 2 x 4 wood: 6 pieces * 200 sticks/piece = 1200 sticks.\n   - With 2 x 8 wood: 4 pieces * 400 sticks/piece = 1600 sticks.\n\n5. Determine the maximum number of sticks Frederick can make:\nFinal answer: 1600",
+  "grade": {
+    "error": null,
+    "extracted_answer": "1600",
+    "gold_answer": "1,600",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    1,
+    1,
+    19,
+    1,
+    1,
+    1,
+    22,
+    4,
+    3,
+    1,
+    21,
+    16,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17376365568,
+  "sample_id": "gsm8k_test-00505",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 58,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 114
+}

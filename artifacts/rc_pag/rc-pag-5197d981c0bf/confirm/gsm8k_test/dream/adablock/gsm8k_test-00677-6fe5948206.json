@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    1,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T06:57:33.512744+00:00",
+  "elapsed_sec": 4.842347599565983,
+  "generated_text": "1. **Determine the total number of signatures collected so far:**\n   - Carol has 20 signatures.\n   - Jennifer has 44 signatures.\n   - Total signatures collected so far = \\(20 + 44 = 64\\).\n\n2. **Calculate the total number of signatures needed to reach the goal:**\n   - The goal is to have 100 signatures between them by the end of the summer.\n   - Therefore, the number of signatures needed = \\(100 - 64 = 36\\).\n\n3. **Determine the number of signatures needed per week:**\n   - The sisters have three more weeks of summer vacation.\n   - Therefore, the number of signatures needed per week = \\(\\frac{36}{3} = 12\\).\n\n4. **Calculate the total number of signatures each sister needs to collect:**\n   - Since the sisters are working together to reach the goal, they need to collect a total of 36 more signatures over the next three weeks.\n\n5. **Conclusion:**\n   - The sisters need to collect a total of 36 more signatures to reach their goal.\n\nFinal answer: \\boxed{36}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{36}",
+    "gold_answer": "36",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    1,
+    18,
+    19,
+    15,
+    21,
+    22,
+    27,
+    17
+  ],
+  "peak_allocated_bytes": 15764631552,
+  "sample_id": "gsm8k_test-00677",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 158
+}

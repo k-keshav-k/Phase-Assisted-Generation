@@ -1,0 +1,15 @@
+{
+  "best_nonlearned": "fixed",
+  "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+  "primary_rc_pag_method": "rc_pag_history",
+  "selected_by_model": {
+    "dream": {
+      "rc_pag_history": "history_t050_p2",
+      "rc_pag_local": "local_t050_p2"
+    },
+    "llada": {
+      "rc_pag_history": "history_t050_p2",
+      "rc_pag_local": "local_t025_p2"
+    }
+  }
+}

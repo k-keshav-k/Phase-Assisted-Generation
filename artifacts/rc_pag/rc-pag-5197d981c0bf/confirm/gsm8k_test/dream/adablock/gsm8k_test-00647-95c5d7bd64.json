@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    6,
+    32,
+    32,
+    13,
+    20,
+    32,
+    6,
+    32,
+    32,
+    19
+  ],
+  "created_at": "2026-08-01T07:57:23.563521+00:00",
+  "elapsed_sec": 2.9884125143289566,
+  "generated_text": "1. Calculate the time it takes to dig through the soil:\n   Bill can dig 4 feet/hour through soil, and he needs to dig through 24 feet of soil.\n   Time = Distance / Speed = 24 feet / 4 feet/hour = 6 hours.\n\n2. Calculate the time it takes to dig through the clay:\n   Bill can dig half as fast through clay, so he digs half of 4 feet/hour = 2 feet/hour through clay.\n   He needs to dig through 8 feet of clay.\n   Time = Distance / Speed = 8 feet / 2 feet/hour = 4 hours.\n\n3. Calculate the total time it takes to dig the well:\n   Total time = Time through soil + Time through clay = 6 hours + 4 hours = 10 hours.\n\nFinal answer: 10",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    5,
+    12,
+    21,
+    5,
+    2,
+    15,
+    2,
+    5,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15690743808,
+  "sample_id": "gsm8k_test-00647",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 97
+}

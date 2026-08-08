@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:58:19.610138+00:00",
+  "elapsed_sec": 2.60079500451684,
+  "generated_text": ".. Sylas initially has 20 cows in each of the ten stalls, so the total number of cows is $20 \\times 10 = 200$ cows. He buys 40 more cows, so the total number of cows becomes $200 + 40 = 240$ cows. He then divides these 240 cows equally among the 20 stalls, so each stall gets $\\frac{240}{20} = 12$ cows. Therefore, in 8 stalls, there are $8 \\times 12 = 96$ cows. Final answer: 96.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "96.",
+    "gold_answer": "192",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    27,
+    16,
+    18,
+    15,
+    6,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15597624320,
+  "sample_id": "gsm8k_test-00255",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 122,
+      "block_index": 0,
+      "block_start": 90,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.841880202293396,
+      "min_top1_confidence": 0.02926219440996647,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 154,
+      "block_index": 1,
+      "block_start": 122,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9393953084945679,
+      "min_top1_confidence": 0.28665676712989807,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 186,
+      "block_index": 2,
+      "block_start": 154,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9464540481567383,
+      "min_top1_confidence": 0.4972863495349884,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 218,
+      "block_index": 3,
+      "block_start": 186,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.9709337949752808,
+      "min_top1_confidence": 0.4089187681674957,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 250,
+      "block_index": 4,
+      "block_start": 218,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9824870228767395,
+      "min_top1_confidence": 0.5540184378623962,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 282,
+      "block_index": 5,
+      "block_start": 250,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999999403953552,
+      "min_top1_confidence": 0.9999990463256836,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 314,
+      "block_index": 6,
+      "block_start": 282,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999997615814209,
+      "min_top1_confidence": 0.9999978542327881,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 346,
+      "block_index": 7,
+      "block_start": 314,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999973773956299,
+      "min_top1_confidence": 0.9999877214431763,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 85
+}

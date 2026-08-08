@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    1,
+    32,
+    23,
+    3,
+    32,
+    3,
+    2
+  ],
+  "created_at": "2026-08-01T07:21:05.774827+00:00",
+  "elapsed_sec": 3.526376076042652,
+  "generated_text": "1. **Calculate Rafaela's total tips:**\n   Rafaela received $20 from each of the 40 customers. Therefore, her total tips are:\n   \\[\n   20 \\times 40 = 800 \\text{ dollars}\n   \\]\n\n2. **Calculate Julieta's total tips:**\n   Julieta received 10% less money than Rafaela. To find 10% of Rafaela's tips, we calculate:\n   \\[\n   0.10 \\times 800 = 80 \\text{ dollars}\n   \\]\n   Therefore, Julieta's total tips are:\n   \\[\n   800 - 80 = 720 \\text{ dollars}\n   \\]\n\n3. **Calculate the total tips received by both Rafaela and Julieta:**\n   Adding the tips received by both Rafaela and Julieta gives:\n   \\[\n   800 + 720 = 1520 \\text{ dollars}\n   \\]\n\n4. **Conclusion:**\n   The total amount of money Rafaela and Julieta received as tips altogether is:\n   \\[\n   \\boxed{1520}\n   \\",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "1520",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    12,
+    16,
+    6,
+    5,
+    1,
+    20,
+    3,
+    2,
+    19,
+    3,
+    2
+  ],
+  "peak_allocated_bytes": 15685647872,
+  "sample_id": "gsm8k_test-00859",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 115
+}

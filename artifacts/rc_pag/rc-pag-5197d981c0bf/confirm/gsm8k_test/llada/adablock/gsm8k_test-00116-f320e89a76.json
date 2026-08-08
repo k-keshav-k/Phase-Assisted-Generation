@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    3,
+    4,
+    1,
+    32,
+    22,
+    1,
+    1,
+    11,
+    32,
+    22,
+    11,
+    32,
+    11,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T04:59:12.339329+00:00",
+  "elapsed_sec": 4.18235632032156,
+  "generated_text": "To solve this problem, we need to determine the number of teaspoonfuls of sugar Katy used given the ratio of sugar to water and the total number of teaspoons and cups of water used.\n\n1. **Identify the ratio and total parts:**\n   - The ratio of teaspoons of sugar to cups of water is 7:13.\n   - The total number of parts in the ratio is \\(7 + 13 = 20\\).\n\n2. **Determine the value of one part:**\n   - The total number of teaspoons and cups of water used is 120.\n   - Since the total number of parts is 20, each part represents \\(\\frac{120}{20} = 6\\) teaspoons.\n\n3. **Calculate the number of teaspoons of sugar:**\n   - The number of teaspoons of sugar corresponds to 7 parts in the ratio.\n   - Therefore, the number of teaspoons of sugar is \\(7 \\times 6 = 42\\).\n\nFinal answer: 42",
+  "grade": {
+    "error": null,
+    "extracted_answer": "42",
+    "gold_answer": "42",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    3,
+    4,
+    1,
+    19,
+    11,
+    1,
+    1,
+    7,
+    14,
+    10,
+    4,
+    15,
+    3,
+    5,
+    1
+  ],
+  "peak_allocated_bytes": 17193563648,
+  "sample_id": "gsm8k_test-00116",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 125
+}

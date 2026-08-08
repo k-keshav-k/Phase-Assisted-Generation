@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    24,
+    1,
+    32,
+    11,
+    1,
+    21,
+    16,
+    32,
+    1,
+    27,
+    32,
+    9,
+    1,
+    32,
+    16
+  ],
+  "created_at": "2026-08-01T04:48:20.974031+00:00",
+  "elapsed_sec": 2.2036907710134983,
+  "generated_text": "To determine how many eggs Jaime won't be able to place on the tray, we need to follow these steps:\n\n1. Calculate the total number of eggs that can be placed on the two trays.\n2. Subtract the number of eggs that can be placed on the trays from the total number of eggs Jaime has.\n\nStep 1: Calculate the total number of eggs that can be placed on the two trays.\nEach tray can hold 24 eggs, and Jaime has 2 trays.\n\\[ 24 \\text{ eggs/tray} \\times 2 \\text{ trays} = 48 \\text{ eggs} \\]\n\nStep 2: Subtract the number of eggs that can be placed on the trays from the total number of eggs Jaime has.\nJaime has 64 eggs in total.\n\\[ 64 \\text{ eggs} - 48 \\text{ eggs} = 16 \\text{ eggs} \\]\n\nFinal answer: 16",
+  "grade": {
+    "error": null,
+    "extracted_answer": "16",
+    "gold_answer": "16",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    7,
+    1,
+    20,
+    2,
+    1,
+    5,
+    6,
+    4,
+    1,
+    1,
+    7,
+    1,
+    1,
+    5,
+    1
+  ],
+  "peak_allocated_bytes": 17163641856,
+  "sample_id": "gsm8k_test-00491",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 63
+}

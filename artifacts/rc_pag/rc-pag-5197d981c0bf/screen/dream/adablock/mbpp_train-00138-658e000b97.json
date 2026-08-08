@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    1,
+    7,
+    7,
+    32,
+    32,
+    19,
+    1,
+    32,
+    14,
+    1,
+    32,
+    17,
+    29
+  ],
+  "created_at": "2026-08-01T00:15:50.217297+00:00",
+  "elapsed_sec": 3.0673779025673866,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef longest_common_subsequence(s1, s2, s3):\n    m = len(s1)\n    n = len(s2)\n    p = len(s3)\n    dp = [[0] * (p+1) for _ in range(n+1)] for _ in range(m+1)]\n    for i in range(m+1):\n        for j in range(n+1):\n            for k in range(p+1):\n                if i == 0 or j == 0 or k == 0:\n                    dp[i][j][k] = 0\n                elif s1[i-1] == s2[j-1] == s3[k-1]:\n                    dp[i][j][k] = 1 + dp[i-1][j-1][k-1]\n                else:\n                    dp[i][j][k] = max(dp[i-1][j][k], dp[i][j-1][k], dp[i][j][k-1])\n    return dp[m][n][p]\n```\n\nThis function uses dynamic programming to find the longest common subsequence of three string sequences. It returns the length of this subsequence.",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_grjx3fm6/candidate.py\", line 6\n    dp = [[0] * (p+1) for _ in range(n+1)] for _ in range(m+1)]\n                                                              ^\nSyntaxError: unmatched ']'\n",
+    "extracted_answer": "def longest_common_subsequence(s1, s2, s3):\n    m = len(s1)\n    n = len(s2)\n    p = len(s3)\n    dp = [[0] * (p+1) for _ in range(n+1)] for _ in range(m+1)]\n    for i in range(m+1):\n        for j in range(n+1):\n            for k in range(p+1):\n                if i == 0 or j == 0 or k == 0:\n                    dp[i][j][k] = 0\n                elif s1[i-1] == s2[j-1] == s3[k-1]:\n                    dp[i][j][k] = 1 + dp[i-1][j-1][k-1]\n                else:\n                    dp[i][j][k] = max(dp[i-1][j][k], dp[i][j-1][k], dp[i][j][k-1])\n    return dp[m][n][p]",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    1,
+    2,
+    4,
+    16,
+    7,
+    3,
+    1,
+    8,
+    3,
+    1,
+    8,
+    3,
+    24
+  ],
+  "peak_allocated_bytes": 15628321280,
+  "sample_id": "mbpp_train-00138",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 101
+}

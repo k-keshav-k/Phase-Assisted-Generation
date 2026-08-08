@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    4,
+    10,
+    32,
+    12,
+    14,
+    8,
+    32,
+    32,
+    32,
+    16
+  ],
+  "created_at": "2026-08-01T07:30:22.361549+00:00",
+  "elapsed_sec": 3.112758506089449,
+  "generated_text": "To solve this problem, we need to determine Ella's hourly rate for dog walking. Since she earned $33 for 3 hours, we can calculate her hourly rate by dividing the total earnings by the number of hours:\n\nHourly rate = Total earnings / Number of hours\nHourly rate = $33 / 3 hours\nHourly rate = $11 per hour\n\nNow that we know Ella's hourly rate, we can calculate how much she would earn after 12 hours by multiplying her hourly rate by the number of hours:\n\nTotal earnings = Hourly rate * Number of hours\nTotal earnings = $11 per hour * 12 hours\nTotal earnings = $132\n\nTherefore, Ella would earn $132 after 12 hours.\n\nFinal answer: 132",
+  "grade": {
+    "error": null,
+    "extracted_answer": "132",
+    "gold_answer": "132",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    21,
+    4,
+    4,
+    12,
+    6,
+    3,
+    2,
+    16,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15662717952,
+  "sample_id": "gsm8k_test-00874",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 101
+}

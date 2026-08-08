@@ -1,0 +1,57 @@
+{
+  "alpha": 0.05,
+  "candidates": [
+    {
+      "min_steps": 2,
+      "name": "local_t010_p2",
+      "patience": 2,
+      "threshold": 0.01,
+      "variant": "rc_pag_local"
+    },
+    {
+      "min_steps": 2,
+      "name": "local_t025_p2",
+      "patience": 2,
+      "threshold": 0.025,
+      "variant": "rc_pag_local"
+    },
+    {
+      "min_steps": 2,
+      "name": "local_t050_p2",
+      "patience": 2,
+      "threshold": 0.05,
+      "variant": "rc_pag_local"
+    },
+    {
+      "min_steps": 2,
+      "name": "history_t010_p2",
+      "patience": 2,
+      "threshold": 0.01,
+      "variant": "rc_pag_history"
+    },
+    {
+      "min_steps": 2,
+      "name": "history_t025_p2",
+      "patience": 2,
+      "threshold": 0.025,
+      "variant": "rc_pag_history"
+    },
+    {
+      "min_steps": 2,
+      "name": "history_t050_p2",
+      "patience": 2,
+      "threshold": 0.05,
+      "variant": "rc_pag_history"
+    }
+  ],
+  "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+  "delta": 0.05,
+  "loss": "any_shadow_token_disagreement",
+  "models": [
+    "llada",
+    "dream"
+  ],
+  "multiplicity_unit": "model_policy_pair",
+  "protocol_identity": "018fe419fb699da1130789b797d450565f603a372cfc181d98be026a1b9f9cb7",
+  "schema_version": 1
+}

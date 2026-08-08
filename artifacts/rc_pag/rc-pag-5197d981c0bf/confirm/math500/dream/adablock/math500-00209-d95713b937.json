@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    9,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T08:15:57.795976+00:00",
+  "elapsed_sec": 4.499527048319578,
+  "generated_text": "1. **Identify the range of values for $\\text{AB}$:**\n   - Since $\\text{AB}$ is a two-digit integer, it must be between 10 and 99.\n\n2. **Calculate the cube of the smallest and largest possible values for $\\text{AB}$:**\n   - The cube of 10 is $10^3 = 1000$.\n   - The cube of 99 is $99^3 = 970299$.\n\n3. **Determine the range for $\\text{AB}$:**\n   - Since $912,\\!673$ is between $10^3$ and $99^3$, $\\text{AB}$ must be between 10 and 99.\n\n4. **Identify $\\text{AB}$:**\n   - The only two-digit integer whose cube is approximately $912,\\!673$ is $99$.\n\n5. **Calculate $A + B$:**\n   - Since $\\text{AB} = 99$, we have $A + B = 9 + 9 = 18$.\n\n$\\boxed{18}$",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[18, '18']",
+    "gold_answer": "16",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    25,
+    9,
+    18,
+    19,
+    4,
+    20,
+    18,
+    7
+  ],
+  "peak_allocated_bytes": 15658906624,
+  "sample_id": "math500-00209",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 145
+}

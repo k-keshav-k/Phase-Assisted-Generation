@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    13,
+    32,
+    23,
+    3,
+    32,
+    32,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:17:36.112959+00:00",
+  "elapsed_sec": 4.191360656172037,
+  "generated_text": "1. **Identify the number of Great Grandma Jones' children:**\n   Great Grandma Jones has 3 children.\n\n2. **Determine the number of grandchildren:**\n   Each of her 3 children has 3 children of their own. Therefore, the total number of grandchildren is:\n   \\[\n   3 \\times 3 = 9\n   \\]\n\n3. **Determine the number of great grand-babies:**\n   Each of these 9 grandchildren has 3 babies of their own. Therefore, the total number of great grand-babies is:\n   \\[\n   9 \\times 3 = 27\n   \\]\n\n4. **Calculate the total number of family members:**\n   The total number of family members is the sum of Great Grandma Jones, her children, grandchildren, and great grand-babies:\n   \\[\n   1 + 3 + 9 + 27 = 40\n   \\]\n\n5. **Identify the number of great grand-babies:**\n   From the previous step, we know there are 27 great grand-babies.\n\n6. **Conclusion:**\n   There are 27 great grand-babies.\n\nFinal answer: \\boxed{27}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{27}",
+    "gold_answer": "27",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    19,
+    6,
+    14,
+    2,
+    2,
+    25,
+    8,
+    22,
+    15
+  ],
+  "peak_allocated_bytes": 15720043008,
+  "sample_id": "gsm8k_test-00697",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 138
+}

@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    4,
+    32,
+    8,
+    18,
+    32,
+    32,
+    32,
+    32,
+    32,
+    2
+  ],
+  "created_at": "2026-08-01T08:48:46.251495+00:00",
+  "elapsed_sec": 3.51315051689744,
+  "generated_text": "Let $M$ be the midpoint of $\\overline{PR}$.  Then $PM = MR = \\frac{1}{2} PR = 16$.\n\nBy the Pythagorean Theorem in $\\triangle PQM$, we have\n\\[QM^2 + PM^2 = PQ^2.\\]\nSubstituting the given values, we get\n\\[QM^2 + 16^2 = 34^2.\\]\nSolving for $QM^2$, we find\n\\[QM^2 = 34^2 - 16^2 = 1156 - 256 = 900.\\]\nTaking the square root of both sides, we get\n\\[QM = \\sqrt{900} = 30.\\]\nTherefore, the length of median $\\overline{QM}$ is $\\boxed{30}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[30, '30']",
+    "gold_answer": "30",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    4,
+    26,
+    8,
+    5,
+    15,
+    11,
+    15,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15660170240,
+  "sample_id": "math500-00192",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 115
+}

@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    6,
+    32,
+    9,
+    32,
+    32,
+    32,
+    17
+  ],
+  "created_at": "2026-08-01T07:55:34.642973+00:00",
+  "elapsed_sec": 4.2096445970237255,
+  "generated_text": "1. **Identify the total number of socks that need washing:**\n   Lindsay has 50 socks that need washing.\n\n2. **Calculate the number of socks she washed:**\n   Lindsay washes 10 pairs of socks. Since each pair consists of 2 socks, she washes \\(10 \\times 2 = 20\\) socks from the pairs.\n\n3. **Add the number of loose socks she washed:**\n   Lindsay also washes 15 loose socks.\n\n4. **Calculate the total number of socks she washed:**\n   Adding the socks from the pairs and the loose socks, we get \\(20 + 15 = 35\\) socks.\n\n5. **Determine the number of socks she missed:**\n   Since she has washed 35 socks out of the 50 that needed washing, she has missed \\(50 - 35 = 15\\) socks.\n\n6. **Conclusion:**\n   Lindsay has missed 15 socks.\n\nFinal answer: \\boxed{15}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{15}",
+    "gold_answer": "15",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    20,
+    19,
+    3,
+    19,
+    3,
+    24,
+    16,
+    7,
+    2
+  ],
+  "peak_allocated_bytes": 15679278592,
+  "sample_id": "gsm8k_test-00378",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 139
+}

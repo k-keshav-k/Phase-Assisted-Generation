@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    9,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T07:49:16.593944+00:00",
+  "elapsed_sec": 4.491725195199251,
+  "generated_text": "1. **Initial Pens**: Ram starts by buying 25 pens.\n\n2. **Making New Pens**: He can mix the ink from five empty pens to make one full pen. This means for every five empty pens, he can create one new pen.\n\n3. **Calculating New Pens**: Since he starts with 25 pens, he can use these pens to make new pens. The number of new pens he can make from 25 pens is calculated by dividing 25 by 5.\n   - Number of new pens = 25 / 5 = 5\n\n4. **Total Pens**: After making new pens, he will have the original 25 pens plus the 5 new pens.\n   - Total pens = 25 (original) + 5 (new) = 30\n\n5. **Conclusion**: Ram has a total of 30 pens.\n\nFinal answer: 30",
+  "grade": {
+    "error": null,
+    "extracted_answer": "30",
+    "gold_answer": "31",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    27,
+    25,
+    21,
+    21,
+    4,
+    20,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15692017664,
+  "sample_id": "gsm8k_test-00236",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 148
+}

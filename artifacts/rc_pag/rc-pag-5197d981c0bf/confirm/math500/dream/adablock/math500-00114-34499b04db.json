@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    3,
+    32,
+    17,
+    32,
+    3,
+    3,
+    32,
+    6
+  ],
+  "created_at": "2026-08-01T08:21:45.024835+00:00",
+  "elapsed_sec": 4.458396960049868,
+  "generated_text": "1. **Simplify the right-hand side**: Factor the right-hand side of the equation:\n   \\[\n   \\frac{4x-23}{x^2+5x-24} = \\frac{4x-23}{(x-3)(x+8)}\n   \\]\n2. **Set up the equation**: Express the left-hand side as a single fraction:\n   \\[\n   \\frac{C(x-3) + D(x+8)}{(x-3)(x+8)} = \\frac{4x-23}{(x-3)(x+8)}\n   \\]\n3. **Equate numerators**: Since the numerators must be equal for all $x$, we have:\n   \\[\n   C(x-3) + D(x+8) = 4x-23\n   \\]\n4. **Expand and match coefficients**: Expand and match coefficients:\n   \\[\n   Cx-3C + Dx+8D = 4x-23\n   \\]\n   \\[\n   (C+D)x + (-3C+8D) = 4x-23\n   \\]\n5. **Set up the system of equations",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[5, '5']",
+    "gold_answer": "-5",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    9,
+    26,
+    6,
+    2,
+    22,
+    5,
+    21,
+    3,
+    2,
+    15,
+    6
+  ],
+  "peak_allocated_bytes": 15707314176,
+  "sample_id": "math500-00114",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 143
+}

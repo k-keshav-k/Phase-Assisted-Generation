@@ -1,0 +1,28 @@
+{
+  "minimum_tuning_nfe_reduction_per_model": 0.08,
+  "models": {
+    "dream": {
+      "adablock_mean_nfe": 100.89333333333333,
+      "beats_best_nonlearned": true,
+      "best_nonlearned": "adablock",
+      "best_nonlearned_mean_nfe": 100.89333333333333,
+      "candidate_mean_nfe": 100.23333333333333,
+      "nfe_reduction": 0.006541562045724824,
+      "passed": false,
+      "selected_candidate": "rgate_t20_p3_v7"
+    },
+    "llada": {
+      "adablock_mean_nfe": 93.83333333333333,
+      "beats_best_nonlearned": true,
+      "best_nonlearned": "stability_weighted_style",
+      "best_nonlearned_mean_nfe": 93.8,
+      "candidate_mean_nfe": 92.66666666666667,
+      "nfe_reduction": 0.012433392539964375,
+      "passed": false,
+      "selected_candidate": "rgate_t20_p3_v7"
+    }
+  },
+  "passed": false,
+  "require_candidate_beats_nonlearned": true,
+  "schema_version": 1
+}

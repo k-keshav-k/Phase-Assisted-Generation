@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    16,
+    32,
+    26,
+    32,
+    32,
+    22
+  ],
+  "created_at": "2026-08-01T06:59:26.305124+00:00",
+  "elapsed_sec": 3.821318745613098,
+  "generated_text": "1. The first train arrives in 10 minutes and stays in the station for 20 minutes.\n2. The second train arrives 30 minutes after the first train leaves, which is 40 minutes after the first train arrives.\n3. The second train stays in the station for a quarter of the time the first train stayed, which is 20 minutes / 4 = 5 minutes.\n4. The third train arrives 60 minutes after the second train leaves, which is 70 minutes after the first train arrives.\n5. The third train stays in the station immediately after it arrives, so it leaves the station at 70 minutes after the first train arrives.\n6. The fourth train arrives 20 minutes after the third train leaves, which is 90 minutes after the first train arrives.\n7. Paul will wait for his train until the fourth train arrives, which is 90 minutes after the first train arrives.\n\nFinal answer: 90",
+  "grade": {
+    "error": null,
+    "extracted_answer": "90",
+    "gold_answer": "145",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    22,
+    18,
+    9,
+    23,
+    5,
+    23,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15856335872,
+  "sample_id": "gsm8k_test-01077",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 122
+}

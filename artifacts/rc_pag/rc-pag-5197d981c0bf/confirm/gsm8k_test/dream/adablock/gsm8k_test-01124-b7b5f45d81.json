@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    7,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:29:07.716190+00:00",
+  "elapsed_sec": 5.115060690790415,
+  "generated_text": "1. **Determine the number of stickers Luis gave to Kris:**\n   Luis gave the remaining stickers to Kris after using half of them. Since Luis kept half of the stickers and gave the other half to Kris, Luis gave 7 stickers to Kris.\n\n2. **Determine the number of stickers Luis had before giving any to Kris:**\n   Since Luis gave 7 stickers to Kris, Luis must have had 7 stickers before giving any to Kris.\n\n3. **Determine the number of stickers Luis had before giving any to Seth:**\n   Luis gave half of his stickers to Seth. Since Luis had 7 stickers before giving any to Kris, Luis must have had 7 stickers before giving any to Seth.\n\n4. **Determine the number of stickers Seth had before giving any to Luis:**\n   Seth gave half of his stickers to Luis. Since Luis had 7 stickers before giving any to Seth, Seth must have had 7 stickers before giving any to Luis.\n\n5. **Determine the number of stickers Seth had in the beginning:**\n   Since Seth gave half of his stickers to Luis, Seth must have had 7 stickers before giving any to Luis.\n\nFinal answer: The final answer is $\\boxed{14}$  stickers.",
+  "grade": {
+    "error": "not a strict numeric answer: 'The final answer is $\\\\boxed{14}$  stickers.'",
+    "extracted_answer": "The final answer is $\\boxed{14}$  stickers.",
+    "gold_answer": "64",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    30,
+    25,
+    25,
+    22,
+    19,
+    8,
+    4,
+    18,
+    19
+  ],
+  "peak_allocated_bytes": 15681826304,
+  "sample_id": "gsm8k_test-01124",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 30,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 170
+}

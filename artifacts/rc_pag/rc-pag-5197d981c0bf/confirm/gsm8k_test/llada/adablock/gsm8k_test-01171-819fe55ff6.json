@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    10,
+    3,
+    13,
+    25,
+    1,
+    11,
+    15,
+    28,
+    11,
+    9,
+    26,
+    11,
+    17,
+    63,
+    13
+  ],
+  "created_at": "2026-08-01T04:58:55.284581+00:00",
+  "elapsed_sec": 2.393801338970661,
+  "generated_text": "1. Calculate the area of one bedroom:\n   - Each bedroom measures 20 feet by 12 feet.\n   - Area of one bedroom = 20 feet * 12 feet = 240 square feet.\n\n2. Calculate the area of the living room:\n   - The living room is 5 times bigger than one bedroom.\n   - Area of the living room = 5 * 240 square feet = 1200 square feet.\n\n3. Calculate the total area of the bedrooms:\n   - There are 4 bedrooms.\n   - Total area of bedrooms = 4 * 240 square feet = 960 square feet.\n\n4. Calculate the total area of the house:\n   - The rest of the house is 1000 square feet.\n   - Total area of the house = Total area of bedrooms + Area of living room + Rest of the house\n   - Total area of the house = 960 square feet + 1200 square feet + 1000 square feet = 3160 square feet\n\nFinal answer: 3160 square feet.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "3160 square feet.",
+    "gold_answer": "3160",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    6,
+    3,
+    3,
+    6,
+    1,
+    7,
+    1,
+    2,
+    8,
+    6,
+    5,
+    3,
+    6,
+    12,
+    1
+  ],
+  "peak_allocated_bytes": 17244628480,
+  "sample_id": "gsm8k_test-01171",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 63,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 70
+}

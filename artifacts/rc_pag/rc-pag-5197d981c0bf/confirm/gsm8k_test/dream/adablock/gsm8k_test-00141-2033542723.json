@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    13,
+    1,
+    32,
+    9,
+    32,
+    8,
+    32,
+    32,
+    1
+  ],
+  "created_at": "2026-08-01T06:50:41.395857+00:00",
+  "elapsed_sec": 3.094698701053858,
+  "generated_text": "Let's denote the number of queens as \\( q \\). According to the problem, there are twice as many babies as queens, so the number of babies is \\( 2q \\). There are also twice as many worker bees as babies, so the number of worker bees is \\( 2 \\times 2q = 4q \\).\n\nThe total number of bees in the hive is the sum of the number of queens, babies, and worker bees:\n\\[ q + 2q + 4q = 700 \\]\n\nCombine like terms:\n\\[ 7q = 700 \\]\n\nSolve for \\( q \\):\n\\[ q = \\frac{700}{7} = 100 \\]\n\nNow that we know there are 100 queens, we can find the number of babies:\n\\[ 2q = 2 \\times 100 = 200 \\]\n\nAnd the number of worker bees:\n\\[ 4q = 4 \\times 100 = 400 \\]\n\nTherefore, there are 400 worker bees.\n\nFinal answer: 400",
+  "grade": {
+    "error": null,
+    "extracted_answer": "400",
+    "gold_answer": "400",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    13,
+    19,
+    4,
+    1,
+    7,
+    5,
+    10,
+    2,
+    8,
+    11,
+    1
+  ],
+  "peak_allocated_bytes": 15667813376,
+  "sample_id": "gsm8k_test-00141",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 100
+}

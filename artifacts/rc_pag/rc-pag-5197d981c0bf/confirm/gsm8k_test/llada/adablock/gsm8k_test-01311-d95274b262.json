@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    22,
+    32,
+    6,
+    1,
+    13,
+    32,
+    9,
+    3,
+    38,
+    19,
+    13,
+    12,
+    2,
+    3,
+    29,
+    4,
+    1,
+    17
+  ],
+  "created_at": "2026-08-01T05:04:46.656663+00:00",
+  "elapsed_sec": 3.1172021254897118,
+  "generated_text": "To determine how many feet of line the caretaker needs to buy, we can follow these steps:\n\n1. Calculate the total amount of line required based on the length of the dock.\n2. Subtract the amount of line the caretaker already has from the total amount required.\n\nFirst, let's calculate the total amount of line required:\n- The caretaker wants 3 feet of line for every foot of dock.\n- The dock is 200 feet long.\n- Therefore, the total amount of line required is:\n  \\[\n  3 \\text{ feet/foot} \\times 200 \\text{ feet} = 600 \\text{ feet}\n  \\]\n\nNext, we subtract the amount of line the caretaker already has from the total amount required:\n- The caretaker has 6 feet of new line.\n- Therefore, the amount of line he needs to buy is:\n  \\[\n  600 \\text{ feet} - 6 \\text{ feet} = 594 \\text{ feet}\n  \\]\n\nFinal answer: 594.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "594.",
+    "gold_answer": "594",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    7,
+    18,
+    4,
+    1,
+    7,
+    10,
+    5,
+    1,
+    7,
+    5,
+    5,
+    9,
+    1,
+    1,
+    1,
+    1,
+    1,
+    7
+  ],
+  "peak_allocated_bytes": 17228330496,
+  "sample_id": "gsm8k_test-01311",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 38,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 91
+}

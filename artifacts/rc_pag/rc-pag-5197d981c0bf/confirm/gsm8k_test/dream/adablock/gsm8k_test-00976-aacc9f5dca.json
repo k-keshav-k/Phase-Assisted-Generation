@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    16,
+    32,
+    15,
+    32,
+    32,
+    1
+  ],
+  "created_at": "2026-08-01T07:19:32.629124+00:00",
+  "elapsed_sec": 2.8964828848838806,
+  "generated_text": "1. On Saturday, Sunny sold 10 boxes of gingerbread and 4 fewer boxes of apple pie than on Sunday. So, on Sunday, he sold 10 + 4 = 14 boxes of apple pie.\n2. On Sunday, he sold 5 more boxes of gingerbread than on Saturday, so on Sunday he sold 10 + 5 = 15 boxes of gingerbread.\n3. The total number of boxes of gingerbread sold over the two days is 10 + 15 = 25 boxes.\n4. The total number of boxes of apple pie sold over the two days is 15 + 14 = 29 boxes.\n5. The total earnings from gingerbread is 25 boxes * $6 each = $115.\n6. The total earnings from apple pie is 29 boxes * $15 each = $435.\n7. The total earnings for two days is $115 + $435 = $550.\n\nFinal answer: 550",
+  "grade": {
+    "error": null,
+    "extracted_answer": "550",
+    "gold_answer": "540",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    13,
+    12,
+    8,
+    4,
+    19,
+    3,
+    14,
+    2,
+    1
+  ],
+  "peak_allocated_bytes": 15727686144,
+  "sample_id": "gsm8k_test-00976",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 94
+}

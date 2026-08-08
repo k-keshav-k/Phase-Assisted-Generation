@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    9,
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    5,
+    32,
+    16
+  ],
+  "created_at": "2026-08-01T08:02:17.507231+00:00",
+  "elapsed_sec": 3.482686284929514,
+  "generated_text": "1. **Determine the initial temperature during the night:**\n   - The temperature during the day was 45 degrees.\n   - During the night, it is 33 degrees colder.\n   - Therefore, the temperature during the night is \\(45 - 33 = 12\\) degrees.\n\n2. **Calculate the temperature increase needed to prevent the pipes from freezing:**\n   - The pipes will freeze if the temperature falls below 32 degrees.\n   - The current temperature is 12 degrees.\n   - Therefore, the temperature increase needed is \\(32 - 12 = 20\\) degrees.\n\n3. **Determine the number of logs needed:**\n   - Each log of wood heats the house by 5 degrees.\n   - To achieve a temperature increase of 20 degrees, Carson needs \\(\\frac{20}{5} = 4\\) logs.\n\n4. **Conclusion:**\n   - Carson needs to burn 4 logs to prevent the pipes from freezing.\n\nFinal answer: 4",
+  "grade": {
+    "error": null,
+    "extracted_answer": "4",
+    "gold_answer": "4",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    5,
+    18,
+    14,
+    2,
+    14,
+    14,
+    13,
+    3,
+    5,
+    2
+  ],
+  "peak_allocated_bytes": 15721316864,
+  "sample_id": "gsm8k_test-00789",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 114
+}

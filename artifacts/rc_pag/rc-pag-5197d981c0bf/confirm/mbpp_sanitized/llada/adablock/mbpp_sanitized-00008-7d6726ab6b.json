@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    3,
+    32,
+    7,
+    8,
+    11,
+    10,
+    15,
+    1,
+    13,
+    6,
+    32,
+    10,
+    2,
+    1,
+    32,
+    32,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T06:16:10.971446+00:00",
+  "elapsed_sec": 3.767857652157545,
+  "generated_text": "```python\ndef is_one_less_than_twice_reverse(number):\n    # Convert the number to a string\n    num_str = str(number)\n    # Reverse the string\n    reversed_str = num_str[::-1]\n    # Convert the reversed string back to an integer\n    reversed_number = int(reversed_str)\n    # Check if the original number is one less than twice the reversed number\n    return number == 2 * reversed_number - 1\n\n# Example usage:\nprint(is_one_less_than_twice_reverse(121))  # Output: True\nprint(is_one_less_than_twice_reverse(123))  # Output: False\n```\n\nThis function `is_one_less_than_twice_reverse` takes an integer `number` as input and returns `True` if the number is one less than twice its reverse, and `False` otherwise. The function first converts the number to a string, reverses the string, and then converts it back to an integer. Finally, it checks if the original number is one less than twice the reversed number.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_awkoe1k5/candidate.py\", line 15, in <module>\n    assert check(70) == False\n           ^^^^^\nNameError: name 'check' is not defined\n",
+    "extracted_answer": "def is_one_less_than_twice_reverse(number):\n    # Convert the number to a string\n    num_str = str(number)\n    # Reverse the string\n    reversed_str = num_str[::-1]\n    # Convert the reversed string back to an integer\n    reversed_number = int(reversed_str)\n    # Check if the original number is one less than twice the reversed number\n    return number == 2 * reversed_number - 1\n\n# Example usage:\nprint(is_one_less_than_twice_reverse(121))  # Output: True\nprint(is_one_less_than_twice_reverse(123))  # Output: False",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    2,
+    19,
+    5,
+    1,
+    4,
+    2,
+    8,
+    1,
+    4,
+    2,
+    10,
+    6,
+    2,
+    1,
+    15,
+    17,
+    9,
+    1
+  ],
+  "peak_allocated_bytes": 17060509184,
+  "sample_id": "mbpp_sanitized-00008",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/llada",
+  "total_nfe": 109
+}

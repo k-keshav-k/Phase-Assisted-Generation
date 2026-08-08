@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-07-31T22:36:23.097242+00:00",
+  "elapsed_sec": 5.216143600642681,
+  "generated_text": ".. **Identify the number of days Shenny will be on vacation:**\n   Shenny will be departing on Monday and returning on Sunday, which means she will be on vacation for 7 days.\n\n2. **Determine the number of days she will use the same shirt:**\n   Shenny will use the same shirt when departing on Monday and returning on Sunday. This means she will use the same shirt for 2 days.\n\n3. **Calculate the number of she she will use different shirts:**\n   Since she will use the same shirt for 2 days, she will use different shirts for the remaining 7 - 2 = 5 days.\n\n4. **Determine the number of different shirts needed:**\n   Shenny will use two different shirts each day for the55 days. Therefore, she will need 2 * 5 = 10 different shirts for these days.\n\n5. **Calculate the total number of shirts needed:**\n   Adding the same shirt for the first and last days to the 10 different shirts for the other days, Shenny will need 1 + 10 = 11 shirts in total.\n\nFinal answer: Shenny should pack $\\boxed{11}$ shirts for her vacation.",
+  "grade": {
+    "error": "not a strict numeric answer: 'Shenny should pack $\\\\boxed{11}$ shirts for her vacation.'",
+    "extracted_answer": "Shenny should pack $\\boxed{11}$ shirts for her vacation.",
+    "gold_answer": "11",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    28,
+    26,
+    17,
+    24,
+    19,
+    23,
+    27,
+    13
+  ],
+  "peak_allocated_bytes": 15501638656,
+  "sample_id": "gsm8k_train-00316",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 108,
+      "block_index": 0,
+      "block_start": 76,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8651995062828064,
+      "min_top1_confidence": 0.03426465764641762,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "block_end": 140,
+      "block_index": 1,
+      "block_start": 108,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9375008344650269,
+      "min_top1_confidence": 0.3778901994228363,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 172,
+      "block_index": 2,
+      "block_start": 140,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9477416276931763,
+      "min_top1_confidence": 0.4083561897277832,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 204,
+      "block_index": 3,
+      "block_start": 172,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9170635342597961,
+      "min_top1_confidence": 0.4017362594604492,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 236,
+      "block_index": 4,
+      "block_start": 204,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9565898180007935,
+      "min_top1_confidence": 0.5607132911682129,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 268,
+      "block_index": 5,
+      "block_start": 236,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9294717311859131,
+      "min_top1_confidence": 0.17720699310302734,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 300,
+      "block_index": 6,
+      "block_start": 268,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9345372915267944,
+      "min_top1_confidence": 0.31893858313560486,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 332,
+      "block_index": 7,
+      "block_start": 300,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9893829822540283,
+      "min_top1_confidence": 0.8140789866447449,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 177
+}

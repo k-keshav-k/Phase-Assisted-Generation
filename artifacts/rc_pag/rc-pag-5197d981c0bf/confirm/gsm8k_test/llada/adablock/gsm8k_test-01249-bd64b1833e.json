@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    13,
+    32,
+    4,
+    32,
+    32,
+    28,
+    1,
+    26,
+    47,
+    9
+  ],
+  "created_at": "2026-08-01T04:26:39.921551+00:00",
+  "elapsed_sec": 3.837512470781803,
+  "generated_text": "1. Determine the number of flashlights:\n   - There are 4 people, and each person has 1 flashlight.\n   - There are 8 rooms, and each room has 2 flashlights.\n   - Total flashlights = 4 (people) + 16 (rooms) = 20 flashlights.\n\n2. Determine the number of candles:\n   - Half of the rooms have 4 small candles each.\n   - Half of the rooms have 5 medium candles each.\n   - Half of 8 rooms = 8 / 2 = 4 rooms.\n   - Total small candles = 4 rooms * 4 candles/room = 16 small candles.\n   - Total medium candles = 4 rooms * 5 candles/room = 20 medium candles.\n   - Total candles = 16 (small) + 20 (medium) = 36 candles.\n\n3. Calculate the total number of candles and flashlights:\n   - Total candles and flashlights = 20 (flashlights) + 36 (candles).\n   - Total = 56.\n\nFinal answer: 56.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "56.",
+    "gold_answer": "56",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    5,
+    13,
+    1,
+    16,
+    17,
+    3,
+    1,
+    6,
+    22,
+    1
+  ],
+  "peak_allocated_bytes": 17393529856,
+  "sample_id": "gsm8k_test-01249",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 47,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 111
+}

@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    21,
+    11,
+    1,
+    10,
+    19,
+    14,
+    32,
+    16,
+    20,
+    2,
+    1,
+    11,
+    32,
+    9,
+    1,
+    19,
+    27,
+    10
+  ],
+  "created_at": "2026-08-01T04:22:56.820533+00:00",
+  "elapsed_sec": 3.0956428311765194,
+  "generated_text": "To find the average height of heels at the cocktail party, we need to follow these steps:\n\n1. Calculate the total height of all the heels.\n2. Determine the total number of women.\n3. Divide the total height by the total number of women to find the average.\n\n1. **Calculate the total height of all the heels:**\n   - Three women are wearing 4-inch heels: \\(3 \\times 4 = 12\\) inches.\n   - Three women are wearing 2-inch heels: \\(3 \\times 2 = 6\\) inches.\n   - Total height of all heels: \\(12 + 6 = 18\\) inches.\n\n2. **Determine the total number of women:**\n   - There are 3 women wearing 4-inch heels and 3 women wearing 2-inch heels.\n   - Total number of women: \\(3 + 3 = 6\\).\n\n3. **Divide the total height by the total number of women to find the average:**\n   - Average height of heels: \\(\\frac{18}{6} = 3\\) inches.\n\nFinal answer: 3.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "3.",
+    "gold_answer": "3",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    11,
+    8,
+    1,
+    5,
+    6,
+    6,
+    10,
+    1,
+    7,
+    1,
+    1,
+    1,
+    11,
+    1,
+    1,
+    4,
+    12,
+    3
+  ],
+  "peak_allocated_bytes": 17133717504,
+  "sample_id": "gsm8k_test-01109",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 90
+}

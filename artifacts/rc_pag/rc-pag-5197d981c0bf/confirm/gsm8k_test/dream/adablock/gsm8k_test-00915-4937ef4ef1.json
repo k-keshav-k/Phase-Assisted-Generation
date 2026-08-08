@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    3,
+    32,
+    30,
+    21,
+    32,
+    6,
+    11,
+    32,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:57:40.156073+00:00",
+  "elapsed_sec": 2.461426507681608,
+  "generated_text": "1. Calculate the number of hours Bruce works on Wednesday:\n   - Bruce works twice the time he works on Tuesday.\n   - On Tuesday, he works 5 hours.\n   - Therefore, on Wednesday, he works \\(2 \\times 5 = 10\\) hours.\n\n2. Calculate the number of hours Bruce works on Thursday:\n   - Bruce works 2 hours less than the time he works on Wednesday.\n   - On Wednesday, he works 10 hours.\n   - Therefore, on Thursday, he works \\(10 - 2 = 8\\) hours.\n\n3. Calculate the total number of hours Bruce works over the three days:\n   - On Tuesday, he works 5 hours.\n   - On Wednesday, he works 10 hours.\n   - On Thursday, he works 8 hours.\n   - Total hours = \\(5 + 10 + 8 = 23\\) hours.\n\nFinal answer: \\boxed{23}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{23}",
+    "gold_answer": "23",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    2,
+    12,
+    5,
+    2,
+    11,
+    2,
+    2,
+    17,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15679278592,
+  "sample_id": "gsm8k_test-00915",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 79
+}

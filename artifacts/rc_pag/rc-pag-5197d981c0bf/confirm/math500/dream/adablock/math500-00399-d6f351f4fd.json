@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    8,
+    3,
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    20
+  ],
+  "created_at": "2026-08-01T09:01:15.713695+00:00",
+  "elapsed_sec": 3.3528218157589436,
+  "generated_text": "To solve the problem of adding 313.9 and 12.6, we can follow these steps:\n\n1. Write down the numbers vertically, aligning the decimal points:\n   \\[\n   \\begin{array}{r}\n   313.9 \\\\\n   + 12.6 \\\\\n   \\end{array}\n   \\]\n\n2. Add the numbers starting from the rightmost digit:\n   - Add the tenths place: \\(9 + 6 = 15\\)\n   - Add the units place: \\(3 + 2 = 5\\)\n   - Add the tens place: \\(3 + 1 = 4\\)\n\n3. Combine the results:\n   \\[\n   \\begin{array}{r}\n   313.9 \\\\\n   + 12.6 \\\\\n   \\hline\n   326.5 \\\\\n   \\end{array}\n   \\]\n\nThus, the sum of 313.9 and 12.6 is $\\boxed{326.5}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[326.500000000000, '326.5']",
+    "gold_answer": "326.5",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    15,
+    4,
+    3,
+    21,
+    13,
+    1,
+    11,
+    14,
+    7,
+    2
+  ],
+  "peak_allocated_bytes": 15637242368,
+  "sample_id": "math500-00399",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 109
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T00:02:04.276087+00:00",
+  "elapsed_sec": 4.456686515361071,
+  "generated_text": "Here is a Python solution using lambda function:\n\n```python\ndef find_anagrams(word, strings):\n    sorted_word = ''.join(sorted(word))\n    return [ for for s in strings if ''.join(sorted(s)) == sorted_word]\n```\n\nThis function takes a word and a list of strings as input. It sorts the characters in the word and then checks each string in the list to see if its sorted characters match the sorted word. If they match, the string is an anagram of the word and is added to the list of anagrams.\n\nHere is an example usage of the function:\n\n```python\nprint(find_anagrams('',', ['cat', 'dog', 'tac', 'god', 'act', 'good']))\n```\n\nThis will output:\n\n```python\n['cat', 'tac', 'god', 'act']\n```\n\n",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_uu62fw8g/candidate.py\", line 3, in <module>\n    assert anagram_lambda([\"bcda\", \"abce\", \"cbda\", \"cbea\", \"adcb\"],\"abcd\")==['bcda', 'cbda', 'adcb']\n           ^^^^^^^^^^^^^^\nNameError: name 'anagram_lambda' is not defined\n",
+    "extracted_answer": "['cat', 'tac', 'god', 'act']",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    26,
+    20,
+    28,
+    26,
+    28,
+    21,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15559360512,
+  "sample_id": "mbpp_train-00114",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "block_end": 85,
+      "block_index": 0,
+      "block_start": 53,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9230374097824097,
+      "min_top1_confidence": 0.35700151324272156,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 117,
+      "block_index": 1,
+      "block_start": 85,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9204875826835632,
+      "min_top1_confidence": 0.2199898213148117,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 149,
+      "block_index": 2,
+      "block_start": 117,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8870277404785156,
+      "min_top1_confidence": 0.025126440450549126,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "block_end": 181,
+      "block_index": 3,
+      "block_start": 149,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8599385023117065,
+      "min_top1_confidence": 0.05761143937706947,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 213,
+      "block_index": 4,
+      "block_start": 181,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8671449422836304,
+      "min_top1_confidence": 0.10512107610702515,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 5,
+      "block_start": 213,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.985206663608551,
+      "min_top1_confidence": 0.8807119727134705,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 277,
+      "block_index": 6,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999933242797852,
+      "min_top1_confidence": 0.9998927116394043,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 309,
+      "block_index": 7,
+      "block_start": 277,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999902248382568,
+      "min_top1_confidence": 0.9999568462371826,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 151
+}

@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    16,
+    1,
+    32,
+    32,
+    32,
+    32,
+    13
+  ],
+  "created_at": "2026-08-01T07:02:14.812651+00:00",
+  "elapsed_sec": 3.5930099934339523,
+  "generated_text": "1. Let's denote the original length of the dress as \\( x \\) centimeters.\n2. Shania extends the dress by 50% of its original length. This means the new length of the dress after extension is \\( x + 0.5x = 1.5x \\) centimeters.\n3. She then adds 20 cm to the bottom of the dress with a lace trim. So, the total length of the dress after adding the lace trim is \\( 1.5x + 20 \\) centimeters.\n4. We are given that the final design is 140 cm long. Therefore, we can set up the equation \\( 1.5x + 20 = 140 \\).\n5. Solving for \\( x \\), we subtract 20 from both sides: \\( 1.5x = 120 \\).\n6. Then, we divide both sides by 1.5 to find \\( x \\): \\( x = \\frac{120}{1.5} = 80 \\).\n\nSo, the original length of the dress was 80 centimeters.\n\nFinal answer: \\boxed{80}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{80}",
+    "gold_answer": "80",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    22,
+    2,
+    19,
+    3,
+    1,
+    14,
+    10,
+    11,
+    10,
+    5
+  ],
+  "peak_allocated_bytes": 15712399872,
+  "sample_id": "gsm8k_test-00682",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 116
+}

@@ -1,0 +1,38 @@
+{
+  "accuracy_eligible": {
+    "adablock": true,
+    "confidence_gate": false,
+    "constant_budget": false,
+    "entropy_sum": false,
+    "fast_dllm": false,
+    "fixed": true,
+    "sched": false,
+    "size_lookup": false,
+    "stability_gate": false
+  },
+  "allowed_correct_loss": 6,
+  "best_nonlearned": "fixed",
+  "best_nonlearned_mean_nfe": 93.85666666666667,
+  "method_correct": {
+    "adablock": 120,
+    "confidence_gate": 111,
+    "constant_budget": 41,
+    "entropy_sum": 101,
+    "fast_dllm": 111,
+    "fixed": 118,
+    "sched": 106,
+    "size_lookup": 44,
+    "stability_gate": 108
+  },
+  "method_mean_nfe": {
+    "adablock": 99.30666666666667,
+    "confidence_gate": 90.81333333333333,
+    "constant_budget": 59.23,
+    "entropy_sum": 79.01666666666667,
+    "fast_dllm": 90.81333333333333,
+    "fixed": 93.85666666666667,
+    "sched": 83.87333333333333,
+    "size_lookup": 68.17666666666666,
+    "stability_gate": 86.52
+  }
+}

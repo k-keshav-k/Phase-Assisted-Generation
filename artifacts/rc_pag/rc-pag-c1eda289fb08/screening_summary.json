@@ -1,0 +1,103 @@
+{
+  "best_nonlearned": {
+    "dream": "adablock",
+    "llada": "stability_weighted_style"
+  },
+  "best_nonlearned_mean_nfe": {
+    "dream": 100.89333333333333,
+    "llada": 93.8
+  },
+  "models": {
+    "dream": {
+      "allowed_harmful_regressions": 3,
+      "candidates": {
+        "rgate_t10_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.38666666666667
+        },
+        "rgate_t15_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.24
+        },
+        "rgate_t20_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.23333333333333
+        }
+      },
+      "nonlearned": {
+        "adablock": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.89333333333333
+        },
+        "stability_weighted_style": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.89333333333333
+        },
+        "token_convergence_style": {
+          "accuracy_eligible": true,
+          "correct": 70,
+          "harmful_regressions": 0,
+          "mean_nfe": 100.89333333333333
+        }
+      }
+    },
+    "llada": {
+      "allowed_harmful_regressions": 3,
+      "candidates": {
+        "rgate_t10_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 83,
+          "harmful_regressions": 0,
+          "mean_nfe": 92.90666666666667
+        },
+        "rgate_t15_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 82,
+          "harmful_regressions": 1,
+          "mean_nfe": 92.84666666666666
+        },
+        "rgate_t20_p3_v7": {
+          "accuracy_eligible": true,
+          "correct": 82,
+          "harmful_regressions": 1,
+          "mean_nfe": 92.66666666666667
+        }
+      },
+      "nonlearned": {
+        "adablock": {
+          "accuracy_eligible": true,
+          "correct": 83,
+          "harmful_regressions": 0,
+          "mean_nfe": 93.83333333333333
+        },
+        "stability_weighted_style": {
+          "accuracy_eligible": true,
+          "correct": 83,
+          "harmful_regressions": 0,
+          "mean_nfe": 93.8
+        },
+        "token_convergence_style": {
+          "accuracy_eligible": true,
+          "correct": 83,
+          "harmful_regressions": 0,
+          "mean_nfe": 93.82666666666667
+        }
+      }
+    }
+  },
+  "protocol_version": "v7",
+  "selected_candidate": {
+    "dream": "rgate_t20_p3_v7",
+    "llada": "rgate_t20_p3_v7"
+  }
+}

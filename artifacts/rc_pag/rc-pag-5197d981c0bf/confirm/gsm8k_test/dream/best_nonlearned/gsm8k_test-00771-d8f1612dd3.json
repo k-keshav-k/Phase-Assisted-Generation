@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:51:32.622981+00:00",
+  "elapsed_sec": 3.363830592483282,
+  "generated_text": "1. Calculate the total revenue from selling eggplants:\n   Bennet sells 20 eggplants for $3 each. So, the total revenue from eggplants is:\n   \\[\n   20 \\times 3 = 60 \\text{ dollars}\n   \\]\n\n2. Determine the remaining amount needed to reach $135:\n   Bennet wants to make a total of $135. After selling the eggplants, he needs to make     \\[\n   135 - 60 = 75 \\text{ dollars}\n   \\]\n\n3. Calculate the price per ear of corn:\n   Bennet has 25 ears of corn. To find the price per ear of corn, divide the remaining amount needed by the number of ears of corn:\n   \\[\n   \\frac{75}{25} = 3 \\text{ dollars}\n   \\]\n\nTherefore, Bennet should sell each ear of corn for $3.\n\nFinal answer: \\boxed{3}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{3}",
+    "gold_answer": "3",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    14,
+    19,
+    8,
+    19,
+    11,
+    17,
+    1
+  ],
+  "peak_allocated_bytes": 15519891456,
+  "sample_id": "gsm8k_test-00771",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 133,
+      "block_index": 0,
+      "block_start": 101,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9200100302696228,
+      "min_top1_confidence": 0.042511530220508575,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 165,
+      "block_index": 1,
+      "block_start": 133,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.8894264698028564,
+      "min_top1_confidence": 0.0297490656375885,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 197,
+      "block_index": 2,
+      "block_start": 165,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9544061422348022,
+      "min_top1_confidence": 0.6316019296646118,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 229,
+      "block_index": 3,
+      "block_start": 197,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9244318008422852,
+      "min_top1_confidence": 0.3678157925605774,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 261,
+      "block_index": 4,
+      "block_start": 229,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9666726589202881,
+      "min_top1_confidence": 0.34048208594322205,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 293,
+      "block_index": 5,
+      "block_start": 261,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9665086269378662,
+      "min_top1_confidence": 0.44112372398376465,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 325,
+      "block_index": 6,
+      "block_start": 293,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9894798398017883,
+      "min_top1_confidence": 0.7693994641304016,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 357,
+      "block_index": 7,
+      "block_start": 325,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999998927116394,
+      "min_top1_confidence": 0.9999902248382568,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 111
+}

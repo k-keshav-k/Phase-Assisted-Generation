@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:16:52.641384+00:00",
+  "elapsed_sec": 2.1306964829564095,
+  "generated_text": ".. Identify the initial number of lollipops Jean has: 30 lollipops.\n2. Subtract the number of lollipops Jean eats from the initial number: 30 - 2 = 28 lollipops.\n3. Determine how many bags Jean can fill with remaining remaining lollipops: 28 ÷ 2 = 14 bags.\n\nFinal answer: 14",
+  "grade": {
+    "error": null,
+    "extracted_answer": "14",
+    "gold_answer": "14",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    23,
+    21,
+    20,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15597624320,
+  "sample_id": "gsm8k_test-00055",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 122,
+      "block_index": 0,
+      "block_start": 90,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.8660445213317871,
+      "min_top1_confidence": 0.03662315011024475,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 154,
+      "block_index": 1,
+      "block_start": 122,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9177295565605164,
+      "min_top1_confidence": 0.16991443932056427,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 186,
+      "block_index": 2,
+      "block_start": 154,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9633157253265381,
+      "min_top1_confidence": 0.7079598903656006,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 218,
+      "block_index": 3,
+      "block_start": 186,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999984502792358,
+      "min_top1_confidence": 0.9999934434890747,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 250,
+      "block_index": 4,
+      "block_start": 218,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999985694885254,
+      "min_top1_confidence": 0.9999802112579346,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 282,
+      "block_index": 5,
+      "block_start": 250,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999913573265076,
+      "min_top1_confidence": 0.9999619722366333,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 314,
+      "block_index": 6,
+      "block_start": 282,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999987781047821,
+      "min_top1_confidence": 0.9999485015869141,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 346,
+      "block_index": 7,
+      "block_start": 314,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999579191207886,
+      "min_top1_confidence": 0.9998546838760376,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 69
+}

@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    32,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T08:26:13.063916+00:00",
+  "elapsed_sec": 4.7279313169419765,
+  "generated_text": "The wheel has 4 numbers, so there are 4 possible outcomes for the first spin. The second spin has 5 possible outcomes, so there are 5 possible outcomes for the second spin. Therefore, there are a total of $4 \\times 5 = 20$ possible outcomes for the two spins.\n\nThe checkerboard has 3 columns and 4 rows, so there are $3 \\times 4 = 12$ squares on the checkerboard. The checker is placed on a shaded square if the first number is 1 or 2 and the second number is 1, 2, or 3. There are $2 \\times 3 = 6$ favorable outcomes for the checker to be placed on a shaded square.\n\nTherefore, the probability that the checker is placed on a shaded square is $\\frac{6}{20} = \\frac{3}{10}$.\n\nThe final answer is $\\boxed{\\frac{3}{10}}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[3/10, '\\\\frac{3}{10}']",
+    "gold_answer": "\\frac{1}{2}",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    29,
+    21,
+    1,
+    20,
+    27,
+    18,
+    17,
+    4,
+    2
+  ],
+  "peak_allocated_bytes": 16502210560,
+  "sample_id": "math500-00219",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 139
+}

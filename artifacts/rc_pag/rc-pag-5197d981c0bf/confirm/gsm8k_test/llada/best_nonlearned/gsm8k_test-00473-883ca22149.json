@@ -1,0 +1,193 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    10,
+    32,
+    32,
+    32,
+    44,
+    1,
+    9
+  ],
+  "created_at": "2026-08-01T04:41:03.703941+00:00",
+  "elapsed_sec": 4.4444842003285885,
+  "generated_text": "1. Convert the length of the remoras to inches.\n2. Calculate the total length of the remoras.\n3. Convert the total length of the remoras to feet.\n4. Calculate the percentage of the shark's body length that the combined length of the remoras represents.\n\n1. Each remora is 6 inches long.\n2. There are 2 remoras, so the total length of the remoras is \\(2 \\times 6 = 12\\) inches.\n3. Convert the total length of the remoras to feet: \\(12 \\div 12 = 1\\) foot.\n4. The shark is 10 feet long. To find the percentage of the shark's body length that the combined length of the remoras represents, use the formula: \\(\\left( \\frac{\\text{Total length of remoras}}{\\text{Total length of shark}} \\right) \\times 100\\).\n\n   Plugging in the values: \\(\\left( \\frac{1 \\text{ foot}}{10 \\text{ feet}} \\right) \\times 100 = 10\\%\\).\n\nFinal answer: 10%.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10%.",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    27,
+    16,
+    21,
+    1,
+    19,
+    16,
+    15,
+    14,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17172310016,
+  "sample_id": "gsm8k_test-00473",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 105,
+      "block_index": 0,
+      "block_start": 73,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 137,
+      "block_index": 1,
+      "block_start": 105,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 169,
+      "block_index": 2,
+      "block_start": 137,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 179,
+      "block_index": 3,
+      "block_start": 169,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 211,
+      "block_index": 4,
+      "block_start": 179,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 243,
+      "block_index": 5,
+      "block_start": 211,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 275,
+      "block_index": 6,
+      "block_start": 243,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 319,
+      "block_index": 7,
+      "block_start": 275,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 10,
+      "block_end": 320,
+      "block_index": 8,
+      "block_start": 319,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 10,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "block_end": 329,
+      "block_index": 9,
+      "block_start": 320,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 9,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 132
+}

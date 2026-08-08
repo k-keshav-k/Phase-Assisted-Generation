@@ -1,0 +1,99 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:16:01.130304+00:00",
+  "elapsed_sec": 4.30458277836442,
+  "generated_text": "Here is a Python solution for the problem:\n\n```python\ndef anti_shuffle(s):\n    words = s.split()\n    ordered_words = []\n    for word in words:\n        ordered_word = ''.join(sorted(word, key=ord))\n        ordered_words.append(ordered_word)\n    return ' '.join(ordered_words)\n```\n\nThis function works by first splitting the input string into a list of words. Then, for each word, it sorts the characters in the word based on their ASCII values using the `sorted` function with the `key=ord` argument. The sorted characters are then joined back into a string using the `join` function. The ordered word is appended to a list of ordered words. Finally, the ordered words are joined back into a string with spaces in between using the `join` function.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "def anti_shuffle(s):\n    words = s.split()\n    ordered_words = []\n    for word in words:\n        ordered_word = ''.join(sorted(word, key=ord))\n        ordered_words.append(ordered_word)\n    return ' '.join(ordered_words)",
+    "gold_answer": "tests",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    16,
+    27,
+    32,
+    29,
+    10,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15748075008,
+  "sample_id": "humaneval-00086",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 32,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 141
+}

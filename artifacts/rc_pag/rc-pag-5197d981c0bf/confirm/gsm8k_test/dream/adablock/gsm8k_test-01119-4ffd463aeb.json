@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    7,
+    14,
+    32,
+    32,
+    1,
+    32,
+    32,
+    8
+  ],
+  "created_at": "2026-08-01T07:24:30.172500+00:00",
+  "elapsed_sec": 3.6745991371572018,
+  "generated_text": "1. **Determine the time Megan took to complete her chore:**\n   - Megan took 2 hours longer than Amalia to complete her chore.\n   - Amalia took 4 hours to mow the lawn.\n   - Therefore, Megan took \\(4 + 2 = 6\\) hours to walk the dog.\n\n2. **Determine the time Dior took to complete her chore:**\n   - Dior took well over 4 hours longer than the time Amalia took to mow the lawn.\n   - Amalia took 4 hours to mow the lawn.\n   - Therefore, Dior took \\(4 + 4 = 8\\) hours to do the laundry.\n\n3. **Calculate the total time taken by all three to complete their chores:**\n   - Amalia took 4 hours.\n   - Megan took 6 hours.\n   - Dior took 8 hours.\n   - Total time = \\(4 + 6 + 8 = 18\\) hours.\n\n4. **Conclusion:**\n   - The total time taken by all three to complete their chores is 18 hours.\n\nFinal answer: 18",
+  "grade": {
+    "error": null,
+    "extracted_answer": "18",
+    "gold_answer": "18",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    13,
+    2,
+    10,
+    3,
+    4,
+    12,
+    7,
+    1,
+    16,
+    23,
+    2
+  ],
+  "peak_allocated_bytes": 15754440704,
+  "sample_id": "gsm8k_test-01119",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 118
+}

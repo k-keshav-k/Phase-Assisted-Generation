@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    8,
+    9,
+    32,
+    7,
+    15,
+    22,
+    15,
+    9,
+    25,
+    1,
+    32,
+    5,
+    26,
+    8,
+    10
+  ],
+  "created_at": "2026-08-01T04:27:32.165980+00:00",
+  "elapsed_sec": 2.800656568259001,
+  "generated_text": "1. Determine the number of dumplings each female ate.\n   - Each female ate 3 dumplings.\n\n2. Calculate the total number of dumplings eaten by the females.\n   - There are 6 females.\n   - Total dumplings eaten by females = \\( 6 \\times 3 = 18 \\) dumplings.\n\n3. Determine the number of dumplings each male ate.\n   - Each male ate 1 more dumpling than each female.\n   - Therefore, each male ate \\( 3 + 1 = 4 \\) dumplings.\n\n4. Calculate the total number of dumplings eaten by the males.\n   - There are 8 males.\n   - Total dumplings eaten by males = \\( 8 \\times 4 = 32 \\) dumplings.\n\n5. Calculate the total number of dumplings eaten by all the friends.\n   - Total dumplings eaten by all = Dumplings eaten by females + Dumplings eaten by males\n   - Total dumplings eaten by all = \\( 18 + 32 = 50 \\) dumplings\n\nFinal answer: 50",
+  "grade": {
+    "error": null,
+    "extracted_answer": "50",
+    "gold_answer": "50",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    4,
+    4,
+    9,
+    1,
+    1,
+    4,
+    1,
+    2,
+    1,
+    1,
+    18,
+    2,
+    6,
+    6,
+    1
+  ],
+  "peak_allocated_bytes": 17220165632,
+  "sample_id": "gsm8k_test-00703",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 81
+}

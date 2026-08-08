@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    7,
+    1,
+    16,
+    1,
+    11,
+    32,
+    14,
+    48,
+    1,
+    36,
+    47,
+    1,
+    9
+  ],
+  "created_at": "2026-08-01T04:35:06.748236+00:00",
+  "elapsed_sec": 2.848854772746563,
+  "generated_text": "To determine how many cents Grayson earns from recycling in a four-week month, we need to follow these steps:\n\n1. Calculate the weekly earnings from recycling aluminum cans and plastic bottles.\n2. Multiply the weekly earnings by the number of weeks in a month.\n\nFirst, let's calculate the weekly earnings:\n\n- Grayson recycles 3 aluminum cans each week, and each can is worth 2 cents.\n  \\[\n  3 \\times 2 = 6 \\text{ cents}\n  \\]\n\n- Grayson recycles 5 plastic bottles each week, and each bottle is worth 3 cents.\n  \\[\n  5 \\times 3 = 15 \\text{ cents}\n  \\]\n\n- Adding these together gives the total weekly earnings:\n  \\[\n  6 + 15 = 21 \\text{ cents}\n  \\]\n\nNext, we multiply the weekly earnings by the number of weeks in a month (which is 4):\n  \\[\n  21 \\times 4 = 84 \\text{ cents}\n  \\]\n\nFinal answer: 84.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "84.",
+    "gold_answer": "84",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    9,
+    6,
+    1,
+    9,
+    1,
+    6,
+    19,
+    4,
+    2,
+    1,
+    8,
+    14,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17224212480,
+  "sample_id": "gsm8k_test-00460",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 48,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 36,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 47,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 83
+}

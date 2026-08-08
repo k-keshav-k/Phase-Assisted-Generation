@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    7,
+    32,
+    32,
+    32,
+    32,
+    32,
+    2,
+    25,
+    30
+  ],
+  "created_at": "2026-08-01T07:52:34.441890+00:00",
+  "elapsed_sec": 3.65432908013463,
+  "generated_text": "1. Calculate the number of sheep that produce 1 kg of milk per day:\n   - Mary has 30 sheep, and half of them produce 1 kg of milk per day.\n   - Half of 30 is 30 / 2 = 15 sheep.\n\n2. Calculate the amount of milk produced by these 15 sheep per day:\n   - Each of these 15 sheep produces 1 kg of milk per day.\n   - Total milk from these sheep = 15 sheep * 1 kg/sheep = 15 kg.\n\n3. Calculate the number of sheep that produce 2 kg of milk per day:\n   - The other half of the sheep produce 2 kg of milk per day.\n   - Half of 30 is 15 sheep.\n\n4. Calculate the amount of milk produced by these 15 sheep per day:\n   - Each of these 15 sheep produces 2 kg of milk per day.\n   - Total milk from these sheep = 15 sheep * 2 kg/sheep = 30 kg.\n\n5. Calculate the total amount of milk collected every day:\n   - Total milk = 15 kg.\n\nFinal answer: 45.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "45.",
+    "gold_answer": "45",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    5,
+    21,
+    17,
+    7,
+    17,
+    4,
+    2,
+    2,
+    21
+  ],
+  "peak_allocated_bytes": 15667813376,
+  "sample_id": "gsm8k_test-00374",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 120
+}

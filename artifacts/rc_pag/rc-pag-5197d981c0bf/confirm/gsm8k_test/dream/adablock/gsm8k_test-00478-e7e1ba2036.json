@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    13,
+    32,
+    32,
+    18,
+    32,
+    32,
+    32,
+    1
+  ],
+  "created_at": "2026-08-01T07:41:53.031392+00:00",
+  "elapsed_sec": 2.8641750402748585,
+  "generated_text": "1. **Determine the total number of employees:**\n   - The employees are divided into 3 groups of 200 employees each.\n   - Total number of employees = 3 groups × 200 employees/group = 600 employees.\n\n2. **Calculate the total number of tour guides:**\n   - Each group is assigned 7 tour guides.\n   - Total number of tour guides = 3 groups × 7 tour guides/group = 21 tour guides.\n\n3. **Calculate the total number of people going on the tour:**\n   - Total number of people = Total number of employees + Total number of tour guides\n   - Total number of people = 600 employees + 21 tour guides = 621 people.\n\n4. **Final answer:**\n   - Final answer: 621",
+  "grade": {
+    "error": null,
+    "extracted_answer": "621",
+    "gold_answer": "621",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    15,
+    4,
+    9,
+    11,
+    3,
+    24,
+    2,
+    2,
+    1
+  ],
+  "peak_allocated_bytes": 15684374016,
+  "sample_id": "gsm8k_test-00478",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 93
+}

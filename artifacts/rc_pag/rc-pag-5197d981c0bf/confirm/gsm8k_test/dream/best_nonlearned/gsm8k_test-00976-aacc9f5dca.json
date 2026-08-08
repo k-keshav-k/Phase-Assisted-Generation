@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:19:35.376812+00:00",
+  "elapsed_sec": 2.7404115460813046,
+  "generated_text": ".. On Saturday, Sunny sold 10 boxes of gingerbread and 4 fewer boxes of apple pie than on Sunday. So, on Sunday, he sold 10 + 4 = 14 boxes of apple pie.\n2. On Sunday, he sold 5 more boxes of gingerbread than on Saturday, so he sold 10 + 5 = 15 boxes of gingerbread.\n3. The total number of boxes of gingerbread sold over the two days is 10 + 15 = 25 boxes.\n4. The total number of boxes of apple pie sold over the two days is 14 + 15 = 29 boxes.\n5. The total earnings from gingerbread is 25 boxes * $6 per box = $150.\n6. The total earnings from apple pie is 29 boxes * $15 per box = $435.\n7. The total earnings for two days is $150 + $435 = $585.\n\nFinal answer: 585",
+  "grade": {
+    "error": null,
+    "extracted_answer": "585",
+    "gold_answer": "540",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    21,
+    13,
+    14,
+    8,
+    16,
+    2,
+    15,
+    1
+  ],
+  "peak_allocated_bytes": 15538874368,
+  "sample_id": "gsm8k_test-00976",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 159,
+      "block_index": 0,
+      "block_start": 127,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9211153984069824,
+      "min_top1_confidence": 0.46535778045654297,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 191,
+      "block_index": 1,
+      "block_start": 159,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9610826373100281,
+      "min_top1_confidence": 0.3550183176994324,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 223,
+      "block_index": 2,
+      "block_start": 191,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9358289837837219,
+      "min_top1_confidence": 0.3245024085044861,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 255,
+      "block_index": 3,
+      "block_start": 223,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.991766095161438,
+      "min_top1_confidence": 0.8452296257019043,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 287,
+      "block_index": 4,
+      "block_start": 255,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9691790342330933,
+      "min_top1_confidence": 0.34875744581222534,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 319,
+      "block_index": 5,
+      "block_start": 287,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9852803945541382,
+      "min_top1_confidence": 0.6685093641281128,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 351,
+      "block_index": 6,
+      "block_start": 319,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9786078929901123,
+      "min_top1_confidence": 0.5566453337669373,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 383,
+      "block_index": 7,
+      "block_start": 351,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.99993896484375,
+      "min_top1_confidence": 0.9998254179954529,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 90
+}

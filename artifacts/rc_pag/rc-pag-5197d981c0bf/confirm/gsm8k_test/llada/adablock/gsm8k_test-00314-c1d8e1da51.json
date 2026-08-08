@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    25,
+    1,
+    42,
+    32,
+    1,
+    3,
+    19,
+    4,
+    1,
+    14,
+    61,
+    5,
+    4,
+    1,
+    11
+  ],
+  "created_at": "2026-08-01T04:17:23.869512+00:00",
+  "elapsed_sec": 2.9412226378917694,
+  "generated_text": "Let's denote the number of players on the defense as \\( D \\).\n\n1. According to the problem, there are twice as many players on the offense as there are on the defense. Therefore, the number of players on the offense is \\( 2D \\).\n\n2. There are half the number of players on the special teams as there are on the defense. Therefore, the number of players on the special teams is \\( \\frac{D}{2} \\).\n\n3. The total number of players on the team is the sum of the players on the offense, defense, and special teams. This can be expressed as:\n   \\[\n   2D + D + \\frac{D}{2} = 105\n   \\]\n\n4. Combine the terms on the left side:\n   \\[\n   \\frac{7D}{2} = 105\n   \\]\n\n5. Solve for \\( D \\):\n   \\[\n   7D = 210\n   \\]\n   \\[\n   D = \\frac{210}{7} = 30\n   \\]\n\nFinal answer: \\( 30 \\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\( 30 \\).",
+    "gold_answer": "30",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    14,
+    4,
+    1,
+    5,
+    15,
+    1,
+    1,
+    8,
+    1,
+    1,
+    7,
+    21,
+    1,
+    1,
+    1,
+    3
+  ],
+  "peak_allocated_bytes": 17207550976,
+  "sample_id": "gsm8k_test-00314",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 42,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 61,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 85
+}

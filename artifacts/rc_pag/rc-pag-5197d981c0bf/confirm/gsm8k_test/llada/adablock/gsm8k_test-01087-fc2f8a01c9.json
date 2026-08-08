@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    11,
+    32,
+    32,
+    45,
+    15,
+    32,
+    29,
+    28
+  ],
+  "created_at": "2026-08-01T04:13:40.942173+00:00",
+  "elapsed_sec": 2.43091244623065,
+  "generated_text": "To determine how many bales of hay are left in the field after a 6-hour day, we need to calculate the total number of bales produced and the total number of bales picked up.\n\n1. **Calculate the total number of bales produced:**\n   - The farmer makes 5 bales per hour.\n   - Over 6 hours, the farmer makes \\( 5 \\times 6 = 30 \\) bales.\n\n2. **Calculate the total number of bales picked up:**\n   - The truck picks up 3 bales per hour.\n   - Over 6 hours, the truck picks up \\( 3 \\times 6 = 18 \\) bales.\n\n3. **Calculate the number of bales left in the field:**\n   - The total number of bales produced is 30.\n   - The total number of bales picked up is 18.\n   - Therefore, the number of bales left in the field is \\( 30 - 18 = 12 \\).\n\nFinal answer: 12.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "12.",
+    "gold_answer": "12",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    6,
+    14,
+    10,
+    2,
+    5,
+    8,
+    6,
+    4
+  ],
+  "peak_allocated_bytes": 17273325056,
+  "sample_id": "gsm8k_test-01087",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 45,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 72
+}

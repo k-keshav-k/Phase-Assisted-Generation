@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    4,
+    1,
+    20,
+    32,
+    22,
+    29,
+    32,
+    15,
+    1,
+    24,
+    3,
+    1,
+    32,
+    8
+  ],
+  "created_at": "2026-08-01T04:23:27.558425+00:00",
+  "elapsed_sec": 2.596827931702137,
+  "generated_text": "1. **Initial number of trees**: Tom starts with 50 trees.\n\n2. **Trees planted per year**: Tom plants 10 trees each year.\n\n3. **Trees chopped down per year**: Tom chops down 2 trees each year.\n\n4. **Net increase in trees per year**: \\(10 - 2 = 8\\) trees per year.\n\n5. **Total net increase over 10 years**: \\(8 \\times 10 = 80\\) trees.\n\n6. **Total trees after 10 years**: \\(50 + 80 = 130\\) trees.\n\n7. **Percentage of trees that die**: 30% of the trees die.\n\n8. **Number of trees that die**: \\(0.30 \\times 130 = 39\\) trees.\n\n9. **Number of trees left after some die**: \\(130 - 39 = 91\\) trees.\n\nFinal answer: 91.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "91.",
+    "gold_answer": "91",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    2,
+    1,
+    2,
+    15,
+    4,
+    6,
+    10,
+    1,
+    1,
+    8,
+    1,
+    1,
+    4,
+    1
+  ],
+  "peak_allocated_bytes": 17203540992,
+  "sample_id": "gsm8k_test-00192",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 75
+}

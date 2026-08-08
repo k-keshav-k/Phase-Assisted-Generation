@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    3,
+    32,
+    2,
+    8,
+    10,
+    2,
+    6,
+    7,
+    2,
+    1,
+    32,
+    32,
+    32,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T06:13:48.199776+00:00",
+  "elapsed_sec": 2.8337859101593494,
+  "generated_text": "```python\ndef can_be_represented_as_sum_of_powers_of_2(n):\n    if n <= 0:\n        return False\n    mask = 1\n    while n > 0:\n        if n & mask:\n            n -= mask\n        mask <<= 1\n    return n == 0\n```\n\nThis function `can_be_represented_as_sum_of_powers_of_2` checks if a given number `n` can be represented as a sum of non-zero powers of 2. It uses a bitwise approach to determine if the number can be expressed as a sum of powers of 2.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_2k_ne2ld/candidate.py\", line 11, in <module>\n    assert is_Sum_Of_Powers_Of_Two(10) == True\n           ^^^^^^^^^^^^^^^^^^^^^^^\nNameError: name 'is_Sum_Of_Powers_Of_Two' is not defined\n",
+    "extracted_answer": "def can_be_represented_as_sum_of_powers_of_2(n):\n    if n <= 0:\n        return False\n    mask = 1\n    while n > 0:\n        if n & mask:\n            n -= mask\n        mask <<= 1\n    return n == 0",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    2,
+    22,
+    2,
+    5,
+    7,
+    1,
+    3,
+    4,
+    2,
+    1,
+    8,
+    20,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17083785728,
+  "sample_id": "mbpp_sanitized-00077",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/llada",
+  "total_nfe": 81
+}

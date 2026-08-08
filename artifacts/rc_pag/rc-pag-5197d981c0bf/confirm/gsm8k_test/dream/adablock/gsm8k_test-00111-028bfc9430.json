@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    4,
+    32,
+    9,
+    32,
+    8,
+    32,
+    32,
+    32,
+    32,
+    11
+  ],
+  "created_at": "2026-08-01T07:49:01.959260+00:00",
+  "elapsed_sec": 4.5978818498551846,
+  "generated_text": "1. **Determine the rate at which the boat takes on water:**\n   - The boat takes on 2 liters of water for every 10 feet Julia rows.\n   - Therefore, the rate is 2 liters per 10 feet.\n\n2. **Calculate the total distance Julia rows:**\n   - Julia rows 20 feet in 16 seconds.\n   - To find the total distance she rows in 64 seconds, we use the proportion:\n     - 20 feet / 16 seconds = x feet / 64 seconds\n   - Solving for x, we get x = (20 feet * 64 seconds) / 16 seconds = 80 feet.\n\n3. **Calculate the total amount of water the boat takes on:**\n   - Using the rate of 2 liters per 10 feet, the total amount of water taken on is:\n     - (2 liters / 10 feet) * 80 feet = 16 liters.\n\n4. **Conclusion:**\n   - The boat took on 16 liters of water by the time Julia reached shore.\n\nFinal answer: \\boxed{16}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{16}",
+    "gold_answer": "16",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    4,
+    23,
+    5,
+    25,
+    4,
+    18,
+    17,
+    14,
+    16,
+    2
+  ],
+  "peak_allocated_bytes": 15706030080,
+  "sample_id": "gsm8k_test-00111",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 151
+}

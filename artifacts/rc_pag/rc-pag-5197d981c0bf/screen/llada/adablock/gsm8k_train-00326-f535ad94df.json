@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    13,
+    33,
+    32,
+    1,
+    32,
+    32,
+    32,
+    14,
+    32,
+    3
+  ],
+  "created_at": "2026-07-31T20:06:41.691207+00:00",
+  "elapsed_sec": 4.035613361746073,
+  "generated_text": "1. Determine how much money Doris earns in a week:\n   - She babysits for 3 hours every weekday, so she earns \\(3 \\times 20 = 60\\) dollars per weekday.\n   - She babysits for 5 hours on Saturday, so she earns \\(5 \\times 20 = 100\\) dollars on Saturday.\n   - There are 5 weekdays in a week, so she earns \\(5 \\times 60 = 300\\) dollars in a week.\n   - Adding these together, she earns \\(300 + 100 = 400\\) dollars in a week.\n\n2. Calculate how many weeks Doris needs to earn at least $1200:\n   - She earns $400 per week.\n   - To find out how many weeks she needs to earn $1200, we divide 1200 by 400: \\(1200 \\div 400 = 3\\).\n\nFinal answer: 3.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "3.",
+    "gold_answer": "3",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    29,
+    5,
+    4,
+    16,
+    1,
+    13,
+    16,
+    22,
+    4,
+    6,
+    1
+  ],
+  "peak_allocated_bytes": 17233418752,
+  "sample_id": "gsm8k_train-00326",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 33,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/llada",
+  "total_nfe": 117
+}

@@ -1,0 +1,343 @@
+{
+  "block_history": [
+    22,
+    1,
+    17,
+    24,
+    2,
+    1,
+    19,
+    1,
+    1,
+    32,
+    22,
+    1,
+    29,
+    1,
+    13,
+    35,
+    1,
+    1,
+    32,
+    1
+  ],
+  "created_at": "2026-08-01T04:16:33.513292+00:00",
+  "elapsed_sec": 2.5942114405333996,
+  "generated_text": "To determine how much James pays on average for each pair of shoes, we need to follow these steps:\n\n1. Calculate the total number of pairs of shoes James buys in a year.\n2. Divide the total amount spent on shoes by the total number of pairs of shoes to find the average cost per pair.\n\n**Step 1: Calculate the total number of pairs of shoes James buys in a year.**\n\nJames buys 2 pairs of shoes each month. There are 12 months in a year.\n\\[ 2 \\text{ pairs/month} \\times 12 \\text{ months/year} = 24 \\text{ pairs/year} \\]\n\n**Step 2: Divide the total amount spent on shoes by the total number of pairs of shoes to find the average cost per pair.**\n\nJames spends $2640 on shoes each year.\n\\[ \\frac{2640 \\text{ dollars}}{24 \\text{ pairs/year}} = 110 \\text{ dollars/pair} \\]\n\nSo, James pays an average of $110 for each pair of shoes.\n\n**Final answer:** \\(\\boxed{110}\\)",
+  "grade": {
+    "error": null,
+    "extracted_answer": "** \\(\\boxed{110}\\)",
+    "gold_answer": "110",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    5,
+    1,
+    4,
+    15,
+    1,
+    1,
+    3,
+    1,
+    1,
+    10,
+    3,
+    1,
+    1,
+    1,
+    2,
+    7,
+    1,
+    1,
+    13,
+    1
+  ],
+  "peak_allocated_bytes": 17162156032,
+  "sample_id": "gsm8k_test-00851",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 94,
+      "block_index": 0,
+      "block_start": 72,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 95,
+      "block_index": 1,
+      "block_start": 94,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 112,
+      "block_index": 2,
+      "block_start": 95,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 136,
+      "block_index": 3,
+      "block_start": 112,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 138,
+      "block_index": 4,
+      "block_start": 136,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 139,
+      "block_index": 5,
+      "block_start": 138,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 158,
+      "block_index": 6,
+      "block_start": 139,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 159,
+      "block_index": 7,
+      "block_start": 158,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 160,
+      "block_index": 8,
+      "block_start": 159,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 192,
+      "block_index": 9,
+      "block_start": 160,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 214,
+      "block_index": 10,
+      "block_start": 192,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 215,
+      "block_index": 11,
+      "block_start": 214,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 244,
+      "block_index": 12,
+      "block_start": 215,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 13,
+      "block_start": 244,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 258,
+      "block_index": 14,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 293,
+      "block_index": 15,
+      "block_start": 258,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 294,
+      "block_index": 16,
+      "block_start": 293,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 295,
+      "block_index": 17,
+      "block_start": 294,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 327,
+      "block_index": 18,
+      "block_start": 295,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "block_end": 328,
+      "block_index": 19,
+      "block_start": 327,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 1,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 73
+}

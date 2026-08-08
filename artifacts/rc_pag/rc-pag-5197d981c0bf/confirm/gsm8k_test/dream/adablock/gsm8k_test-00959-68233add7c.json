@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    6,
+    24,
+    32,
+    32,
+    8,
+    32,
+    32,
+    32,
+    26
+  ],
+  "created_at": "2026-08-01T07:10:30.880305+00:00",
+  "elapsed_sec": 2.642406139522791,
+  "generated_text": "1. **Determine the number of balls each boy carried:**\n   - Jordan carried twice as many balls as Jason, so Jordan carried 2 * 2 = 4 balls.\n   - Jason carried twice as many balls as Jeffrey, so Jeffrey carried 2 / 2 = 1 ball.\n\n2. **Calculate the total number of balls carried by all three boys:**\n   - Total balls = Jordan's balls + Jason's balls + Jeffrey's balls = 4 + 2 + 1 = 7 balls.\n\n3. **State the final answer:**\n   - The total number of balls that the coach brought to practice is 7.\n\nFinal answer: 7",
+  "grade": {
+    "error": null,
+    "extracted_answer": "7",
+    "gold_answer": "7",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    2,
+    7,
+    15,
+    17,
+    5,
+    4,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15760809984,
+  "sample_id": "gsm8k_test-00959",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 84
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T08:48:25.708207+00:00",
+  "elapsed_sec": 2.428091485053301,
+  "generated_text": "To solve the problem of dividing $10$ by $\\frac{2}{3}$, we can use the fact that dividing by a fraction is equivalent to multiplying by its reciprocal. The reciprocal of $\\frac{2}{3}$ is $\\frac{3}{2}$.\n\nSo, we can rewrite the division as multiplication multiplication of $10$ by $\\frac{3}{2}$:\n\n$10 \\times \\frac{3}{2} = \\boxed{15}$\n\nTherefore, Remmy should multiply $10$ by $\\frac{3}{2}$ to get the answer.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[15, '15']",
+    "gold_answer": "\\frac{3}{2}",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    20,
+    15,
+    23,
+    17,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15585213440,
+  "sample_id": "math500-00090",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 110,
+      "block_index": 0,
+      "block_start": 78,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9547027349472046,
+      "min_top1_confidence": 0.540815532207489,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 142,
+      "block_index": 1,
+      "block_start": 110,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9293612837791443,
+      "min_top1_confidence": 0.23617693781852722,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 174,
+      "block_index": 2,
+      "block_start": 142,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9215972423553467,
+      "min_top1_confidence": 0.4407026767730713,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 206,
+      "block_index": 3,
+      "block_start": 174,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9693252444267273,
+      "min_top1_confidence": 0.5050541758537292,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 238,
+      "block_index": 4,
+      "block_start": 206,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999980926513672,
+      "min_top1_confidence": 0.9999920129776001,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 270,
+      "block_index": 5,
+      "block_start": 238,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999993443489075,
+      "min_top1_confidence": 0.999995231628418,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 302,
+      "block_index": 6,
+      "block_start": 270,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999973177909851,
+      "min_top1_confidence": 0.9999887943267822,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 334,
+      "block_index": 7,
+      "block_start": 302,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999357461929321,
+      "min_top1_confidence": 0.9997197985649109,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 79
+}

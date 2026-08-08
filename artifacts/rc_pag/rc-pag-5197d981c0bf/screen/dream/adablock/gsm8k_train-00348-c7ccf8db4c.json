@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    4,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    28
+  ],
+  "created_at": "2026-07-31T23:01:48.628310+00:00",
+  "elapsed_sec": 2.6970333866775036,
+  "generated_text": "1. **Calculate the number of students who have puppies:**\n   - There are 40 students in total.\n   - 80% of these students have puppies.\n   - Therefore, the number of students with puppies is \\(40 \\times 0.80 = 32\\).\n\n2. **Calculate the number of students who have both puppies and parrots:**\n   - Of those who have puppies, 25% also have parrots.\n   - Therefore, the number of students with both puppies and parrots is \\(32 \\times 0.25 = 8\\).\n\n3. **Conclusion:**\n   - There are 8 students who have both puppies and parrots.\n\nFinal answer: \\boxed{8}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{8}",
+    "gold_answer": "8",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    2,
+    24,
+    10,
+    8,
+    19,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15679278592,
+  "sample_id": "gsm8k_train-00348",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 89
+}

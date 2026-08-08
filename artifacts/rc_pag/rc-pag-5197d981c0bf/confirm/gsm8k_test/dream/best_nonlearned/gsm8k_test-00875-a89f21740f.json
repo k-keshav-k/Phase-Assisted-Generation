@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:31:45.420205+00:00",
+  "elapsed_sec": 2.831434939056635,
+  "generated_text": "1. **Calculate the total number of marbles Paul has after his friend gives him more:**\n   - Paul initially has 52 marbles.\n   - His friend gives him 28 marbles.\n   - Total marbles after receiving from his friend: \\(52 + 28 = 80\\).\n\n2. **Calculate the number of marbles Paul loses:**\n   - Paul loses \\(\\frac{1}{4}\\) of his marbles.\n   - Number of marbles lost: \\(\\frac{1}{4} \\times 80 = 20\\).\n\n3. ** the the number of marbles Paul has left:**\n   - Total marbles after losing some: \\(80 - 20 = 60\\).\n\nFinal answer: \\boxed{60}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{60}",
+    "gold_answer": "60",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    28,
+    15,
+    11,
+    9,
+    14,
+    14,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15587281920,
+  "sample_id": "gsm8k_test-00875",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 112,
+      "block_index": 0,
+      "block_start": 80,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9188451766967773,
+      "min_top1_confidence": 0.06561789661645889,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 144,
+      "block_index": 1,
+      "block_start": 112,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9390935897827148,
+      "min_top1_confidence": 0.1813099980354309,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 176,
+      "block_index": 2,
+      "block_start": 144,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9497074484825134,
+      "min_top1_confidence": 0.030949734151363373,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 208,
+      "block_index": 3,
+      "block_start": 176,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9519190788269043,
+      "min_top1_confidence": 0.2603480815887451,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 240,
+      "block_index": 4,
+      "block_start": 208,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9873818159103394,
+      "min_top1_confidence": 0.8969585299491882,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 272,
+      "block_index": 5,
+      "block_start": 240,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9852710366249084,
+      "min_top1_confidence": 0.6593499183654785,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 304,
+      "block_index": 6,
+      "block_start": 272,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 1.0,
+      "min_top1_confidence": 1.0,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 336,
+      "block_index": 7,
+      "block_start": 304,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999858140945435,
+      "min_top1_confidence": 0.9999508857727051,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 93
+}

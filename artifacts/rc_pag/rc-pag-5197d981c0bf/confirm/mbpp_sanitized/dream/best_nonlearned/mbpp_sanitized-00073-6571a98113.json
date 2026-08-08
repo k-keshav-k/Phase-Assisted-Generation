@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:11:24.167767+00:00",
+  "elapsed_sec": 0.9453670047223568,
+  "generated_text": "Here is a Python function that converts a tuple to a string:\n\n```python\ndef tuple_to_string(t):\n    return str(t)\n```",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_jotuj0p6/candidate.py\", line 4, in <module>\n    assert tup_string(('e', 'x', 'e', 'r', 'c', 'i', 's', 'e', 's'))==(\"exercises\")\n           ^^^^^^^^^^\nNameError: name 'tup_string' is not defined\n",
+    "extracted_answer": "def tuple_to_string(t):\n    return str(t)",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15549201920,
+  "sample_id": "mbpp_sanitized-00073",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 75,
+      "block_index": 0,
+      "block_start": 43,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.917133092880249,
+      "min_top1_confidence": 0.16318374872207642,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 107,
+      "block_index": 1,
+      "block_start": 75,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999374270439148,
+      "min_top1_confidence": 0.998676598072052,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 139,
+      "block_index": 2,
+      "block_start": 107,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999919593334198,
+      "min_top1_confidence": 0.9998393058776855,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 171,
+      "block_index": 3,
+      "block_start": 139,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999817609786987,
+      "min_top1_confidence": 0.999951958656311,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 203,
+      "block_index": 4,
+      "block_start": 171,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999880790710449,
+      "min_top1_confidence": 0.9999734163284302,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 235,
+      "block_index": 5,
+      "block_start": 203,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999872446060181,
+      "min_top1_confidence": 0.9999638795852661,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 267,
+      "block_index": 6,
+      "block_start": 235,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999761581420898,
+      "min_top1_confidence": 0.9999052286148071,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 299,
+      "block_index": 7,
+      "block_start": 267,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999936580657959,
+      "min_top1_confidence": 0.9997963309288025,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 29
+}

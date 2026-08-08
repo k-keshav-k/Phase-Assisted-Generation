@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:22:27.222378+00:00",
+  "elapsed_sec": 3.9721001759171486,
+  "generated_text": "Here is a Python solution for the problem:\n\n```python\ndef is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n\ndef intersection(interval1, interval2):\n    start1, end1 = interval1\n    start2, end2 = interval2\n\n    if start1 end end2 or start2 end end1:\n        return \"NO\"\n\n    start = max(start1, start2)\n    end = min(end1, end2)\n\n    length = end - start\n\n    if is_prime(length):\n        return \"YES\"\n    else:\n        return \"NO\"\n```\n\nThis first first checks if the two intervals intersect. If they don't, it returns \"NO\". If they do, it calculates the start and end of the intersection, and then the length of the intersection. Finally, it checks if the length is a prime number using the `is_prime` helper function. If it is, it returns \"YES\", otherwise it returns \"NO\".",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_l4f0_t22/candidate.py\", line 14\n    if start1 end end2 or start2 end end1:\n              ^^^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n\ndef intersection(interval1, interval2):\n    start1, end1 = interval1\n    start2, end2 = interval2\n\n    if start1 end end2 or start2 end end1:\n        return \"NO\"\n\n    start = max(start1, start2)\n    end = min(end1, end2)\n\n    length = end - start\n\n    if is_prime(length):\n        return \"YES\"\n    else:\n        return \"NO\"",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    23,
+    4,
+    10,
+    9,
+    15,
+    29,
+    28,
+    9
+  ],
+  "peak_allocated_bytes": 15641097728,
+  "sample_id": "humaneval-00127",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 299,
+      "block_index": 0,
+      "block_start": 267,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9478417634963989,
+      "min_top1_confidence": 0.1403277963399887,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 331,
+      "block_index": 1,
+      "block_start": 299,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9614484906196594,
+      "min_top1_confidence": 0.06167598441243172,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 363,
+      "block_index": 2,
+      "block_start": 331,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9772161245346069,
+      "min_top1_confidence": 0.6106087565422058,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 395,
+      "block_index": 3,
+      "block_start": 363,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9317539930343628,
+      "min_top1_confidence": 0.32090863585472107,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 427,
+      "block_index": 4,
+      "block_start": 395,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.9161616563796997,
+      "min_top1_confidence": 0.06515496224164963,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "block_end": 459,
+      "block_index": 5,
+      "block_start": 427,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8939393758773804,
+      "min_top1_confidence": 0.24501408636569977,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 491,
+      "block_index": 6,
+      "block_start": 459,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.840573787689209,
+      "min_top1_confidence": 0.03233512118458748,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 523,
+      "block_index": 7,
+      "block_start": 491,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9892714023590088,
+      "min_top1_confidence": 0.8306193351745605,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 127
+}

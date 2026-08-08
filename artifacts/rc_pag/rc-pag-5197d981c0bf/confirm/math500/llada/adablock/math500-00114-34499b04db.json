@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    27,
+    32,
+    32,
+    32,
+    1,
+    16,
+    32,
+    2,
+    18
+  ],
+  "created_at": "2026-08-01T05:28:20.518762+00:00",
+  "elapsed_sec": 4.6993390545248985,
+  "generated_text": "First, factor the denominator $x^2 + 5x - 24$ as $(x-3)(x+8)$.\n\nNext, rewrite the left-hand side of the equation as a single fraction:\n\\[\\frac{C(x-3) + D(x+8)}{(x-3)(x+8)} = \\frac{4x-23}{(x-3)(x+8)}.\\]\n\nNow, equate the numerators:\n\\[C(x-3) + D(x+8) = 4x - 23.\\]\n\nExpand and combine like terms:\n\\[Cx - 3C + Dx + 8D = 4x - 23.\\]\n\nFor the equation to hold for all $x$, the coefficients of $x$ and the constant terms must match:\n\\[C + D = 4,\\]\n\\[-3C + 8D = -23.\\]\n\nSolve this system of equations. We find:\n\\[C = 3, D = -1.\\]\n\nThus, the product $CD$ is:\n\\[CD = (3)(-1) = \\boxed{-3}.\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[-3, '-3']",
+    "gold_answer": "-5",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    26,
+    8,
+    12,
+    10,
+    25,
+    1,
+    2,
+    25,
+    2,
+    4
+  ],
+  "peak_allocated_bytes": 17237501952,
+  "sample_id": "math500-00114",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 137
+}

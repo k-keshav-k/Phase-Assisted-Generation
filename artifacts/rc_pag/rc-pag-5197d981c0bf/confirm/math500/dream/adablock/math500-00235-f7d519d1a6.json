@@ -1,0 +1,99 @@
+{
+  "block_history": [
+    32,
+    32,
+    11,
+    32,
+    43,
+    32,
+    43,
+    31
+  ],
+  "created_at": "2026-08-01T08:41:20.125173+00:00",
+  "elapsed_sec": 2.341631267219782,
+  "generated_text": "1. Convert $0.\\overline{7}$ to a fraction:\n   Let $x = 0.\\overline{7}$. Then $10x = 7.\\overline{7}$. Subtracting $x$ from $10x$ gives $9x = 7$, so $x = \\frac{7}{9}$.\n\n2. Convert $0.\\overline{4}$ to a fraction:\n   Let $y = 0.\\overline{4}$. Then $10y = 4.\\overline{4}$. Subtracting $y$ from $10y$ gives $9y = 4$, so $y = \\frac{4}{9}$.\n\n3. Convert $0.\\overline{2}$ to a fraction:\n   Let $z = 0.\\overline{2}$. Then $10z = 2.\\overline{2}$. Subtracting $z$ from $10z$ gives $9z = 2$, so $z = \\frac{2}{9}$.\n\n4. Combine the fractions:\n   $\\frac{7-4 + 2}{9} = \\boxed{\\frac{5}{9}}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[5/9, '\\\\frac{5}{9}']",
+    "gold_answer": "\\frac 59",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    12,
+    3,
+    3,
+    3,
+    3,
+    3,
+    26
+  ],
+  "peak_allocated_bytes": 15653800960,
+  "sample_id": "math500-00235",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 43,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 43,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 76
+}

@@ -1,0 +1,39 @@
+{
+  "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "models": {
+    "dream": {
+      "errors": [],
+      "mock": false,
+      "ok": true,
+      "repository": "Dream-org/Dream-v0-Instruct-7B",
+      "revision": "05334cb9faaf763692dcf9d8737c642be2b2a6ae"
+    },
+    "llada": {
+      "errors": [],
+      "mock": false,
+      "ok": true,
+      "repository": "GSAI-ML/LLaDA-8B-Instruct",
+      "revision": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    }
+  },
+  "schema_version": 1,
+  "stage": "preflight",
+  "status": "completed"
+}

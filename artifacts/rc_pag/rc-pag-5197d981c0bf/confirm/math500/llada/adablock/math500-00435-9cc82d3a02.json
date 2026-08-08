@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    3,
+    32,
+    32,
+    32,
+    2,
+    1,
+    32,
+    6,
+    1,
+    32,
+    48,
+    3
+  ],
+  "created_at": "2026-08-01T05:53:14.870364+00:00",
+  "elapsed_sec": 4.282366428524256,
+  "generated_text": "1. The expression inside the square root, \\( x^2 - 5x + 6 \\), must be non-negative for the square root to be defined.\n2. Solve the quadratic inequality \\( x^2 - 5x + 6 \\geq 0 \\).\n\n   \\[\n   x^2 - 5x + 6 = (x - 2)(x - 3) \\geq 0\n   \\]\n\n   The roots of the equation \\( x^2 - 5x + 6 = 0 \\) are \\( x = 2 \\) and \\( x = 3 \\).\n\n   Therefore, the solution to the inequality \\( x^2 - 5x + 6 \\geq 0 \\) is \\( x \\in [2, 3] \\).\n\n3. The function \\( f(x) = \\frac{2x-7}{\\sqrt{x^2-5x+6}} \\) is defined for \\( x \\in [2, 3] \\).\n\nThus, the domain of the function \\( f(x) \\) is \\( [2, 3] \\).\n\n\\[\n\\boxed{[2, 3]}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[Interval(2, 3), '[2, 3]']",
+    "gold_answer": "(-\\infty, 2) \\cup (3, \\infty)",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    3,
+    21,
+    14,
+    9,
+    2,
+    1,
+    19,
+    1,
+    1,
+    14,
+    17,
+    1
+  ],
+  "peak_allocated_bytes": 17117754880,
+  "sample_id": "math500-00435",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 48,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 126
+}

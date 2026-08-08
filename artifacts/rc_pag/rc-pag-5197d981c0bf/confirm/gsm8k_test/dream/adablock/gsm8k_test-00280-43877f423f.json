@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    36,
+    32,
+    7,
+    32,
+    32,
+    21
+  ],
+  "created_at": "2026-08-01T06:55:19.183364+00:00",
+  "elapsed_sec": 2.9590181969106197,
+  "generated_text": "To solve this problem, we need to calculate the total cost of the popsicles and the ice cream bars separately, and then add them together.\n\nFirst, let's calculate the total cost of the popsicles. Peter purchased 20 popsicles at $0.25 each. So, the total cost of the popsicles is 20 * $0.25 = $5.\n\nNext, let's calculate the total cost of the ice cream bars. Peter purchased 4 ice cream bars at $0.50 each. So, the total cost of the ice cream bars is 4 * $0.50 = $2.\n\nFinally, let's add the total cost of the popsicles and the ice cream bars together to find the total amount Peter paid. The total cost is $5 + $2 = $7.\n\nSo, Peter paid a total of $7.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "7",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    19,
+    11,
+    2,
+    21,
+    2,
+    16,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15669087744,
+  "sample_id": "gsm8k_test-00280",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 36,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 97
+}

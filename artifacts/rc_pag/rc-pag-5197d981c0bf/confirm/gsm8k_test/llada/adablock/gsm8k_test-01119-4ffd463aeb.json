@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    32,
+    6,
+    1,
+    9,
+    15,
+    1,
+    8,
+    17,
+    32,
+    38,
+    6,
+    1,
+    32,
+    19,
+    1,
+    32,
+    6
+  ],
+  "created_at": "2026-08-01T04:29:35.604080+00:00",
+  "elapsed_sec": 3.101969163864851,
+  "generated_text": "To determine the total time Amalia, Megan, and Dior took to complete their chores, we need to calculate the time each person spent on their respective tasks and then sum these times.\n\n1. **Amalia's Time:**\n   - Amalia took 4 hours to mow the lawn.\n\n2. **Megan's Time:**\n   - Megan took 2 hours longer than Amalia to walk the dog.\n   - Therefore, Megan's time is \\(4 + 2 = 6\\) hours.\n\n3. **Dior's Time:**\n   - Dior took well over 4 hours longer than Amalia to do laundry.\n   - Therefore, Dior's time is \\(4 + 4 = 8\\) hours.\n\n4. **Total Time Calculation:**\n   - Amalia's time: 4 hours\n   - Megan's time: 6 hours\n   - Dior's time: 8 hours\n   - Total time: \\(4 + 6 + 8 = 18\\) hours\n\nFinal answer: 18",
+  "grade": {
+    "error": null,
+    "extracted_answer": "18",
+    "gold_answer": "18",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    1,
+    1,
+    6,
+    7,
+    1,
+    1,
+    4,
+    9,
+    14,
+    3,
+    1,
+    5,
+    6,
+    1,
+    6,
+    1
+  ],
+  "peak_allocated_bytes": 17374628864,
+  "sample_id": "gsm8k_test-01119",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 38,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 86
+}

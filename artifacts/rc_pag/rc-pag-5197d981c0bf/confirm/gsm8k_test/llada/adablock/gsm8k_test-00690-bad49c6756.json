@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    8,
+    32,
+    15,
+    32,
+    6,
+    9,
+    27,
+    32,
+    5,
+    45,
+    13
+  ],
+  "created_at": "2026-08-01T04:16:21.080250+00:00",
+  "elapsed_sec": 3.4489751383662224,
+  "generated_text": "1. Determine Rong's monthly savings: 20 coins.\n2. Calculate Neil's monthly savings:\n   - Neil saves 2/5 times more coins than Rong.\n   - 2/5 of 20 is 20 * (2/5) = 8 coins.\n   - Therefore, Neil saves 20 + 8 = 28 coins per month.\n3. Calculate Rong's annual savings:\n   - Rong's annual savings = 20 coins/month * 12 months/year = 240 coins/year.\n4. Calculate Neil's annual savings:\n   - Neil's annual savings = 28 coins/month * 12 months/year = 336 coins/year.\n5. Calculate their combined annual savings:\n   - Combined annual savings = 240 coins/year + 336 coins/year = 576 coins/year.\n6. Calculate their total savings after 10 years:\n   - Total savings after 10 years = 576 coins/year * 10 years = 5,760 coins.\n\nFinal answer: 5,760 coins.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "5,760 coins.",
+    "gold_answer": "5760",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    4,
+    23,
+    3,
+    21,
+    4,
+    1,
+    1,
+    9,
+    1,
+    11,
+    1
+  ],
+  "peak_allocated_bytes": 17200176640,
+  "sample_id": "gsm8k_test-00690",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 45,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 102
+}

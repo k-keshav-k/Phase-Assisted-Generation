@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    7,
+    32,
+    7,
+    32,
+    32,
+    32,
+    13,
+    32,
+    32,
+    5
+  ],
+  "created_at": "2026-08-01T07:28:18.073125+00:00",
+  "elapsed_sec": 3.7045389860868454,
+  "generated_text": "1. Calculate the volume of one raised bed: \n   - Volume = width × length × height = 2 feet × 8 feet × 2 feet = 32 cubic feet.\n\n2. Calculate the total volume for all 10 raised beds:\n   - Total volume = 10 beds × 32 cubic feet/bed = 320 cubic feet.\n\n3. Determine how many bags of potting soil are needed:\n   - Each bag holds 2 cubic feet, so the number of bags needed = total volume / volume per bag = 320 cubic feet / 2 cubic feet/bag = 160 bags.\n\n4. Calculate the total cost of the potting soil:\n   - Each bag costs $12, so the total cost = number of bags × cost per bag = 160 bags × $12/bag = $1920.\n\n5. Final answer: $1920.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$1920.",
+    "gold_answer": "1920",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    3,
+    19,
+    2,
+    20,
+    9,
+    11,
+    4,
+    26,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15709852160,
+  "sample_id": "gsm8k_test-00455",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 121
+}

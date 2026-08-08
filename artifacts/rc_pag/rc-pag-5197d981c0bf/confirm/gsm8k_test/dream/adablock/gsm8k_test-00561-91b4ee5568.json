@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    5,
+    32,
+    2,
+    32,
+    6,
+    32,
+    32,
+    32,
+    32,
+    19
+  ],
+  "created_at": "2026-08-01T07:00:25.742179+00:00",
+  "elapsed_sec": 2.110003098845482,
+  "generated_text": "First, let's find Susan's weight. Since Susan weighs 20 pounds less than Mark, Susan weighs 150 - 20 = 130 pounds.\n\nNext, let's find Bob's weight. Since Bob weighs twice as much as Susan, Bob weighs 2 * 130 = 260 pounds.\n\nNow, let's find the total weight of the three friends. The total weight is 150 + 130 + 260 = 540 pounds.\n\nFinally, let's find the average weight of the three friends. The average weight is 540 / 3 = 180 pounds.\n\nFinal answer: 180",
+  "grade": {
+    "error": null,
+    "extracted_answer": "180",
+    "gold_answer": "180",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    3,
+    8,
+    2,
+    14,
+    3,
+    12,
+    3,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15671635456,
+  "sample_id": "gsm8k_test-00561",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 67
+}

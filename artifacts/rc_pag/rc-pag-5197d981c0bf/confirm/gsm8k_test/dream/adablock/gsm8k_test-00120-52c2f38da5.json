@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    6,
+    32,
+    32,
+    26
+  ],
+  "created_at": "2026-08-01T07:56:51.961859+00:00",
+  "elapsed_sec": 3.168462123721838,
+  "generated_text": "To solve this problem, we need to determine how many sheets of paper Miguel uses every month.\n\n1. Calculate the number of pads of paper Miguel uses in a month:\n   - Miguel uses 2 pads of paper a week.\n   - There are approximately 4 weeks in a month.\n   - Therefore, in a month, he uses 2 pads/week * 4 weeks/month = 8 pads/month.\n\n2. Calculate the number of sheets of paper in a pad:\n   - There are 30 sheets of paper on a pad of paper.\n\n3. Calculate the total number of sheets of paper Miguel uses in a month:\n   - He uses 8 pads/month * 30 sheets/pad = 240 sheets/month.\n\nTherefore, Miguel uses 240 sheets of paper every month.\n\nFinal answer: 240",
+  "grade": {
+    "error": null,
+    "extracted_answer": "240",
+    "gold_answer": "240",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    20,
+    18,
+    14,
+    13,
+    3,
+    6,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15669087744,
+  "sample_id": "gsm8k_test-00120",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 104
+}

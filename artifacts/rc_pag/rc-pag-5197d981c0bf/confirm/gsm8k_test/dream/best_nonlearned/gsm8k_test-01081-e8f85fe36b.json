@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:04:31.544625+00:00",
+  "elapsed_sec": 3.5281628221273422,
+  "generated_text": "To solve this problem, we need to determine Frankie's bowling score based on the information given about Binkie's score and the relationship between their scores.\n\n1. Identify Binkie's score: Binkie's score is given as 90.\n2. Understand the relationship between Frankie's score and Binkie's score: Frankie's score is 15 points more than twice as high as Binkie's score.\n3. Calculate Frankie's score: To find Frankie's score, we need to calculate twice Binkie's score and then add 15 points to it.\n\nLet's break it down step by step:\n\n1. Twice Binkie's score: 2 * 90 = 180\n2. Add 15 points to twice Binkie's score: 180 + 15 = 195\n\nTherefore, Frankie's score is 195.\n\nFinal answer: 195",
+  "grade": {
+    "error": null,
+    "extracted_answer": "195",
+    "gold_answer": "195",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    25,
+    21,
+    16,
+    20,
+    20,
+    7,
+    3,
+    1
+  ],
+  "peak_allocated_bytes": 15511130112,
+  "sample_id": "gsm8k_test-01081",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 121,
+      "block_index": 0,
+      "block_start": 89,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.8486582636833191,
+      "min_top1_confidence": 0.07761674374341965,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 153,
+      "block_index": 1,
+      "block_start": 121,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9516619443893433,
+      "min_top1_confidence": 0.4701918363571167,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 185,
+      "block_index": 2,
+      "block_start": 153,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.8746305108070374,
+      "min_top1_confidence": 0.2462710291147232,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 217,
+      "block_index": 3,
+      "block_start": 185,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.8921825289726257,
+      "min_top1_confidence": 0.0375250019133091,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 249,
+      "block_index": 4,
+      "block_start": 217,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.953954815864563,
+      "min_top1_confidence": 0.19862331449985504,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 281,
+      "block_index": 5,
+      "block_start": 249,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.957790732383728,
+      "min_top1_confidence": 0.3695722222328186,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 313,
+      "block_index": 6,
+      "block_start": 281,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9967506527900696,
+      "min_top1_confidence": 0.9157070517539978,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 345,
+      "block_index": 7,
+      "block_start": 313,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999977350234985,
+      "min_top1_confidence": 0.9999754428863525,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 113
+}

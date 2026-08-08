@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    22,
+    32,
+    11,
+    32,
+    8,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T06:55:02.147852+00:00",
+  "elapsed_sec": 3.8814045935869217,
+  "generated_text": "1. Calculate the amount of water in the orange drink: The orange drink is two-thirds water, so the amount of water is 10 liters * (2/3) = 6.7 liters.\n2. Calculate the amount of water in the pineapple drink: The pineapple drink is three-fifths water, so the amount of water is 15 liters * (3/5) = 9 liters.\n3. Calculate the total amount of water in the mixture: Add the amount of water from the orange drink and the pineapple drink: 6.7 liters + 9 liters = 15.7 liters.\n4. Subtract the spilled orange drink from the total mixture: You spilled 1 liter of orange drink, so the remaining mixture is 25 liters - 1 liter = 24 liters.\n5. Calculate the amount of water in the remaining mixture: Subtract the spilled water from the total water: 15.7 liters - 6.7 liters = 9 liters.\n\nFinal answer: 9",
+  "grade": {
+    "error": null,
+    "extracted_answer": "9",
+    "gold_answer": "15",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    9,
+    3,
+    22,
+    2,
+    31,
+    2,
+    22,
+    11,
+    2
+  ],
+  "peak_allocated_bytes": 15697113088,
+  "sample_id": "gsm8k_test-00020",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 127
+}

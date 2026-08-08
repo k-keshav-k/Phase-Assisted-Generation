@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    32,
+    14,
+    3,
+    32,
+    24,
+    32,
+    17,
+    3,
+    32,
+    32,
+    1,
+    2
+  ],
+  "created_at": "2026-08-01T07:38:06.506855+00:00",
+  "elapsed_sec": 2.7140261232852936,
+  "generated_text": "1. **Determine the number of laps Bethany can run:**\n   Bethany can run 10 laps in one hour.\n\n2. **Calculate the number of laps Trey can run:**\n   Trey can run 4 more laps than Bethany. Therefore, Trey can run:\n   \\[\n   10 + 4 = 14 \\text{ laps}\n   \\]\n\n3. **Calculate the number of laps Shaelyn can run:**\n   Shaelyn can run half as many laps as Trey. Therefore, Shaelyn can run:\n   \\[\n   \\frac{14}{2} = 7 \\text{ laps}\n   \\]\n\n4. **Calculate the number of laps that Quinn can run:**\n   Quinn can run 2 fewer laps than Shaelyn. Therefore, Quinn can run:\n   \\[\n   7 - 2 = 5 \\text{ laps}\n   \\]\n\n5. **Determine how many more laps Bethany can run compared to Quinn:**\n   Bethany can run 10 laps, and Quinn can run 5 laps. Therefore, Bethany can run:\n   \\[\n   10 - 5 = 5 \\text{ more laps}\n   \\]\n\nConclusion:\n",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "5",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    12,
+    3,
+    2,
+    9,
+    3,
+    4,
+    2,
+    2,
+    12,
+    17,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 15698386944,
+  "sample_id": "gsm8k_test-01010",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 87
+}

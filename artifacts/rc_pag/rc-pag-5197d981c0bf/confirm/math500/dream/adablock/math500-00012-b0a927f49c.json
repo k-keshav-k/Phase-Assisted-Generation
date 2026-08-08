@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    6,
+    32,
+    32,
+    18,
+    32,
+    10,
+    32,
+    9,
+    32,
+    21
+  ],
+  "created_at": "2026-08-01T08:13:06.048176+00:00",
+  "elapsed_sec": 3.2772343568503857,
+  "generated_text": "1. **Find the proper divisors of 284:**\n   - The prime factorization of 284 is $2^2 \\cdot 71$.\n   - The proper divisors of 284 are $1, 2, 4, 71, 142$.\n\n2. **Calculate the sum of the proper divisors of 284:**\n   - Sum of the proper divisors = $1 + 2 + 4 + 71 + 142 = 220$.\n\n3. **Find the proper divisors of 220:**\n   - The prime factorization of 220 is $2^2 \\cdot 5 \\cdot 11$.\n   - The proper divisors of 220 are $1, 2, 4, 5, 10, 20, 22, 44, 55, 110$.\n\n4. **Calculate the sum of the proper divisors of 220:**\n   - Sum of the proper divisors of 220 = $\\boxed{484}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[484, '484']",
+    "gold_answer": "284",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    3,
+    18,
+    11,
+    5,
+    8,
+    2,
+    5,
+    9,
+    9,
+    14
+  ],
+  "peak_allocated_bytes": 15700944896,
+  "sample_id": "math500-00012",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 107
+}

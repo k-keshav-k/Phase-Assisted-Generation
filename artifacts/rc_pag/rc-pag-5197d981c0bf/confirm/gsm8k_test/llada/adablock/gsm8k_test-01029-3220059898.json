@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    32,
+    1,
+    1,
+    9,
+    3,
+    32,
+    17,
+    1,
+    10,
+    1,
+    45,
+    8,
+    9,
+    32,
+    1,
+    45,
+    9
+  ],
+  "created_at": "2026-08-01T04:53:35.735859+00:00",
+  "elapsed_sec": 3.2392928265035152,
+  "generated_text": "1. **Initial Count:**\n   - Red balloons: 25\n   - Green balloons: 7\n   - Yellow balloons: 12\n\n2. **Bursting Red Balloons:**\n   - 40% of the red balloons burst: \\( 0.40 \\times 25 = 10 \\)\n   - Remaining red balloons: \\( 25 - 10 = 15 \\)\n\n3. **Releasing Yellow Balloons:**\n   - Half of the yellow balloons are released: \\( \\frac{12}{2} = 6 \\)\n   - Remaining yellow balloons: \\( 12 - 6 = 6 \\)\n\n4. **Adding Blue Balloons:**\n   - Sally finds 8 blue balloons: \\( 8 \\)\n   - She adds 75% of the blue balloons: \\( 0.75 \\times 8 = 6 \\)\n\n5. **Total Balloons:**\n   - Sum of remaining red, green, yellow, and blue balloons: \\( 15 + 7 + 6 + 6 = 34 \\)\n\nFinal answer: 34.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "34.",
+    "gold_answer": "34",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    8,
+    1,
+    1,
+    6,
+    1,
+    14,
+    2,
+    1,
+    5,
+    1,
+    9,
+    2,
+    6,
+    12,
+    1,
+    18,
+    2
+  ],
+  "peak_allocated_bytes": 17436248064,
+  "sample_id": "gsm8k_test-01029",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 45,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 45,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 90
+}

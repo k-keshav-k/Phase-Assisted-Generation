@@ -1,0 +1,388 @@
+{
+  "block_history": [
+    32,
+    1,
+    2,
+    30,
+    32,
+    9,
+    10,
+    2,
+    26,
+    6,
+    1,
+    2,
+    16,
+    2,
+    1,
+    6,
+    2,
+    13,
+    2,
+    1,
+    45,
+    3,
+    12
+  ],
+  "created_at": "2026-08-01T05:15:01.996160+00:00",
+  "elapsed_sec": 2.842449750751257,
+  "generated_text": "To find the distance between the points \\((2, -6)\\) and \\((-4, 3)\\), we can use the distance formula:\n\n\\[\nd = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}\n\\]\n\nHere, \\((x_1, y_1) = (2, -6)\\) and \\((x_2, y_2) = (-4, 3)\\).\n\nSubstitute the coordinates into the formula:\n\n\\[\nd = \\sqrt{((-4) - 2)^2 + (3 - (-6))^2}\n\\]\n\nSimplify inside the parentheses:\n\n\\[\nd = \\sqrt{(-6)^2 + 9^2}\n\\]\n\nCalculate the squares:\n\n\\[\nd = \\sqrt{36 + 81}\n\\]\n\nAdd the results:\n\n\\[\nd = \\sqrt{117}\n\\]\n\nThus, the distance between the points \\((2, -6)\\) and \\((-4, 3)\\) is\n\n\\(\\boxed{\\sqrt{117}}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[sqrt(117), '\\\\sqrt{117}']",
+    "gold_answer": "3\\sqrt{13}",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    14,
+    1,
+    2,
+    2,
+    4,
+    3,
+    8,
+    1,
+    4,
+    5,
+    1,
+    1,
+    4,
+    1,
+    1,
+    5,
+    1,
+    1,
+    1,
+    1,
+    9,
+    3,
+    5
+  ],
+  "peak_allocated_bytes": 17147181056,
+  "sample_id": "math500-00008",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 97,
+      "block_index": 0,
+      "block_start": 65,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 98,
+      "block_index": 1,
+      "block_start": 97,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 100,
+      "block_index": 2,
+      "block_start": 98,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 130,
+      "block_index": 3,
+      "block_start": 100,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 162,
+      "block_index": 4,
+      "block_start": 130,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 171,
+      "block_index": 5,
+      "block_start": 162,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 181,
+      "block_index": 6,
+      "block_start": 171,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 183,
+      "block_index": 7,
+      "block_start": 181,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 209,
+      "block_index": 8,
+      "block_start": 183,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 215,
+      "block_index": 9,
+      "block_start": 209,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 216,
+      "block_index": 10,
+      "block_start": 215,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 218,
+      "block_index": 11,
+      "block_start": 216,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 234,
+      "block_index": 12,
+      "block_start": 218,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 236,
+      "block_index": 13,
+      "block_start": 234,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 237,
+      "block_index": 14,
+      "block_start": 236,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 243,
+      "block_index": 15,
+      "block_start": 237,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 16,
+      "block_start": 243,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 258,
+      "block_index": 17,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 260,
+      "block_index": 18,
+      "block_start": 258,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 261,
+      "block_index": 19,
+      "block_start": 260,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 306,
+      "block_index": 20,
+      "block_start": 261,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "block_end": 309,
+      "block_index": 21,
+      "block_start": 306,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 15,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "block_end": 321,
+      "block_index": 22,
+      "block_start": 309,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 12,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 78
+}

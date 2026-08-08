@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    28,
+    3,
+    28,
+    32,
+    11,
+    32,
+    15,
+    32,
+    11
+  ],
+  "created_at": "2026-08-01T07:41:07.941782+00:00",
+  "elapsed_sec": 2.77642285451293,
+  "generated_text": "1. Calculate the number of eggs Chester eats in the first 30 days:\n   - Chester eats 3 eggs a day for 30 days.\n   - Total eggs in the first 30 days = 3 eggs/day * 30 days = 90 eggs.\n\n2. Calculate the number of eggs Chester eats in the next 30 days:\n   - Chester increases his egg consumption to 5 eggs a day for 30 days.\n   - Total eggs in the next 30 days = 5 eggs/day * 30 days = 150 eggs.\n\n3. Calculate the total number of eggs Chester eats in 60 days:\n   - Total eggs in 60 days = 90 eggs + 150 eggs = 240 eggs.\n\n4. Convert the total number of eggs to dozens:\n   - 1 dozen = 12 eggs.\n   - Total dozens of eggs = 240 eggs / 12 eggs/dozen = 20 dozens.\n\nFinal answer: 20",
+  "grade": {
+    "error": null,
+    "extracted_answer": "20",
+    "gold_answer": "20",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    11,
+    10,
+    2,
+    2,
+    17,
+    2,
+    18,
+    4,
+    6,
+    2
+  ],
+  "peak_allocated_bytes": 15671635456,
+  "sample_id": "gsm8k_test-01141",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 90
+}

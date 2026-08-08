@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T07:14:09.621294+00:00",
+  "elapsed_sec": 4.016935206949711,
+  "generated_text": "1. **Calculate the number of marbles Solomon received from his father:**\n   - Solomon bought 20 marbles from Johanna.\n   - His father gave him 2/5 times as many marbles as he bought from Johanna.\n   - Therefore, the number of marbles from his father is \\( \\frac{2}{5} \\times 20 = 8 \\) marbles.\n\n2. **Add the number of marbles from his father to the total in the store:**\n   - The store initially had 50 marbles.\n   - Solomon added 8 marbles from his father.\n   - Therefore, the total number of marbles in the store is \\( 50 + 8 = 58 \\) marbles.\n\n3. **Calculate the total weight of the marbles:**\n   - Each marble weighs 2 kgs.\n   - Therefore, the total weight of the marbles is \\( 58 \\times 2 = 116 \\) kgs.\n\n4. **Final answer:**\n   - The total weight of marbles Solomon has in the store is 116 kgs.\n\nFinal answer: 116",
+  "grade": {
+    "error": null,
+    "extracted_answer": "116",
+    "gold_answer": "156",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    19,
+    14,
+    24,
+    1,
+    11,
+    14,
+    12,
+    16
+  ],
+  "peak_allocated_bytes": 15704756224,
+  "sample_id": "gsm8k_test-00316",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 132
+}

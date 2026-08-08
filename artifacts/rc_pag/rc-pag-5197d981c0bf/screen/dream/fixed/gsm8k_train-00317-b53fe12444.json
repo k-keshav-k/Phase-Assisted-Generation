@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-07-31T22:37:51.794985+00:00",
+  "elapsed_sec": 3.097274214029312,
+  "generated_text": "To solve this problem, we need to determine the total number of index cards John bought.\n\n1. Calculate the total number of students John has:\n   John has 6 classes with 30 students in each class.\n   Total number of students = 6 classes * 30 students/class = 180 students.\n\n2. Calculate the total number of index cards John bought:\n   John buys 2 packs of index cards for each student.\n   Total number of index cards = 180 students * 2 packs/student = 360 packs.\n\n3. Convert the total number of index cards John bought into packs     Since each pack contains 1 pack, the total number of index cards is the same as the total number of packs.\n   Final answer: 360.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "360.",
+    "gold_answer": "360",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    27,
+    13,
+    17,
+    16,
+    23,
+    6,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15583144960,
+  "sample_id": "gsm8k_train-00317",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 108,
+      "block_index": 0,
+      "block_start": 76,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.9429661631584167,
+      "min_top1_confidence": 0.44912049174308777,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 140,
+      "block_index": 1,
+      "block_start": 108,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9738826751708984,
+      "min_top1_confidence": 0.5942609310150146,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 172,
+      "block_index": 2,
+      "block_start": 140,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9865189790725708,
+      "min_top1_confidence": 0.650268018245697,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 204,
+      "block_index": 3,
+      "block_start": 172,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.8888689279556274,
+      "min_top1_confidence": 0.048187702894210815,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 236,
+      "block_index": 4,
+      "block_start": 204,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.8738864660263062,
+      "min_top1_confidence": 0.21304388344287872,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 268,
+      "block_index": 5,
+      "block_start": 236,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.983730673789978,
+      "min_top1_confidence": 0.4821144938468933,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 300,
+      "block_index": 6,
+      "block_start": 268,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999980330467224,
+      "min_top1_confidence": 0.999972939491272,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 332,
+      "block_index": 7,
+      "block_start": 300,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999712705612183,
+      "min_top1_confidence": 0.9999047517776489,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 104
+}

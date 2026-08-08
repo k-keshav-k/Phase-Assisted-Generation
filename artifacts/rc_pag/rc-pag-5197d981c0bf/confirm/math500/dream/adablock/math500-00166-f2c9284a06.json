@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    15,
+    32,
+    17
+  ],
+  "created_at": "2026-08-01T08:19:53.617452+00:00",
+  "elapsed_sec": 4.868871718645096,
+  "generated_text": "1. **Identify the angles in the heptagon**: A regular heptagon has 7 equal sides and angles. The sum of the interior angles of a heptagon is $180(7-2) = 900$ degrees. Therefore, each interior angle of the heptagon is $\\frac{900}{7} = 128.57$ degrees.\n\n2. **Identify the angles in the square**: A square has 4 equal sides and angles, each interior angle being 90 degrees.\n\n3. **Determine the angle $BAC$**: Since the square and heptagon share a common side $\\overline{AD}$, the angle $BAC$ is the difference between the angle of the square at $A$ and the angle of the heptagon at $A$. Therefore, the angle $BAC$ is $128.57 - 90 = 38.57$ degrees.\n\n4. **Express the answer as a common fraction**: The degree measure of angle $BAC$ is $\\frac{270}{7}$ degrees.\n\nThe final answer is $\\boxed{\\frac{270}{7}}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[270/7, '\\\\frac{270}{7}']",
+    "gold_answer": "\\frac{270}7\\text{ degrees}",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    21,
+    16,
+    24,
+    21,
+    15,
+    5,
+    22,
+    3
+  ],
+  "peak_allocated_bytes": 15870362624,
+  "sample_id": "math500-00166",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 155
+}

@@ -1,0 +1,22 @@
+{
+  "details": {
+    "beat_adablock_models": {
+      "dream": true,
+      "llada": true
+    },
+    "history_frontier_required": false,
+    "minimum_accuracy_lower_ci": -0.212,
+    "primary_method": "rc_pag_history",
+    "required_accuracy_lower_ci": -0.02
+  },
+  "failed_gates": [
+    "accuracy_noninferiority"
+  ],
+  "gates": {
+    "accuracy_noninferiority": false,
+    "beat_adablock_both_models": true,
+    "beat_best_nonlearned": true,
+    "risk_certificate": true
+  },
+  "headline_eligible": false
+}

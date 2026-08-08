@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    6,
+    32,
+    11,
+    32,
+    32,
+    3,
+    32,
+    5,
+    12,
+    32,
+    18,
+    1,
+    8
+  ],
+  "created_at": "2026-08-01T04:36:08.908856+00:00",
+  "elapsed_sec": 3.787305999547243,
+  "generated_text": "1. Calculate the total amount of dog food needed for the first 180 days:\n   - The puppy needs 1 cup per day for 180 days.\n   - Total = 1 cup/day * 180 days = 180 cups.\n\n2. Calculate the total amount of dog food needed for the remaining days:\n   - The puppy needs 2 cups per day for the rest of the year.\n   - There are 365 days in a year.\n   - Total = 2 cups/day * 365 days = 730 cups.\n\n3. Calculate the total amount of dog food needed for the entire year:\n   - Total = 180 cups + 730 cups = 910 cups.\n\n4. Determine how many bags of dog food are needed:\n   - Each bag contains 110 cups.\n   - Total bags needed = 910 cups / 110 cups/bag ≈ 8.27 bags.\n\nSince Cecilia cannot buy a fraction of a bag, she will need to buy 9 bags.\n\nFinal answer: 9.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "9.",
+    "gold_answer": "5",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    1,
+    10,
+    7,
+    15,
+    10,
+    1,
+    11,
+    4,
+    2,
+    18,
+    7,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17309938688,
+  "sample_id": "gsm8k_test-00076",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 112
+}

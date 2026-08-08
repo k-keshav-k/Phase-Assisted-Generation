@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    10,
+    32,
+    1,
+    27,
+    1,
+    12,
+    2,
+    12,
+    11,
+    29,
+    32,
+    45,
+    10
+  ],
+  "created_at": "2026-08-01T05:00:21.747535+00:00",
+  "elapsed_sec": 3.290956638753414,
+  "generated_text": "1. Determine the number of pods in the special size box:\n   - A regular box has 100 pods.\n   - The special size box has 20% more pods.\n   - 20% of 100 pods is \\( 0.20 \\times 100 = 20 \\) pods.\n   - Therefore, the special size box has \\( 100 + 20 = 120 \\) pods.\n\n2. Calculate the cost per pod for the special size box:\n   - The special size box costs $12.\n   - It contains 120 pods.\n   - The cost per pod is \\( \\frac{12}{120} = 0.10 \\) dollars.\n\n3. Determine how many dishwashing cycles can be run for $1:\n   - Each dishwashing cycle uses 1 pod.\n   - If you have $1 and each pod costs $0.10, then the number of cycles you can run for $1 is \\( \\frac{1}{0.10} = 10 \\) cycles.\n\nFinal answer: 10 cycles.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10 cycles.",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    2,
+    9,
+    1,
+    2,
+    1,
+    9,
+    1,
+    5,
+    7,
+    8,
+    14,
+    16,
+    2
+  ],
+  "peak_allocated_bytes": 17220126208,
+  "sample_id": "gsm8k_test-01173",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 45,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 97
+}

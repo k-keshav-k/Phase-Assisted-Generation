@@ -1,0 +1,176 @@
+{
+  "block_history": [
+    32,
+    7,
+    4,
+    1,
+    32,
+    32,
+    32,
+    4,
+    4,
+    32,
+    2,
+    11,
+    4,
+    1,
+    9,
+    3,
+    18,
+    1,
+    27
+  ],
+  "created_at": "2026-08-01T05:23:37.579747+00:00",
+  "elapsed_sec": 3.17676105722785,
+  "generated_text": "1. Calculate the total number of students who participate in either MATHCOUNTS or science club or both:\n   \\[\n   50 - 6 = 44\n   \\]\n\n2. Let \\( x \\) be the number of students who participate in both MATHCOUNTS and science club.\n\n3. Use the principle of inclusion and exclusion to find the number of students who participate in either MATHCOUNTS or science club or both:\n   \\[\n   \\text{Number of students in MATHCOUNTS} + \\text{Number of students in science club} - \\text{Number of students in both} = 44\n   \\]\n   \\[\n   28 + 21 - x = 44\n   \\]\n\n4. Simplify the equation:\n   \\[\n   49 - x = 44\n   \\]\n\n5. Solve for \\( x \\):\n   \\[\n   x = 49 - 44 = 5\n   \\]\n\nTherefore, the number of students who participate in both MATHCOUNTS and science club is \\(\\boxed{5}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[5, '5']",
+    "gold_answer": "5",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    1,
+    1,
+    1,
+    14,
+    19,
+    8,
+    2,
+    1,
+    9,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17177653248,
+  "sample_id": "math500-00059",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 90
+}

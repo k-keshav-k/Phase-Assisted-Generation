@@ -1,0 +1,20 @@
+{
+  "basis": "paired plain/instrumented pilot wall time; rerun after the real A100 pilot",
+  "bytes_per_sample": 6572.3125,
+  "instrumented_bytes_per_sample": 294276.9375,
+  "instrumented_seconds_per_sample": 3.3123578518589056,
+  "mock": false,
+  "projected_a100_hours": 8.558275849046248,
+  "projected_collect_models": 2,
+  "projected_gpu_runs": 9384,
+  "projected_instrumented_runs": 6756,
+  "projected_plain_runs": 2628,
+  "projected_runs_per_model_by_stage": {
+    "calibrate": 600,
+    "collect": 600,
+    "confirm": 2592,
+    "screen": 900
+  },
+  "projected_storage_bytes": 2005407027,
+  "seconds_per_sample": 3.2083346306726526
+}

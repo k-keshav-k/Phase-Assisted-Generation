@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:14:10.944665+00:00",
+  "elapsed_sec": 0.9505964331328869,
+  "generated_text": "def digits(n):\n    product = 1\n    for digit in str(n):\n        if int(digit) % 2 != 0:\n            product *= int(digit)\n    return product",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_u5ig4_hr/candidate.py\", line 22, in <module>\n    check(digits)\n  File \"/tmp/rc_pag_code_u5ig4_hr/candidate.py\", line 19, in check\n    assert candidate(2468) == 0\n           ^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "extracted_answer": "def digits(n):\n    product = 1\n    for digit in str(n):\n        if int(digit) % 2 != 0:\n            product *= int(digit)\n    return product",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    15,
+    8,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15594525696,
+  "sample_id": "humaneval-00131",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 119,
+      "block_index": 0,
+      "block_start": 87,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.948921799659729,
+      "min_top1_confidence": 0.2720297873020172,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 151,
+      "block_index": 1,
+      "block_start": 119,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9998931288719177,
+      "min_top1_confidence": 0.9984045624732971,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 183,
+      "block_index": 2,
+      "block_start": 151,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999882578849792,
+      "min_top1_confidence": 0.9999732971191406,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 215,
+      "block_index": 3,
+      "block_start": 183,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999839663505554,
+      "min_top1_confidence": 0.9999611377716064,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 247,
+      "block_index": 4,
+      "block_start": 215,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999779462814331,
+      "min_top1_confidence": 0.9999425411224365,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 279,
+      "block_index": 5,
+      "block_start": 247,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999812841415405,
+      "min_top1_confidence": 0.9999502897262573,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 311,
+      "block_index": 6,
+      "block_start": 279,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999943971633911,
+      "min_top1_confidence": 0.9999847412109375,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 343,
+      "block_index": 7,
+      "block_start": 311,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999090433120728,
+      "min_top1_confidence": 0.9997112154960632,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 29
+}

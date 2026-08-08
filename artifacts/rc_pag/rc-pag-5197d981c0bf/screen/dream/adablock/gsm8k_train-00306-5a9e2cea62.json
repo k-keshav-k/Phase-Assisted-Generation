@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    13,
+    32,
+    11,
+    16,
+    20,
+    32,
+    32,
+    32,
+    32,
+    4
+  ],
+  "created_at": "2026-07-31T22:27:25.483980+00:00",
+  "elapsed_sec": 2.183268677443266,
+  "generated_text": "1. Calculate the number of German Shepherds Peter wants to buy:\n   - Sam has 3 German Shepherds.\n   - Peter wants to buy 3 times as many German Shepherds as Sam.\n   - Therefore, Peter wants to buy \\(3 * 3 = 9\\) German Shepherds.\n\n2. Calculate the number of French Bulldogs Peter wants to buy:\n   - Sam has 4 French Bulldogs.\n   - Peter wants to buy 2 times as many French Bulldogs as Sam.\n   - Therefore, Peter wants to buy \\(2 * 4 = 8\\) French Bulldogs.\n\n3. Calculate the total number of dogs Peter wants to have:\n   - Peter wants to have 9 German Shepherds and 8 French Bulldogs.\n   - Therefore, the total number of dogs Peter wants to have is \\(9 + 8 = 17\\).\n\nFinal answer: \\boxed{17}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{17}",
+    "gold_answer": "17",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    5,
+    12,
+    2,
+    3,
+    3,
+    10,
+    12,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15681826304,
+  "sample_id": "gsm8k_train-00306",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 71
+}

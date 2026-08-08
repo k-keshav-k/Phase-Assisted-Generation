@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    4,
+    12,
+    1,
+    15,
+    1,
+    32,
+    34,
+    15,
+    1,
+    20,
+    34,
+    2,
+    1,
+    32,
+    20
+  ],
+  "created_at": "2026-08-01T03:51:40.393659+00:00",
+  "elapsed_sec": 2.665310837328434,
+  "generated_text": "To determine the total distance James runs in a week, we need to break down the problem into smaller steps.\n\n1. Calculate the distance James runs in one session.\n2. Calculate the distance James runs in one week.\n\n**Step 1: Calculate the distance James runs in one session.**\n\nJames runs 3 sprints each session, and each sprint is 60 meters long. Therefore, the distance he runs in one session is:\n\\[ 3 \\text{ sprints} \\times 60 \\text{ meters/sprint} = 180 \\text{ meters} \\]\n\n**Step 2: Calculate the distance James runs in one week.**\n\nJames runs 3 times a week. Therefore, the distance he runs in one week is:\n\\[ 180 \\text{ meters/session} \\times 3 \\text{ sessions/week} = 540 \\text{ meters/week} \\]\n\nFinal answer: 540.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "540.",
+    "gold_answer": "540",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    4,
+    5,
+    1,
+    6,
+    1,
+    14,
+    4,
+    1,
+    1,
+    4,
+    6,
+    1,
+    1,
+    6,
+    1
+  ],
+  "peak_allocated_bytes": 17137078784,
+  "sample_id": "gsm8k_test-00003",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 34,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 34,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 78
+}

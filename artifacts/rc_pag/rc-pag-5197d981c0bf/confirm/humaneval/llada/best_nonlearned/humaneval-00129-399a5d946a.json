@@ -1,0 +1,298 @@
+{
+  "block_history": [
+    8,
+    7,
+    32,
+    32,
+    5,
+    9,
+    32,
+    2,
+    10,
+    6,
+    16,
+    10,
+    6,
+    9,
+    9,
+    58,
+    5
+  ],
+  "created_at": "2026-08-01T06:43:04.224062+00:00",
+  "elapsed_sec": 5.700028050690889,
+  "generated_text": "def minPath(grid, k):\n    n = len(grid)\n    path = []\n    x = 0\n    y = 0\n    i = 0\n    j = 0\n    visited = [[False] * n for _ in range(n)]\n    for i in range(n):\n        for j in range(n):\n            if not visited[i][j]:\n                visited[i][j] = True\n                x = i\n                y = j\n                for _ in range(k):\n                    if x == 0:\n                        x = n - 1\n                    elif x == n - 1:\n                        x = 0\n                    if y == 0:\n                        y = n - 1\n                    elif y == n - 1:\n                        y = 0\n                    if not visited[x][y]:\n                        visited[x][y] = True\n                        path.append(grid[x][y])\n                        x = (x + 1) % n\n                        y = (y + 1) % n\n                        else:\n                            break\n                if x == n:\n                    return path\n                else:\n                    break\n    return path",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_p3p1bicv/candidate.py\", line 30\n    else:\n    ^^^^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "def minPath(grid, k):\n    n = len(grid)\n    path = []\n    x = 0\n    y = 0\n    i = 0\n    j = 0\n    visited = [[False] * n for _ in range(n)]\n    for i in range(n):\n        for j in range(n):\n            if not visited[i][j]:\n                visited[i][j] = True\n                x = i\n                y = j\n                for _ in range(k):\n                    if x == 0:\n                        x = n - 1\n                    elif x == n - 1:\n                        x = 0\n                    if y == 0:\n                        y = n - 1\n                    elif y == n - 1:\n                        y = 0\n                    if not visited[x][y]:\n                        visited[x][y] = True\n                        path.append(grid[x][y])\n                        x = (x + 1) % n\n                        y = (y + 1) % n\n                        else:\n                            break\n                if x == n:\n                    return path\n                else:\n                    break\n    return path",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    3,
+    7,
+    32,
+    16,
+    2,
+    4,
+    24,
+    1,
+    7,
+    1,
+    4,
+    1,
+    1,
+    7,
+    4,
+    34,
+    2
+  ],
+  "peak_allocated_bytes": 18349935616,
+  "sample_id": "humaneval-00129",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 431,
+      "block_index": 0,
+      "block_start": 423,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 438,
+      "block_index": 1,
+      "block_start": 431,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 32,
+      "applied_block_size": 32,
+      "block_end": 470,
+      "block_index": 2,
+      "block_start": 438,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 502,
+      "block_index": 3,
+      "block_start": 470,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 507,
+      "block_index": 4,
+      "block_start": 502,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 516,
+      "block_index": 5,
+      "block_start": 507,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 548,
+      "block_index": 6,
+      "block_start": 516,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 550,
+      "block_index": 7,
+      "block_start": 548,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 560,
+      "block_index": 8,
+      "block_start": 550,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 566,
+      "block_index": 9,
+      "block_start": 560,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 582,
+      "block_index": 10,
+      "block_start": 566,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 592,
+      "block_index": 11,
+      "block_start": 582,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 598,
+      "block_index": 12,
+      "block_start": 592,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 607,
+      "block_index": 13,
+      "block_start": 598,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 616,
+      "block_index": 14,
+      "block_start": 607,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 34,
+      "applied_block_size": 32,
+      "block_end": 674,
+      "block_index": 15,
+      "block_start": 616,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "block_end": 679,
+      "block_index": 16,
+      "block_start": 674,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 5,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/llada",
+  "total_nfe": 150
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T08:30:16.546541+00:00",
+  "elapsed_sec": 3.452297203242779,
+  "generated_text": "Let $x = 0.\\overline{1331}$. Then $10000x = 1331.\\overline{1331}$. Subtracting $x$ from $10000x$, we get $9999x = 1331$. Therefore, $x = \\frac{1331}{9999}$. To simplify this fraction, we find the greatest common divisor (GCD) of 1331 and 9999. The GCD of 1331 and 9999 is 11. So, we divide both the numerator and the denominator by 11 to get $\\frac{1331}{9999} = \\frac{121}{909}$. Thus, $a = 121$ and $b = 909$. Therefore, $a + b = 121 + 909 = \\boxed{1030}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[1030, '1030']",
+    "gold_answer": "1030",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    17,
+    17,
+    16,
+    12,
+    22,
+    15,
+    14,
+    1
+  ],
+  "peak_allocated_bytes": 15508939776,
+  "sample_id": "math500-00272",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 118,
+      "block_index": 0,
+      "block_start": 86,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.5,
+      "mean_top1_confidence": 0.9985088109970093,
+      "min_top1_confidence": 0.9713063836097717,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 150,
+      "block_index": 1,
+      "block_start": 118,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9944709539413452,
+      "min_top1_confidence": 0.8616201281547546,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 182,
+      "block_index": 2,
+      "block_start": 150,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9490442872047424,
+      "min_top1_confidence": 0.4629901945590973,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 214,
+      "block_index": 3,
+      "block_start": 182,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.53125,
+      "mean_top1_confidence": 0.9787774085998535,
+      "min_top1_confidence": 0.40260547399520874,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 246,
+      "block_index": 4,
+      "block_start": 214,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9676210880279541,
+      "min_top1_confidence": 0.3733469545841217,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 278,
+      "block_index": 5,
+      "block_start": 246,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9668799042701721,
+      "min_top1_confidence": 0.42126476764678955,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 310,
+      "block_index": 6,
+      "block_start": 278,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.5,
+      "mean_top1_confidence": 0.9470095038414001,
+      "min_top1_confidence": 0.48547568917274475,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 342,
+      "block_index": 7,
+      "block_start": 310,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9987759590148926,
+      "min_top1_confidence": 0.9978494644165039,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 114
+}

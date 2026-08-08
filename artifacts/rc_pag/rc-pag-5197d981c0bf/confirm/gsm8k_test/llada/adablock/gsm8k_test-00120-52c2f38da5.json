@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    20,
+    1,
+    32,
+    1,
+    19,
+    1,
+    32,
+    5,
+    34,
+    1,
+    19,
+    1,
+    32,
+    11,
+    35,
+    12
+  ],
+  "created_at": "2026-08-01T05:02:02.451950+00:00",
+  "elapsed_sec": 2.5868611074984074,
+  "generated_text": "To determine how many sheets of paper Miguel uses every month, we need to follow these steps:\n\n1. Calculate the number of sheets of paper Miguel uses in a week.\n2. Calculate the number of sheets of paper Miguel uses in a month.\n\n**Step 1: Calculate the number of sheets of paper Miguel uses in a week.**\n\nMiguel uses 2 pads of paper a week, and each pad contains 30 sheets of paper. Therefore, the number of sheets he uses in a week is:\n\\[ 2 \\text{ pads/week} \\times 30 \\text{ sheets/pad} = 60 \\text{ sheets/week} \\]\n\n**Step 2: Calculate the number of sheets of paper Miguel uses in a month.**\n\nAssuming there are 4 weeks in a month, we can calculate the number of sheets he uses in a month by multiplying the number of sheets he uses in a week by the number of weeks in a month:\n\\[ 60 \\text{ sheets/week} \\times 4 \\text{ weeks/month} = 240 \\text{ sheets/month} \\]\n\nFinal answer: \\boxed{240}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{240}",
+    "gold_answer": "240",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    6,
+    1,
+    16,
+    1,
+    5,
+    1,
+    15,
+    1,
+    5,
+    1,
+    1,
+    1,
+    12,
+    2,
+    2,
+    5
+  ],
+  "peak_allocated_bytes": 17157748224,
+  "sample_id": "gsm8k_test-00120",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 34,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 35,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 75
+}

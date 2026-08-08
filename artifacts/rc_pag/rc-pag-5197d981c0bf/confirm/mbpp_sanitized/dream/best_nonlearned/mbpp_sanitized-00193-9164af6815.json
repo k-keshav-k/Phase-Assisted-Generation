@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:09:42.837402+00:00",
+  "elapsed_sec": 2.7008691988885403,
+  "generated_text": "Here is a Python function that finds the minimum value in a given heterogeneous list:\n\n```python\ndef find_min_heterogeneous(lst):\n    min_value = float('inf')\n    for item in lst:\n        if isinstance(item, (int, float)):\n            if item < min_value:\n                min_value = item\n    return min_value\n```\n\nThis function iterates through the given list and checks if each item is an integer or a float. If it is, it compares it with the current minimum value and updates it if necessary. The function returns the minimum value found in the list.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_7e3jd2__/candidate.py\", line 9, in <module>\n    assert min_val(['Python', 3, 2, 4, 5, 'version'])==2\n           ^^^^^^^\nNameError: name 'min_val' is not defined\n",
+    "extracted_answer": "def find_min_heterogeneous(lst):\n    min_value = float('inf')\n    for item in lst:\n        if isinstance(item, (int, float)):\n            if item < min_value:\n                min_value = item\n    return min_value",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    25,
+    9,
+    28,
+    22,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15552120832,
+  "sample_id": "mbpp_sanitized-00193",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 78,
+      "block_index": 0,
+      "block_start": 46,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9119808673858643,
+      "min_top1_confidence": 0.042546346783638,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 110,
+      "block_index": 1,
+      "block_start": 78,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9942214488983154,
+      "min_top1_confidence": 0.9216691851615906,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 142,
+      "block_index": 2,
+      "block_start": 110,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.896369218826294,
+      "min_top1_confidence": 0.14195138216018677,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 174,
+      "block_index": 3,
+      "block_start": 142,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.951280415058136,
+      "min_top1_confidence": 0.44858238101005554,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 206,
+      "block_index": 4,
+      "block_start": 174,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999993622303009,
+      "min_top1_confidence": 0.9999828338623047,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 238,
+      "block_index": 5,
+      "block_start": 206,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999912977218628,
+      "min_top1_confidence": 0.9999765157699585,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 270,
+      "block_index": 6,
+      "block_start": 238,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999966621398926,
+      "min_top1_confidence": 0.9999918937683105,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 302,
+      "block_index": 7,
+      "block_start": 270,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999767541885376,
+      "min_top1_confidence": 0.9999179840087891,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 88
+}

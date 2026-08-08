@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    32,
+    7,
+    16,
+    9,
+    11,
+    3,
+    5,
+    32,
+    8,
+    6,
+    8,
+    2,
+    1,
+    32,
+    32,
+    32,
+    20
+  ],
+  "created_at": "2026-08-01T06:41:34.806061+00:00",
+  "elapsed_sec": 4.598757833242416,
+  "generated_text": "Certainly! Below is the implementation of the `all_prefixes` function:\n\n```python\nfrom typing import List\n\ndef all_prefixes(string: str) -> List[str]:\n    \"\"\" Return list of all prefixes from shortest to longest of the input string\n    >>> all_prefixes('abc')\n    ['a', 'ab', 'abc']\n    \"\"\"\n    prefixes = []\n    for i in range(len(string) + 1):\n        prefixes.append(string[:i])\n    return prefixes\n\n# Example usage\nif __name__ == \"__main__\":\n    import doctest\n    doctest.testmod()\n```\n\nThis function `all_prefixes` takes a string as input and returns a list of all possible prefixes of that string. The `for` loop iterates over the range of the string's length, and for each position `i`, it creates a substring from the start of the string up to the `i`-th character and appends it to the `prefixes` list.\n\nYou can test the function using the `doctest` module provided in the docstring, which will run the example provided in the docstring and display the result.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_4gh9ysu_/candidate.py\", line 31, in <module>\n    check(all_prefixes)\n  File \"/tmp/rc_pag_code_4gh9ysu_/candidate.py\", line 27, in check\n    assert candidate('') == []\n           ^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "extracted_answer": "from typing import List\n\ndef all_prefixes(string: str) -> List[str]:\n    \"\"\" Return list of all prefixes from shortest to longest of the input string\n    >>> all_prefixes('abc')\n    ['a', 'ab', 'abc']\n    \"\"\"\n    prefixes = []\n    for i in range(len(string) + 1):\n        prefixes.append(string[:i])\n    return prefixes\n\n# Example usage\nif __name__ == \"__main__\":\n    import doctest\n    doctest.testmod()",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    9,
+    1,
+    4,
+    1,
+    1,
+    1,
+    5,
+    19,
+    1,
+    2,
+    1,
+    1,
+    1,
+    19,
+    31,
+    20,
+    17
+  ],
+  "peak_allocated_bytes": 17143636480,
+  "sample_id": "humaneval-00014",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/llada",
+  "total_nfe": 134
+}

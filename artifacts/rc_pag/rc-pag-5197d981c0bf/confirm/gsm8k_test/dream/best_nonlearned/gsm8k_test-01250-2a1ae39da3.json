@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:23:05.270755+00:00",
+  "elapsed_sec": 1.9804637134075165,
+  "generated_text": ".. Mitchell buys two bags of chips, each containing 55 chips. So, the total number of chips is 2 * 55 = 110 chips.\n2. Mitchell's family has five members.\n3. To find out how many chips each person gets, divide the total number of chips by the number of family members: 110 chips / 5 members = 22 chips per person.\n\nFinal answer: 22",
+  "grade": {
+    "error": null,
+    "extracted_answer": "22",
+    "gold_answer": "22",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    25,
+    16,
+    18,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15592453120,
+  "sample_id": "gsm8k_test-01250",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 117,
+      "block_index": 0,
+      "block_start": 85,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.8904817700386047,
+      "min_top1_confidence": 0.33229154348373413,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 149,
+      "block_index": 1,
+      "block_start": 117,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.961296558380127,
+      "min_top1_confidence": 0.03286806121468544,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 181,
+      "block_index": 2,
+      "block_start": 149,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.952383279800415,
+      "min_top1_confidence": 0.17779511213302612,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 213,
+      "block_index": 3,
+      "block_start": 181,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999439716339111,
+      "min_top1_confidence": 0.9998753070831299,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 4,
+      "block_start": 213,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999992847442627,
+      "min_top1_confidence": 0.999995231628418,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 277,
+      "block_index": 5,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999988079071045,
+      "min_top1_confidence": 0.999994158744812,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 309,
+      "block_index": 6,
+      "block_start": 277,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999997615814209,
+      "min_top1_confidence": 0.9999934434890747,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 341,
+      "block_index": 7,
+      "block_start": 309,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999746084213257,
+      "min_top1_confidence": 0.9999154806137085,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 64
+}

@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    32,
+    32,
+    30
+  ],
+  "created_at": "2026-07-31T23:54:32.026541+00:00",
+  "elapsed_sec": 1.6012548096477985,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef lucid_number(n):\n    lucid_numbers = [2, 1]\n    while lucid_numbers[-1] <= n:\n        lucid_numbers.append(lucid_numbers[-1] + lucid_numbers[-2])\n    return lucid_numbers[-2]\n```",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_xvmd_6hi/candidate.py\", line 7, in <module>\n    assert get_ludic(10) == [1, 2, 3, 5, 7]\n           ^^^^^^^^^\nNameError: name 'get_ludic' is not defined\n",
+    "extracted_answer": "def lucid_number(n):\n    lucid_numbers = [2, 1]\n    while lucid_numbers[-1] <= n:\n        lucid_numbers.append(lucid_numbers[-1] + lucid_numbers[-2])\n    return lucid_numbers[-2]",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    10,
+    2,
+    4,
+    2,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15627051008,
+  "sample_id": "mbpp_train-00104",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 52
+}

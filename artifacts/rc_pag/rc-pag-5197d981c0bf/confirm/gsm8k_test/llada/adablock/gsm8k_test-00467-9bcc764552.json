@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    6,
+    1,
+    32,
+    32,
+    6,
+    40,
+    1,
+    32,
+    63,
+    11
+  ],
+  "created_at": "2026-08-01T04:38:04.090603+00:00",
+  "elapsed_sec": 2.6572944670915604,
+  "generated_text": "To determine the total number of pieces of laundry in 80 rooms, we need to calculate the number of each type of laundry per room and then multiply by the number of rooms.\n\n1. **Sheets**: Each room has 2 sheets.\n2. **Comforter**: Each room has 1 comforter.\n3. **Pillow cases**: Each room has twice as many pillow cases as sheets. Since there are 2 sheets, there are \\(2 \\times 2 = 4\\) pillow cases.\n4. **Towels**: Each room has twice as many towels as pillow cases. Since there are 4 pillow cases, there are \\(2 \\times 4 = 8\\) towels.\n\nNow, we sum up all the pieces of laundry per room:\n\\[ 2 \\text{ sheets} + 1 \\text{ comforter} + 4 \\text{ pillow cases} + 8 \\text{ towels} = 15 \\text{ pieces per room} \\]\n\nFor 80 rooms, the total number of pieces is:\n\\[ 15 \\times 80 = 1200 \\]\n\nFinal answer: 1200.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "1200.",
+    "gold_answer": "1200",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    3,
+    1,
+    9,
+    10,
+    1,
+    2,
+    1,
+    15,
+    18,
+    1
+  ],
+  "peak_allocated_bytes": 17194754560,
+  "sample_id": "gsm8k_test-00467",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 40,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 63,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 78
+}

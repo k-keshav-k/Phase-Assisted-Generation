@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    32,
+    6,
+    32,
+    32,
+    11,
+    32,
+    13
+  ],
+  "created_at": "2026-07-31T22:42:09.979832+00:00",
+  "elapsed_sec": 4.58955604955554,
+  "generated_text": "1. **Determine the volume of water in the pot in milliliters:**\n   - The pot holds 3 liters. Since 1 liter is equal to 1000 milliliters, the pot holds \\(3 \\times 1000 = 3000\\) milliliters.\n\n2. **Calculate the volume of water that drips into the pot per minute:**\n   - Each drop is 20 milliliters, and there are 3 drops per minute. Therefore, the volume of water that drips into the pot per minute is \\(3 \\times 20 = 60\\) milliliters.\n\n3. **Determine the time it takes to fill the pot:**\n   - To find the time it takes to fill the pot, divide the total volume of the pot by the volume of water that drips into the pot per minute. So, the time in minutes is \\(\\frac{3000}{60} = 50\\) minutes.\n\n4. **Conclusion:**\n   - It will take 50 minutes for the pot to be full.\n\nFinal answer: \\boxed{50}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{50}",
+    "gold_answer": "50",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    17,
+    2,
+    24,
+    14,
+    3,
+    22,
+    22,
+    4,
+    18,
+    2
+  ],
+  "peak_allocated_bytes": 15678004736,
+  "sample_id": "gsm8k_train-00322",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 154
+}

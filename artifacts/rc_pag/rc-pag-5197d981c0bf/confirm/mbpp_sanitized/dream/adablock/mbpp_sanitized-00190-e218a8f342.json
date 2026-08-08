@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    32,
+    30
+  ],
+  "created_at": "2026-08-01T09:07:31.777124+00:00",
+  "elapsed_sec": 4.438554748892784,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef next_bigger(n):\n    digits = list(str(n))\n    for i in range(len(digits) - 2, -1, -1):\n        if digits[i] < digits[i + 1]:\n            j = i + 1\n            while j < len(digits) and digits[j] > digits[i]:\n                j += 1\n            digits[i], digits[j] = digits[j], digits[i]\n            digits[i + 1:] = reversed(digits[i + 1:])\n            return int(''.join(digits))\n    return -1\n```\n\nThis function works by iterating over the digits of the given number from right to left. If it finds a digit that is smaller than the digit to its right, it finds the smallest digit to the right of this digit that is larger than it, swaps these two digits, and then reverses the digits to the right of the swapped digit. This creates the next bigger number by rearranging the digits of the given number. If no such digit is found, it returns -1.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_qe0fw46b/candidate.py\", line 13, in <module>\n    assert rearrange_bigger(12)==21\n           ^^^^^^^^^^^^^^^^\nNameError: name 'rearrange_bigger' is not defined\n",
+    "extracted_answer": "def next_bigger(n):\n    digits = list(str(n))\n    for i in range(len(digits) - 2, -1, -1):\n        if digits[i] < digits[i + 1]:\n            j = i + 1\n            while j < len(digits) and digits[j] > digits[i]:\n                j += 1\n            digits[i], digits[j] = digits[j], digits[i]\n            digits[i + 1:] = reversed(digits[i + 1:])\n            return int(''.join(digits))\n    return -1",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    10,
+    5,
+    2,
+    18,
+    29,
+    29,
+    27,
+    2
+  ],
+  "peak_allocated_bytes": 15630873088,
+  "sample_id": "mbpp_sanitized-00190",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 146
+}

@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    11,
+    3,
+    32,
+    32,
+    19,
+    3,
+    32,
+    28
+  ],
+  "created_at": "2026-08-01T07:23:11.434449+00:00",
+  "elapsed_sec": 3.898613266646862,
+  "generated_text": "1. **Determine the amount of gas Sophia used:**\n   Sophia traveled 100 miles and used 4 gallons of gas to fill her tank again.\n\n2. **Calculate the miles per gallon (mpg):**\n   To find the miles per gallon, we divide the distance traveled by the amount of gas used:\n   \\[\n   \\text{mpg} = \\frac{100 \\text{ miles}}{4 \\text{ gallons}} = 25 \\text{ miles per gallon}\n   \\]\n\n3. **Calculate the total distance Sophia can drive on a full tank:**\n   Sophia's tank holds 12 gallons of gas. Using the mpg calculated, we find the total distance she can drive:\n   \\[\n   \\text{Total distance} = 25 \\text{ miles per gallon} \\times 12 \\text{ gallons} = 300 \\text{ miles}\n   \\]\n\n4. **Conclusion:**\n   Sophia can drive 300 miles on a single tank of gas.\n\nFinal answer: \\boxed{300}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{300}",
+    "gold_answer": "300",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    26,
+    9,
+    3,
+    2,
+    20,
+    17,
+    2,
+    2,
+    16,
+    2
+  ],
+  "peak_allocated_bytes": 15735332352,
+  "sample_id": "gsm8k_test-00064",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 126
+}

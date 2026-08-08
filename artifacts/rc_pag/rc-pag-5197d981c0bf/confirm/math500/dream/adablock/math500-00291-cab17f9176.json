@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    5,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    27
+  ],
+  "created_at": "2026-08-01T08:53:00.334744+00:00",
+  "elapsed_sec": 5.15984471142292,
+  "generated_text": "1. **Identify the vertices of the rectangle**: The vertices are $$(5,4), (-5,4), (-5,-4), (5,-4).$$\n2. **Determine the dimensions of the rectangle**: The width of the rectangle is $10$ units (from $-5$ to $5$), and the height is $8$ units (from $-4$ to $4$).\n3. **Calculate the number of lattice points in the interior**: The number of lattice points in the interior of the rectangle is given by the product of the number of lattice points along the width and the number of lattice points along the height. The number of lattice points along the width is $10 - 2 = 8$ (since we exclude the endpoints), and the number of lattice points along the height is $8 - 2 = 6$.\n4. **Compute the total number of lattice points**: The total number of lattice points in the interior is $8 \\times 6 = 48$.\n\nThus, there are $48$ points with integer coordinates that are strictly in the interior of the rectangular region.\n\n$\\boxed{48}$",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[48, '48']",
+    "gold_answer": "63",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    5,
+    22,
+    14,
+    31,
+    26,
+    14,
+    19,
+    18
+  ],
+  "peak_allocated_bytes": 15674187264,
+  "sample_id": "math500-00291",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 171
+}

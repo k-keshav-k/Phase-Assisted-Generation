@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    8,
+    32,
+    1,
+    32,
+    32,
+    10,
+    13
+  ],
+  "created_at": "2026-08-01T07:14:55.768974+00:00",
+  "elapsed_sec": 4.2988484762609005,
+  "generated_text": "1. **Calculate the total number of brownies Greta had:**\n   - Greta made 1 dozen brownies for herself.\n   - At her office, she received 1/2 a dozen brownies.\n   - At home, she received 4 dozen brownies from her friends.\n   - Total brownies = 1 + 0.5 + 4 = 5.5 dozen.\n\n2. **Convert the total number of brownies to individual brownies:**\n   - Since 1 dozen = 12 brownies, 5.5 dozen brownies = 5.5 * 12 = 66 brownies.\n\n3. **Calculate the number of brownies eaten during the party:**\n   - During the party, 1 1/2 dozen brownies were eaten.\n   - 1 1/2 dozen brownies = 1.5 * 12 = 18 brownies.\n\n4. **Calculate the number of brownies left over:**\n   - Total brownies - Brownies eaten = Remaining brownies.\n   - Remaining brownies = 66 - 18 = 48 brownies.\n\n**Final answer:** \\boxed{48}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "** \\boxed{48}",
+    "gold_answer": "48",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    21,
+    22,
+    14,
+    4,
+    9,
+    1,
+    10,
+    19,
+    2,
+    9
+  ],
+  "peak_allocated_bytes": 15754440704,
+  "sample_id": "gsm8k_test-00966",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 139
+}

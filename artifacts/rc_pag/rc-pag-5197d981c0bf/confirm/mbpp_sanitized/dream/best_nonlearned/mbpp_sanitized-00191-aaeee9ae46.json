@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:08:35.147437+00:00",
+  "elapsed_sec": 4.648960296064615,
+  "generated_text": "Here is a Python solution using a priority queue (heap) to find the k smallest pairs:\n\n```python\nimport heapq\n\ndef k_smallest_pairs(nums1, nums2, k):\n    heap = []\n    pairs = []\n    m = len(nums1)\n    n = len(nums2)\n\n    for i in range(min(k, m)):\n        heapq.heappush(heap, (nums1[i] + nums2[0], i, 0))\n\n    while heap and len(pairs) < k:\n        sum, i, j = heapq.heappop(heap)\n        pairs.append((nums1[i], nums2[j               if j + 1 < n:\n            heapq.heappush(heap, (nums1[i] + nums2[j + 1], i, j + 1))\n\n    return pairs\n```\n\nThis solution uses a priority queue to keep track of the smallest sums of pairs. It starts with the first k elements of the first array and the first element of the second array. Then, it pops the smallest sum from the queue, adds it to the result list, and pushes the next possible sum into the queue if it exists. This process is repeated until we have found k smallest pairs or the queue is empty.",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_gqwrfw3p/candidate.py\", line 15\n    pairs.append((nums1[i], nums2[j               if j + 1 < n:\n                                                              ^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "import heapq\n\ndef k_smallest_pairs(nums1, nums2, k):\n    heap = []\n    pairs = []\n    m = len(nums1)\n    n = len(nums2)\n\n    for i in range(min(k, m)):\n        heapq.heappush(heap, (nums1[i] + nums2[0], i, 0))\n\n    while heap and len(pairs) < k:\n        sum, i, j = heapq.heappop(heap)\n        pairs.append((nums1[i], nums2[j               if j + 1 < n:\n            heapq.heappush(heap, (nums1[i] + nums2[j + 1], i, j + 1))\n\n    return pairs",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    29,
+    20,
+    15,
+    8,
+    7,
+    23,
+    25,
+    27
+  ],
+  "peak_allocated_bytes": 15489229824,
+  "sample_id": "mbpp_sanitized-00191",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "block_end": 91,
+      "block_index": 0,
+      "block_start": 59,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.8926106691360474,
+      "min_top1_confidence": 0.2513054609298706,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 123,
+      "block_index": 1,
+      "block_start": 91,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9593407511711121,
+      "min_top1_confidence": 0.44646188616752625,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 155,
+      "block_index": 2,
+      "block_start": 123,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.927154541015625,
+      "min_top1_confidence": 0.0815461128950119,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 187,
+      "block_index": 3,
+      "block_start": 155,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9533863067626953,
+      "min_top1_confidence": 0.16078582406044006,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 219,
+      "block_index": 4,
+      "block_start": 187,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.902603805065155,
+      "min_top1_confidence": 0.29504215717315674,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 251,
+      "block_index": 5,
+      "block_start": 219,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.8813419342041016,
+      "min_top1_confidence": 0.34809204936027527,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 283,
+      "block_index": 6,
+      "block_start": 251,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8003395199775696,
+      "min_top1_confidence": 0.05350475013256073,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 315,
+      "block_index": 7,
+      "block_start": 283,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8854191899299622,
+      "min_top1_confidence": 0.032302021980285645,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 154
+}

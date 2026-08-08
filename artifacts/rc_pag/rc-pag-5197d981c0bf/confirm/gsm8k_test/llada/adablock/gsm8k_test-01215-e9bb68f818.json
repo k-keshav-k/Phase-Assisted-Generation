@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    10,
+    32,
+    32,
+    12,
+    1,
+    32,
+    18,
+    1,
+    12,
+    32,
+    14,
+    1,
+    50,
+    9
+  ],
+  "created_at": "2026-08-01T04:07:21.956132+00:00",
+  "elapsed_sec": 4.367102432996035,
+  "generated_text": "1. Calculate the volume of the jar:\n   - Volume = 6 inches * 6 inches * 15 inches = 540 cubic inches.\n\n2. Calculate the number of jelly beans that can fit in the jar:\n   - Number of jelly beans = 540 cubic inches / 0.15 cubic inches per jelly bean = 3600 jelly beans.\n\n3. Adjust for the packing efficiency:\n   - The packing efficiency is 80%, so the actual number of jelly beans = 3600 jelly beans * 0.80 = 2880 jelly beans.\n\n4. Estimate the number of red jelly beans:\n   - Tim estimates 30% of the jelly beans are red, so the estimated number of red jelly beans = 2880 jelly beans * 0.30 = 864 red jelly beans.\n\n5. Determine how far off Tim's guess was:\n   - The difference between the estimated number and the true number is = 900 true jelly beans - 864 estimated jelly beans = 36 jelly beans.\n\nFinal answer: 36.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "36.",
+    "gold_answer": "36",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    8,
+    20,
+    14,
+    1,
+    1,
+    21,
+    8,
+    1,
+    6,
+    9,
+    2,
+    1,
+    33,
+    1
+  ],
+  "peak_allocated_bytes": 17397613568,
+  "sample_id": "gsm8k_test-01215",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 33,
+      "applied_block_size": 50,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 126
+}

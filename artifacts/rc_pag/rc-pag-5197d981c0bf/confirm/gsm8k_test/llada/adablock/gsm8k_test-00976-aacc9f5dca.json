@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    32,
+    1,
+    1,
+    32,
+    32,
+    7,
+    21,
+    1,
+    4,
+    17,
+    10,
+    19,
+    21,
+    21,
+    1,
+    25,
+    1,
+    10
+  ],
+  "created_at": "2026-08-01T04:24:33.818335+00:00",
+  "elapsed_sec": 3.2402371279895306,
+  "generated_text": "1. Determine the number of boxes sold on each day.\n2. Calculate the earnings for each day.\n3. Sum the earnings for both days.\n\n**Saturday:**\n- Gingerbread sold: 10 boxes\n- Apple pie sold: 15 - 4 = 11 boxes\n- Earnings from gingerbread: \\(10 \\times 6 = 60\\)\n- Earnings from apple pie: \\(11 \\times 15 = 165\\)\n- Total earnings for Saturday: \\(60 + 165 = 225\\)\n\n**Sunday:**\n- Gingerbread sold: 10 + 5 = 15 boxes\n- Apple pie sold: 15 boxes\n- Earnings from gingerbread: \\(15 \\times 6 = 90\\)\n- Earnings from apple pie: \\(15 \\times 15 = 225\\)\n- Total earnings for Sunday: \\(90 + 225 = 315\\)\n\n**Total earnings for both days:**\n- \\(225 + 315 = 540\\)\n\nFinal answer: 540.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "540.",
+    "gold_answer": "540",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    1,
+    1,
+    22,
+    18,
+    1,
+    4,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    7,
+    1,
+    4
+  ],
+  "peak_allocated_bytes": 17309938688,
+  "sample_id": "gsm8k_test-00976",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 93
+}

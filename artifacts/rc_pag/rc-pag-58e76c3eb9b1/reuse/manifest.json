@@ -1,0 +1,24 @@
+{
+  "reason": "v6 reuses only native full-budget observations and refits calibrated risk plus remaining-NFE estimators; v4/v5 fitted heads are discarded",
+  "reuse_scope": "raw_native_exact_loop_traces_only",
+  "reused_models": [
+    "llada",
+    "dream"
+  ],
+  "reused_variants": [],
+  "schema_version": 4,
+  "source": "/gpfs/scratch/sm12779/Phase-Assisted-Generation/artifacts/rc_pag/rc-pag-7688c5235bd4",
+  "source_config_hash": "7688c5235bd4de2f7da9c73d06c7dc3a30891dc680790e19e74ab99c11db3eaf",
+  "traces": {
+    "dream": {
+      "observation_count": 57184,
+      "sha256": "59e8ceb20f6001dcea89c1fcd0681ef56d34e0832b2558de53a949849aa25b7d",
+      "trace_count": 600
+    },
+    "llada": {
+      "observation_count": 55734,
+      "sha256": "d985ebf036d56fe6bbf1649ebefdf6084509d4caaa2d5d4d3a25ab66f30df7c9",
+      "trace_count": 600
+    }
+  }
+}

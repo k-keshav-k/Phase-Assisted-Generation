@@ -1,0 +1,268 @@
+{
+  "block_history": [
+    14,
+    1,
+    10,
+    32,
+    14,
+    32,
+    1,
+    27,
+    4,
+    43,
+    7,
+    3,
+    18,
+    41,
+    9
+  ],
+  "created_at": "2026-08-01T04:08:54.989868+00:00",
+  "elapsed_sec": 2.4651313796639442,
+  "generated_text": "To determine Frankie's score, we need to follow these steps:\n\n1. Identify Binkie's score.\n2. Determine the relationship between Frankie's score and Binkie's score.\n3. Calculate Frankie's score based on the given relationship.\n\n1. Binkie's score is given as 90.\n2. Frankie's score is 15 more than twice as high as Binkie's score. We can express this relationship mathematically as:\n   \\[\n   \\text{Frankie's score} = 2 \\times \\text{Binkie's score} + 15\n   \\]\n3. Substitute Binkie's score into the equation:\n   \\[\n   \\text{Frankie's score} = 2 \\times 90 + 15\n   \\]\n4. Perform the multiplication:\n   \\[\n   2 \\times 90 = 180\n   \\]\n5. Add 15 to the result:\n   \\[\n   180 + 15 = 195\n   \\]\n\nTherefore, Frankie's score is Final answer: 195.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "195.",
+    "gold_answer": "195",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    9,
+    1,
+    5,
+    14,
+    4,
+    15,
+    1,
+    2,
+    1,
+    4,
+    2,
+    1,
+    2,
+    9,
+    1
+  ],
+  "peak_allocated_bytes": 17208125440,
+  "sample_id": "gsm8k_test-01081",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 98,
+      "block_index": 0,
+      "block_start": 84,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 99,
+      "block_index": 1,
+      "block_start": 98,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 109,
+      "block_index": 2,
+      "block_start": 99,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 141,
+      "block_index": 3,
+      "block_start": 109,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 155,
+      "block_index": 4,
+      "block_start": 141,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 187,
+      "block_index": 5,
+      "block_start": 155,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 188,
+      "block_index": 6,
+      "block_start": 187,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 215,
+      "block_index": 7,
+      "block_start": 188,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 219,
+      "block_index": 8,
+      "block_start": 215,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 262,
+      "block_index": 9,
+      "block_start": 219,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 269,
+      "block_index": 10,
+      "block_start": 262,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 272,
+      "block_index": 11,
+      "block_start": 269,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 290,
+      "block_index": 12,
+      "block_start": 272,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 331,
+      "block_index": 13,
+      "block_start": 290,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "block_end": 340,
+      "block_index": 14,
+      "block_start": 331,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 9,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 71
+}

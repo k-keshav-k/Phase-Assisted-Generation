@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    3,
+    32,
+    14,
+    32,
+    32,
+    32,
+    32,
+    32,
+    15
+  ],
+  "created_at": "2026-08-01T06:53:18.987629+00:00",
+  "elapsed_sec": 2.6480130814015865,
+  "generated_text": "1. Fred started with 24 gallons of root beer.\n2. His children drank 4 gallons, leaving 24 - 4 = 20 gallons.\n3. His wife Barbie spilled 7 gallons, leaving 20 - 7 = 13 gallons.\n4. Fred's friend Ronnie took 5 gallons, leaving 13 - 5 = 8 gallons.\n5. On the fourth day, 3 people showed up for the party, including Fred, making a total of 4 people.\n6. The remaining root beer was shared equally among the 4 people, so each person got 8 / 4 = 2 gallons.\n\nFinal answer: 2",
+  "grade": {
+    "error": null,
+    "extracted_answer": "2",
+    "gold_answer": "2",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    2,
+    10,
+    3,
+    23,
+    21,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15816846336,
+  "sample_id": "gsm8k_test-01199",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 83
+}

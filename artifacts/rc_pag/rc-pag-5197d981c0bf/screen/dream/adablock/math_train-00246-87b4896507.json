@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    6,
+    32,
+    5,
+    9,
+    9,
+    9,
+    9,
+    10,
+    10,
+    10,
+    10,
+    9
+  ],
+  "created_at": "2026-07-31T23:47:38.588468+00:00",
+  "elapsed_sec": 4.7646647319197655,
+  "generated_text": "To solve this problem, we can use a recursive approach. Let $a_n$ be the number of $n$-digit numbers with two consecutive 1's. We can derive the following recurrence relation:\n\n$$a_n = a_{n-1} + a_{n-2}$$\n\nThis recurrence relation can be understood by considering the last digit of the number. If the last digit is 1, then the second last digit must be 1 as well, and the remaining $n-2$ digits can be any valid number. If the last digit is 2, then the remaining $n-1$ digits can be any valid number.\n\nWe can solve this recurrence relation using the initial conditions $a_1 = 1$ and $a_2 = 2$.\n\n$$a_1 = 1$$\n$$a_2 = 2$$\n$$a_3 = 3$$\n$$a_4 = 5$$\n$$a_5 = 8$$\n$$a_6 = 13$$\n$$a_7 = 21$$\n$$a_8 = 34$$\n$$a_9 = 55$$\n$$a_{10} = 8",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[8, '8']",
+    "gold_answer": "We take as our universe the set of 10-digit integers whose digits are all either 1 or 2, of which there are $2^{10}$, and we count the complement. The complement is the set of 10-digit positive integers composed of the digits 1 and 2 with no two consecutive 1s. Counting such numbers is a popular combinatorial problem: we approach it via a recursion.\nThere are two \"good\" one-digit numbers (1 and 2) and three good two-digit numbers (12, 21 and 22). Each such $n$-digit number is formed either by gluing \"2\" on to the end of a good $(n - 1)$-digit number or by gluing \"21\" onto the end of a good $(n - 2)$-digit number. This is a bijection between the good $n$-digit numbers and the union of the good $(n-1)$- and $(n - 2)$-digit numbers. Thus, the number of good $n$-digit numbers is the sum of the number of good $(n-1)$- and $(n - 2)$-digit numbers. The resulting recursion is exactly that of the Fibonacci numbers with initial values $F_1 = 2$ and $F_2 = 3$.\nThus, our final answer is $2^{10} - F_{10} = 1024 - 144 = \\boxed{880}$.",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    25,
+    26,
+    15,
+    2,
+    22,
+    4,
+    3,
+    6,
+    2,
+    4,
+    4,
+    4,
+    4,
+    4,
+    6
+  ],
+  "peak_allocated_bytes": 15643630080,
+  "sample_id": "math_train-00246",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 158
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:17:56.780859+00:00",
+  "elapsed_sec": 2.0346349328756332,
+  "generated_text": ".. Robert has 30 cherries.\n2. Robert has 10 more cherries than Richard. Therefore, Richard has 30 - 10 = 20 cherries.\n3. The total number of cherries is 60. Since Robert has 30 and Richard has 20, Jerry must have 60 - 30 - 20 = 10 cherries.\n4. Robert has 30 cherries and Jerry has 10 cherries. Therefore, Robert has 30 - 10 = 20 more cherries than Jerry.\n\nFinal answer: 20",
+  "grade": {
+    "error": null,
+    "extracted_answer": "20",
+    "gold_answer": "20",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    13,
+    15,
+    9,
+    4,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15592453120,
+  "sample_id": "gsm8k_test-00975",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 117,
+      "block_index": 0,
+      "block_start": 85,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9316353797912598,
+      "min_top1_confidence": 0.44000816345214844,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 149,
+      "block_index": 1,
+      "block_start": 117,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9707848429679871,
+      "min_top1_confidence": 0.42371654510498047,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 181,
+      "block_index": 2,
+      "block_start": 149,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.5625,
+      "mean_top1_confidence": 0.9438649415969849,
+      "min_top1_confidence": 0.1699615865945816,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 213,
+      "block_index": 3,
+      "block_start": 181,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9563642144203186,
+      "min_top1_confidence": 0.5984662175178528,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 245,
+      "block_index": 4,
+      "block_start": 213,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9954158663749695,
+      "min_top1_confidence": 0.8563188910484314,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 277,
+      "block_index": 5,
+      "block_start": 245,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 1.0,
+      "min_top1_confidence": 0.9999995231628418,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 309,
+      "block_index": 6,
+      "block_start": 277,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999998152256012,
+      "min_top1_confidence": 0.9999935626983643,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 341,
+      "block_index": 7,
+      "block_start": 309,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999945163726807,
+      "min_top1_confidence": 0.9999847412109375,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 66
+}

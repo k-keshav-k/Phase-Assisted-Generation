@@ -1,0 +1,54 @@
+{
+  "alpha": 0.02,
+  "candidates": [
+    {
+      "max_prompt_stops": 3,
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 0.0,
+      "min_steps": 2,
+      "name": "rgate_t10_p3_v7",
+      "patience": 3,
+      "require_exact_agreement": false,
+      "threshold": 0.1,
+      "total_risk_budget": 1.0,
+      "variant": "rc_pag_budgeted"
+    },
+    {
+      "max_prompt_stops": 3,
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 0.0,
+      "min_steps": 2,
+      "name": "rgate_t15_p3_v7",
+      "patience": 3,
+      "require_exact_agreement": false,
+      "threshold": 0.15,
+      "total_risk_budget": 1.0,
+      "variant": "rc_pag_budgeted"
+    },
+    {
+      "max_prompt_stops": 3,
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 0.0,
+      "min_steps": 2,
+      "name": "rgate_t20_p3_v7",
+      "patience": 3,
+      "require_exact_agreement": false,
+      "threshold": 0.2,
+      "total_risk_budget": 1.0,
+      "variant": "rc_pag_budgeted"
+    }
+  ],
+  "config_hash": "c1eda289fb081b3154ba69551b71655ee4587d2ffca3ccb4f5581642c77d03aa",
+  "delta": 0.05,
+  "loss": "adablock_correct_candidate_wrong",
+  "models": [
+    "llada",
+    "dream"
+  ],
+  "multiplicity_unit": "model_policy_pair",
+  "protocol_identity": "3831d74408d6ab9edd3ef1eb03b2541d0380eec834f69a404fb456cfb30408dd",
+  "schema_version": 1
+}

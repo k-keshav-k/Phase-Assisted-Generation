@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    19,
+    32,
+    4,
+    32,
+    13,
+    28
+  ],
+  "created_at": "2026-08-01T07:04:47.409980+00:00",
+  "elapsed_sec": 3.2944396808743477,
+  "generated_text": "Let's denote the number of gold coins as \\( G \\) and the number of silver coins as \\( S \\). According to the problem, we have the following information:\n\n1. The total number of coins is 110: \\( G + S = 110 \\).\n2. There are 30 more gold coins than silver coins: \\( G = S + 30 \\).\n\nWe can solve this system of equations step by step. First, we substitute the second equation into the first equation:\n\n\\[ (S + 30) + S = 110 \\]\n\nSimplifying this equation, we get:\n\n\\[ 2S + 30 = 110 \\]\n\nSubtracting 30 from both sides:\n\n\\[ 2S = 80 \\]\n\nDividing both sides by 2:\n\n\\[ S = 40 \\]\n\nNow that we know the number of silver coins, we can find the number of gold coins using the second equation:\n\n\\[ G = S + 30 = 40 + 30 = 70 \\]\n\nTherefore, Gretchen has 70 gold coins.\n\nFinal answer: 70",
+  "grade": {
+    "error": null,
+    "extracted_answer": "70",
+    "gold_answer": "70",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    16,
+    14,
+    17,
+    3,
+    8,
+    2,
+    12,
+    2,
+    12
+  ],
+  "peak_allocated_bytes": 15656348672,
+  "sample_id": "gsm8k_test-00033",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 107
+}

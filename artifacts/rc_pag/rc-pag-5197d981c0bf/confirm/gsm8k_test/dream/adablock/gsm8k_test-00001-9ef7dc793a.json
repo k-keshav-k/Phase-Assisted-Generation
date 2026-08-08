@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    6,
+    32,
+    32,
+    5,
+    32,
+    32,
+    32,
+    32,
+    21
+  ],
+  "created_at": "2026-08-01T06:45:55.291525+00:00",
+  "elapsed_sec": 4.168355163186789,
+  "generated_text": "To solve this problem, we need to determine the total number of bolts of fiber required to make a robe. The robe takes 2 bolts of blue fiber and half that much white fiber.\n\nStep 1: Determine the number of bolts of white fiber needed.\nThe problem states that the robe takes half as much white fiber as blue fiber. Since the robe takes 2 bolts of blue fiber, the number of bolts of white fiber needed is half of 2.\n\nStep 2: Calculate the number of bolts of white fiber needed.\nTo find half of 2, we divide 2 by 2. So, 2 / 2 = 1.\n\nStep 3: Add the number of bolts of blue fiber and white fiber together to find the total number of bolts.\nThe total number of bolts of fiber needed is the sum of the bolts of blue fiber and the bolts of white fiber. So, 2 (blue fiber) + 1 (white fiber) = 3.\n\nStep 4: State the final answer.\nThe total number of bolts of fiber required to make the robe is 3.\n\nFinal answer: 3",
+  "grade": {
+    "error": null,
+    "extracted_answer": "3",
+    "gold_answer": "3",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    4,
+    22,
+    16,
+    3,
+    16,
+    21,
+    14,
+    18,
+    2
+  ],
+  "peak_allocated_bytes": 15649979392,
+  "sample_id": "gsm8k_test-00001",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 137
+}

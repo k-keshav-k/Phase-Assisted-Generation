@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    11,
+    32,
+    32,
+    4,
+    24,
+    1,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T07:31:32.722705+00:00",
+  "elapsed_sec": 3.913453172892332,
+  "generated_text": "1. Calculate the total number of slices in all pizzas: \n   - Each pizza has 12 slices.\n   - There are 5 people (Bryce and 4 friends).\n   - Total slices = 5 pizzas * 12 slices/pizza = 60 slices.\n\n2. Determine how many slices Bryce and two friends ate:\n   - Bryce and two friends ate 2/3 of their pizzas.\n   - Each of them ate 2/3 * 12 slices = 8 slices.\n   - Total slices eaten by Bryce and two friends = 3 people * 8 slices/person = 24 slices.\n\n3. Determine how many slices the two remaining friends ate:\n   - The two remaining friends ate ¾ of their pizzas.\n   - Each of them ate ¾ * 12 slices = 9 slices.\n   - Total slices eaten by the two remaining friends = 2 people * 9 slices/person = 18 slices.\n\n4. Calculate the number of slices left:\n   - Total slices left = Total slices - Total slices eaten.\n   - Total slices left = 60 slices - 42 slices = 18 slices.\n\nFinal answer: 18",
+  "grade": {
+    "error": null,
+    "extracted_answer": "18",
+    "gold_answer": "18",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    19,
+    21,
+    4,
+    16,
+    8,
+    2,
+    4,
+    1,
+    15,
+    12
+  ],
+  "peak_allocated_bytes": 15689469952,
+  "sample_id": "gsm8k_test-00724",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 128
+}

@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    29,
+    32,
+    12,
+    16,
+    32,
+    17,
+    22
+  ],
+  "created_at": "2026-08-01T07:56:19.739698+00:00",
+  "elapsed_sec": 2.9793316908180714,
+  "generated_text": "1. Calculate the number of letters delivered on Tuesday:\n   - The post office delivered 17 more than one-fifth as many letters as on Monday.\n   - One-fifth of 425 is $425 / 5 = 85$.\n   - Adding 17 to this gives $85 + 17 = 102$.\n   - So, the post office delivered 102 letters on Tuesday.\n\n2. Calculate the number of letters delivered on Wednesday:\n   - The post office delivered 5 more than twice as many letters as on Tuesday.\n   - Twice as many as on Tuesday is $102 * 2 = 204$.\n   - Adding 5 to this gives $204 + 5 = 209$.\n   - So, the post office delivered 209 letters on Wednesday.\n\n3. Calculate the total number of letters delivered from Monday to Wednesday:\n   - Add the letters delivered on Monday, Tuesday, and Wednesday: $425 + 102 + 209 = 736$.\n\nFinal answer: \\boxed{736}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{736}",
+    "gold_answer": "736",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    20,
+    10,
+    7,
+    12,
+    2,
+    2,
+    14,
+    4,
+    7
+  ],
+  "peak_allocated_bytes": 15690743808,
+  "sample_id": "gsm8k_test-01040",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 97
+}

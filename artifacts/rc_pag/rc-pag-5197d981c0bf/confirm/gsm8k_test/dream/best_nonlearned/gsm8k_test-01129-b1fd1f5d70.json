@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:33:47.919659+00:00",
+  "elapsed_sec": 4.114441826939583,
+  "generated_text": ".. Let's denote the number of eggs painted by Arnold and Madeline as \\( A \\). Since they painted the same number of eggs, the total number of eggs painted by Arnold and Madeline is \\( 2A \\).\n2. Camden and Sarah painted a total of 30 eggs, and Camden painted 12 more than Sarah. Let's denote the number of eggs painted by Sarah as \\( S \\). Therefore, Camden painted \\( S + 12 \\) eggs.\n3. The total number of eggs painted by all four people is 56. So, we can write the equation \\( 2A + (S + S + 12) = 56 \\).\n4. Simplifying the equation, we get \\( 2A + 2S + 12 = 56 \\).\n5. Rearranging the equation, we have \\( 2A + 2S = 44 \\).\n6. Since Camden painted \\( S + 12 \\) eggs and Arnold painted \\( A \\) eggs, the difference in the number of eggs painted by Camden and Arnold is \\( S + 12 - A = 12 \\).\n\nFinal answer: $ \\boxed{12}$",
+  "grade": {
+    "error": "not a strict numeric answer: '$ \\\\boxed{12}$'",
+    "extracted_answer": "$ \\boxed{12}$",
+    "gold_answer": "8",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    24,
+    19,
+    13,
+    20,
+    12,
+    13,
+    15,
+    20
+  ],
+  "peak_allocated_bytes": 15519891456,
+  "sample_id": "gsm8k_test-01129",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 133,
+      "block_index": 0,
+      "block_start": 101,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8550318479537964,
+      "min_top1_confidence": 0.031148482114076614,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 165,
+      "block_index": 1,
+      "block_start": 133,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9524565935134888,
+      "min_top1_confidence": 0.5357826352119446,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 197,
+      "block_index": 2,
+      "block_start": 165,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9238502383232117,
+      "min_top1_confidence": 0.09482196718454361,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 229,
+      "block_index": 3,
+      "block_start": 197,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.982348620891571,
+      "min_top1_confidence": 0.8672392964363098,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 261,
+      "block_index": 4,
+      "block_start": 229,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9454587697982788,
+      "min_top1_confidence": 0.3960298001766205,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 293,
+      "block_index": 5,
+      "block_start": 261,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9551442265510559,
+      "min_top1_confidence": 0.4041363000869751,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 325,
+      "block_index": 6,
+      "block_start": 293,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9599027633666992,
+      "min_top1_confidence": 0.48133376240730286,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 357,
+      "block_index": 7,
+      "block_start": 325,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9835389852523804,
+      "min_top1_confidence": 0.8066583275794983,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 136
+}

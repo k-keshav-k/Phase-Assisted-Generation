@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T06:54:46.744267+00:00",
+  "elapsed_sec": 3.2869358249008656,
+  "generated_text": "1. Calculate the number of big coupons: \n   Anthony wants to send out twice as many big coupons as small coupons. So, he will send out  * * 700 = 1400 big coupons.\n\n2. Calculate the cost of mailing small coupons: \n   Each small coupon costs 5 cents to mail. So, the total cost for small coupons is 700 * 5 = 3500 cents.\n\n3. Calculate the cost of mailing big coupons: \n   Each big coupon costs 15 cents to mail. So, the total cost for big coupons is 1400 * 15 = 21000 cents.\n\n4. Calculate the total postage cost: \n   Add the cost of mailing small and big coupons to get the total postage cost: 3500 + 21000 = 24500 cents.\n\n5. Convert the total postage cost from cents to dollars: \n   Since there are 100 cents in a dollar, divide the total postage cost by 100: 24500 / 100 = 245 dollars.\n\nFinal answer: \\boxed{245}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{245}",
+    "gold_answer": "245",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    21,
+    14,
+    20,
+    2,
+    12,
+    12,
+    19,
+    8
+  ],
+  "peak_allocated_bytes": 15519891456,
+  "sample_id": "gsm8k_test-01067",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 133,
+      "block_index": 0,
+      "block_start": 101,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.8946740031242371,
+      "min_top1_confidence": 0.026746047660708427,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 165,
+      "block_index": 1,
+      "block_start": 133,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.969674825668335,
+      "min_top1_confidence": 0.4463416337966919,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 197,
+      "block_index": 2,
+      "block_start": 165,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9808692932128906,
+      "min_top1_confidence": 0.6580527424812317,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 229,
+      "block_index": 3,
+      "block_start": 197,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.984238862991333,
+      "min_top1_confidence": 0.8254635334014893,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 261,
+      "block_index": 4,
+      "block_start": 229,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9412524700164795,
+      "min_top1_confidence": 0.29814061522483826,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 293,
+      "block_index": 5,
+      "block_start": 261,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.5625,
+      "mean_top1_confidence": 0.9526110887527466,
+      "min_top1_confidence": 0.3815193772315979,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 325,
+      "block_index": 6,
+      "block_start": 293,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.939492404460907,
+      "min_top1_confidence": 0.3050611913204193,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 357,
+      "block_index": 7,
+      "block_start": 325,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.59375,
+      "mean_top1_confidence": 0.9816632866859436,
+      "min_top1_confidence": 0.49256229400634766,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 108
+}

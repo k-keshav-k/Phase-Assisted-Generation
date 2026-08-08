@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    20,
+    1,
+    13,
+    2,
+    1,
+    32,
+    9,
+    17,
+    1,
+    32,
+    10,
+    21,
+    8,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T05:57:48.700482+00:00",
+  "elapsed_sec": 3.6961519308388233,
+  "generated_text": "To find the original price of the shirt, we need to determine the original price before the discount. We know that the sale price is 60% off the original price, which means the sale price is 40% of the original price.\n\nLet's denote the original price of the shirt by \\( P \\).\n\nGiven:\n- The sale price is \\$14.40.\n- The sale price is 40% of the original price.\n\nWe can express this relationship mathematically as:\n\\[ 0.40P = 14.40 \\]\n\nTo find \\( P \\), we need to solve for \\( P \\) by isolating it on one side of the equation. We do this by dividing both sides of the equation by 0.40:\n\\[ P = \\frac{14.40}{0.40} \\]\n\nNow, we perform the division:\n\\[ P = \\frac{14.40}{0.40} = 36.00 \\]\n\nTherefore, the original price of the shirt was \\(\\boxed{36.00}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[36.0000000000000, '36.00']",
+    "gold_answer": "\\$36",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    7,
+    1,
+    7,
+    2,
+    1,
+    10,
+    9,
+    5,
+    1,
+    12,
+    1,
+    2,
+    4,
+    11,
+    10
+  ],
+  "peak_allocated_bytes": 17133661696,
+  "sample_id": "math500-00488",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 106
+}

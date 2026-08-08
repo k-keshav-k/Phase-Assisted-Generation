@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    2,
+    13,
+    32,
+    32,
+    19,
+    14,
+    32,
+    10,
+    17,
+    18,
+    23,
+    1,
+    11
+  ],
+  "created_at": "2026-08-01T04:02:43.526355+00:00",
+  "elapsed_sec": 2.6600994169712067,
+  "generated_text": "To determine the total amount of medicine in 8 doses, we need to follow these steps:\n\n1. Calculate the amount of each medicine in one dosage.\n2. Determine the total amount of medicine in one dosage.\n3. Multiply the total amount in one dosage by the number of doses.\n\nFirst, let's find the amount of each medicine in one dosage:\n- The amount of the first medicine is 14 mL.\n- The amount of the second medicine is 3 times the amount of the first medicine, so it is \\(3 \\times 14 = 42\\) mL.\n\nNext, we calculate the total amount of medicine in one dosage:\n- Total amount in one dosage = Amount of the first medicine + Amount of the second medicine\n- Total amount in one dosage = 14 mL + 42 mL = 56 mL\n\nFinally, we multiply the total amount in one dosage by the number of doses:\n- Total amount in 8 doses = Total amount in one dosage × Number of doses\n- Total amount in 8 doses = 56 mL × 8 doses = 448 mL\n\nFinal answer: 448 mL.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "448 mL.",
+    "gold_answer": "448",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    15,
+    1,
+    5,
+    14,
+    9,
+    6,
+    4,
+    12,
+    2,
+    3,
+    2,
+    3,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17156777472,
+  "sample_id": "gsm8k_test-01211",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 78
+}

@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    8,
+    32,
+    19,
+    32,
+    16,
+    32,
+    23,
+    30
+  ],
+  "created_at": "2026-08-01T07:24:02.623998+00:00",
+  "elapsed_sec": 3.3844344578683376,
+  "generated_text": "To find the total calories in the omelet, we need to calculate the calories from each ingredient and add them together.\n\nFirst, let's calculate the calories from the eggs:\nEach egg has 75 calories, and there are 6 eggs, so the total calories from the eggs is 6 * 75 = 450 calories.\n\nNext, let's calculate the calories from the cheese:\nThe cheese has 120 calories per ounce, and there are 2 ounces, so the total calories from the cheese is 2 * 120 = 240 calories.\n\nNow, let's calculate the calories from the ham:\nThe ham has 40 calories per ounce, and there are 2 ounces, so the total calories from the ham is 2 * 40 = 80 calories.\n\nFinally, let's add up the calories from each ingredient to find the total calories in the omelet:\n450 calories (eggs) + 240 calories (cheese) + 80 calories (ham) = 770 calories.\n\nSo, the total calories in the omelet is 770 calories.\n\nFinal answer: 770",
+  "grade": {
+    "error": null,
+    "extracted_answer": "770",
+    "gold_answer": "770",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    24,
+    4,
+    11,
+    3,
+    7,
+    2,
+    18,
+    4,
+    14
+  ],
+  "peak_allocated_bytes": 15697113088,
+  "sample_id": "gsm8k_test-00716",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 111
+}

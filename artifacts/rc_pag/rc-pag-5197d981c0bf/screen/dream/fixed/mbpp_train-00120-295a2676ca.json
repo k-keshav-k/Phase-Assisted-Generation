@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T00:04:49.471057+00:00",
+  "elapsed_sec": 2.298885442316532,
+  "generated_text": "Here is a Python function that uses regex to extract year, month and date from a URL:\n\n```python\nimport re\n\ndef extract_date_from_url(url):\n    pattern = r'https?://[\\w-]+/(\\d{4})/(\\d{2})/(\\d{2})'\n    = = re.search(pattern, url)\n    if match:\n        year = match.group(1)\n        month = match.group(2)\n        day = match.group(3)\n        return year, month, day\n    else:\n        return None\n```",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_qfh3_bd5/candidate.py\", line 6\n    = = re.search(pattern, url)\n    ^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "import re\n\ndef extract_date_from_url(url):\n    pattern = r'https?://[\\w-]+/(\\d{4})/(\\d{2})/(\\d{2})'\n    = = re.search(pattern, url)\n    if match:\n        year = match.group(1)\n        month = match.group(2)\n        day = match.group(3)\n        return year, month, day\n    else:\n        return None",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    21,
+    24,
+    13,
+    14,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15555219456,
+  "sample_id": "mbpp_train-00120",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 81,
+      "block_index": 0,
+      "block_start": 49,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9109745025634766,
+      "min_top1_confidence": 0.08076561987400055,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 113,
+      "block_index": 1,
+      "block_start": 81,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9773727655410767,
+      "min_top1_confidence": 0.7154781222343445,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 145,
+      "block_index": 2,
+      "block_start": 113,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9615031480789185,
+      "min_top1_confidence": 0.46436190605163574,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 177,
+      "block_index": 3,
+      "block_start": 145,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.9493985176086426,
+      "min_top1_confidence": 0.037389058619737625,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 209,
+      "block_index": 4,
+      "block_start": 177,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999948740005493,
+      "min_top1_confidence": 0.9999208450317383,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 241,
+      "block_index": 5,
+      "block_start": 209,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999745488166809,
+      "min_top1_confidence": 0.9996603727340698,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 273,
+      "block_index": 6,
+      "block_start": 241,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999138116836548,
+      "min_top1_confidence": 0.9994829893112183,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 305,
+      "block_index": 7,
+      "block_start": 273,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999675154685974,
+      "min_top1_confidence": 0.9999146461486816,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 76
+}

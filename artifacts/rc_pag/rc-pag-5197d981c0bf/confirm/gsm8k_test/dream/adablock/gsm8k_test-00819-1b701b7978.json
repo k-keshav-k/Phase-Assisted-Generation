@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    1,
+    32,
+    32,
+    3,
+    32,
+    32,
+    32,
+    32,
+    28
+  ],
+  "created_at": "2026-08-01T07:00:46.100695+00:00",
+  "elapsed_sec": 3.5110433101654053,
+  "generated_text": "1. **Determine the total amount raised by the students:**\n   - The total amount raised by the charity is $175,000.\n   - $50,000 comes from organizations.\n   - Therefore, the amount raised by the students is:\n     \\[\n     \\text{Amount raised by students} = 175,000 - 50,000 = 125,000\n     \\]\n\n2. **Calculate the amount raised by each student:**\n   - There are 20 students.\n   - Each student raises the same amount.\n   - To find the amount each student raises, divide the total amount raised by the students by the number of students:\n     \\[\n     \\text{Amount per student} = \\frac{125,000}{20} = 6,250\n     \\]\n\n3. **Conclusion:**\n   - Each student raises $6,250.\n\nFinal answer: $6,250$",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$6,250$",
+    "gold_answer": "6,250",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    1,
+    20,
+    7,
+    2,
+    18,
+    12,
+    8,
+    19,
+    2
+  ],
+  "peak_allocated_bytes": 15689469952,
+  "sample_id": "gsm8k_test-00819",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 114
+}

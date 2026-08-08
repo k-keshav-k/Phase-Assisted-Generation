@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    11,
+    21,
+    1,
+    32,
+    22,
+    32,
+    32,
+    7,
+    32,
+    2
+  ],
+  "created_at": "2026-08-01T07:27:17.829538+00:00",
+  "elapsed_sec": 3.057933457195759,
+  "generated_text": "1. Calculate the number of green cars: \n   - The rink has 2 fewer green cars than red cars.\n   - Number of green cars = 12 red cars - 2 = 10 green cars.\n\n2. Calculate the number of blue cars: \n   - The rink has 3 times the number of blue cars as green cars.\n   - Number of blue cars = 3 * 10 green cars = 30 blue cars.\n\n3. Calculate the total number of cars that are red, green, and blue: \n   - Total number of red, green, and blue cars = 12 red cars + 10 green cars + 30 blue cars = 52 cars.\n\n4. Calculate the number of yellow cars: \n   - The total number of cars in the rink is 75.\n   - Number of yellow cars = Total number of cars - Total number of red, green, and blue cars.\n   - Number of yellow cars = 75 cars - 52 cars = 23 cars.\n\nFinal answer: 23",
+  "grade": {
+    "error": null,
+    "extracted_answer": "23",
+    "gold_answer": "23",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    9,
+    3,
+    4,
+    1,
+    18,
+    3,
+    14,
+    12,
+    5,
+    6,
+    2
+  ],
+  "peak_allocated_bytes": 15704756224,
+  "sample_id": "gsm8k_test-00865",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 99
+}

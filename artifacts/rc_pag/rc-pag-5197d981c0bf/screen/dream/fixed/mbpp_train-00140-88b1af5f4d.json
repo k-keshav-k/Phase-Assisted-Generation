@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T00:17:09.490632+00:00",
+  "elapsed_sec": 4.581767335534096,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef isomorphic(str1, str2):\n    if len(str1) != len(str2):\n        return False\n\n    dict1 = {}\n    dict2 = {}\n\n    for i in range(len(str1)):\n        if str1[i] not in dict1:\n            dict1[str1[i]] = str2[i]\n        if str2[i] not in dict2:\n            dict2[str2[i]] = str1[i]\n\n        if dict1[str1[i]] != str2[i] or dict2[str2[i]] != str1[i]:\n            return False\n\n    return True\n```\n\nThis function takes two strings as input and returns True if they are isomorphic and False otherwise. It uses two dictionaries to the the mapping between characters in the two strings. If the lengths of the strings are not equal, it immediately returns False. Otherwise, it iterates over the characters in the strings and updates the dictionaries accordingly. If at any point the mapping between the characters in the two strings is not consistent, it returns False. If all mappings are consistent, it returns True.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_8oa4pctf/candidate.py\", line 19, in <module>\n    assert is_Isomorphic(\"paper\",\"title\") == True\n           ^^^^^^^^^^^^^\nNameError: name 'is_Isomorphic' is not defined. Did you mean: 'isomorphic'?\n",
+    "extracted_answer": "def isomorphic(str1, str2):\n    if len(str1) != len(str2):\n        return False\n\n    dict1 = {}\n    dict2 = {}\n\n    for i in range(len(str1)):\n        if str1[i] not in dict1:\n            dict1[str1[i]] = str2[i]\n        if str2[i] not in dict2:\n            dict2[str2[i]] = str1[i]\n\n        if dict1[str1[i]] != str2[i] or dict2[str2[i]] != str1[i]:\n            return False\n\n    return True",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    20,
+    19,
+    7,
+    7,
+    23,
+    30,
+    31,
+    18
+  ],
+  "peak_allocated_bytes": 15484114944,
+  "sample_id": "mbpp_train-00140",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 84,
+      "block_index": 0,
+      "block_start": 52,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9030061960220337,
+      "min_top1_confidence": 0.07701136916875839,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 116,
+      "block_index": 1,
+      "block_start": 84,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9591839909553528,
+      "min_top1_confidence": 0.24153074622154236,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 148,
+      "block_index": 2,
+      "block_start": 116,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9821138381958008,
+      "min_top1_confidence": 0.458688348531723,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 180,
+      "block_index": 3,
+      "block_start": 148,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9519604444503784,
+      "min_top1_confidence": 0.22593605518341064,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 212,
+      "block_index": 4,
+      "block_start": 180,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9023467302322388,
+      "min_top1_confidence": 0.17302492260932922,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 30,
+      "applied_block_size": 32,
+      "block_end": 244,
+      "block_index": 5,
+      "block_start": 212,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8706270456314087,
+      "min_top1_confidence": 0.08279434591531754,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 32,
+      "block_end": 276,
+      "block_index": 6,
+      "block_start": 244,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8887505531311035,
+      "min_top1_confidence": 0.1956012099981308,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 308,
+      "block_index": 7,
+      "block_start": 276,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9773023724555969,
+      "min_top1_confidence": 0.7428558468818665,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 155
+}

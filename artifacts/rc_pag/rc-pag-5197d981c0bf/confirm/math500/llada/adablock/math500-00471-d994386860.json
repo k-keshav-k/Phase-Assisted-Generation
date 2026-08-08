@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    11,
+    27,
+    29,
+    1,
+    32,
+    5,
+    4,
+    1,
+    32,
+    1,
+    62,
+    19
+  ],
+  "created_at": "2026-08-01T05:38:22.704495+00:00",
+  "elapsed_sec": 2.7137518376111984,
+  "generated_text": "1. Calculate the total score for each group of students:\n   - For the 20 students who scored 80: \\(20 \\times 80 = 1600\\)\n   - For the 8 students who scored 90: \\(8 \\times 90 = 720\\)\n   - For the 2 students who scored 100: \\(2 \\times 100 = 200\\)\n\n2. Sum the total scores of all students:\n   \\[\n   1600 + 720 + 200 = 2520\n   \\]\n\n3. Calculate the total number of students:\n   \\[\n   20 + 8 + 2 = 30\n   \\]\n\n4. Calculate the class average by dividing the total score by the total number of students:\n   \\[\n   \\frac{2520}{30} = 84\n   \\]\n\nTherefore, the class average (the mean) on this test is \\(\\boxed{84}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[84, '84']",
+    "gold_answer": "84",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    2,
+    1,
+    1,
+    1,
+    14,
+    1,
+    1,
+    1,
+    8,
+    1,
+    21,
+    1
+  ],
+  "peak_allocated_bytes": 17201095680,
+  "sample_id": "math500-00471",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 62,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 77
+}

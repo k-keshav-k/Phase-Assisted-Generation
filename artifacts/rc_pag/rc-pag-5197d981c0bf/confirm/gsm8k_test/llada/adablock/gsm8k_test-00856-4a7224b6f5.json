@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    3,
+    32,
+    6,
+    9,
+    1,
+    32,
+    2,
+    1,
+    32,
+    23,
+    1,
+    32,
+    42,
+    8
+  ],
+  "created_at": "2026-08-01T04:21:11.964402+00:00",
+  "elapsed_sec": 3.579376522451639,
+  "generated_text": "To determine how many packs of glue sticks Mr. Jackson needs to buy, we can follow these steps:\n\n1. Calculate the total number of glue sticks required.\n2. Determine how many packs of glue sticks are needed.\n\nFirst, let's calculate the total number of glue sticks required:\n- Each student gets 2 glue sticks.\n- There are 27 students.\n\n\\[\n27 \\text{ students} \\times 2 \\text{ glue sticks/student} = 54 \\text{ glue sticks}\n\\]\n\nNext, we need to determine how many packs of glue sticks are needed. Each pack contains 8 glue sticks.\n\n\\[\n\\frac{54 \\text{ glue sticks}}{8 \\text{ glue sticks/pack}} = 6.75\n\\]\n\nSince Mr. Jackson can only buy whole packs, he will need to round up to the next whole number. This is because even a fraction of a pack is an additional pack.\n\n\\[\n\\lceil 6.75 \\rceil = 7\n\\]\n\nTherefore, Mr. Jackson needs to buy 7 packs of glue sticks.\n\nFinal answer: 7.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "7.",
+    "gold_answer": "7",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    8,
+    3,
+    17,
+    1,
+    3,
+    1,
+    10,
+    1,
+    1,
+    17,
+    8,
+    1,
+    17,
+    16,
+    1
+  ],
+  "peak_allocated_bytes": 17265916416,
+  "sample_id": "gsm8k_test-00856",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 42,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 105
+}

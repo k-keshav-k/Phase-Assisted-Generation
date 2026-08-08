@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    26,
+    32,
+    32,
+    13,
+    32,
+    3,
+    32,
+    22
+  ],
+  "created_at": "2026-08-01T07:32:13.158483+00:00",
+  "elapsed_sec": 2.668159507215023,
+  "generated_text": "1. **First 30 seconds**: 20 kernels pop.\n2. **Next 30 seconds**: Three times the amount of the first 30 seconds, so \\(3 \\times 20 = 60\\) kernels pop.\n3. **Next 30 seconds**: Four times the initial popping rate, so \\(4 \\times 20 = 80\\) kernels pop.\n4. **Final 30 seconds**: Half the rate of the previous 30 seconds, so \\(\\frac{80}{2} = 40\\) kernels pop.\n5. **Residual heat**: A quarter of the kernels that popped in the final 30 seconds pop from the residual heat, so \\(\\frac{40}{4} = 10\\) kernels pop.\n\nAdding up all the kernels that popped:\n\\[ 20 + 60 + 80 + 40 + 10 = 210 \\]\n\nFinal answer: \\boxed{210}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{210}",
+    "gold_answer": "210",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    9,
+    4,
+    12,
+    15,
+    3,
+    12,
+    3,
+    6,
+    2
+  ],
+  "peak_allocated_bytes": 15787561472,
+  "sample_id": "gsm8k_test-01264",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 85
+}

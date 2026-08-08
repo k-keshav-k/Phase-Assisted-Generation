@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    7,
+    32,
+    32,
+    32,
+    32,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:31:52.901249+00:00",
+  "elapsed_sec": 4.296676684170961,
+  "generated_text": "1. **Identify the total number of people**: There are 2 adults and 4 kids, making a total of 6 people.\n2. **Determine the ratio of slices**: Each adult gets a slice that is twice as big as each kid's slice. Therefore, the ratio of adult slices to kid slices is 2:1.\n3. **Calculate the total number of slices**: Since there are 2 adults and 4 kids, the total number of slices is 2 + 4 = 6 slices.\n4. **Determine the number of slices each adult gets**: Since the ratio is 2:1, each adult gets 2 slices.\n5. **Calculate the percentage of the watermelon each adult gets**: Each adult gets 2 slices out of the total 6 slices. Therefore, the percentage of the watermelon each adult gets is (2/6) * 100% = 33.33%.\n\nFinal answer: 33.33",
+  "grade": {
+    "error": null,
+    "extracted_answer": "33.33",
+    "gold_answer": "25",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    27,
+    5,
+    24,
+    24,
+    17,
+    17,
+    4,
+    2
+  ],
+  "peak_allocated_bytes": 15678004736,
+  "sample_id": "gsm8k_test-00999",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 142
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:54:27.970598+00:00",
+  "elapsed_sec": 2.730365637689829,
+  "generated_text": ".. Calculate the total number of wheels needed for the cars: \n   - Henry has 57 cars, and each car requires 4 wheels.\n   - Total wheels for cars = 57 cars * 4 wheels/car = 228 wheels.\n\n2. Calculate the total number of wheels needed for the motorcycles: \n   - Henry has 73 motorcycles, and each motorcycle requires 2 wheels.\n   - Total wheels for motorcycles = 73 motorcycles * 2 wheels/motorcycle = 146 wheels.\n\n3. Calculate the total number of wheels needed for both cars and motorcycles: \n   - Total wheels needed = Total wheels for cars + Total wheels for motorcycles = 228 wheels + 146 wheels = 374 wheels.\n\n4. Determine how many wheels will be left in the box: \n   - Henry has a box with 650 wheels.\n   - Wheels left = Total wheels in the box - Total wheels needed = 650 wheels - 374 wheels = 276 wheels.\n\nFinal answer: 276",
+  "grade": {
+    "error": null,
+    "extracted_answer": "276",
+    "gold_answer": "276",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    24,
+    15,
+    3,
+    11,
+    5,
+    21,
+    8,
+    2
+  ],
+  "peak_allocated_bytes": 15521351680,
+  "sample_id": "gsm8k_test-00775",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 135,
+      "block_index": 0,
+      "block_start": 103,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9134885668754578,
+      "min_top1_confidence": 0.03150131180882454,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 167,
+      "block_index": 1,
+      "block_start": 135,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9582902789115906,
+      "min_top1_confidence": 0.42347022891044617,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 199,
+      "block_index": 2,
+      "block_start": 167,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9990164637565613,
+      "min_top1_confidence": 0.9936527013778687,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 231,
+      "block_index": 3,
+      "block_start": 199,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9515385627746582,
+      "min_top1_confidence": 0.5674849152565002,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "block_end": 263,
+      "block_index": 4,
+      "block_start": 231,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9950062036514282,
+      "min_top1_confidence": 0.9462286829948425,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 295,
+      "block_index": 5,
+      "block_start": 263,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9851227402687073,
+      "min_top1_confidence": 0.8472196459770203,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 327,
+      "block_index": 6,
+      "block_start": 295,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9587559103965759,
+      "min_top1_confidence": 0.23349536955356598,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 359,
+      "block_index": 7,
+      "block_start": 327,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9915835857391357,
+      "min_top1_confidence": 0.7380138635635376,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 89
+}

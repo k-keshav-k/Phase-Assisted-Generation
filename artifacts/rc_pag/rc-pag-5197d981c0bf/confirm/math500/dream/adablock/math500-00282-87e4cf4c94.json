@@ -1,0 +1,169 @@
+{
+  "block_history": [
+    32,
+    32,
+    9,
+    15,
+    15,
+    15,
+    15,
+    5,
+    32,
+    6,
+    8,
+    8,
+    9,
+    9,
+    9,
+    1,
+    11,
+    25
+  ],
+  "created_at": "2026-08-01T08:37:46.293913+00:00",
+  "elapsed_sec": 3.6291595734655857,
+  "generated_text": "To solve this problem, we need to identify the pattern of the sequence and find the first term that is greater than 125.\n\nThe sequence is defined as follows:\n- The first term is 0.\n- The second term is obtained by adding 1 to the first term.\n- The third term is obtained by multiplying the second term by 1.\n- The fourth term is obtained by adding 2 to the third term.\n- The fifth term is obtained by multiplying the fourth term by 2.\n- The sixth term is obtained by adding 3 to the fifth term.\n- The seventh term is obtained by multiplying the sixth term by 3.\n- And so on.\n\nLet's analyze the sequence:\n- The first term is 0.\n- The second term is 1.\n- The third term is 1.\n- The fourth term is 3.\n- The fifth term is 6.\n- The sixth term is 9.\n- The seventh term is 27.\n- The eighth term is 36.\n- The ninth term is 108.\n- The tenth term is 144.\n\nTherefore, the value of the first term that is greater than 125 is $\\boxed{144}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[144, '144']",
+    "gold_answer": "129",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    15,
+    3,
+    2,
+    5,
+    5,
+    4,
+    4,
+    18,
+    2,
+    2,
+    2,
+    3,
+    5,
+    5,
+    1,
+    8,
+    5
+  ],
+  "peak_allocated_bytes": 15773549056,
+  "sample_id": "math500-00282",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 113
+}

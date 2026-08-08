@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    10,
+    32,
+    13,
+    32,
+    32,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T07:39:56.720554+00:00",
+  "elapsed_sec": 3.0458366498351097,
+  "generated_text": "Let's break down the problem step by step:\n\n1. Lee runs the 400-meter hurdles in 38 seconds.\n2. Gerald used to run the 400-meter hurdles two seconds slower than Lee, so Gerald's original time was 38 + 2 = 40 seconds.\n3. Gerald changed his diet, which improved his speed by 10%. To find his new time, we need to calculate 10% of his original time and subtract it from his original time.\n4. 10% of 40 seconds is 0.10 * 40 = 4 seconds.\n5. Gerald's new time is 40 - 4 = 36 seconds.\n\nSo, Gerald can run the 400-meter hurdles in 36 seconds with his improved diet.\n\nFinal answer: 36",
+  "grade": {
+    "error": null,
+    "extracted_answer": "36",
+    "gold_answer": "36",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    16,
+    21,
+    6,
+    11,
+    5,
+    14,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15723864576,
+  "sample_id": "gsm8k_test-00093",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 99
+}

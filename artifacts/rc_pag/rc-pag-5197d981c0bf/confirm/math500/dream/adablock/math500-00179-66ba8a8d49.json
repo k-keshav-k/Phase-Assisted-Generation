@@ -1,0 +1,99 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T08:33:57.128051+00:00",
+  "elapsed_sec": 3.617539770901203,
+  "generated_text": "Let $A = (0,-1,-1),$ $B = (-4,4,4),$ and $C = (4,5,1).$  Then $\\overrightarrow{AB} = (-4,5,5)$ and $\\overrightarrow{AC} = (4,6,2).$  The cross product of $\\overrightarrow{AB}$ and $\\overrightarrow{AC}$ is\n\\[\\begin{vmatrix} \\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\\\ -4 & 5 & 5 \\\\ 4 & 6 & 2 \\end{vmatrix} = -2\\mathbf{i} - 24\\mathbf{j} + 34\\mathbf{k}.\\]Thus, the equation of the plane is\n\\[-2x - 24y + 34z = 0.\\]Dividing by $-2,$ we get\n\\[x + 12y - 17z = 0.\\]Therefore, the equation of the plane is $\\boxed{x + 12y - 17z = 0}.$\nThe answer is: 12y-17z",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[Eq(x + 12*y - 1*17*z, 0), 'x + 12y - 17z = 0']",
+    "gold_answer": "5x - 7y + 11z + 4 = 0",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    13,
+    11,
+    15,
+    4,
+    19,
+    20,
+    19,
+    14
+  ],
+  "peak_allocated_bytes": 15740427776,
+  "sample_id": "math500-00179",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 115
+}

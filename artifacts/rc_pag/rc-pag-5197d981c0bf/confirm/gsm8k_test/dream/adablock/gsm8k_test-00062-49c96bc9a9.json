@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    16,
+    32,
+    34,
+    13
+  ],
+  "created_at": "2026-08-01T07:20:04.042867+00:00",
+  "elapsed_sec": 4.216285560280085,
+  "generated_text": "1. Calculate the annual pension if Marcy works for 40 years: $50,000/year.\n2. Calculate the annual pension if Marcy works for 30 years: $50,000/year * 30 years = $150,000/year.\n3. Calculate the annual pension if Marcy works for 30 years and is entitled to 5% of the value of the pension per year: $150,000/year * 5% = $7,500/year.\n4. Calculate the annual pension if Marcy works for 30 years and is entitled to 5% of the value of the pension per year: $150,000/year + $7,500/year = $157,500/year.\n5. Calculate the annual pension if Marcy works for 30 years and is entitled to 5% of the value of the pension per year, and then works for 10 years: $157,500/year * 10 years = $1,575,000.\n\nFinal answer: 1575000.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "1575000.",
+    "gold_answer": "25000",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    24,
+    1,
+    25,
+    14,
+    8,
+    3,
+    10,
+    20,
+    6
+  ],
+  "peak_allocated_bytes": 15703482368,
+  "sample_id": "gsm8k_test-00062",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 34,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 139
+}

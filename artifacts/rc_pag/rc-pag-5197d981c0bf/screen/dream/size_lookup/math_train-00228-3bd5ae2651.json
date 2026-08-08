@@ -1,0 +1,115 @@
+{
+  "block_history": [
+    64,
+    64,
+    64,
+    64
+  ],
+  "created_at": "2026-07-31T23:31:01.720358+00:00",
+  "elapsed_sec": 2.078023787587881,
+  "generated_text": "1. **Initial Drop**: The ball is dropped from a height of 16 meters. So, the travels 16 meters meters22.... **.**:**: the thefracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfracfrac",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[16, '16']",
+    "gold_answer": "The ball traveled $16+16\\cdot\\frac34+16\\cdot\\left(\\frac34\\right)^2 = 16+ 12+9 = 37$ meters on its three descents. The ball also traveled $16\\cdot\\frac34+16\\cdot\\left(\\frac34\\right)^2+16\\cdot\\left(\\frac34\\right)^3 = 12+9+\\frac{27}4 = 27.75$ meters on its three ascents. Thus, the ball traveled $37+27.75 = 64.75 \\approx \\boxed{65}$ meters total.",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "size_lookup",
+  "is_correct": false,
+  "method": "size_lookup",
+  "mock": false,
+  "nfe_history": [
+    16,
+    16,
+    16,
+    16
+  ],
+  "peak_allocated_bytes": 15539361792,
+  "sample_id": "math_train-00228",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 165,
+      "block_index": 0,
+      "block_start": 101,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.140625,
+      "mean_top1_confidence": 0.40253743529319763,
+      "min_top1_confidence": 0.07525873929262161,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 229,
+      "block_index": 1,
+      "block_start": 165,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8210136890411377,
+      "min_top1_confidence": 0.4762600362300873,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 293,
+      "block_index": 2,
+      "block_start": 229,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.6638327836990356,
+      "min_top1_confidence": 0.44716739654541016,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 357,
+      "block_index": 3,
+      "block_start": 293,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.780415952205658,
+      "min_top1_confidence": 0.5140517354011536,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 64
+}

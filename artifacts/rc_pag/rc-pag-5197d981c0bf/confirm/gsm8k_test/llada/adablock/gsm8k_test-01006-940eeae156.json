@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    32,
+    9,
+    9,
+    8,
+    32,
+    8,
+    32,
+    12,
+    13,
+    11,
+    12,
+    12,
+    17,
+    10,
+    1,
+    32,
+    6
+  ],
+  "created_at": "2026-08-01T04:40:08.171618+00:00",
+  "elapsed_sec": 2.90049035102129,
+  "generated_text": "1. Calculate the volume of the pool:\n   - Volume (V) = Width (W) × Length (L) × Depth (D)\n   - W = 14 feet\n   - L = 25 feet\n   - D = 4 feet\n   - V = 14 × 25 × 4\n   - V = 1400 cubic feet\n\n2. Convert the volume from cubic feet to gallons:\n   - 1 cubic foot = 5.9 gallons\n   - Total gallons = Volume in cubic feet × 5.9\n   - Total gallons = 1400 × 5.9\n   - Total gallons = 8260 gallons\n\n3. Calculate the cost to fill the pool:\n   - Cost per gallon = $0.10\n   - Total cost = Total gallons × Cost per gallon\n   - Total cost = 8260 × 0.10\n   - Total cost = $826\n\nFinal answer: $826",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$826",
+    "gold_answer": "826",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    6,
+    1,
+    1,
+    10,
+    3,
+    15,
+    2,
+    3,
+    3,
+    3,
+    4,
+    2,
+    2,
+    1,
+    3,
+    1
+  ],
+  "peak_allocated_bytes": 17383086080,
+  "sample_id": "gsm8k_test-01006",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 80
+}

@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    32,
+    4,
+    3,
+    9,
+    32,
+    32,
+    3,
+    12,
+    32,
+    32,
+    32,
+    1
+  ],
+  "created_at": "2026-08-01T07:03:44.820059+00:00",
+  "elapsed_sec": 3.498289167881012,
+  "generated_text": "1. **Determine Mitchell's earnings:**\n   Mitchell sold 21 lemonades at $4 each. To find his total earnings, we multiply the number of lemonades by the price per lemonade:\n   \\[\n   \\text{Mitchell's earnings} = 21 \\times 4 = 84\n   \\]\n   So, Mitchell made $84.\n\n2. **Determine how much more Mitchell made than Liam:**\n   Liam made $63. To find out how much more Mitchell made than Liam, we subtract Liam's earnings from Mitchell's earnings:\n   \\[\n   \\text{Difference} = 84 - 63 = 21\n   \\]\n   Therefore, Mitchell made $21 more than Liam.\n\n3. **Final answer:**\n   Final answer: 21",
+  "grade": {
+    "error": null,
+    "extracted_answer": "21",
+    "gold_answer": "21",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    15,
+    3,
+    3,
+    6,
+    17,
+    5,
+    2,
+    4,
+    26,
+    2,
+    2,
+    1
+  ],
+  "peak_allocated_bytes": 15702208512,
+  "sample_id": "gsm8k_test-00569",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 112
+}

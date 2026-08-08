@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    1,
+    9,
+    21,
+    1,
+    32,
+    12,
+    1,
+    32,
+    32,
+    1,
+    1,
+    11,
+    60,
+    10
+  ],
+  "created_at": "2026-08-01T04:01:02.493021+00:00",
+  "elapsed_sec": 3.7726010233163834,
+  "generated_text": "1. Calculate the total number of people Kayla invited:\n   - Classmates: 25\n   - Girls in her dance class: 7\n   - Family members: 13\n   - Total invited people = 25 + 7 + 13 = 45\n\n2. Subtract the number of people who could not come:\n   - People who could not come: 4\n   - Total people who will come = 45 - 4 = 41\n\n3. Determine the number of additional guests:\n   - Base fee for 20 guests: $125\n   - Additional fee for each guest: $6\n   - Number of additional guests = Total people who will come - 20 = 41 - 20 = 21\n\n4. Calculate the total cost:\n   - Base fee for 20 guests: $125\n   - Additional cost for 21 guests: 21 * $6 = $126\n   - Total cost for 41 guests = $125 + $126 = $251\n\nFinal answer: $251.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$251.",
+    "gold_answer": "251",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    15,
+    1,
+    1,
+    8,
+    1,
+    18,
+    1,
+    1,
+    18,
+    13,
+    1,
+    1,
+    4,
+    27,
+    1
+  ],
+  "peak_allocated_bytes": 17303503872,
+  "sample_id": "gsm8k_test-01071",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 60,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 111
+}

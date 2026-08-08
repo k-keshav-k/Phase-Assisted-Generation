@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    32,
+    7,
+    3,
+    32,
+    18,
+    3,
+    32,
+    32,
+    6,
+    3,
+    12,
+    32,
+    5,
+    3,
+    4
+  ],
+  "created_at": "2026-08-01T07:00:16.810898+00:00",
+  "elapsed_sec": 3.9137168154120445,
+  "generated_text": "1. **Initial Number of Cats**: We start with 50 cats on the rock.\n\n2. **Cats Carried Away by Boats**: Four boats came, each carrying away 5 cats. Therefore, the total number of cats carried away by the boats is:\n   \\[\n   4 \\times 5 = 20\n   \\]\n   So, 20 cats were carried away.\n\n3. **Remaining Cats After Boats**: Subtract the number of cats carried away from the initial number of cats:\n   \\[\n   50 - 20 = 30\n   \\]\n   So, 30 cats remained on the rock.\n\n4. **Cats Running After the Mouse**: Later, 3/5 of the remaining cats ran after a mouse. To find the number of cats that ran, we calculate:\n   \\[\n   \\frac{3}{5} \\times 30 = 18\n   \\]\n   So, 18 cats ran after the mouse.\n\n5. **Final Cats on the Rock**: Subtract the number of cats that ran from the remaining cats:\n   \\[\n   30 - 18 = 12\n   \\]\n   So, ",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "12",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    18,
+    3,
+    3,
+    20,
+    3,
+    2,
+    17,
+    14,
+    2,
+    2,
+    4,
+    9,
+    3,
+    3,
+    4
+  ],
+  "peak_allocated_bytes": 15679278592,
+  "sample_id": "gsm8k_test-00421",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 126
+}

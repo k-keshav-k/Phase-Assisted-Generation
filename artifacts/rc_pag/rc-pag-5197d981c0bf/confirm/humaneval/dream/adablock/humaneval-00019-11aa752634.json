@@ -1,0 +1,99 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:15:33.567005+00:00",
+  "elapsed_sec": 3.827522352337837,
+  "generated_text": "Here is a Python solution for the problem:\n\n```python\ndef sort_numbers(numbers: str) -> str:\n    numbers = numbers.split()\n    sorted_numbers = sorted(numbers, key=lambda x: numbers.index(x))\n    return ' '.join(sorted_numbers)\n```\n\nThis function works by first splitting the input string into a list of individual numbers. It then sorts this list using a custom key function that returns the index of each number in the original list. This effectively sorts the numbers in the order they appear in the original string. Finally, it joins the sorted numbers back into a string and returns it.\n\nFor example, if you call `sort_numbers('three one five')`, it will return `'one three five'`.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_gs5s969x/candidate.py\", line 21, in <module>\n    check(sort_numbers)\n  File \"/tmp/rc_pag_code_gs5s969x/candidate.py\", line 18, in check\n    assert candidate('five zero four seven nine eight') == 'zero four five seven eight nine'\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "extracted_answer": "def sort_numbers(numbers: str) -> str:\n    numbers = numbers.split()\n    sorted_numbers = sorted(numbers, key=lambda x: numbers.index(x))\n    return ' '.join(sorted_numbers)",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    26,
+    32,
+    30,
+    13,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15716225536,
+  "sample_id": "humaneval-00019",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 32,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 30,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 126
+}

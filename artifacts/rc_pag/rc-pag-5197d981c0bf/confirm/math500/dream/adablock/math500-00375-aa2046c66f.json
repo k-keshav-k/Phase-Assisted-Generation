@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    1,
+    3,
+    32,
+    32,
+    32,
+    2,
+    3,
+    32,
+    32,
+    52,
+    3
+  ],
+  "created_at": "2026-08-01T08:38:03.422747+00:00",
+  "elapsed_sec": 3.588610529899597,
+  "generated_text": "1. **Prime Factorization of 500**:\n   \\[\n   500 = 2^2 \\cdot 5^3\n   \\]\n\n2. **Sum of Divisors**:\n   Using the formula for the sum of divisors:\n   \\[\n   \\sigma(500) = (1 + 2 + 2^2)(1 + 5 + 5^2 + 5^3) = (1 + 2 + 4)(1 + 5 + 25 + 125) = 7 \\cdot 156 = 1092\n   \\]\n\n3. **Prime Factorization of 1092**:\n   \\[\n   1092 = 2^2 \\cdot 3 \\cdot 93\n   \\]\n\n4. **Sum of Distinct Prime Divisors**:\n   The distinct prime divisors of 1092 are 2, 3, and 93. Their sum is:\n   \\[\n   2 + 3 + 93 = 98\n   \\]\n\n   Conclusion:\n   \\[\n   \\boxed{98}\n   \\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[98, '98']",
+    "gold_answer": "25",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    1,
+    3,
+    18,
+    12,
+    11,
+    2,
+    2,
+    11,
+    16,
+    17,
+    2
+  ],
+  "peak_allocated_bytes": 15652527104,
+  "sample_id": "math500-00375",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 52,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 116
+}

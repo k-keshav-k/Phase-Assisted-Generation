@@ -1,0 +1,39 @@
+{
+  "config_hash": "8cce1af8e35bf6ebb091175040852e01f86a011b5f12d07717fc9f8fa499d735",
+  "environment": {
+    "created_at": "2026-08-01T18:51:15.085511+00:00",
+    "device": "cuda",
+    "git_commit": "fe9954aa51b5fffa18c66bde0e116822b69aa78b",
+    "git_status": "M scripts/slurm/rc_pag_a100.sbatch\n M scripts/slurm/submit_rc_pag.sh\n?? changes.patch",
+    "gpu": {
+      "name": "NVIDIA A100 80GB PCIe",
+      "total_memory": 85093777408
+    },
+    "packages": {
+      "datasets": "4.8.5",
+      "math-verify": "0.9.0",
+      "scikit-learn": "1.9.0",
+      "torch": "2.5.1+cu121",
+      "transformers": "4.46.3"
+    },
+    "platform": "Linux-5.14.0-570.12.1.el9_6.x86_64-x86_64-with-glibc2.34",
+    "python": "3.11.15",
+    "torch_cuda": "12.1"
+  },
+  "models": {
+    "dream": {
+      "errors": [],
+      "mock": false,
+      "ok": true,
+      "repository": "Dream-org/Dream-v0-Instruct-7B",
+      "revision": "05334cb9faaf763692dcf9d8737c642be2b2a6ae"
+    },
+    "llada": {
+      "errors": [],
+      "mock": false,
+      "ok": true,
+      "repository": "GSAI-ML/LLaDA-8B-Instruct",
+      "revision": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    }
+  }
+}

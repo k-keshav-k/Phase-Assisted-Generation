@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:05:18.829737+00:00",
+  "elapsed_sec": 2.535563927143812,
+  "generated_text": "Here is a Python function that filters odd numbers from a list:\n\n```python\ndef filter_odd_numbers(numbers):\n    return [num for num in numbers if num % 2 != 0]\n```\n\nThis function uses a list comprehension to iterate over the input list and create a new list containing only the odd numbers. The `num % 2 != 0` condition checks if a number is odd by checking if the remainder of the division by 2 is not equal to00.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_s2n49sx4/candidate.py\", line 4, in <module>\n    assert filter_oddnumbers([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])==[1,3,5,7,9]\n           ^^^^^^^^^^^^^^^^^\nNameError: name 'filter_oddnumbers' is not defined. Did you mean: 'filter_odd_numbers'?\n",
+    "extracted_answer": "def filter_odd_numbers(numbers):\n    return [num for num in numbers if num % 2 != 0]",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    21,
+    25,
+    23,
+    9,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15546292736,
+  "sample_id": "mbpp_sanitized-00207",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 72,
+      "block_index": 0,
+      "block_start": 40,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9391168355941772,
+      "min_top1_confidence": 0.2581038177013397,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 104,
+      "block_index": 1,
+      "block_start": 72,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.8979261517524719,
+      "min_top1_confidence": 0.4465421736240387,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 136,
+      "block_index": 2,
+      "block_start": 104,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9324644804000854,
+      "min_top1_confidence": 0.33645206689834595,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 168,
+      "block_index": 3,
+      "block_start": 136,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9947634339332581,
+      "min_top1_confidence": 0.9686440825462341,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 200,
+      "block_index": 4,
+      "block_start": 168,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999895691871643,
+      "min_top1_confidence": 0.9999622106552124,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 232,
+      "block_index": 5,
+      "block_start": 200,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999942779541016,
+      "min_top1_confidence": 0.9999808073043823,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 264,
+      "block_index": 6,
+      "block_start": 232,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999991774559021,
+      "min_top1_confidence": 0.9999767541885376,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 296,
+      "block_index": 7,
+      "block_start": 264,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9998928904533386,
+      "min_top1_confidence": 0.9996795654296875,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 82
+}

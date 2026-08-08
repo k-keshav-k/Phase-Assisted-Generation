@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    7,
+    32,
+    7,
+    32,
+    18
+  ],
+  "created_at": "2026-08-01T07:27:50.357979+00:00",
+  "elapsed_sec": 3.7201369665563107,
+  "generated_text": "1. Calculate the total cost of the cell phones: \n   Shiela bought 5 cell phones for $150 each, so the total cost is $5 \\times 150 = 750$.\n\n2. Calculate the interest for each cell phone:\n   The interest is 2% of $150, which is $150 \\times 0.02 = 3$.\n\n3. Calculate the total interest for all cell phones:\n   Since there are 5 cell phones, the total interest is $5 \\times 3 = 15$.\n\n4. Calculate the total amount to be paid:\n   The total amount to be paid is the total cost plus the total interest, which is $750 + 15 = 765$.\n\n5. Calculate the monthly installment:\n   Since the installment is to be paid over 3 months, the monthly installment is $765 \\div 3 = 255$.\n\nFinal answer: 255",
+  "grade": {
+    "error": null,
+    "extracted_answer": "255",
+    "gold_answer": "255",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    22,
+    17,
+    8,
+    16,
+    2,
+    21,
+    3,
+    10,
+    2
+  ],
+  "peak_allocated_bytes": 15674183168,
+  "sample_id": "gsm8k_test-00073",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 122
+}

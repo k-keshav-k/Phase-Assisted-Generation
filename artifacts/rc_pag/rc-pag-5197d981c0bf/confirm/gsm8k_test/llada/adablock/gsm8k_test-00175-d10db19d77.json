@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    5,
+    10,
+    32,
+    3,
+    32,
+    32,
+    8,
+    1,
+    9,
+    11,
+    32,
+    40,
+    1,
+    8
+  ],
+  "created_at": "2026-08-01T04:12:40.756099+00:00",
+  "elapsed_sec": 4.838736306875944,
+  "generated_text": "1. Calculate the total revenue from selling lemonade.\n2. Calculate the total cost of making lemonade.\n3. Determine the gallons of lemonade sold based on the profit.\n4. Calculate the total cost of lemons.\n\n1. Total revenue from selling lemonade:\n   - Each glass is sold for $0.50.\n   - They get 20 glasses per gallon.\n   - Revenue per gallon = $0.50 * 20 = $10.\n\n2. Total cost of making lemonade:\n   - Cost of lemons per gallon = $3.\n   - Cost of sugar per gallon = $2.\n   - Total cost per gallon = $3 + $2 = $5.\n\n3. Gallons of lemonade sold:\n   - They made $25 in profit.\n   - Profit = Revenue - Cost.\n   - $25 = $10 - $5 * gallons.\n   - $5 * gallons = $15.\n   - Gallons = 5.\n\n4. Total cost of lemons:\n   - Total cost of lemons = $3 * gallons = $15.\n\nFinal answer: $15",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$15",
+    "gold_answer": "15",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    29,
+    5,
+    9,
+    20,
+    1,
+    8,
+    8,
+    2,
+    1,
+    5,
+    5,
+    24,
+    24,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17228838912,
+  "sample_id": "gsm8k_test-00175",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 40,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 144
+}

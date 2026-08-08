@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    36,
+    32,
+    4,
+    32,
+    18,
+    13,
+    32,
+    25,
+    1,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T04:04:18.648479+00:00",
+  "elapsed_sec": 2.956081312149763,
+  "generated_text": "To determine how many centimeters shorter a candle will be after burning from 1:00 PM to 5:00 PM, we need to follow these steps:\n\n1. Calculate the total number of hours between 1:00 PM and 5:00 PM.\n2. Determine the rate at which the candle melts.\n3. Multiply the total number of hours by the rate of melting to find the total amount of melting.\n\n1. The total number of hours between 1:00 PM and 5:00 PM is 4 hours.\n2. The candle melts by 2 centimeters every hour.\n3. To find the total amount of melting, we multiply the number of hours by the rate of melting:\n   \\[\n   4 \\text{ hours} \\times 2 \\text{ cm/hour} = 8 \\text{ cm}\n   \\]\n\nTherefore, the candle will be 8 centimeters shorter after burning from 1:00 PM to 5:00 PM.\n\nFinal answer: 8.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "8.",
+    "gold_answer": "8",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    8,
+    14,
+    3,
+    21,
+    5,
+    3,
+    20,
+    4,
+    1,
+    6,
+    3
+  ],
+  "peak_allocated_bytes": 17148026368,
+  "sample_id": "gsm8k_test-00023",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 36,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 88
+}

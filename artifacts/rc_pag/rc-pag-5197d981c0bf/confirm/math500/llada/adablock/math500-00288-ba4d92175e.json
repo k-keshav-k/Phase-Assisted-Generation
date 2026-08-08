@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    32,
+    11,
+    28,
+    32,
+    1,
+    1,
+    32,
+    32,
+    3,
+    2,
+    1,
+    46,
+    3
+  ],
+  "created_at": "2026-08-01T05:56:53.059446+00:00",
+  "elapsed_sec": 5.154161147773266,
+  "generated_text": "1. Identify the direction vectors of the two lines.\n2. Since the lines are parallel, their direction vectors are proportional.\n3. Calculate the distance between the two lines using the formula for the distance between two parallel lines.\n\nThe direction vector of the first line is \\(\\begin{pmatrix} 2 \\\\ -9 \\\\ -2 \\end{pmatrix}\\).\nThe direction vector of the second line is \\(\\begin{pmatrix} 4 \\\\ -18 \\\\ -4 \\end{pmatrix}\\).\n\nSince the lines are parallel, their direction vectors are proportional.\n\nThe distance between the two parallel lines is the distance between any two points on the lines.\n\nLet's find the distance between the points on the first line:\n\\[\n\\begin{pmatrix} 3 \\\\ -10 \\\\ 1 \\end{pmatrix} - \\begin{pmatrix} -5 \\\\ -3 \\\\ 6 \\end{pmatrix} = \\begin{pmatrix} 8 \\\\ -7 \\\\ -5 \\end{pmatrix}\n\\]\n\nThe distance between the two lines is the magnitude of this difference vector:\n\\[\n\\sqrt{8^2 + (-7)^2 + (-5)^2} = 9\n\\]\n\n\\boxed{9}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[9, '9']",
+    "gold_answer": "7",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    30,
+    24,
+    3,
+    5,
+    29,
+    1,
+    1,
+    19,
+    6,
+    1,
+    1,
+    1,
+    25,
+    2
+  ],
+  "peak_allocated_bytes": 17343347200,
+  "sample_id": "math500-00288",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 30,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 46,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 148
+}

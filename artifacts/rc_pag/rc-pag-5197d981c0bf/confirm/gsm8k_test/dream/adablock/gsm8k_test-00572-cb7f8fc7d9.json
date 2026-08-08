@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    8,
+    32,
+    32,
+    9,
+    32,
+    3,
+    32,
+    32,
+    12
+  ],
+  "created_at": "2026-08-01T07:05:36.830133+00:00",
+  "elapsed_sec": 3.403885815292597,
+  "generated_text": "1. Calculate the total number of roses Ford grows per week:\n   Ford grows 40 roses every week.\n\n2. Calculate the total number of roses needed by the flower shops per week:\n   - First flower shop orders 20 roses.\n   - Second flower shop orders 15 roses.\n   - Third flower shop orders 30 roses.\n   Total roses needed per week = 20 + 15 + 30 = 65 roses.\n\n3. Determine the number of roses Ford lacks per week:\n   Roses lacking per week = Total roses needed per week - Total roses grown per week\n   Roses lacking per week = 65 - 40 = 25 roses.\n\n4. Calculate the number of roses Ford lacks per month:\n   Since there are approximately 4 weeks in a month, we multiply the roses lacking per week by 4.\n   Roses lacking per month = 25 roses/week * 4 weeks/month = 100 roses.\n\nFinal answer: \\boxed{100}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{100}",
+    "gold_answer": "100",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    11,
+    3,
+    12,
+    18,
+    3,
+    23,
+    3,
+    14,
+    4,
+    2
+  ],
+  "peak_allocated_bytes": 15707303936,
+  "sample_id": "gsm8k_test-00572",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 110
+}

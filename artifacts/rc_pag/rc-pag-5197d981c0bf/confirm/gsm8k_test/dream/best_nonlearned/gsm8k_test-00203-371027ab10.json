@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:28:00.279896+00:00",
+  "elapsed_sec": 2.6525317765772343,
+  "generated_text": "Carl ate a sandwich every day for lunch, so he used 2 slices of cheese per day. Over 7 days, he used 2 slices/day * 7 days = 14 slices of cheese for sandwiches.\n\nHe also ate cheese and egg omelets for breakfast 3 days in the week, using one more slice per omelet than he did per sandwich. Since he used 2 slices per sandwich, he used 3 slices per omelet. Over 3 days, he used 3 slices/omelet * 3 days = 9 slices of cheese for omelets.\n\nHe made a big dish of macaroni and cheese to last him several dinners for the week and used 8 slices of cheese in it.\n\nIn total, Carl used 14 slices of cheese for sandwiches + 9 slices of cheese for omelets + 8 slices of cheese for macaroni and cheese = 31 slices of cheese.\n\nFinal answer: 31",
+  "grade": {
+    "error": null,
+    "extracted_answer": "31",
+    "gold_answer": "31",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    28,
+    17,
+    11,
+    7,
+    13,
+    6,
+    3,
+    1
+  ],
+  "peak_allocated_bytes": 15545446400,
+  "sample_id": "gsm8k_test-00203",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "block_end": 168,
+      "block_index": 0,
+      "block_start": 136,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9003997445106506,
+      "min_top1_confidence": 0.027917804196476936,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 200,
+      "block_index": 1,
+      "block_start": 168,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9496145248413086,
+      "min_top1_confidence": 0.47412413358688354,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 232,
+      "block_index": 2,
+      "block_start": 200,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9586201906204224,
+      "min_top1_confidence": 0.3991958796977997,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 264,
+      "block_index": 3,
+      "block_start": 232,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9824644327163696,
+      "min_top1_confidence": 0.6666464805603027,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 296,
+      "block_index": 4,
+      "block_start": 264,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9312896728515625,
+      "min_top1_confidence": 0.08496341854333878,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 328,
+      "block_index": 5,
+      "block_start": 296,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9862905740737915,
+      "min_top1_confidence": 0.8854409456253052,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 360,
+      "block_index": 6,
+      "block_start": 328,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.989745020866394,
+      "min_top1_confidence": 0.7263515591621399,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 392,
+      "block_index": 7,
+      "block_start": 360,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999995231628418,
+      "min_top1_confidence": 0.999996542930603,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 86
+}

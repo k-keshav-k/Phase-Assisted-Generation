@@ -1,0 +1,103 @@
+{
+  "best_nonlearned": {
+    "dream": "stability_weighted_style",
+    "llada": "stability_weighted_style"
+  },
+  "best_nonlearned_mean_nfe": {
+    "dream": 99.66,
+    "llada": 88.24666666666667
+  },
+  "models": {
+    "dream": {
+      "allowed_harmful_regressions": 3,
+      "candidates": {
+        "local_q050_p2": {
+          "accuracy_eligible": true,
+          "correct": 86,
+          "harmful_regressions": 0,
+          "mean_nfe": 98.52666666666667
+        },
+        "local_q200_p2": {
+          "accuracy_eligible": true,
+          "correct": 83,
+          "harmful_regressions": 3,
+          "mean_nfe": 96.5
+        },
+        "local_q500_p2": {
+          "accuracy_eligible": false,
+          "correct": 80,
+          "harmful_regressions": 9,
+          "mean_nfe": 93.8
+        }
+      },
+      "nonlearned": {
+        "adablock": {
+          "accuracy_eligible": true,
+          "correct": 86,
+          "harmful_regressions": 0,
+          "mean_nfe": 99.66666666666667
+        },
+        "stability_weighted_style": {
+          "accuracy_eligible": true,
+          "correct": 86,
+          "harmful_regressions": 0,
+          "mean_nfe": 99.66
+        },
+        "token_convergence_style": {
+          "accuracy_eligible": true,
+          "correct": 86,
+          "harmful_regressions": 0,
+          "mean_nfe": 99.66666666666667
+        }
+      }
+    },
+    "llada": {
+      "allowed_harmful_regressions": 3,
+      "candidates": {
+        "local_q050_p2": {
+          "accuracy_eligible": true,
+          "correct": 80,
+          "harmful_regressions": 0,
+          "mean_nfe": 86.36
+        },
+        "local_q200_p2": {
+          "accuracy_eligible": true,
+          "correct": 81,
+          "harmful_regressions": 0,
+          "mean_nfe": 84.2
+        },
+        "local_q500_p2": {
+          "accuracy_eligible": true,
+          "correct": 80,
+          "harmful_regressions": 3,
+          "mean_nfe": 80.22666666666667
+        }
+      },
+      "nonlearned": {
+        "adablock": {
+          "accuracy_eligible": true,
+          "correct": 79,
+          "harmful_regressions": 0,
+          "mean_nfe": 88.26666666666667
+        },
+        "stability_weighted_style": {
+          "accuracy_eligible": true,
+          "correct": 79,
+          "harmful_regressions": 0,
+          "mean_nfe": 88.24666666666667
+        },
+        "token_convergence_style": {
+          "accuracy_eligible": true,
+          "correct": 79,
+          "harmful_regressions": 0,
+          "mean_nfe": 88.25333333333333
+        }
+      }
+    }
+  },
+  "protocol_version": "v4",
+  "selected_candidate": {
+    "dream": "local_q200_p2",
+    "llada": "local_q500_p2"
+  }
+}

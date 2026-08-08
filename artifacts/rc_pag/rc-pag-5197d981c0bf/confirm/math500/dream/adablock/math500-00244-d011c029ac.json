@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    3,
+    3,
+    32,
+    32,
+    32,
+    26
+  ],
+  "created_at": "2026-08-01T08:52:46.622806+00:00",
+  "elapsed_sec": 3.787847127765417,
+  "generated_text": "1. **Identify the sum of the interior angles of a convex polygon:**\n   The sum of the interior angles of a convex polygon with \\( n \\) sides is given by the formula:\n   \\[\n   (n-2) \\times 180^\\circ\n   \\]\n\n2. **Set up the equation using the given information:**\n   We know that the sum of all but one of the interior angles is \\( 1070^\\circ \\). Therefore, we can write:\n   \\[\n   (n-2) \\times 180^\\circ = 1070^\\circ\n   \\]\n\n3. **Solve for \\( n \\):**\n   Divide both sides of the equation by \\( 180^\\circ \\):\n   \\[\n   n-2 = \\frac{1070^\\circ}{180^\\circ}\n   \\]\n   Simplify the right-hand side:\n   \\[\n   n-2 = \\frac{53}{9}\n   \\]\n   Add 2 to both sides:\n   \\[\n   n = 2 + \\frac{53}{9}\n   \\]\n\nConclusion:\n\\[\n\\boxed{7}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[7, '7']",
+    "gold_answer": "8",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    14,
+    19,
+    13,
+    2,
+    2,
+    12,
+    12,
+    12,
+    12
+  ],
+  "peak_allocated_bytes": 15651257344,
+  "sample_id": "math500-00244",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 124
+}

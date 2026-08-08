@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    15,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    17
+  ],
+  "created_at": "2026-08-01T05:40:00.926879+00:00",
+  "elapsed_sec": 5.15288633108139,
+  "generated_text": "1. The area of the larger circle is \\(\\pi \\times 2^2 = 4\\pi\\).\n2. The area of the smaller circle is \\(\\pi \\times 1^2 = \\pi\\).\n3. The area of the shaded region is given as \\(\\frac{5}{12}\\) of the area of the larger circle, which is \\(\\frac{5}{12} \\times 4\\pi = \\frac{5\\pi}{3}\\).\n4. The shaded region is composed of two sectors of the larger circle.\n5. The area of a sector of the larger circle is \\(\\frac{\\theta}{360} \\times 4\\pi\\), where \\(\\theta\\) is the central angle in degrees.\n6. Since the shaded region consists of two such sectors, the total area of the sectors is \\(2 \\times \\frac{\\theta}{360} \\times 4\\pi = \\frac{5\\pi}{3}\\).\n7. Simplifying, we get \\(\\frac{8\\theta}{360} = \\frac{5\\pi}{3}\\).\n8. Solving for \\(\\theta\\), we get \\(\\theta = \\boxed{150}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[150, '150']",
+    "gold_answer": "120",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    1,
+    14,
+    19,
+    27,
+    23,
+    15,
+    20,
+    5
+  ],
+  "peak_allocated_bytes": 17968226304,
+  "sample_id": "math500-00324",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 146
+}

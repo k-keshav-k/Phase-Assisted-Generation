@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    2,
+    32,
+    32,
+    2,
+    32,
+    16,
+    4,
+    8
+  ],
+  "created_at": "2026-08-01T06:51:31.743237+00:00",
+  "elapsed_sec": 3.0339181050658226,
+  "generated_text": "Let's denote John's age as \\( J \\). According to the problem, Paul is 10 years older than John, so Paul's age is \\( J + 10 \\). Peter's age is equal to the sum of Paul and John's age, so Peter's age is \\( (J + 10) + J = 2J + 10 \\).\n\nThe combined age of Peter, Paul, and John is 100 years old, so we can write the equation:\n\\[ (2J + 10) + (J + 10) + J = 100 \\]\n\nSimplifying the equation, we get:\n\\[ 4J + 20 = 100 \\]\n\nSubtracting 20 from both sides, we get:\n\\[ 4J = 80 \\]\n\nDividing both sides by 4, we get:\n\\[ J = 20 \\]\n\nNow that we know John's age, we can find Peter's age:\n\\[ 2J + 10 = 2(20) + 10 = 50 \\]\n\nSo, Peter's age is 50 years old.\n\nFinal answer: 50.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "50.",
+    "gold_answer": "50",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    12,
+    11,
+    10,
+    2,
+    11,
+    7,
+    2,
+    7,
+    12,
+    4,
+    3
+  ],
+  "peak_allocated_bytes": 15680552448,
+  "sample_id": "gsm8k_test-00931",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 98
+}

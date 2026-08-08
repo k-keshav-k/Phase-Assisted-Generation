@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:03:48.035413+00:00",
+  "elapsed_sec": 3.2070239447057247,
+  "generated_text": ".. **Calculate Mitchell's earnings:**\n   Mitchell sold 21 lemonades at $4 each. To find his total earnings, multiply the number of lemonades by the price per lemonade:\n   \\[\n   \\text{Mitchell's earnings} = 21 \\times 4\n   \\22. **Perform the multiplication:**\n   \\[\n   21 \\times 4 = 84\n   \\]\n   So, Mitchell $ $84.\n\n3. **Determine how much more Mitchell made than Liam:**\n   Liam made $63. To find how much more Mitchell made, we subtract Liam's earnings from Mitchell's earnings:\n   \\[\n   \\text{Difference} = 84 - 63\n   \\44. **Perform the subtraction:**\n   \\[\n   84 - 63 = 21\n   \\]\n   Therefore, Mitchell made $21 more than Liam.\n\n5. **Conclusion:**\n   Mitchell made $21 more than Liam.\n\nFinal answer: $\\boxed{21",
+  "grade": {
+    "error": "not a strict numeric answer: '$\\\\boxed{21'",
+    "extracted_answer": "$\\boxed{21",
+    "gold_answer": "21",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    24,
+    14,
+    13,
+    17,
+    11,
+    6,
+    16,
+    4
+  ],
+  "peak_allocated_bytes": 15524272128,
+  "sample_id": "gsm8k_test-00569",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 139,
+      "block_index": 0,
+      "block_start": 107,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9778414964675903,
+      "min_top1_confidence": 0.8226731419563293,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 171,
+      "block_index": 1,
+      "block_start": 139,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9732556343078613,
+      "min_top1_confidence": 0.6932548880577087,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 203,
+      "block_index": 2,
+      "block_start": 171,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.888931930065155,
+      "min_top1_confidence": 0.12452432513237,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 235,
+      "block_index": 3,
+      "block_start": 203,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9544955492019653,
+      "min_top1_confidence": 0.25989672541618347,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 267,
+      "block_index": 4,
+      "block_start": 235,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9514338374137878,
+      "min_top1_confidence": 0.2656621038913727,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 299,
+      "block_index": 5,
+      "block_start": 267,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9384260773658752,
+      "min_top1_confidence": 0.36109426617622375,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 331,
+      "block_index": 6,
+      "block_start": 299,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9416908621788025,
+      "min_top1_confidence": 0.3549945056438446,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 363,
+      "block_index": 7,
+      "block_start": 331,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9973393678665161,
+      "min_top1_confidence": 0.9382240772247314,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 105
+}

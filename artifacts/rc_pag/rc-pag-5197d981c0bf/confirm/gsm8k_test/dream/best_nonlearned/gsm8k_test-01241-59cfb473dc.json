@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:15:18.861768+00:00",
+  "elapsed_sec": 2.924658976495266,
+  "generated_text": ".. Since Rose bought 5 dozens of eggs for $2.40 a dozen, the total cost is 5 * $2.40 = $12.00.\n2. Since she will sell the eggs for $1 for 3 eggs, the selling price per egg is $1 / 3 = $0.33.\n3. Since there are 12 eggs in a dozen, Rose bought 5 * 12 = 60 eggs.\n4. The total selling price is 60 * $0.33 = $19.80.\n5. The profit is the total selling price minus the total cost, which is $19.80 - $12.00 = $7.80.\n\n answer answer: 7.80",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "8",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    25,
+    24,
+    19,
+    15,
+    7,
+    4,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15582110720,
+  "sample_id": "gsm8k_test-01241",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 107,
+      "block_index": 0,
+      "block_start": 75,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.8860549926757812,
+      "min_top1_confidence": 0.2638116180896759,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 139,
+      "block_index": 1,
+      "block_start": 107,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9665071964263916,
+      "min_top1_confidence": 0.589146614074707,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 171,
+      "block_index": 2,
+      "block_start": 139,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.9083393812179565,
+      "min_top1_confidence": 0.2648316025733948,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 203,
+      "block_index": 3,
+      "block_start": 171,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9983726739883423,
+      "min_top1_confidence": 0.9774341583251953,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 235,
+      "block_index": 4,
+      "block_start": 203,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9768649339675903,
+      "min_top1_confidence": 0.5131299495697021,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 267,
+      "block_index": 5,
+      "block_start": 235,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9544820189476013,
+      "min_top1_confidence": 0.3814685642719269,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 299,
+      "block_index": 6,
+      "block_start": 267,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999998927116394,
+      "min_top1_confidence": 0.9999724626541138,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 331,
+      "block_index": 7,
+      "block_start": 299,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999522566795349,
+      "min_top1_confidence": 0.9997166991233826,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 96
+}

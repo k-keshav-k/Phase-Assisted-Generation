@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    20,
+    10,
+    17,
+    32,
+    32,
+    12,
+    4,
+    12,
+    32,
+    2,
+    10,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T04:17:50.835947+00:00",
+  "elapsed_sec": 3.7737708278000355,
+  "generated_text": "1. Calculate the total cost of the vaccines:\n   - Each vaccine costs $20.\n   - John needs 2 vaccines.\n   - Total cost of vaccines = $20 * 2 = $40.\n\n2. Determine the cost of the heartworm check:\n   - The heartworm check is 60% of the total bill.\n   - Let \\( T \\) be the total bill.\n   - The cost of the heartworm check is \\( 0.6T \\).\n   - Since the total bill is the sum of the cost of the vaccines and the cost of the heartworm check, we can write:\n     \\[\n     T = 40 + 0.6T\n     \\]\n   - Solving for \\( T \\):\n     \\[\n     T = \\frac{40}{0.4} = 100\n     \\]\n\n3. Calculate the amount John leaves with:\n   - John brought $125.\n   - Total bill is $100.\n   - Amount left = $125 - $100 = $25.\n\nFinal answer: $25.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "$25.",
+    "gold_answer": "25",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    11,
+    7,
+    3,
+    18,
+    21,
+    6,
+    1,
+    5,
+    11,
+    1,
+    4,
+    4,
+    2
+  ],
+  "peak_allocated_bytes": 17216840704,
+  "sample_id": "gsm8k_test-00691",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 112
+}

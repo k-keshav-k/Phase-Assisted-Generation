@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    4,
+    32,
+    12,
+    32,
+    32,
+    32,
+    32,
+    32,
+    16
+  ],
+  "created_at": "2026-08-01T07:35:19.295807+00:00",
+  "elapsed_sec": 2.597250409424305,
+  "generated_text": "1. Identify the number of yellow blocks: Since there are twice as many yellow blocks as blue blocks, the number of yellow blocks is 2 * 4 = 8.\n2. Calculate the total number of blue and yellow blocks: There are 4 blue blocks and 8 yellow blocks, so the total number of blue and yellow blocks is 4 + 8 = 12.\n3. Determine the number of red blocks: The total number of blocks in the tower is 32, and the number of blue and yellow blocks is 12. Therefore, the number of red blocks is 32 - 12 = 20.\n\nFinal answer: 20",
+  "grade": {
+    "error": null,
+    "extracted_answer": "20",
+    "gold_answer": "20",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    3,
+    21,
+    2,
+    18,
+    12,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15674183168,
+  "sample_id": "gsm8k_test-01268",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 84
+}

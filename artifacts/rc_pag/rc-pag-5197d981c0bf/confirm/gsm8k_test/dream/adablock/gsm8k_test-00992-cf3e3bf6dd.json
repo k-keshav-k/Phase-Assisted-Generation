@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    5,
+    32,
+    32,
+    1,
+    32,
+    10,
+    32,
+    19,
+    1,
+    28
+  ],
+  "created_at": "2026-08-01T07:24:21.721976+00:00",
+  "elapsed_sec": 3.594331182539463,
+  "generated_text": "To determine how many checks Buford writes per year, we need to calculate the number of checks he writes for each expense and then sum them up.\n\n1. Electric bill: Buford writes a check every month for the electric bill. Since there are 12 months in a year, he writes 12 checks for the electric bill.\n\n2. Gas bill: Buford writes a check every month for the gas bill. So, he writes 12 checks for the gas bill.\n\n3. Church: Buford writes a check twice a month to the church. So, he writes 2 * 12 = 24 checks to the church.\n\n4. Pest and lawn service: Buford writes a check to the pest and lawn service quarterly. Since there are 4 quarters in a year, he writes 4 checks to the pest and lawn service.\n\nNow, let's add up the number of checks he writes for each expense:\n12 (electric bill) + 12 (gas bill) + 24 (church) + 4 (pest and lawn service) = 52 checks\n\nBuford writes 52 checks per year.\n\nFinal answer: 52",
+  "grade": {
+    "error": null,
+    "extracted_answer": "52",
+    "gold_answer": "52",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    18,
+    3,
+    11,
+    18,
+    1,
+    11,
+    4,
+    16,
+    6,
+    1,
+    8
+  ],
+  "peak_allocated_bytes": 15709852160,
+  "sample_id": "gsm8k_test-00992",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 117
+}

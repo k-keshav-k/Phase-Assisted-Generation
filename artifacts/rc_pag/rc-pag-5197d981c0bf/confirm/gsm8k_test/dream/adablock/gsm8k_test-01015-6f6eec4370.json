@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    4,
+    3,
+    32,
+    1,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T07:42:32.744892+00:00",
+  "elapsed_sec": 3.622848618775606,
+  "generated_text": "1. **Calculate the total number of pieces of sweets in the box:**\n   Each pack contains 60 pieces, and there are 15 packs in total.\n   \\[\n   \\text{Total pieces} = 15 \\times 60 = 900\n   \\]\n\n2. **Determine the number of packs Anne kept:**\n   Anne kept 2 packs.\n\n3. **Calculate the number of packs Anne gave away:**\n   \\[\n   \\text{Packs given away} = 15 - 2 = 13\n   \\]\n\n4. **Calculate the number of pieces of sweets Anne gave away:**\n   \\[\n   \\text{Pieces given away} = 13 \\times 60 = 780\n   \\]\n\n5. **Determine how many pieces each of Anne's friends received:**\n   Anne gave away 780 pieces equally among her 10 friends.\n   \\[\n   \\text{Pieces per friend} = \\frac{780}{10} = 78\n   \\]\n\n6. **Final answer:**\n   \\[\n   \\boxed{78}\n   \\]",
+  "grade": {
+    "error": "not a strict numeric answer: '**'",
+    "extracted_answer": "**",
+    "gold_answer": "78",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    16,
+    20,
+    7,
+    11,
+    2,
+    2,
+    21,
+    1,
+    5,
+    10
+  ],
+  "peak_allocated_bytes": 15680552448,
+  "sample_id": "gsm8k_test-01015",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 118
+}

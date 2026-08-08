@@ -1,0 +1,136 @@
+{
+  "candidates": [
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.0,
+      "failures": 0,
+      "mean_nfe": 86.27666666666667,
+      "name": "dream/history_t010_p2",
+      "pvalue": 2.0753033477680817e-07,
+      "upper_risk_bound": 0.018102933524228464
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.0,
+      "failures": 0,
+      "mean_nfe": 86.1,
+      "name": "dream/history_t025_p2",
+      "pvalue": 2.0753033477680817e-07,
+      "upper_risk_bound": 0.018102933524228464
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.006666666666666667,
+      "failures": 2,
+      "mean_nfe": 85.82333333333334,
+      "name": "dream/history_t050_p2",
+      "pvalue": 2.9267525966265793e-05,
+      "upper_risk_bound": 0.03127060892482784
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.0,
+      "failures": 0,
+      "mean_nfe": 86.3,
+      "name": "dream/local_t010_p2",
+      "pvalue": 2.0753033477680817e-07,
+      "upper_risk_bound": 0.018102933524228464
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.0,
+      "failures": 0,
+      "mean_nfe": 86.12666666666667,
+      "name": "dream/local_t025_p2",
+      "pvalue": 2.0753033477680817e-07,
+      "upper_risk_bound": 0.018102933524228464
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.0033333333333333335,
+      "failures": 1,
+      "mean_nfe": 85.89333333333333,
+      "name": "dream/local_t050_p2",
+      "pvalue": 3.4843250944105785e-06,
+      "upper_risk_bound": 0.025175804560666936
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.006666666666666667,
+      "failures": 2,
+      "mean_nfe": 94.34333333333333,
+      "name": "llada/history_t010_p2",
+      "pvalue": 2.9267525966265793e-05,
+      "upper_risk_bound": 0.03127060892482784
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.013333333333333334,
+      "failures": 4,
+      "mean_nfe": 93.57333333333334,
+      "name": "llada/history_t025_p2",
+      "pvalue": 0.0006908339871182038,
+      "upper_risk_bound": 0.04220433906473944
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.016666666666666666,
+      "failures": 5,
+      "mean_nfe": 92.94333333333333,
+      "name": "llada/history_t050_p2",
+      "pvalue": 0.002332138650100825,
+      "upper_risk_bound": 0.04731085989763814
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.006666666666666667,
+      "failures": 2,
+      "mean_nfe": 94.33,
+      "name": "llada/local_t010_p2",
+      "pvalue": 2.9267525966265793e-05,
+      "upper_risk_bound": 0.03127060892482784
+    },
+    {
+      "certified": true,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.013333333333333334,
+      "failures": 4,
+      "mean_nfe": 93.61666666666666,
+      "name": "llada/local_t025_p2",
+      "pvalue": 0.0006908339871182038,
+      "upper_risk_bound": 0.04220433906473944
+    },
+    {
+      "certified": false,
+      "corrected_cutoff": 0.004166666666666667,
+      "count": 300,
+      "empirical_risk": 0.023333333333333334,
+      "failures": 7,
+      "mean_nfe": 92.83,
+      "name": "llada/local_t050_p2",
+      "pvalue": 0.0159680007970871,
+      "upper_risk_bound": 0.05707995269369878
+    }
+  ]
+}

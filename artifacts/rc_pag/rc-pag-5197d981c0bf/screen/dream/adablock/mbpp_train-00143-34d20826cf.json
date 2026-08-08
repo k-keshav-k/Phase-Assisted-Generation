@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    32,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T00:18:52.310775+00:00",
+  "elapsed_sec": 2.602999322116375,
+  "generated_text": "Here is a Python function that calculates the least common multiple (LCM) of two positive integers:\n\n```python\ndef lcm(a, b):\n    return a * b // gcd(a, b)\n\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n```\n\nThis function uses the fact that the LCM of two numbers is equal to the product of the two numbers divided by their greatest common divisor (GCD). The `gcd` function calculates the GCD of two numbers using the Euclidean algorithm, which is an efficient method for finding the GCD.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "def lcm(a, b):\n    return a * b // gcd(a, b)\n\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a",
+    "gold_answer": "tests",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    11,
+    1,
+    21,
+    22,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15621951488,
+  "sample_id": "mbpp_train-00143",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 85
+}

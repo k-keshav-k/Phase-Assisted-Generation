@@ -1,0 +1,162 @@
+{
+  "block_history": [
+    32,
+    14,
+    32,
+    2,
+    1,
+    32,
+    5,
+    32,
+    1,
+    1,
+    17,
+    32,
+    2,
+    32,
+    1,
+    1,
+    19
+  ],
+  "created_at": "2026-08-01T03:51:07.690592+00:00",
+  "elapsed_sec": 2.962512284517288,
+  "generated_text": "1. Determine the initial amount of water in the tank:\n   - The tank is filled with half the amount of water in the pool.\n   - The pool has 10000 gallons of water.\n   - Half of 10000 gallons is \\( \\frac{10000}{2} = 5000 \\) gallons.\n\n2. Calculate the total amount of water used from the tank over 6 days:\n   - The tank is emptied at a rate of 500 gallons per day.\n   - Over 6 days, the total amount of water used is \\( 500 \\times 6 = 3000 \\) gallons.\n\n3. Determine the amount of water remaining in the tank after 6 days:\n   - Initially, the tank has 5000 gallons of water.\n   - After 6 days, 3000 gallons are used.\n   - The amount of water remaining in the tank is \\( 5000 - 3000 = 2000 \\) gallons.\n\nFinal answer: 2000.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "2000.",
+    "gold_answer": "2000",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    6,
+    8,
+    1,
+    1,
+    8,
+    2,
+    6,
+    1,
+    1,
+    6,
+    13,
+    2,
+    8,
+    1,
+    1,
+    5
+  ],
+  "peak_allocated_bytes": 17299494400,
+  "sample_id": "gsm8k_test-00925",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 86
+}

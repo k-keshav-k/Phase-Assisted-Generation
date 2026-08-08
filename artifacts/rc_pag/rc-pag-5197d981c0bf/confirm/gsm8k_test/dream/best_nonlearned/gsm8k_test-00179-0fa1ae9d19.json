@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:09:43.740150+00:00",
+  "elapsed_sec": 2.792069874703884,
+  "generated_text": "1. Calculate the total number of hours Lloyd tutored in the first week:\n   Lloyd tutored 5 hours in the first week.\n\n2. Calculate the total number of hours Lloyd tutored in the second week:\n   Lloyd tutored 8 hours in the second week.\n\n3. Calculate the total number of hours Lloyd tutored in the first two weeks:\n   Total hours = Hours in the first week + Hours in the second week\n   Total hours = 5 + 8\n   Total hours = 13 hours\n\n4. Calculate Lloyd's total earnings for the first two weeks:\n   Lloyd earns $10 per hour.\n   Total earnings = Total hours * Hourly rate\n   Total earnings = 13 * $10\n   Total earnings = $130\n\nFinal answer: 130",
+  "grade": {
+    "error": null,
+    "extracted_answer": "130",
+    "gold_answer": "130",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    23,
+    10,
+    15,
+    16,
+    11,
+    14,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15590384640,
+  "sample_id": "gsm8k_test-00179",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 115,
+      "block_index": 0,
+      "block_start": 83,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9211665391921997,
+      "min_top1_confidence": 0.058627523481845856,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 147,
+      "block_index": 1,
+      "block_start": 115,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.8879597187042236,
+      "min_top1_confidence": 0.07391034066677094,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 179,
+      "block_index": 2,
+      "block_start": 147,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9740438461303711,
+      "min_top1_confidence": 0.49577054381370544,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 211,
+      "block_index": 3,
+      "block_start": 179,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9754924774169922,
+      "min_top1_confidence": 0.5428124666213989,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 243,
+      "block_index": 4,
+      "block_start": 211,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.09375,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9890152215957642,
+      "min_top1_confidence": 0.7190845012664795,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 275,
+      "block_index": 5,
+      "block_start": 243,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9967922568321228,
+      "min_top1_confidence": 0.9038620591163635,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 307,
+      "block_index": 6,
+      "block_start": 275,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999998807907104,
+      "min_top1_confidence": 0.9999992847442627,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 339,
+      "block_index": 7,
+      "block_start": 307,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999933242797852,
+      "min_top1_confidence": 0.9999792575836182,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 91
+}

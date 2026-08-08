@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    6,
+    3,
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    32,
+    21
+  ],
+  "created_at": "2026-07-31T23:37:26.220909+00:00",
+  "elapsed_sec": 2.3845277465879917,
+  "generated_text": "1. **Calculate the product inside the square root:**\n   \\[\n   (31)(30)(29)(28) = 24,360\n   \\]\n   \\[\n   24,360 + 1 = 24,361\n   \\]\n\n2. **Find the square root of 24,361:**\n   \\[\n   \\sqrt{24,361} = 156\n   \\]\n\n3. **Conclusion:**\n   \\[\n   \\boxed{156}\n   \\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[156, '156']",
+    "gold_answer": "Let $x = 29.$ Then we can write \\[\\begin{aligned} (31)(30)(29)(28) + 1 &= (x+2)(x+1)(x)(x-1) + 1 \\\\ &= [(x+2)(x-1)][(x+1)x] - 1 \\\\& = (x^2+x-2)(x^2+x) + 1 \\\\&= (x^2+x)^2 - 2(x^2+x) + 1 \\\\&= (x^2+x-1)^2. \\end{aligned} \\]Therefore, the answer is \\[ \\begin{aligned} x^2+x-1&= 29^2 + 29 - 1\\\\& = \\boxed{869}. \\end{aligned}\\]",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    6,
+    3,
+    12,
+    15,
+    2,
+    11,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15635978752,
+  "sample_id": "math_train-00234",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 78
+}

@@ -1,0 +1,238 @@
+{
+  "block_history": [
+    32,
+    32,
+    5,
+    32,
+    32,
+    32,
+    1,
+    32,
+    1,
+    2,
+    1,
+    51,
+    3
+  ],
+  "created_at": "2026-08-01T05:47:46.882769+00:00",
+  "elapsed_sec": 4.516432490199804,
+  "generated_text": "To find the integer \\( n \\) that satisfies \\( 0 \\le n < 18 \\) and \\( n \\equiv -11213141 \\pmod{18} \\), we need to determine the remainder when \\(-11213141\\) is divided by 18.\n\nFirst, we perform the division:\n\\[\n-11213141 \\div 18\n\\]\n\nWe can simplify this by finding the remainder of \\(-11213141\\) when divided by 18. Notice that:\n\\[\n-11213141 = -11213141 + 18 \\times 622957\n\\]\n\nThus, the remainder is:\n\\[\n-11213141 - (-11213141) = 0\n\\]\n\nTherefore, the integer \\( n \\) that satisfies \\( 0 \\le n < 18 \\) and \\( n\\equiv -11213141 \\pmod{18} \\) is:\n\\[\n\\boxed{0}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[0, '0']",
+    "gold_answer": "13",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    7,
+    14,
+    3,
+    17,
+    22,
+    24,
+    1,
+    18,
+    1,
+    1,
+    1,
+    22,
+    1
+  ],
+  "peak_allocated_bytes": 17157616128,
+  "sample_id": "math500-00130",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 98,
+      "block_index": 0,
+      "block_start": 66,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 130,
+      "block_index": 1,
+      "block_start": 98,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 135,
+      "block_index": 2,
+      "block_start": 130,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 167,
+      "block_index": 3,
+      "block_start": 135,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 199,
+      "block_index": 4,
+      "block_start": 167,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 231,
+      "block_index": 5,
+      "block_start": 199,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 232,
+      "block_index": 6,
+      "block_start": 231,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 264,
+      "block_index": 7,
+      "block_start": 232,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 265,
+      "block_index": 8,
+      "block_start": 264,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 267,
+      "block_index": 9,
+      "block_start": 265,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 268,
+      "block_index": 10,
+      "block_start": 267,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 319,
+      "block_index": 11,
+      "block_start": 268,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "block_end": 322,
+      "block_index": 12,
+      "block_start": 319,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 3,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 132
+}

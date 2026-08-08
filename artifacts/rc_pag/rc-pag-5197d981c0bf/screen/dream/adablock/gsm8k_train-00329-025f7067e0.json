@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    12,
+    32,
+    18,
+    32,
+    32,
+    32,
+    2
+  ],
+  "created_at": "2026-07-31T22:47:14.256647+00:00",
+  "elapsed_sec": 2.9771843440830708,
+  "generated_text": "First, let's determine the cost of each stick of gum. Since each stick of gum costs half as much as a candy bar, and each candy bar costs $1.5, the cost of each stick of gum is $1.5 / 2 = $0.75.\n\nNext, let's calculate the total cost of the candy bars. John buys 3 candy bars, each costing $1.5, so the total cost of the candy bars is 3 * $1.5 = $4.5.\n\nNow, let's calculate the total cost of the gum. John buys 2 packs of gum, each costing $0.75, so the total cost of the gum is 2 * $0.75 = $1.5.\n\nFinally, let's add the total cost of the candy bars and the gum to find the total amount John paid. The total cost is $4.5 (candy bars) + $1.5 (gum) = $6.\n\nFinal answer: 6",
+  "grade": {
+    "error": null,
+    "extracted_answer": "6",
+    "gold_answer": "6",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    15,
+    17,
+    3,
+    6,
+    3,
+    20,
+    9,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15676730880,
+  "sample_id": "gsm8k_train-00329",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 99
+}

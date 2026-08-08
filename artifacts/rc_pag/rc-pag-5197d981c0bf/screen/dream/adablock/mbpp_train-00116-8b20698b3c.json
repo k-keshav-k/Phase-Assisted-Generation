@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    18,
+    5,
+    32,
+    32,
+    32,
+    32,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T00:02:53.824709+00:00",
+  "elapsed_sec": 4.4982444532215595,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef min_difference(tuples):\n    min_diff = float('inf')\n    for i in range(len(tuples) - 1):\n        for j in range(i + 1, len(tuples)):\n            diff = abs(tuples[i][0] - tuples[j][0])\n            if diff < min_diff:\n                min_diff = diff\n    return min_diff\n```\n\nThis function takes a list of tuples as input and returns the minimum difference between any two tuples in the list. It uses two nested loops to iterate over all possible pairs of tuples and calculates the absolute difference between the first elements of each pair. If the difference is smaller than the current minimum difference, it updates the minimum difference. Finally, it returns the minimum difference.\n\nNote that this function assumes that the input list of tuples is not empty and that each tuple has at least one element. If these assumptions are not met, the function may not work correctly.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_7z7srfuq/candidate.py\", line 10, in <module>\n    assert min_difference([(3, 5), (1, 7), (10, 3), (1, 2)]) == 1\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "extracted_answer": "def min_difference(tuples):\n    min_diff = float('inf')\n    for i in range(len(tuples) - 1):\n        for j in range(i + 1, len(tuples)):\n            diff = abs(tuples[i][0] - tuples[j][0])\n            if diff < min_diff:\n                min_diff = diff\n    return min_diff",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    9,
+    3,
+    3,
+    27,
+    24,
+    29,
+    25,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15627046912,
+  "sample_id": "mbpp_train-00116",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 151
+}

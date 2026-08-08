@@ -1,0 +1,138 @@
+{
+  "benefit_estimators": {},
+  "config_hash": "7688c5235bd4de2f7da9c73d06c7dc3a30891dc680790e19e74ab99c11db3eaf",
+  "estimators": {
+    "dream": {
+      "rc_pag_local": {
+        "estimators": {
+          "hist_gradient_boosting": {
+            "deployment_estimator": true,
+            "feature_names": [
+              "local.step_index",
+              "local.block_size",
+              "local.remaining_count",
+              "local.remaining_fraction",
+              "local.entropy_mean",
+              "local.entropy_max",
+              "local.entropy_q10",
+              "local.entropy_q50",
+              "local.entropy_q90",
+              "local.top1_mean",
+              "local.top1_min",
+              "local.top1_max",
+              "local.top1_q10",
+              "local.top1_q50",
+              "local.top1_q90",
+              "local.margin_mean",
+              "local.margin_min",
+              "local.margin_max",
+              "local.margin_q10",
+              "local.margin_q50",
+              "local.margin_q90",
+              "local.temporal_js_mean",
+              "local.temporal_js_max",
+              "local.temporal_js_q50",
+              "local.temporal_js_q90",
+              "local.token_churn",
+              "local.entropy_delta",
+              "local.top1_delta",
+              "local.digit_fraction",
+              "local.delimiter_fraction"
+            ],
+            "history_window": 4,
+            "include_history": false,
+            "kind": "hist_gradient_boosting",
+            "path": "estimators/dream_rc_pag_local.joblib",
+            "schema_version": 1,
+            "sha256": "8c5a5de58372ee9e00ef0ec5ca84ea85e12f4c91e0330ce07adcdec181cb9e39",
+            "validation": {
+              "brier": 0.042303401798951756,
+              "examples": 11448,
+              "positive_fraction": 0.7443221523410203,
+              "roc_auc": 0.9840573944065601,
+              "split": "deterministic_prompt_holdout_mod5"
+            }
+          }
+        },
+        "primary_kind": "hist_gradient_boosting",
+        "trace_reused": false
+      }
+    },
+    "llada": {
+      "rc_pag_local": {
+        "estimators": {
+          "hist_gradient_boosting": {
+            "deployment_estimator": true,
+            "feature_names": [
+              "local.step_index",
+              "local.block_size",
+              "local.remaining_count",
+              "local.remaining_fraction",
+              "local.entropy_mean",
+              "local.entropy_max",
+              "local.entropy_q10",
+              "local.entropy_q50",
+              "local.entropy_q90",
+              "local.top1_mean",
+              "local.top1_min",
+              "local.top1_max",
+              "local.top1_q10",
+              "local.top1_q50",
+              "local.top1_q90",
+              "local.margin_mean",
+              "local.margin_min",
+              "local.margin_max",
+              "local.margin_q10",
+              "local.margin_q50",
+              "local.margin_q90",
+              "local.temporal_js_mean",
+              "local.temporal_js_max",
+              "local.temporal_js_q50",
+              "local.temporal_js_q90",
+              "local.token_churn",
+              "local.entropy_delta",
+              "local.top1_delta",
+              "local.digit_fraction",
+              "local.delimiter_fraction"
+            ],
+            "history_window": 4,
+            "include_history": false,
+            "kind": "hist_gradient_boosting",
+            "path": "estimators/llada_rc_pag_local.joblib",
+            "schema_version": 1,
+            "sha256": "74ebf84b65cd5794f9483bfeb085f8dafbac74bbed29af719e10a9e82be9935c",
+            "validation": {
+              "brier": 0.050831592133471215,
+              "examples": 11047,
+              "positive_fraction": 0.6286774689961075,
+              "roc_auc": 0.9825966648167903,
+              "split": "deterministic_prompt_holdout_mod5"
+            }
+          }
+        },
+        "primary_kind": "hist_gradient_boosting",
+        "trace_reused": false
+      }
+    }
+  },
+  "identity": {
+    "config_hash": "7688c5235bd4de2f7da9c73d06c7dc3a30891dc680790e19e74ab99c11db3eaf",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v5"
+  },
+  "schema_version": 1,
+  "stage": "fit",
+  "status": "completed"
+}

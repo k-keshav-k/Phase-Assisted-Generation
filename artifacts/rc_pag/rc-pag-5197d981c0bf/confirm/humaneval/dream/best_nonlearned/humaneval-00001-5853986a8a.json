@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T09:13:17.623821+00:00",
+  "elapsed_sec": 1.6311845481395721,
+  "generated_text": " separate separate_paren_groups(paren_string: str) -> List[str]:\n    stack = []\n    result = []\n    for char in paren_string:\n        if char == '(':\n            stack.append(char)\n        elif char == ')':\n            if not stack:\n                continue\n            stack.pop()\n            if not stack:\n                result.append(''.join(stack))\n                stack = []\n    return result",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_yr9zkppz/candidate.py\", line 2\n    separate separate_paren_groups(paren_string: str) -> List[str]:\n             ^^^^^^^^^^^^^^^^^^^^^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "separate separate_paren_groups(paren_string: str) -> List[str]:\n    stack = []\n    result = []\n    for char in paren_string:\n        if char == '(':\n            stack.append(char)\n        elif char == ')':\n            if not stack:\n                continue\n            stack.pop()\n            if not stack:\n                result.append(''.join(stack))\n                stack = []\n    return result",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    16,
+    16,
+    15,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15636929536,
+  "sample_id": "humaneval-00001",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 160,
+      "block_index": 0,
+      "block_start": 128,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9204559326171875,
+      "min_top1_confidence": 0.190374955534935,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 192,
+      "block_index": 1,
+      "block_start": 160,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9940540194511414,
+      "min_top1_confidence": 0.9428130984306335,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 224,
+      "block_index": 2,
+      "block_start": 192,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9871993064880371,
+      "min_top1_confidence": 0.702620804309845,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 256,
+      "block_index": 3,
+      "block_start": 224,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999995231628418,
+      "min_top1_confidence": 0.9999967813491821,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 288,
+      "block_index": 4,
+      "block_start": 256,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999986290931702,
+      "min_top1_confidence": 0.9999954700469971,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 320,
+      "block_index": 5,
+      "block_start": 288,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999982118606567,
+      "min_top1_confidence": 0.9999728202819824,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 352,
+      "block_index": 6,
+      "block_start": 320,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999964237213135,
+      "min_top1_confidence": 0.9999765157699585,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 384,
+      "block_index": 7,
+      "block_start": 352,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999992847442627,
+      "min_top1_confidence": 0.9999765157699585,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/humaneval/dream",
+  "total_nfe": 52
+}

@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    1,
+    32,
+    32,
+    4,
+    32,
+    32,
+    3,
+    32,
+    15,
+    32,
+    9
+  ],
+  "created_at": "2026-08-01T08:29:14.030704+00:00",
+  "elapsed_sec": 3.8342826142907143,
+  "generated_text": "1. **Identify the initial conditions:**\n   Denali is responsible for $16$ dogs, and Nate is responsible for $12$ dogs.\n\n2. **Set up the equation for the first scenario:**\n   If Denali starts walking $4x$ more dogs, she will be responsible for $16 + 4x$ dogs. The ratio of Denali's pay to Nate's pay would be $\\frac{16 + 4x}{12}$.\n\n3. **Set up the equation for the second scenario:**\n   If $x$ of Nate's dogs are reassigned to Denali, Nate will be responsible for $12 - x$ dogs. The ratio of Denali's pay to Nate's pay would be $\\frac{16}{12 - x}$.\n\n4. **Set the ratios equal to each other:**\n   Since the ratios are equal, we have $\\frac{16 + 4x}{12} = \\frac{16}{12 - x}$.\n\n5. **Cross-multiply and solve for $x$:**\n   Cross-multiplying gives $(16 + 4x)(12 - x) = 16 \\cdot 1",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[1, '1']",
+    "gold_answer": "5",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    1,
+    24,
+    15,
+    2,
+    8,
+    6,
+    2,
+    20,
+    2,
+    15,
+    6
+  ],
+  "peak_allocated_bytes": 15773549056,
+  "sample_id": "math500-00022",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 122
+}

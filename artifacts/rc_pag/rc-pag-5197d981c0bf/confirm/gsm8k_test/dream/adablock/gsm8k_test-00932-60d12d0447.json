@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    12,
+    32,
+    32,
+    32,
+    32,
+    19
+  ],
+  "created_at": "2026-08-01T06:53:01.760573+00:00",
+  "elapsed_sec": 3.087376993149519,
+  "generated_text": "1. Maria invited 4 friends, so there are a total of 5 people (Maria and her 4 friends).\n2. Maria gave each of her 4 friends 2 water balloons, so that's 4 * 2 = 8 balloons.\n3. Maria also had 1 water balloon for herself.\n4. So far, there are 8 + 1 = 9 balloons.\n5. Maria's mom gave each person 3 more balloons, so that's 5 * 3 = 15 balloons.\n6. In total, there are 9 + 15 = 24 balloons.\n\nFinal answer: 24",
+  "grade": {
+    "error": null,
+    "extracted_answer": "24",
+    "gold_answer": "24",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    22,
+    1,
+    23,
+    6,
+    13,
+    2,
+    2,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15703482368,
+  "sample_id": "gsm8k_test-00932",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 100
+}

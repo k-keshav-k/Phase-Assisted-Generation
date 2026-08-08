@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    15,
+    32,
+    6,
+    32,
+    13,
+    32,
+    32,
+    30
+  ],
+  "created_at": "2026-08-01T07:34:27.781577+00:00",
+  "elapsed_sec": 3.3036372512578964,
+  "generated_text": "1. Calculate the cost of the piece of paper: The piece of paper costs $1 less than three times the price of the pen. The price of the pen is $2, so three times the price of the pen is 3 * $2 = $6. Subtracting $1 from this gives the cost of the piece of paper as $6 - $1 = $5.\n2. Calculate the total cost of the items: Add the cost of the pen and the cost of the piece of paper. The total cost is $2 + $5 = $7.\n3. Calculate the change Theo received: Theo gave the cashier $10. Subtract the total cost of the items from the amount given to find the change. The change is $10 - $7 = $3.\n\nFinal answer: 3",
+  "grade": {
+    "error": null,
+    "extracted_answer": "3",
+    "gold_answer": "3",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    25,
+    5,
+    19,
+    2,
+    23,
+    4,
+    6,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15672909312,
+  "sample_id": "gsm8k_test-00470",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 108
+}

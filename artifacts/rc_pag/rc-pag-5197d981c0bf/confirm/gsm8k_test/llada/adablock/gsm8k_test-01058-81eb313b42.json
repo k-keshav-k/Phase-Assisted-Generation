@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    7,
+    32,
+    32,
+    2,
+    1,
+    32,
+    32,
+    32,
+    22
+  ],
+  "created_at": "2026-08-01T03:52:51.169607+00:00",
+  "elapsed_sec": 3.28003054484725,
+  "generated_text": "To determine the total number of stickers Leo has in his collection, we need to account for the stickers he collected over the past two years.\n\n1. **Initial number of stickers**: Two years ago, Leo had 100 stickers.\n2. **Stickers collected last year**: Last year, Leo collected 50 stickers.\n3. **Stickers collected this year**: This year, Leo collected twice the number of stickers as last year. Since he collected 50 stickers last year, this year he collected \\(2 \\times 50 = 100\\) stickers.\n\nNow, we add up all the stickers Leo has:\n\n\\[ 100 + 50 + 100 = 250 \\]\n\nFinal answer: 250\n\n```",
+  "grade": {
+    "error": null,
+    "extracted_answer": "250",
+    "gold_answer": "250",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    12,
+    2,
+    9,
+    15,
+    2,
+    1,
+    13,
+    18,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17199990272,
+  "sample_id": "gsm8k_test-01058",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 98
+}

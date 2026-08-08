@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    8,
+    32,
+    32,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T08:07:21.795617+00:00",
+  "elapsed_sec": 4.284008167684078,
+  "generated_text": "To convert the fraction $\\frac{3}{20}$ to a decimal, we can perform the division $3 \\div 20$.\n\n1. Set up the division: $20 \\mid 3.000000$.\n2. Divide 3 by 20: $20 \\mid 3.000000$ gives $0.1$ with a remainder of $10$.\n3. Bring down the next 0 to make $100$.\n4. Divide $100$ by $20$, which gives $5$ with a remainder of $0$.\n5. Bring down the next 0 to make $0$.\n6. Divide $0$ by $20$, which gives $0$.\n\nThus, the decimal representation of $\\frac{3}{20}$ is $0.15$.\n\nTherefore, the answer is $\\boxed{0.15}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[0.150000000000000, '0.15']",
+    "gold_answer": "0.15",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    28,
+    25,
+    25,
+    6,
+    20,
+    14,
+    4,
+    2
+  ],
+  "peak_allocated_bytes": 15627057152,
+  "sample_id": "math500-00054",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 142
+}

@@ -1,0 +1,176 @@
+{
+  "block_history": [
+    32,
+    14,
+    15,
+    1,
+    8,
+    32,
+    6,
+    1,
+    32,
+    3,
+    15,
+    11,
+    8,
+    1,
+    32,
+    6,
+    1,
+    29,
+    9
+  ],
+  "created_at": "2026-08-01T04:38:51.751281+00:00",
+  "elapsed_sec": 3.2826779261231422,
+  "generated_text": "Let's define the number of eggs painted by each person:\n- Let \\( A \\) be the number of eggs painted by Arnold and Madeline.\n- Let \\( C \\) be the number of eggs painted by Camden.\n- Let \\( S \\) be the number of eggs painted by Sarah.\n\nFrom the problem, we know:\n1. \\( A + C + S = 56 \\)\n2. \\( C + S = 30 \\)\n3. \\( C = S + 12 \\)\n\nFirst, substitute \\( C = S + 12 \\) into the second equation:\n\\[ (S + 12) + S = 30 \\]\n\\[ 2S + 12 = 30 \\]\n\\[ 2S = 18 \\]\n\\[ S = 9 \\]\n\nNow, substitute \\( S = 9 \\) back into \\( C = S + 12 \\):\n\\[ C = 9 + 12 = 21 \\]\n\nFinally, calculate \\( C - A \\):\n\\[ C - A = 21 - 9 = 12 \\]\n\nFinal answer: 12.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "12.",
+    "gold_answer": "8",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    5,
+    1,
+    1,
+    6,
+    13,
+    1,
+    1,
+    14,
+    1,
+    1,
+    1,
+    1,
+    1,
+    11,
+    1,
+    1,
+    12,
+    1
+  ],
+  "peak_allocated_bytes": 17223490560,
+  "sample_id": "gsm8k_test-01129",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 95
+}

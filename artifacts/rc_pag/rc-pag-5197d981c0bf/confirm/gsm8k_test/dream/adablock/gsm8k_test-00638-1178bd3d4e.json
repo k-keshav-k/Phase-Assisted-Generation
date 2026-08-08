@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    8,
+    32,
+    8,
+    32,
+    10,
+    42,
+    32,
+    9,
+    32,
+    19
+  ],
+  "created_at": "2026-08-01T07:49:43.721357+00:00",
+  "elapsed_sec": 2.392415028065443,
+  "generated_text": "1. Calculate the cost of one apple: Since four apples cost $5.20, the cost of one apple is $5.20 / 4 = $1.30.\n2. Calculate the cost of one orange: Since three oranges cost $3.30, the cost of one orange is $3.30 / 3 = $1.10.\n3. Calculate the cost of 5 apples: Since one apple costs $1.30, the cost of 5 apples is 5 * $1.30 = $6.50.\n4. Calculate the cost of 5 oranges: Since one orange costs $1.10, the cost of 5 oranges is 5 * $1.10 = $5.50.\n5. Calculate the total cost: Add the cost of 5 apples and the cost of 5 oranges: $6.50 + $5.50 = $12.00.\n\nFinal answer: 12",
+  "grade": {
+    "error": null,
+    "extracted_answer": "12",
+    "gold_answer": "12",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    3,
+    3,
+    2,
+    12,
+    2,
+    4,
+    17,
+    5,
+    9,
+    2
+  ],
+  "peak_allocated_bytes": 15665265664,
+  "sample_id": "gsm8k_test-00638",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 42,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 77
+}

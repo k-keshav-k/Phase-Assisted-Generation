@@ -1,0 +1,225 @@
+{
+  "block_history": [
+    32,
+    2,
+    3,
+    12,
+    4,
+    14,
+    1,
+    11,
+    1,
+    19,
+    1,
+    12,
+    3,
+    10,
+    4,
+    1,
+    11,
+    3,
+    12,
+    1,
+    32,
+    9,
+    2,
+    1,
+    52,
+    3
+  ],
+  "created_at": "2026-08-01T06:05:25.892991+00:00",
+  "elapsed_sec": 4.238598816096783,
+  "generated_text": "First, solve the inequality \\(0 \\ge 54p - 144\\):\n\n1. Add 144 to both sides:\n   \\[\n   144 \\ge 54p\n   \\]\n\n2. Divide both sides by 54:\n   \\[\n   p \\le 4\n   \\]\n\nNext, solve the inequality \\(0 > 12 - 20p\\):\n\n1. Subtract 12 from both sides:\n   \\[\n   -12 > -20p\n   \\]\n\n2. Divide both sides by -20:\n   \\[\n   p < 0.6\n   \\]\n\nNow, we need to find the intersection of the solution sets of the two inequalities:\n\n\\[\np \\le 4 \\quad \\text{and} \\quad p < 0.6\n\\]\n\nThe intersection of these two sets is:\n\n\\[\n-\\infty \\le p < 0\n\\]\n\nThus, the values of \\(p\\) that satisfy both inequalities are:\n\n\\[\n\\boxed{(-\\infty, 0]}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[Interval(-oo, 0), '(-\\\\infty, 0]']",
+    "gold_answer": "\\left(\\frac{3}{5},\\frac{8}{3}\\right]",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    2,
+    2,
+    1,
+    1,
+    4,
+    1,
+    7,
+    1,
+    2,
+    1,
+    5,
+    1,
+    2,
+    1,
+    1,
+    4,
+    1,
+    6,
+    1,
+    23,
+    1,
+    1,
+    1,
+    31,
+    1
+  ],
+  "peak_allocated_bytes": 17171966976,
+  "sample_id": "math500-00293",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 52,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 119
+}

@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    9,
+    32,
+    32,
+    29,
+    32,
+    5,
+    32,
+    2,
+    32,
+    19
+  ],
+  "created_at": "2026-07-31T22:31:26.060879+00:00",
+  "elapsed_sec": 4.264829561114311,
+  "generated_text": "1. **Calculate the number of elephants that left the park during the 4-hour exodus:**\n   - The rate of elephants leaving the park is 2,880 elephants/hour.\n   - Over 4 hours, the number of elephants leaving is 2,880 * 4 = 11,520 elephants.\n\n2. **Determine the number of elephants remaining after the exodus:**\n   - Starting with 30,000 elephants, after the exodus, there are 30,000 - 11,520 = 18,480 elephants.\n\n3. **Calculate the number of new elephants that entered the park during the 7-hour period:**\n   - The final number of elephants is 28,980.\n   - The number of new elephants entering is 28,980 - 18,480 = 10,500 elephants.\n\n4. **Calculate the rate at which the new elephants entered the park:**\n   - The rate is 10,500 elephants / 7 hours = 1500 elephants/hour.\n\nFinal answer: 150",
+  "grade": {
+    "error": null,
+    "extracted_answer": "150",
+    "gold_answer": "1500",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    5,
+    16,
+    19,
+    10,
+    19,
+    3,
+    9,
+    2,
+    19,
+    13
+  ],
+  "peak_allocated_bytes": 15741701632,
+  "sample_id": "gsm8k_train-00311",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 141
+}

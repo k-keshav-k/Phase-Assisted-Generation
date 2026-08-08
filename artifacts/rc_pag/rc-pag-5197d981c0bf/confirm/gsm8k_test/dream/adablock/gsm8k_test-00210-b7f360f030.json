@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    16,
+    32,
+    16
+  ],
+  "created_at": "2026-08-01T07:32:33.588519+00:00",
+  "elapsed_sec": 3.9949285201728344,
+  "generated_text": "1. Calculate the total cost of the jacket and shoes:\n   - The jacket costs $30.\n   - Each pair of shoes costs $20.\n   - Sara wants 2 pairs of shoes, so the total cost for the shoes is 2 * $20 = $40.\n   - Total cost for the jacket and shoes is $30 + $40 = $70.\n\n2. Calculate the total amount Sara has earned:\n   - Sara babysits 4 times, earning $5 each time.\n   - Total earnings from babysitting is 4 * $5 = $20.\n   - Sara already had $10 saved.\n   - Total amount Sara has earned is $20 + $10 = $30.\n\n3. Calculate the remaining amount Sara needs to earn:\n   - Total cost for the jacket and shoes is $70.\n   - Sara has already earned $30.\n   - Remaining amount is $70 - $30 = $40.\n\n4. Determine how many times Sara needs to mow the lawn:\n   - Sara earns $4 each time she mows the lawn.\n   - She needs to earn $40 more.\n\nFinal answer: 10.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10.",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    22,
+    15,
+    15,
+    16,
+    17,
+    6,
+    13,
+    10
+  ],
+  "peak_allocated_bytes": 15745523200,
+  "sample_id": "gsm8k_test-00210",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 130
+}

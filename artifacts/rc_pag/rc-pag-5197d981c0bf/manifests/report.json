@@ -1,0 +1,220 @@
+{
+  "claim_audit": {
+    "details": {
+      "beat_adablock_models": {
+        "dream": true,
+        "llada": true
+      },
+      "history_frontier_required": false,
+      "minimum_accuracy_lower_ci": -0.212,
+      "primary_method": "rc_pag_history",
+      "required_accuracy_lower_ci": -0.02
+    },
+    "failed_gates": [
+      "accuracy_noninferiority"
+    ],
+    "gates": {
+      "accuracy_noninferiority": false,
+      "beat_adablock_both_models": true,
+      "beat_best_nonlearned": true,
+      "risk_certificate": true
+    },
+    "headline_eligible": false
+  },
+  "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "inputs": {
+    "certificate": {
+      "alpha": 0.05,
+      "candidates": [
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.0,
+          "failures": 0,
+          "mean_nfe": 86.27666666666667,
+          "name": "dream/history_t010_p2",
+          "pvalue": 2.0753033477680817e-07,
+          "upper_risk_bound": 0.018102933524228464
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.0,
+          "failures": 0,
+          "mean_nfe": 86.1,
+          "name": "dream/history_t025_p2",
+          "pvalue": 2.0753033477680817e-07,
+          "upper_risk_bound": 0.018102933524228464
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.006666666666666667,
+          "failures": 2,
+          "mean_nfe": 85.82333333333334,
+          "name": "dream/history_t050_p2",
+          "pvalue": 2.9267525966265793e-05,
+          "upper_risk_bound": 0.03127060892482784
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.0,
+          "failures": 0,
+          "mean_nfe": 86.3,
+          "name": "dream/local_t010_p2",
+          "pvalue": 2.0753033477680817e-07,
+          "upper_risk_bound": 0.018102933524228464
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.0,
+          "failures": 0,
+          "mean_nfe": 86.12666666666667,
+          "name": "dream/local_t025_p2",
+          "pvalue": 2.0753033477680817e-07,
+          "upper_risk_bound": 0.018102933524228464
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.0033333333333333335,
+          "failures": 1,
+          "mean_nfe": 85.89333333333333,
+          "name": "dream/local_t050_p2",
+          "pvalue": 3.4843250944105785e-06,
+          "upper_risk_bound": 0.025175804560666936
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.006666666666666667,
+          "failures": 2,
+          "mean_nfe": 94.34333333333333,
+          "name": "llada/history_t010_p2",
+          "pvalue": 2.9267525966265793e-05,
+          "upper_risk_bound": 0.03127060892482784
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.013333333333333334,
+          "failures": 4,
+          "mean_nfe": 93.57333333333334,
+          "name": "llada/history_t025_p2",
+          "pvalue": 0.0006908339871182038,
+          "upper_risk_bound": 0.04220433906473944
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.016666666666666666,
+          "failures": 5,
+          "mean_nfe": 92.94333333333333,
+          "name": "llada/history_t050_p2",
+          "pvalue": 0.002332138650100825,
+          "upper_risk_bound": 0.04731085989763814
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.006666666666666667,
+          "failures": 2,
+          "mean_nfe": 94.33,
+          "name": "llada/local_t010_p2",
+          "pvalue": 2.9267525966265793e-05,
+          "upper_risk_bound": 0.03127060892482784
+        },
+        {
+          "certified": true,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.013333333333333334,
+          "failures": 4,
+          "mean_nfe": 93.61666666666666,
+          "name": "llada/local_t025_p2",
+          "pvalue": 0.0006908339871182038,
+          "upper_risk_bound": 0.04220433906473944
+        },
+        {
+          "certified": false,
+          "corrected_cutoff": 0.004166666666666667,
+          "count": 300,
+          "empirical_risk": 0.023333333333333334,
+          "failures": 7,
+          "mean_nfe": 92.83,
+          "name": "llada/local_t050_p2",
+          "pvalue": 0.0159680007970871,
+          "upper_risk_bound": 0.05707995269369878
+        }
+      ],
+      "correction": "bonferroni",
+      "fallback": false,
+      "familywise_delta": 0.05,
+      "mock": false,
+      "protocol_identity": "018fe419fb699da1130789b797d450565f603a372cfc181d98be026a1b9f9cb7",
+      "schema_version": 1,
+      "selected": "dream/history_t050_p2"
+    },
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "coverage": {
+      "dream/gsm8k_test/adablock": 500,
+      "dream/gsm8k_test/best_nonlearned": 500,
+      "dream/gsm8k_test/rc_pag_history": 500,
+      "dream/humaneval/adablock": 100,
+      "dream/humaneval/best_nonlearned": 100,
+      "dream/humaneval/rc_pag_history": 100,
+      "dream/math500/adablock": 300,
+      "dream/math500/best_nonlearned": 300,
+      "dream/math500/rc_pag_history": 300,
+      "dream/mbpp_sanitized/adablock": 100,
+      "dream/mbpp_sanitized/best_nonlearned": 100,
+      "dream/mbpp_sanitized/rc_pag_history": 100,
+      "llada/gsm8k_test/adablock": 500,
+      "llada/gsm8k_test/best_nonlearned": 500,
+      "llada/gsm8k_test/rc_pag_history": 500,
+      "llada/humaneval/adablock": 100,
+      "llada/humaneval/best_nonlearned": 100,
+      "llada/humaneval/rc_pag_history": 100,
+      "llada/math500/adablock": 300,
+      "llada/math500/best_nonlearned": 300,
+      "llada/math500/rc_pag_history": 300,
+      "llada/mbpp_sanitized/adablock": 100,
+      "llada/mbpp_sanitized/best_nonlearned": 100,
+      "llada/mbpp_sanitized/rc_pag_history": 100
+    },
+    "estimator_manifest": "estimators/manifest.json",
+    "mock": false
+  },
+  "schema_version": 1,
+  "stage": "report",
+  "status": "completed"
+}

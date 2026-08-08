@@ -1,0 +1,99 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:41:27.134513+00:00",
+  "elapsed_sec": 2.4259926453232765,
+  "generated_text": "1. **Determine the number of cats:**\n   - Since there are two cats for every dog, and the number of dogs is 60, the number of cats is \\(2 \\times 60 = 120\\).\n\n2. **Calculate the total number of dogs and cats:**\n   - The total number of dogs and cats is \\(60 + 120 = 180\\).\n\n3. **Determine the number of rabbits:**\n   - The number of rabbits is twelve less than the combined number of dogs and cats, so the number of rabbits is \\(180 - 12 = 168\\).\n\n4. **Calculate the total number of pets:**\n   - The total number of pets is the sum of dogs, cats, and rabbits: \\(60 + 120 + 168 = 348\\).\n\nFinal answer: $\\boxed{348}$",
+  "grade": {
+    "error": "not a strict numeric answer: '$\\\\boxed{348}$'",
+    "extracted_answer": "$\\boxed{348}$",
+    "gold_answer": "348",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    12,
+    12,
+    11,
+    9,
+    9,
+    5,
+    2
+  ],
+  "peak_allocated_bytes": 15681826304,
+  "sample_id": "gsm8k_test-00094",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 79
+}

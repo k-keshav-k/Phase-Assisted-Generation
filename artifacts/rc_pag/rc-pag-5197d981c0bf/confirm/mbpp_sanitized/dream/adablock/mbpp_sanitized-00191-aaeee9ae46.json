@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    9,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T09:08:30.468291+00:00",
+  "elapsed_sec": 4.801445607095957,
+  "generated_text": "Here is a Python solution using a priority queue (heap) to find the k smallest pairs:\n\n```python\nimport heapq\n\ndef k_smallest_pairs(nums1, nums2, k):\n    heap = []\n    pairs = []\n    m = len(nums1)\n    n = len(nums2)\n\n    for i in range(min(k, m)):\n        heapq.heappush(heap, (nums1[i] + nums2[0], i, 0))\n\n    while heap and len(pairs) < k:\n        sum, i, j = heapq.heappop(heap)\n        pairs.append((nums1[i], nums2[j]))\n        if j + 1 < n:\n            heapq.heappush(heap, (nums1[i] + nums2[j + 1], i, j + 1))\n\n    return pairs\n```\n\nThis solution uses a priority queue to keep track of the smallest sums of pairs. It starts by pushing the sum of the first element of the first array and each element of the second array into the queue. Then, it pops the smallest sum from the queue, adds the pair to the result list, and pushes the next element from the second array into the queue if possible. This process continues until it has k pairs.",
+  "grade": {
+    "error": "Traceback (most recent call last):\n  File \"/tmp/rc_pag_code_l0pt_5hk/candidate.py\", line 20, in <module>\n    assert k_smallest_pairs([1,3,7],[2,4,6],2)==[[1, 2], [1, 4]]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+    "extracted_answer": "import heapq\n\ndef k_smallest_pairs(nums1, nums2, k):\n    heap = []\n    pairs = []\n    m = len(nums1)\n    n = len(nums2)\n\n    for i in range(min(k, m)):\n        heapq.heappush(heap, (nums1[i] + nums2[0], i, 0))\n\n    while heap and len(pairs) < k:\n        sum, i, j = heapq.heappop(heap)\n        pairs.append((nums1[i], nums2[j]))\n        if j + 1 < n:\n            heapq.heappush(heap, (nums1[i] + nums2[j + 1], i, j + 1))\n\n    return pairs",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    29,
+    21,
+    15,
+    8,
+    9,
+    2,
+    29,
+    25,
+    21
+  ],
+  "peak_allocated_bytes": 15641063936,
+  "sample_id": "mbpp_sanitized-00191",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/mbpp_sanitized/dream",
+  "total_nfe": 159
+}

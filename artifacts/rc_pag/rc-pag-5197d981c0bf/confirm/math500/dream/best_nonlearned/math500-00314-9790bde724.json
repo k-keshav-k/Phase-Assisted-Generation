@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T08:16:26.233881+00:00",
+  "elapsed_sec": 3.4067703373730183,
+  "generated_text": ".. **Reflection over the vertical line $x=1$:** The point $(0,0)$ is reflected over the vertical line $x=1$. The reflection of a point $(x,y)$ over the line $x=1$ is given by $(2(1)-x, y)$. Therefore, the reflection of $(0,0)$ over $x=1$ is $(2-0, 0) = (2,0)$.\n\n2. **Reflection over the line $y=2$:** The point $(2,0)$ is then reflected over the line $y=2$. The reflection of a point $(x,y)$ over the line $y=2$ is given by $(x, 4-y)$. Therefore, the reflection of $(2,0)$ over $y=2$ is $(2, 4-0) = (2,4)$.\n\n3. **Conclusion:** The resulting point after both reflections is $(2,4)$.\n\n$\\boxed{(2,4)}$",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[Interval.open(2, 4), '(2,4)']",
+    "gold_answer": "(2,4)",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    21,
+    29,
+    16,
+    10,
+    7,
+    8,
+    18,
+    1
+  ],
+  "peak_allocated_bytes": 15516981248,
+  "sample_id": "math500-00314",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 129,
+      "block_index": 0,
+      "block_start": 97,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9155625104904175,
+      "min_top1_confidence": 0.17356258630752563,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "block_end": 161,
+      "block_index": 1,
+      "block_start": 129,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9488790035247803,
+      "min_top1_confidence": 0.4934639036655426,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 193,
+      "block_index": 2,
+      "block_start": 161,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.987262487411499,
+      "min_top1_confidence": 0.6641548275947571,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 225,
+      "block_index": 3,
+      "block_start": 193,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.935640275478363,
+      "min_top1_confidence": 0.3166337013244629,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 257,
+      "block_index": 4,
+      "block_start": 225,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9533557891845703,
+      "min_top1_confidence": 0.20056015253067017,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 289,
+      "block_index": 5,
+      "block_start": 257,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9524428844451904,
+      "min_top1_confidence": 0.3105419874191284,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 321,
+      "block_index": 6,
+      "block_start": 289,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9953137636184692,
+      "min_top1_confidence": 0.9450278878211975,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 353,
+      "block_index": 7,
+      "block_start": 321,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999995231628418,
+      "min_top1_confidence": 0.9999967813491821,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 110
+}

@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    8,
+    32,
+    1,
+    32,
+    15,
+    1,
+    32,
+    32,
+    32,
+    7
+  ],
+  "created_at": "2026-07-31T19:56:41.870674+00:00",
+  "elapsed_sec": 3.787719242274761,
+  "generated_text": "To determine how many shirts Shenny should pack for her vacation, we need to break down her usage pattern:\n\n1. **Monday and Sunday**: She will use the same shirt for both days.\n2. **Tuesday to Saturday**: She will use two different shirts each day.\n\nLet's calculate the total number of shirts needed:\n\n- **Monday and Sunday**: She needs 1 shirt.\n- **Tuesday to Saturday**: She needs 2 shirts each day for 5 days.\n\nSo, the total number of shirts required is:\n\n\\[ 1 \\text{ shirt (Monday and Sunday)} + 5 \\text{ shirts (Tuesday to Saturday)} = 6 \\text{ shirts} \\]\n\nFinal answer: 6.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "6.",
+    "gold_answer": "11",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    23,
+    20,
+    5,
+    23,
+    1,
+    23,
+    5,
+    1,
+    5,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17140002304,
+  "sample_id": "gsm8k_train-00316",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/llada",
+  "total_nfe": 109
+}

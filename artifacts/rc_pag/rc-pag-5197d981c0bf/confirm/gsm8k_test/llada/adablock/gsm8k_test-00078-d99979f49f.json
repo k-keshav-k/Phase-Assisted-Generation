@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    32,
+    2,
+    32,
+    22,
+    1,
+    1,
+    18,
+    13,
+    27,
+    24,
+    1,
+    32,
+    7,
+    18,
+    26
+  ],
+  "created_at": "2026-08-01T04:37:34.609262+00:00",
+  "elapsed_sec": 2.8418642841279507,
+  "generated_text": "1. Calculate the cost of buying 18 flowers in packages of 3:\n   - Each package of 3 flowers costs $2.50.\n   - To get 18 flowers, Vincent needs \\( \\frac{18}{3} = 6 \\) packages.\n   - Total cost for packages of 3: \\( 6 \\times 2.50 = 15 \\) dollars.\n\n2. Calculate the cost of buying 18 flowers in packages of 2:\n   - Each package of 2 flowers costs $1.\n   - To get 18 flowers, Vincent needs \\( \\frac{18}{2} = 9 \\) packages.\n   - Total cost for packages of 2: \\( 9 \\times 1 = 9 \\) dollars.\n\n3. Determine the savings by buying in packages of 2:\n   - Cost in packages of 3: $15\n   - Cost in packages of 2: $9\n   - Savings: \\( 15 - 9 = 6 \\) dollars\n\nFinal answer: 6",
+  "grade": {
+    "error": null,
+    "extracted_answer": "6",
+    "gold_answer": "6",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    1,
+    14,
+    8,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    18,
+    1,
+    6,
+    7
+  ],
+  "peak_allocated_bytes": 17163641856,
+  "sample_id": "gsm8k_test-00078",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 83
+}

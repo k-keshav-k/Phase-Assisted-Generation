@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    2,
+    32,
+    32,
+    32,
+    5,
+    32,
+    32,
+    25
+  ],
+  "created_at": "2026-07-31T22:37:55.186028+00:00",
+  "elapsed_sec": 3.3839454986155033,
+  "generated_text": "To solve this problem, we need to determine the total number of index cards John bought.\n\n1. Calculate the total number of students John has:\n   John has 6 classes with 30 students in each class.\n   Total number of students = 6 classes * 30 students/class = 180 students.\n\n2. Calculate the total number of index cards John bought:\n   John buys 2 packs of index cards for each student.\n   Total number of index cards = 180 students * 2 packs/student = 360 packs.\n\n3. Convert the total number of index cards to the number of packs:\n   Since each pack contains 1 index card, the total number of packs is equal to the total number of index cards.\n   Total number of packs = 360 packs.\n\nFinal answer: 360",
+  "grade": {
+    "error": null,
+    "extracted_answer": "360",
+    "gold_answer": "360",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    27,
+    14,
+    2,
+    18,
+    16,
+    22,
+    4,
+    6,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15662717952,
+  "sample_id": "gsm8k_train-00317",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 113
+}

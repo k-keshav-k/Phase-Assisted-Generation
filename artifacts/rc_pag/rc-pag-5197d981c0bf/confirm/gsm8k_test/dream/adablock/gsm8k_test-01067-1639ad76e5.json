@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    15,
+    32,
+    32,
+    39,
+    2,
+    32,
+    17,
+    32,
+    15,
+    8
+  ],
+  "created_at": "2026-08-01T06:54:43.448426+00:00",
+  "elapsed_sec": 3.4001145027577877,
+  "generated_text": "1. Calculate the number of big coupons: \n   Anthony wants to send out twice as many big coupons as small coupons. So, he will send out 2 * 700 = 1400 big coupons.\n\n2. Calculate the cost of mailing small coupons: \n   Each small coupon costs 5 cents to mail. So, the total cost for 700 small coupons is 700 * 5 = 3500 cents.\n\n3. Calculate the cost of mailing big coupons: \n   Each big coupon costs 15 cents to mail. So, the total cost for 1400 big coupons is 1400 * 15 = 20000 cents.\n\n4. Calculate the total postage cost: \n   Add the cost of mailing small coupons and big coupons to get the total postage cost: 3500 + 20000 = 23500 cents.\n\n5. Convert the total postage cost to dollars: \n   Since 100 cents = 1 dollar, the total postage cost in dollars is 23500 / 100 = 235 dollars.\n\nFinal answer: 235",
+  "grade": {
+    "error": null,
+    "extracted_answer": "235",
+    "gold_answer": "245",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    4,
+    19,
+    7,
+    5,
+    2,
+    21,
+    4,
+    22,
+    3,
+    2
+  ],
+  "peak_allocated_bytes": 15694565376,
+  "sample_id": "gsm8k_test-01067",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 39,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 110
+}

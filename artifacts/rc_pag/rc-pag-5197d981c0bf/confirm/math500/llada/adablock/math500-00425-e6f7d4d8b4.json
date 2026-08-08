@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    2,
+    32,
+    32,
+    32,
+    32,
+    23,
+    32,
+    32,
+    7
+  ],
+  "created_at": "2026-08-01T05:42:36.746877+00:00",
+  "elapsed_sec": 4.511288560926914,
+  "generated_text": "1. We know that the centroid $G$ and the orthocenter $H$ of a triangle $ABC$ are related by the line segment $GH$.\n2. The midpoint $F$ of $GH$ is the midpoint of the line segment joining the centroid and the orthocenter.\n3. The formula for the sum of the squares of the distances from the centroid to the vertices of the triangle is given by:\n   \\[\n   AF^2 + BF^2 + CF^2 = \\frac{4}{3} (a^2 + b^2 + c^2)\n   \\]\n   where $a$, $b$, and $c$ are the side lengths of the triangle.\n\nThus, the final answer is:\n\\[\n\\boxed{\\frac{4}{3} (a^2 + b^2 + c^2)}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[4*(a**2 + b**2 + c**2)/3, '\\\\frac{4}{3} (a^2 + b^2 + c^2)']",
+    "gold_answer": "3R^2",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    26,
+    2,
+    29,
+    27,
+    17,
+    22,
+    5,
+    3,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17266658816,
+  "sample_id": "math500-00425",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 133
+}

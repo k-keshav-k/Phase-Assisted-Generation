@@ -1,0 +1,28 @@
+{
+  "config_hash": "8cce1af8e35bf6ebb091175040852e01f86a011b5f12d07717fc9f8fa499d735",
+  "protocol_identity": "447664a131dbf68941f7164ae0aabdda316fbb7542db22ce0bfd933c90b9083b",
+  "risk_loss": "adablock_correct_candidate_wrong",
+  "schema_version": 1,
+  "selected_by_model": {
+    "dream": {
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 0.0,
+      "min_steps": 2,
+      "name": "local_q200_p2",
+      "patience": 2,
+      "threshold": 0.2,
+      "variant": "rc_pag_local"
+    },
+    "llada": {
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 0.0,
+      "min_steps": 2,
+      "name": "local_q500_p2",
+      "patience": 2,
+      "threshold": 0.5,
+      "variant": "rc_pag_local"
+    }
+  }
+}

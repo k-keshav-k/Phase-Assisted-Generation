@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    1,
+    32,
+    32,
+    3,
+    2,
+    32,
+    6,
+    8,
+    32,
+    6,
+    6
+  ],
+  "created_at": "2026-08-01T08:02:57.373194+00:00",
+  "elapsed_sec": 3.7272158674895763,
+  "generated_text": "Let's denote the number of chickens as $x$ and the number of cows as $y$. We know that the total number of animals is 20, so we can write the equation:\n\\[ x + y = 20 \\]\n\nWe also know that the total number of legs is 70. Since chickens have 2 legs and cows have 4 legs, we can write the equation:\n\\[ 2x + 4y = 70 \\]\n\nWe can simplify the second equation by dividing all terms by 2:\n\\[ x + 2y = 35 \\]\n\nNow we have a system of two equations:\n\\[\n\\begin{align*}\nx + y &= 20 \\\\\nx + 2y &= 35\n\\end{align*}\n\\]\n\nSubtract the first equation from the second to eliminate $x$:\n\\[ (x + 2y) - (x + y) = 35 - 20 \\]\n\\[ y = 15 \\]\n\nSo, there are 15 cows. Therefore, the number of chickens is:\n\\[ x = 20 - y = 20 - 15 = 5 \\]\n\nFinal answer: 5",
+  "grade": {
+    "error": null,
+    "extracted_answer": "5",
+    "gold_answer": "5",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    21,
+    11,
+    1,
+    16,
+    9,
+    2,
+    2,
+    11,
+    2,
+    3,
+    18,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15666539520,
+  "sample_id": "gsm8k_test-01317",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 121
+}

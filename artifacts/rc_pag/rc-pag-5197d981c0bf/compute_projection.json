@@ -1,0 +1,15 @@
+{
+  "basis": "pilot wall time; rerun after the 32-prompt real A100 pilot",
+  "bytes_per_sample": 4069.03125,
+  "mock": false,
+  "projected_a100_hours": 14.877467849466484,
+  "projected_gpu_runs": 16200,
+  "projected_runs_per_model_by_stage": {
+    "calibrate": 1800,
+    "collect": 600,
+    "confirm": 3000,
+    "screen": 2700
+  },
+  "projected_storage_bytes": 65918307,
+  "seconds_per_sample": 3.3061039665481076
+}

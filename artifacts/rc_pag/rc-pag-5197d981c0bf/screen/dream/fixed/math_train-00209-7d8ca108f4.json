@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-07-31T23:12:25.326624+00:00",
+  "elapsed_sec": 0.9240511320531368,
+  "generated_text": "..............",
+  "grade": {
+    "error": "Math-Verify extracted no answer",
+    "extracted_answer": null,
+    "gold_answer": "Let $P'$ be the prism similar to $P$, and let the sides of $P'$ be of length $x,y,z$, such that $x \\le y \\le z$. Then\n\\[\\frac{x}{a} = \\frac{y}{b} = \\frac zc < 1.\\]\nNote that if the ratio of similarity was equal to $1$, we would have a prism with zero volume. As one face of $P'$ is a face of $P$, it follows that $P$ and $P'$ share at least two side lengths in common. Since $x < a, y < b, z < c$, it follows that the only possibility is $y=a,z=b=1995$. Then,\n\\[\\frac{x}{a} = \\frac{a}{1995} = \\frac{1995}{c} \\Longrightarrow ac = 1995^2 = 3^25^27^219^2.\\]\nThe number of factors of $3^25^27^219^2$ is $(2+1)(2+1)(2+1)(2+1) = 81$. Only in $\\left\\lfloor \\frac {81}2 \\right\\rfloor = 40$ of these cases is $a < c$ (for $a=c$, we end with a prism of zero volume). We can easily verify that these will yield nondegenerate prisms, so the answer is $\\boxed{40}$.",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    20,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15649345536,
+  "sample_id": "math_train-00209",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "block_end": 172,
+      "block_index": 0,
+      "block_start": 140,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9778881072998047,
+      "min_top1_confidence": 0.5645259022712708,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 204,
+      "block_index": 1,
+      "block_start": 172,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9998874664306641,
+      "min_top1_confidence": 0.9988962411880493,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 236,
+      "block_index": 2,
+      "block_start": 204,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9998259544372559,
+      "min_top1_confidence": 0.9993191957473755,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 268,
+      "block_index": 3,
+      "block_start": 236,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9994430541992188,
+      "min_top1_confidence": 0.997710108757019,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 300,
+      "block_index": 4,
+      "block_start": 268,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9996915459632874,
+      "min_top1_confidence": 0.9981391429901123,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 332,
+      "block_index": 5,
+      "block_start": 300,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9989442825317383,
+      "min_top1_confidence": 0.9932689070701599,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 364,
+      "block_index": 6,
+      "block_start": 332,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.999517560005188,
+      "min_top1_confidence": 0.9982336759567261,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 396,
+      "block_index": 7,
+      "block_start": 364,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9990416765213013,
+      "min_top1_confidence": 0.9973088502883911,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 27
+}

@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    3,
+    15,
+    15,
+    6,
+    32,
+    3,
+    24,
+    2,
+    1,
+    56,
+    1,
+    1,
+    13,
+    42,
+    10
+  ],
+  "created_at": "2026-08-01T04:35:43.614833+00:00",
+  "elapsed_sec": 2.7018343545496464,
+  "generated_text": "To determine how many people were in the church next door, we need to follow these steps:\n\n1. Calculate the total number of cookies brought by the guests.\n2. Determine how many cookies were given to the church next door.\n3. Calculate the number of people in the church next door based on the cookies they received.\n\n1. **Total number of cookies brought by the guests:**\n   - There were 100 guests.\n   - Each guest brought 15 cookies.\n   - Total cookies = 100 guests * 15 cookies/guest = 1500 cookies.\n\n2. **Cookies given to the church next door:**\n   - The bride decided to give 1/2 of the cookies to the church next door.\n   - Cookies given = 1/2 * 1500 cookies = 750 cookies.\n\n3. **Number of people in the church next door:**\n   - Each person in the church next door received 15 cookies.\n   - Number of people = 750 cookies / 15 cookies per person = 50 people.\n\nFinal answer: 50 people.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "50 people.",
+    "gold_answer": "50",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    12,
+    1,
+    5,
+    8,
+    5,
+    16,
+    1,
+    7,
+    1,
+    1,
+    10,
+    1,
+    1,
+    1,
+    6,
+    2
+  ],
+  "peak_allocated_bytes": 17292734464,
+  "sample_id": "gsm8k_test-00998",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 56,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 42,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 78
+}

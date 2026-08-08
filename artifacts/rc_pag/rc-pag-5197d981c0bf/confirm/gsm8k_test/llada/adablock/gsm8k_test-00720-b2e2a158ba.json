@@ -1,0 +1,148 @@
+{
+  "block_history": [
+    24,
+    1,
+    32,
+    10,
+    1,
+    18,
+    32,
+    12,
+    1,
+    28,
+    32,
+    25,
+    1,
+    32,
+    7
+  ],
+  "created_at": "2026-08-01T04:30:38.448399+00:00",
+  "elapsed_sec": 2.222549345344305,
+  "generated_text": "To determine how many more boxes of cereal Castle bought this week than last week, we need to follow these steps:\n\n1. Calculate the total number of boxes of cereal Castle bought this week.\n2. Subtract the number of boxes of cereal Castle bought last week from the total number of boxes she bought this week.\n\nStep 1: Calculate the total number of boxes of cereal Castle bought this week.\nCastle bought 3 boxes of Coco Crunch and 5 boxes of Fruit Loops this week. Therefore, the total number of boxes bought this week is:\n\\[ 3 + 5 = 8 \\]\n\nStep 2: Subtract the number of boxes of cereal Castle bought last week from the total number of boxes she bought this week.\nCastle bought 4 boxes of cereal last week. To find out how many more boxes she bought this week than last week, we subtract the number of boxes bought last week from the total number of boxes bought this week:\n\\[ 8 - 4 = 4 \\]\n\nFinal answer: 4",
+  "grade": {
+    "error": null,
+    "extracted_answer": "4",
+    "gold_answer": "4",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    8,
+    1,
+    10,
+    3,
+    1,
+    6,
+    10,
+    1,
+    1,
+    2,
+    11,
+    4,
+    1,
+    4,
+    1
+  ],
+  "peak_allocated_bytes": 17166966784,
+  "sample_id": "gsm8k_test-00720",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 64
+}

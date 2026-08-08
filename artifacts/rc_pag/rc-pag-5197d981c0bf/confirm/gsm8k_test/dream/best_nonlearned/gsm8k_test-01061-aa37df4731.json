@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T06:50:12.882830+00:00",
+  "elapsed_sec": 3.646437183022499,
+  "generated_text": "Let's denote the time it took for Donovan to complete his part as \\( x \\) minutes. According to the problem, Betsy's part took 18 minutes longer than Donovan's part, so Betsy's part took \\( x + 18 \\) minutes.\n\nThe total time taken to make the meal is the sum of the times for Betsy's and Donovan's parts, which is 98 minutes. Therefore, we can write the equation:\n\n\\[ x + (x + 18) = 98 \\]\n\nSimplifying the equation, we get:\n\n\\[ 2x + 18 = 98 \\]\n\nSubtracting 18 from both sides:\n\n\\[ 2x = 80 \\]\n\nDividing both sides by 2:\n\n\\[ x = 40 \\]\n\nSo, Donovan's part took 40 minutes. Betsy's part took 18 minutes longer than Donovan's part, so Betsy's part took:\n\n\\[ x + 18 = 40 + 18 = 58 \\]\n\nTherefore, Betsy's part was $\\boxed{58}$ minutes long.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "58",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    15,
+    22,
+    7,
+    8,
+    14,
+    13,
+    19
+  ],
+  "peak_allocated_bytes": 15507479552,
+  "sample_id": "gsm8k_test-01061",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 116,
+      "block_index": 0,
+      "block_start": 84,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.8907948732376099,
+      "min_top1_confidence": 0.28701239824295044,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 148,
+      "block_index": 1,
+      "block_start": 116,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9132663607597351,
+      "min_top1_confidence": 0.024637969210743904,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 180,
+      "block_index": 2,
+      "block_start": 148,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9304269552230835,
+      "min_top1_confidence": 0.47912272810935974,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 212,
+      "block_index": 3,
+      "block_start": 180,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9205994606018066,
+      "min_top1_confidence": 0.02904161810874939,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 244,
+      "block_index": 4,
+      "block_start": 212,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9720367789268494,
+      "min_top1_confidence": 0.5566393733024597,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 276,
+      "block_index": 5,
+      "block_start": 244,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9686477184295654,
+      "min_top1_confidence": 0.5063874125480652,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 308,
+      "block_index": 6,
+      "block_start": 276,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9703525304794312,
+      "min_top1_confidence": 0.4617629945278168,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 340,
+      "block_index": 7,
+      "block_start": 308,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9955201745033264,
+      "min_top1_confidence": 0.9464171528816223,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 120
+}

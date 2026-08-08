@@ -1,0 +1,115 @@
+{
+  "block_history": [
+    64,
+    64,
+    64,
+    64
+  ],
+  "created_at": "2026-08-01T00:13:59.326953+00:00",
+  "elapsed_sec": 0.6491643860936165,
+  "generated_text": "Here is a Python solution for the task:\n\n```python\ndef find_max_sum_list(list_of_lists):\n    max_sum = None0            _list_list in_list_list                             if if max max max_sum_sum_sum_sum_sum_sum_sum_sum_sum",
+  "grade": {
+    "error": "  File \"/tmp/rc_pag_code_5k9wfkny/candidate.py\", line 2\n    Here is a Python solution for the task:\n              ^^^^^^\nSyntaxError: invalid syntax\n",
+    "extracted_answer": "Here is a Python solution for the task:\n\n```python\ndef find_max_sum_list(list_of_lists):\n    max_sum = None0            _list_list in_list_list                             if if max max max_sum_sum_sum_sum_sum_sum_sum_sum_sum",
+    "gold_answer": "tests",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "size_lookup",
+  "is_correct": false,
+  "method": "size_lookup",
+  "mock": false,
+  "nfe_history": [
+    16,
+    1,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15558322176,
+  "sample_id": "mbpp_train-00135",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 116,
+      "block_index": 0,
+      "block_start": 52,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.015625,
+      "digit_fraction": 0.015625,
+      "mean_top1_confidence": 0.41451579332351685,
+      "min_top1_confidence": 0.06078765541315079,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 64,
+      "block_end": 180,
+      "block_index": 1,
+      "block_start": 116,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9955877065658569,
+      "min_top1_confidence": 0.9779468178749084,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 64,
+      "block_end": 244,
+      "block_index": 2,
+      "block_start": 180,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.992560625076294,
+      "min_top1_confidence": 0.9762150645256042,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 64,
+      "block_end": 308,
+      "block_index": 3,
+      "block_start": 244,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9977349042892456,
+      "min_top1_confidence": 0.9944630265235901,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 19
+}

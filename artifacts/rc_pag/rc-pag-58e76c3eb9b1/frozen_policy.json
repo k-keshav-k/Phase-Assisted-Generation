@@ -1,0 +1,34 @@
+{
+  "config_hash": "58e76c3eb9b12b404cbde810d4407fbbe212cbc52c51ac6691261746905d9de6",
+  "protocol_identity": "c00e8539141b3babe9a1e8dc1a7742e5b00dc9208180cbbaa9ed6f5f2ac34ae1",
+  "risk_loss": "adablock_correct_candidate_wrong",
+  "schema_version": 1,
+  "selected_by_model": {
+    "dream": {
+      "max_prompt_stops": 3,
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 2.0,
+      "min_steps": 2,
+      "name": "ledger_b100_k3_g2_v2",
+      "patience": 2,
+      "require_exact_agreement": true,
+      "threshold": 1.0,
+      "total_risk_budget": 0.1,
+      "variant": "rc_pag_budgeted"
+    },
+    "llada": {
+      "max_prompt_stops": 3,
+      "max_remaining_fraction": 1.0,
+      "max_temporal_js": 1.0,
+      "min_predicted_nfe_savings": 2.0,
+      "min_steps": 2,
+      "name": "ledger_b100_k3_g2_v2",
+      "patience": 2,
+      "require_exact_agreement": true,
+      "threshold": 1.0,
+      "total_risk_budget": 0.1,
+      "variant": "rc_pag_budgeted"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    32,
+    4,
+    32,
+    18,
+    3,
+    11,
+    32,
+    19,
+    3,
+    13,
+    1,
+    32,
+    24
+  ],
+  "created_at": "2026-08-01T07:36:15.225022+00:00",
+  "elapsed_sec": 3.7009580470621586,
+  "generated_text": "1. First, find out how many apples Beck has initially. Since Beck has 23 fewer apples than Boris, we subtract 23 from Boris's total number of apples:\n   \\[\n   100 - 23 = 77\n   \\]\n   So, Beck initially has 77 apples.\n\n2. Next, calculate the number of apples Boris has after giving 10 apples to Beck. We subtract 10 from Boris's initial number of apples:\n   \\[\n   100 - 10 = 90\n   \\]\n   So, Boris now has 90 apples.\n\n3. Now, find out how many fewer apples Beck has than Boris after the exchange. We subtract the current number of apples Beck has from the number of apples Boris has:\n   \\[\n   90 - 77 = 13\n   \\]\n   Therefore, Beck has 13 fewer apples than Boris now.\n\nFinal answer: \\boxed{13}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{13}",
+    "gold_answer": "3",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    14,
+    2,
+    25,
+    2,
+    2,
+    6,
+    27,
+    5,
+    2,
+    5,
+    1,
+    6,
+    2
+  ],
+  "peak_allocated_bytes": 15666539520,
+  "sample_id": "gsm8k_test-00736",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 18,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 120
+}

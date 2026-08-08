@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    25,
+    30,
+    3,
+    13,
+    32,
+    12,
+    3,
+    32,
+    10
+  ],
+  "created_at": "2026-08-01T07:11:11.458383+00:00",
+  "elapsed_sec": 3.7083897218108177,
+  "generated_text": "To solve this problem, we need to determine how many new limbs the serum will cause a person to grow after fifteen days.\n\n1. **Determine the number of extra arms grown:**\n   - The serum grows an extra arm every three days.\n   - In fifteen days, the number of extra arms grown is:\n     \\[\n     \\frac{15}{3} = 5\n     \\]\n   - Therefore, the person will grow 5 extra arms.\n\n2. **Determine the number of extra legs grown:**\n   - The serum grows an extra leg every five days.\n   - In fifteen days, the number of extra legs grown is:\n     \\[\n     \\frac{15}{5} = 3\n     \\]\n   - Therefore, the person will grow 3 extra legs.\n\n3. **Calculate the total number of new limbs:**\n   - The total number of new limbs is the sum of the extra arms and extra legs:\n     \\[\n     5 + 3 = 8\n     \\]\n   - Therefore, the person will grow a total of 8 new limbs.\n\nFinal answer: \\boxed{8}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{8}",
+    "gold_answer": "8",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    23,
+    19,
+    2,
+    2,
+    2,
+    2,
+    15,
+    3,
+    3,
+    19,
+    2
+  ],
+  "peak_allocated_bytes": 15697113088,
+  "sample_id": "gsm8k_test-00309",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 120
+}

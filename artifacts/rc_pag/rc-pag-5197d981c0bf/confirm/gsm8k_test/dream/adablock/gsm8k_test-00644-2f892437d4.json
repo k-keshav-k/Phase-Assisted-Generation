@@ -1,0 +1,127 @@
+{
+  "block_history": [
+    32,
+    32,
+    22,
+    1,
+    32,
+    1,
+    32,
+    28,
+    2,
+    32,
+    32,
+    10
+  ],
+  "created_at": "2026-08-01T07:52:49.618169+00:00",
+  "elapsed_sec": 2.4109692461788654,
+  "generated_text": "1. **Determine Steve's wife's age:**\n   Steve is 60 years old. His wife is 4 years older than him.\n   \\[\n   \\text{Wife's age} = 60 + 4 = 64 \\text{ years old}\n   \\]\n\n2. **Determine Steve's son's age:**\n   Steve's son is half as old as his mom.\n   \\[\n   \\text{Son's age} = \\frac{64}{2} = 32 \\text{ years old}\n   \\]\n\n3. **Determine Steve's son's wife's age:**\n   Steve's son's wife is 3 years younger than her husband.\n   \\[\n   \\text{Son's wife's age} = 32 - 3 = 29 \\text{ years old}\n   \\]\n\n4. **Conclusion:**\n   Steve's son's wife is 29 years old.\n\nFinal answer: \\boxed{29}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{29}",
+    "gold_answer": "29",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    10,
+    9,
+    1,
+    4,
+    1,
+    5,
+    4,
+    2,
+    18,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15681826304,
+  "sample_id": "gsm8k_test-00644",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 28,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 77
+}

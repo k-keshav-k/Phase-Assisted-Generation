@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    11,
+    32,
+    32,
+    32,
+    21
+  ],
+  "created_at": "2026-08-01T08:20:56.249053+00:00",
+  "elapsed_sec": 3.9744655415415764,
+  "generated_text": "Let $P(x) = ax^2 + bx + c$. We know that $x^2 - 2x + 2 \\le P(x) \\le 2x^2 - 4x + 3$ for all real numbers $x$.\n\nSince $P(x)$ is a quadratic polynomial, we can write it as $P(x) = ax^2 + bx + c$.\n\nWe are given that $P(11) = 181$, so we can substitute $x = 11$ into the equation to get $a(11)^2 + b(11) + c = 181$.\n\nWe can simplify this equation to $121a + 11b + c = 181$.\n\nWe also know that $P(x)$ is a quadratic polynomial, so we can write it as $P(x) = ax^2 + bx + c$.\n\nWe can substitute $x = 16$ into the equation to get $P(16) = a(16)^2 + b(16) + c$.\n\nWe can simplify this equation to $P(16) = \\boxed{16}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[16, '16']",
+    "gold_answer": "406",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    16,
+    17,
+    18,
+    21,
+    2,
+    12,
+    20,
+    9,
+    13
+  ],
+  "peak_allocated_bytes": 15704766464,
+  "sample_id": "math500-00412",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 21,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 128
+}

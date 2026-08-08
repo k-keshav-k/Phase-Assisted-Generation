@@ -1,0 +1,313 @@
+{
+  "block_history": [
+    22,
+    32,
+    2,
+    1,
+    10,
+    1,
+    32,
+    8,
+    1,
+    32,
+    5,
+    1,
+    13,
+    21,
+    1,
+    16,
+    32,
+    26
+  ],
+  "created_at": "2026-08-01T05:00:34.034208+00:00",
+  "elapsed_sec": 2.709652900695801,
+  "generated_text": "To determine the number of chocolate chip cookies made by the Adams family, we can follow these steps:\n\n1. Start with the total number of cookies made.\n2. Subtract the number of rainbow cookies.\n3. Subtract the number of oatmeal cookies.\n\nLet's perform the calculations step by step:\n\n1. Total number of cookies made: 7995\n2. Number of rainbow cookies: 2595\n3. Number of oatmeal cookies: 3075\n\nFirst, subtract the number of rainbow cookies from the total number of cookies:\n\\[ 7995 - 2595 = 5400 \\]\n\nNext, subtract the number of oatmeal cookies from the result:\n\\[ 5400 - 3075 = 2325 \\]\n\nTherefore, the number of chocolate chip cookies made by the Adams family is:\n\nFinal answer: 2325",
+  "grade": {
+    "error": null,
+    "extracted_answer": "2325",
+    "gold_answer": "2325",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    8,
+    10,
+    2,
+    1,
+    8,
+    1,
+    11,
+    1,
+    1,
+    13,
+    1,
+    1,
+    3,
+    1,
+    1,
+    7,
+    6,
+    1
+  ],
+  "peak_allocated_bytes": 17216403456,
+  "sample_id": "gsm8k_test-01305",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 111,
+      "block_index": 0,
+      "block_start": 89,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 143,
+      "block_index": 1,
+      "block_start": 111,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 145,
+      "block_index": 2,
+      "block_start": 143,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 146,
+      "block_index": 3,
+      "block_start": 145,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 156,
+      "block_index": 4,
+      "block_start": 146,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 157,
+      "block_index": 5,
+      "block_start": 156,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 189,
+      "block_index": 6,
+      "block_start": 157,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 197,
+      "block_index": 7,
+      "block_start": 189,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 198,
+      "block_index": 8,
+      "block_start": 197,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 230,
+      "block_index": 9,
+      "block_start": 198,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 235,
+      "block_index": 10,
+      "block_start": 230,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 236,
+      "block_index": 11,
+      "block_start": 235,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 249,
+      "block_index": 12,
+      "block_start": 236,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 270,
+      "block_index": 13,
+      "block_start": 249,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 271,
+      "block_index": 14,
+      "block_start": 270,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 287,
+      "block_index": 15,
+      "block_start": 271,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 319,
+      "block_index": 16,
+      "block_start": 287,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 26,
+      "block_end": 345,
+      "block_index": 17,
+      "block_start": 319,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 26,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 77
+}

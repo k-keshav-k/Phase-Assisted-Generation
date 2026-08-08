@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    7,
+    32,
+    17,
+    10,
+    32,
+    32,
+    32,
+    5,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:58:08.397369+00:00",
+  "elapsed_sec": 3.015960145741701,
+  "generated_text": "1. **Determine the number of apples Kael brought:**\n   - Kael brought twice the amount of apples as Morisette.\n   - Morisette brought 5 apples.\n   - Therefore, Kael brought \\(2 \\times 5 = 10\\) apples.\n\n2. **Determine the number of oranges Kael brought:**\n   - Kael brought half the number of oranges as Morisette.\n   - Morisette brought 8 oranges.\n   - Therefore, Kael brought \\(\\frac{8}{2} = 4\\) oranges.\n\n3. **Calculate the total number of fruits Kael brought:**\n   - Kael brought 10 apples and 4 oranges.\n   - Total fruits Kael brought = \\(10 + 4 = 14\\).\n\n4. **Calculate the total number of fruits Morisette and Kael brought:**\n   - Morisette brought 5 apples and 8 oranges.\n   - Kael brought 10 apples and 4 oranges.\n   - Total fruits = \\(5 + 8 + 10 + 4 = 27\\).\n\n5. **Conclusion with the final answer:**\n   - Final answer: 27.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "27.",
+    "gold_answer": "27",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    24,
+    2,
+    7,
+    4,
+    2,
+    7,
+    11,
+    14,
+    3,
+    11,
+    13
+  ],
+  "peak_allocated_bytes": 15684374016,
+  "sample_id": "gsm8k_test-00121",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 98
+}

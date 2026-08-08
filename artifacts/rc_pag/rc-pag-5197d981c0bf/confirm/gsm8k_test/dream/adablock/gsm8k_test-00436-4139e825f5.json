@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    32,
+    6,
+    3,
+    32,
+    32,
+    8,
+    3,
+    32,
+    30,
+    3,
+    32,
+    11
+  ],
+  "created_at": "2026-08-01T07:11:23.448809+00:00",
+  "elapsed_sec": 3.557878717780113,
+  "generated_text": "1. **Determine the weight of each piece of cake:**\n   The entire cake weighs 20 ounces and is cut into 8 pieces. Therefore, each piece weighs:\n   \\[\n   \\frac{20 \\text{ ounces}}{8 \\text{ pieces}} = 2.5 \\text{ ounces per piece}\n   \\]\n\n2. **Calculate the total weight of the pieces taken by Rory and her mom:**\n   Rory and her mom each take one piece. Therefore, the total weight of the pieces they take is:\n   \\[\n   2 \\text{ pieces} \\times 2.5 \\text{ ounces per piece} = 5 \\text{ ounces}\n   \\]\n\n3. **Find the weight of the remaining cake:**\n   Subtract the weight of the pieces taken by Rory and her mom from the total weight of the cake:\n   \\[\n   20 \\text{ ounces} - 5 \\text{ ounces} = 15 \\text{ ounces}\n   \\]\n\n4. **Conclusion:**\n   The remaining cake weighs 15 ounces.\n\nFinal answer: \\boxed{15}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{15}",
+    "gold_answer": "15",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    25,
+    11,
+    3,
+    2,
+    20,
+    9,
+    2,
+    2,
+    11,
+    3,
+    2,
+    23,
+    2
+  ],
+  "peak_allocated_bytes": 15662717952,
+  "sample_id": "gsm8k_test-00436",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 115
+}

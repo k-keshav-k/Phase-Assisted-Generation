@@ -1,0 +1,28 @@
+{
+  "minimum_tuning_nfe_reduction_per_model": 0.05,
+  "models": {
+    "dream": {
+      "adablock_mean_nfe": 99.66666666666667,
+      "beats_best_nonlearned": true,
+      "best_nonlearned": "stability_weighted_style",
+      "best_nonlearned_mean_nfe": 99.66,
+      "candidate_mean_nfe": 96.5,
+      "nfe_reduction": 0.03177257525083617,
+      "passed": false,
+      "selected_candidate": "local_q200_p2"
+    },
+    "llada": {
+      "adablock_mean_nfe": 88.26666666666667,
+      "beats_best_nonlearned": true,
+      "best_nonlearned": "stability_weighted_style",
+      "best_nonlearned_mean_nfe": 88.24666666666667,
+      "candidate_mean_nfe": 80.22666666666667,
+      "nfe_reduction": 0.09108761329305128,
+      "passed": true,
+      "selected_candidate": "local_q500_p2"
+    }
+  },
+  "passed": false,
+  "require_candidate_beats_nonlearned": true,
+  "schema_version": 1
+}

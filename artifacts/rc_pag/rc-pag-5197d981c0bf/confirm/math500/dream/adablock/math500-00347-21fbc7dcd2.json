@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    14,
+    3,
+    32,
+    7,
+    3,
+    32,
+    32,
+    32,
+    3,
+    3,
+    32,
+    31
+  ],
+  "created_at": "2026-08-01T08:59:14.471435+00:00",
+  "elapsed_sec": 3.1114995293319225,
+  "generated_text": "1. Distribute the constants inside the parentheses:\n   \\[\n   4(3r^3 + 5r - 6) = 12r^3 + 20r - 24\n   \\]\n   \\[\n   -6(2r^3 - r^2 + 4r) = -12r^3 + 6r^2 - 24r\n   \\]\n\n2. Combine like terms:\n   \\[\n   (12r^3 + 20r - 24) + (-12r^3 + 6r^2 - 24r) = 6r^2 - 4r - 24\n   \\]\n\n3. Write the expression in the form $Ar^2 + Br + C$:\n   \\[\n   6r^2 - 4r - 24\n   \\]\n\nConclusion:\nThe simplified expression is $6r^2 - 4r - 24$, which can be written as $\\boxed{6r^2 - 4r - 24}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[6*r**2 - 1*4*r - 24, '6r^2 - 4r - 24']",
+    "gold_answer": "6r^2-4r-24",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    2,
+    2,
+    3,
+    2,
+    3,
+    16,
+    17,
+    9,
+    3,
+    3,
+    16,
+    4
+  ],
+  "peak_allocated_bytes": 15685651968,
+  "sample_id": "math500-00347",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 100
+}

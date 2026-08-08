@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    32,
+    9,
+    32,
+    20,
+    32,
+    32,
+    7,
+    48,
+    12
+  ],
+  "created_at": "2026-08-01T04:01:40.144661+00:00",
+  "elapsed_sec": 2.789886176586151,
+  "generated_text": "1. We know that a cobra has 70 spots.\n2. Since a cobra has twice as many spots as a mamba, we can find the number of spots on a mamba by dividing the number of spots on a cobra by 2: \\( \\frac{70}{2} = 35 \\).\n3. There are 40 cobras and 60 mambas in the snake park.\n4. The total number of spots on all the cobras is \\( 40 \\times 70 = 2800 \\).\n5. The total number of spots on all the mambas is \\( 60 \\times 35 = 2100 \\).\n6. The combined total number of spots for all the cobras and mambas is \\( 2800 + 2100 = 4900 \\).\n7. To find half the number of spots they all have combined, we divide the total number of spots by 2: \\( \\frac{4900}{2} = 2450 \\).\n\nFinal answer: 2450.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "2450.",
+    "gold_answer": "2450",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    12,
+    18,
+    4,
+    12,
+    5,
+    1,
+    9,
+    1,
+    16,
+    5
+  ],
+  "peak_allocated_bytes": 17200720896,
+  "sample_id": "gsm8k_test-00281",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 48,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 83
+}

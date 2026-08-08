@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:23:53.389716+00:00",
+  "elapsed_sec": 4.458227384835482,
+  "generated_text": "To solve this problem, we need to determine how many rotations Jeremy's tires undergo in a year and then divide that by the total number of rotations a tire can undergo.\n\nFirst, let's calculate how many rotations Jeremy's tires undergo in a year. Since Jeremy drives 400 miles a month, he drives 400 * 12 = 4800 miles in a year. Since the tires rotate 725 times every 2 miles, the total number of rotations in a year is 4800 * 725 / 2 = 1716000 rotations.\n\nNext, we need to divide the total number of rotations a tire can undergo by the number of rotations it undergoes in a year. Since each tire can undergo 10,440,000 rotations, we divide 10,440,000 by 1716000 to get the number of years before the tire needs to be replaced: 10,440,000 / 1716000 = 6 years.\n\nTherefore, Jeremy's tires will need to be replaced after 6 years.\n\nFinal answer: 6",
+  "grade": {
+    "error": null,
+    "extracted_answer": "6",
+    "gold_answer": "6",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    31,
+    23,
+    14,
+    23,
+    22,
+    9,
+    14,
+    12
+  ],
+  "peak_allocated_bytes": 15516240896,
+  "sample_id": "gsm8k_test-00606",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 31,
+      "applied_block_size": 32,
+      "block_end": 128,
+      "block_index": 0,
+      "block_start": 96,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.8738800287246704,
+      "min_top1_confidence": 0.03265785798430443,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 160,
+      "block_index": 1,
+      "block_start": 128,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.951378583908081,
+      "min_top1_confidence": 0.4722123146057129,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 192,
+      "block_index": 2,
+      "block_start": 160,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.53125,
+      "mean_top1_confidence": 0.9745069742202759,
+      "min_top1_confidence": 0.5770376920700073,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 224,
+      "block_index": 3,
+      "block_start": 192,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.59375,
+      "mean_top1_confidence": 0.9778497219085693,
+      "min_top1_confidence": 0.5646506547927856,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 256,
+      "block_index": 4,
+      "block_start": 224,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9326579570770264,
+      "min_top1_confidence": 0.44367924332618713,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 288,
+      "block_index": 5,
+      "block_start": 256,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.6875,
+      "mean_top1_confidence": 0.9823969602584839,
+      "min_top1_confidence": 0.8302483558654785,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 320,
+      "block_index": 6,
+      "block_start": 288,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.9327908754348755,
+      "min_top1_confidence": 0.030764861032366753,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 352,
+      "block_index": 7,
+      "block_start": 320,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9844858050346375,
+      "min_top1_confidence": 0.8533045053482056,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 148
+}

@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:26:52.088824+00:00",
+  "elapsed_sec": 2.7459384202957153,
+  "generated_text": "1. Calculate the total distance traveled by the car:\n   - For the first part of the trip, the car travels 60 mph for 2 hours         - Distance = speed × time = 60 mph × 2 hours = 120 miles.\n   - For the second part of the trip, the car travels 30 mph for 1 hour:\n     - Distance = speed × time = 30 mph × 1 hour = 30 miles.\n   - Total distance = 120 miles + 30 miles = 150 miles.\n\n2. Calculate the total time taken for the trip:\n   - The car travels for 2 hours in the first part and 1 hour in the second part:\n     - Total time = 2 hours + 1 hour = 3 hours.\n\n3. Calculate the average speed:\n   - Average speed = total distance / total time = 150 miles / 3 hours = 50 mph.\n\nFinal answer: 50",
+  "grade": {
+    "error": null,
+    "extracted_answer": "50",
+    "gold_answer": "50",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    25,
+    14,
+    3,
+    9,
+    18,
+    11,
+    9,
+    1
+  ],
+  "peak_allocated_bytes": 15506019328,
+  "sample_id": "gsm8k_test-00452",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "block_end": 114,
+      "block_index": 0,
+      "block_start": 82,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9556705951690674,
+      "min_top1_confidence": 0.2820422351360321,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 146,
+      "block_index": 1,
+      "block_start": 114,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9555778503417969,
+      "min_top1_confidence": 0.40180450677871704,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 178,
+      "block_index": 2,
+      "block_start": 146,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9259064197540283,
+      "min_top1_confidence": 0.3349708914756775,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 210,
+      "block_index": 3,
+      "block_start": 178,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9718924164772034,
+      "min_top1_confidence": 0.4957118332386017,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 242,
+      "block_index": 4,
+      "block_start": 210,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9688936471939087,
+      "min_top1_confidence": 0.711304247379303,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 274,
+      "block_index": 5,
+      "block_start": 242,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9908072352409363,
+      "min_top1_confidence": 0.854487955570221,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "block_end": 306,
+      "block_index": 6,
+      "block_start": 274,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9876165390014648,
+      "min_top1_confidence": 0.6502447724342346,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 338,
+      "block_index": 7,
+      "block_start": 306,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999997615814209,
+      "min_top1_confidence": 0.9999959468841553,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 90
+}

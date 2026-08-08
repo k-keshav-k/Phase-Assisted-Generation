@@ -1,0 +1,268 @@
+{
+  "block_history": [
+    32,
+    14,
+    9,
+    12,
+    20,
+    1,
+    10,
+    36,
+    13,
+    16,
+    24,
+    1,
+    16,
+    43,
+    9
+  ],
+  "created_at": "2026-08-01T05:06:23.052601+00:00",
+  "elapsed_sec": 2.5639185272157192,
+  "generated_text": "1. **Determine Dora's current age:**\n   - Dora will turn 12 in 3 years.\n   - Therefore, Dora is currently 12 - 3 = 9 years old.\n\n2. **Determine James's current age:**\n   - James is currently twice as old as Dora.\n   - Therefore, James is currently 2 * 9 = 18 years old.\n\n3. **Determine John's current age:**\n   - John had James when he was 19.\n   - Therefore, John is currently 19 + 18 = 37 years old.\n\n4. **Determine John's youngest son's current age:**\n   - John's youngest son was born when John was 32.\n   - Therefore, John's youngest son is currently 37 - 32 = 5 years old.\n\n5. **Determine John's youngest son's age in 3 years:**\n   - John's youngest son is currently 5 years old.\n   - Therefore, in 3 years, John's youngest son will be 5 + 3 = 8 years old.\n\n**Final answer: 8 years.**",
+  "grade": {
+    "error": null,
+    "extracted_answer": "8 years.**",
+    "gold_answer": "8",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    14,
+    4,
+    1,
+    6,
+    6,
+    1,
+    3,
+    16,
+    4,
+    2,
+    2,
+    1,
+    2,
+    8,
+    4
+  ],
+  "peak_allocated_bytes": 17244699648,
+  "sample_id": "gsm8k_test-01314",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 127,
+      "block_index": 0,
+      "block_start": 95,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 141,
+      "block_index": 1,
+      "block_start": 127,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 150,
+      "block_index": 2,
+      "block_start": 141,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 162,
+      "block_index": 3,
+      "block_start": 150,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 182,
+      "block_index": 4,
+      "block_start": 162,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 183,
+      "block_index": 5,
+      "block_start": 182,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "block_end": 193,
+      "block_index": 6,
+      "block_start": 183,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 229,
+      "block_index": 7,
+      "block_start": 193,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 32,
+      "block_end": 242,
+      "block_index": 8,
+      "block_start": 229,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 258,
+      "block_index": 9,
+      "block_start": 242,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 282,
+      "block_index": 10,
+      "block_start": 258,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 283,
+      "block_index": 11,
+      "block_start": 282,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 299,
+      "block_index": 12,
+      "block_start": 283,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 342,
+      "block_index": 13,
+      "block_start": 299,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "block_end": 351,
+      "block_index": 14,
+      "block_start": 342,
+      "budgeted_refinement_steps": 64,
+      "exit_reason": "complete",
+      "predicted_tuple": {
+        "block_size": 9,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 74
+}

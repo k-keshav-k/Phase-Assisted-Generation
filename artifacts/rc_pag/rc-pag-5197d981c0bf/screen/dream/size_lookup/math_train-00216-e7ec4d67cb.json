@@ -1,0 +1,115 @@
+{
+  "block_history": [
+    64,
+    64,
+    64,
+    64
+  ],
+  "created_at": "2026-07-31T23:19:48.963686+00:00",
+  "elapsed_sec": 1.6151557266712189,
+  "generated_text": "To determine the number of triangles that can be formed using the vertices of a regular dodecagon, we need to choose 3 vertices out of the 12 available vertices. This can be combination using using the formula           22 2 22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[2222, '2222']",
+    "gold_answer": "No three vertices are collinear, so any combination of 3 vertices will make a triangle. Choosing 3 out of 12 is $\\binom{12}{3}=\\boxed{220}.$",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "size_lookup",
+  "is_correct": false,
+  "method": "size_lookup",
+  "mock": false,
+  "nfe_history": [
+    16,
+    16,
+    16,
+    2
+  ],
+  "peak_allocated_bytes": 15508689920,
+  "sample_id": "math_train-00216",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 123,
+      "block_index": 0,
+      "block_start": 59,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.5604976415634155,
+      "min_top1_confidence": 0.037677083164453506,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 187,
+      "block_index": 1,
+      "block_start": 123,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 1.0,
+      "mean_top1_confidence": 0.5634897351264954,
+      "min_top1_confidence": 0.1266811341047287,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 64,
+      "block_end": 251,
+      "block_index": 2,
+      "block_start": 187,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.859375,
+      "mean_top1_confidence": 0.6679048538208008,
+      "min_top1_confidence": 0.36178824305534363,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 64,
+      "block_end": 315,
+      "block_index": 3,
+      "block_start": 251,
+      "budgeted_refinement_steps": 16,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9875760078430176,
+      "min_top1_confidence": 0.9428419470787048,
+      "predicted_tuple": {
+        "block_size": 64,
+        "refinement_steps": 16
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 50
+}

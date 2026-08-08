@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T08:48:16.085800+00:00",
+  "elapsed_sec": 4.12239471450448,
+  "generated_text": ".. To find the daily caloric requirement, we need to determine how many calories correspond to $100\\%$ of the daily caloric requirement22. Since $40$ calories represent $2\\%$ of the daily caloric requirement, we can set up a proportion to find the total daily caloric requirement.\n3. Let $x$ be the daily caloric requirement in calories. The proportion can be written as:\n   \\[\n   \\frac{40 \\text{ calories}}{2\\%} = \\frac{x \\text{ calories}}{100\\%}\n   \\]\n4. Cross-multiply to solve for $x$:\n   \\[\n   40 \\times 100 = 2 \\times x     \\]\n   \\[\n   4000 = 2x\n   \\]\n   \\[\n   x = \\frac{4000}{2} = 2000\n   \\]\n5. Therefore, the daily caloric requirement is $2000$ calories$\\$\\boxed{2000}$",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[2000, '2000']",
+    "gold_answer": "2000",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    23,
+    22,
+    27,
+    6,
+    15,
+    10,
+    14,
+    19
+  ],
+  "peak_allocated_bytes": 15502368768,
+  "sample_id": "math500-00038",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 109,
+      "block_index": 0,
+      "block_start": 77,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.8914826512336731,
+      "min_top1_confidence": 0.24794124066829681,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 141,
+      "block_index": 1,
+      "block_start": 109,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9182360172271729,
+      "min_top1_confidence": 0.16395528614521027,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 27,
+      "applied_block_size": 32,
+      "block_end": 173,
+      "block_index": 2,
+      "block_start": 141,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.03125,
+      "mean_top1_confidence": 0.9603444337844849,
+      "min_top1_confidence": 0.5366608500480652,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "block_end": 205,
+      "block_index": 3,
+      "block_start": 173,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9844878911972046,
+      "min_top1_confidence": 0.6713473796844482,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 237,
+      "block_index": 4,
+      "block_start": 205,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9524748921394348,
+      "min_top1_confidence": 0.4231376647949219,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 269,
+      "block_index": 5,
+      "block_start": 237,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.28125,
+      "mean_top1_confidence": 0.9499494433403015,
+      "min_top1_confidence": 0.3940492272377014,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 301,
+      "block_index": 6,
+      "block_start": 269,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9506618976593018,
+      "min_top1_confidence": 0.454998642206192,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 333,
+      "block_index": 7,
+      "block_start": 301,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.125,
+      "mean_top1_confidence": 0.9942849278450012,
+      "min_top1_confidence": 0.9177200198173523,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 136
+}

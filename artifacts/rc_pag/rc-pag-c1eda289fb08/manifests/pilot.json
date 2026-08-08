@@ -1,0 +1,43 @@
+{
+  "config_hash": "c1eda289fb081b3154ba69551b71655ee4587d2ffca3ccb4f5581642c77d03aa",
+  "identity": {
+    "config_hash": "c1eda289fb081b3154ba69551b71655ee4587d2ffca3ccb4f5581642c77d03aa",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v7"
+  },
+  "projection": {
+    "basis": "paired plain/instrumented pilot wall time; rerun after the real A100 pilot",
+    "bytes_per_sample": 6430.78125,
+    "instrumented_bytes_per_sample": 283417.875,
+    "instrumented_seconds_per_sample": 3.1458475209219614,
+    "mock": false,
+    "projected_a100_hours": 7.767275566391206,
+    "projected_collect_models": 0,
+    "projected_gpu_runs": 8984,
+    "projected_instrumented_runs": 5956,
+    "projected_plain_runs": 3028,
+    "projected_runs_per_model_by_stage": {
+      "calibrate": 1000,
+      "collect": 600,
+      "confirm": 2592,
+      "screen": 900
+    },
+    "projected_storage_bytes": 1707509270,
+    "seconds_per_sample": 3.046738508717681
+  },
+  "schema_version": 1,
+  "stage": "pilot",
+  "status": "completed"
+}

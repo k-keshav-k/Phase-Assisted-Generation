@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:46:22.134910+00:00",
+  "elapsed_sec": 3.2547099702060223,
+  "generated_text": "1. Calculate the number of 2 x 4 pieces Frederick can buy with $24:\n   - Each 2 x 4 costs $4.\n   - Number of 2 x 4 pieces = $24 / $4 = 6 pieces.\n   - Each 2 x 4 gives 200 sticks, so 6 pieces * 200 sticks = 1200 sticks.\n\n2. Calculate the number of 2 x 8 pieces Frederick can buy with $24:\n   - Each 2 x 8 costs $6.\n   - Number of 2 x 8 pieces = $24 / $6 = 4 pieces.\n   - Each 2 x 8 gives 400 sticks, so 4 pieces * 400 sticks = 1600 sticks.\n\n3. Determine which option gives the most sticks:\n   - The 2 x 8 can give 1600 sticks, which is more than the 1200 sticks from the 2 x 4 pieces.\n\n4. Calculate the maximum number of popsicle sticks Frederick can make:\n   - Maximum = 1600 sticks.\n\nFinal answer: 1600.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "1600.",
+    "gold_answer": "1,600",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    23,
+    16,
+    16,
+    2,
+    2,
+    14,
+    17,
+    16
+  ],
+  "peak_allocated_bytes": 15552017408,
+  "sample_id": "gsm8k_test-00505",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 177,
+      "block_index": 0,
+      "block_start": 145,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9184882640838623,
+      "min_top1_confidence": 0.03166826441884041,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 209,
+      "block_index": 1,
+      "block_start": 177,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9354238510131836,
+      "min_top1_confidence": 0.23516029119491577,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 241,
+      "block_index": 2,
+      "block_start": 209,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.53125,
+      "mean_top1_confidence": 0.9806021451950073,
+      "min_top1_confidence": 0.4176117777824402,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 273,
+      "block_index": 3,
+      "block_start": 241,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.40625,
+      "mean_top1_confidence": 0.9508473873138428,
+      "min_top1_confidence": 0.4704945385456085,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "block_end": 305,
+      "block_index": 4,
+      "block_start": 273,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.9960390329360962,
+      "min_top1_confidence": 0.9119022488594055,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 337,
+      "block_index": 5,
+      "block_start": 305,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.95305997133255,
+      "min_top1_confidence": 0.5510294437408447,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 369,
+      "block_index": 6,
+      "block_start": 337,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.46875,
+      "mean_top1_confidence": 0.9110785722732544,
+      "min_top1_confidence": 0.2950325012207031,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "block_end": 401,
+      "block_index": 7,
+      "block_start": 369,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9612363576889038,
+      "min_top1_confidence": 0.5670106410980225,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 106
+}

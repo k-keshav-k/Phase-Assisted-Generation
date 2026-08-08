@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    19,
+    24,
+    32,
+    15,
+    32,
+    24,
+    1,
+    32,
+    13
+  ],
+  "created_at": "2026-08-01T07:54:25.233254+00:00",
+  "elapsed_sec": 2.8487905859947205,
+  "generated_text": "1. Calculate the total number of wheels needed for the cars:\n   - Henry has 57 cars, and each car requires 4 wheels.\n   - Total wheels for cars = 57 cars * 4 wheels/car = 228 wheels.\n\n2. Calculate the total number of wheels needed for the motorcycles:\n   - Henry has 73 motorcycles, and each motorcycle requires 2 wheels.\n   - Total wheels for motorcycles = 73 motorcycles * 2 wheels/motor = 146 wheels.\n\n3. Calculate the total number of wheels needed for all toys:\n   - Total wheels needed = Total wheels for cars + Total wheels for motorcycles = 228 wheels + 146 wheels = 374 wheels.\n\n4. Determine how many wheels will be left in the box:\n   - The box contains 650 wheels.\n   - Wheels left = Total wheels in the box - Total wheels needed = 650 wheels - 374 wheels = 276 wheels.\n\nFinal answer: 276",
+  "grade": {
+    "error": null,
+    "extracted_answer": "276",
+    "gold_answer": "276",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    21,
+    11,
+    2,
+    4,
+    14,
+    3,
+    23,
+    4,
+    1,
+    7,
+    2
+  ],
+  "peak_allocated_bytes": 15697113088,
+  "sample_id": "gsm8k_test-00775",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 13,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 92
+}

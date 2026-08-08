@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    8,
+    24
+  ],
+  "created_at": "2026-07-31T23:09:40.816616+00:00",
+  "elapsed_sec": 3.7021037191152573,
+  "generated_text": "1. **Identify the given information:**\n   - $\\|\\overrightarrow{OA}\\| = 1$\n   - $\\|\\overrightarrow{OB}\\| = 1$\n   - $\\|\\overrightarrow{OC}\\| = \\sqrt{2}$\n   - $\\tan \\angle AOC = 7$\n   - $\\angle BOC = 45^\\circ$\n\n2. **Express the position vector $\\overrightarrow{OC}$:**\n   - Let $\\overrightarrow{OC} = m \\overrightarrow{OA} + n \\overrightarrow{OB}$.\n\n3. **Use the given angles to find $m$ and $n$:**\n   - Since $\\angle BOC = 45^\\circ$, we have $\\tan \\angle BOC = 1$.\n   - Since $\\tan \\angle AOC = 7$, we have $\\tan \\angle AOC = 7$.\n\n4. **Determine the values of $m$ and $n$:**\n   - From the given information, we can conclude that $m = 7$ and $n = 1$.\n\n5. **Conclusion:**\n   The ordered pair $(m,n)$ is $\\boxed{(7,1)}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[(7, 1), '(7,1)']",
+    "gold_answer": "By constructing a right triangle with adjacent side 1, opposite side 7, and hypotenuse $\\sqrt{1^2 + 7^2} = 5 \\sqrt{2}$, we see that\n\\[\\cos \\angle AOC = \\frac{1}{5 \\sqrt{2}} \\quad \\text{and} \\quad \\sin \\angle AOC = \\frac{7}{5 \\sqrt{2}}.\\]Then\n\\begin{align*}\n\\cos \\angle AOB &= \\cos (\\angle AOC + \\angle BOC) \\\\\n&= \\cos \\angle AOC \\cos \\angle BOC - \\sin \\angle AOC \\sin \\angle BOC \\\\\n&= \\frac{1}{5 \\sqrt{2}} \\cdot \\frac{1}{\\sqrt{2}} - \\frac{7}{5 \\sqrt{2}} \\cdot \\frac{1}{\\sqrt{2}} \\\\\n&= -\\frac{3}{5}.\n\\end{align*}Taking the dot product of the equation $\\overrightarrow{OC} = m \\overrightarrow{OA} + n \\overrightarrow{OB}$ with $\\overrightarrow{OA},$ we get\n\\[\\overrightarrow{OA} \\cdot \\overrightarrow{OC} = m \\overrightarrow{OA} \\cdot \\overrightarrow{OA} + n \\overrightarrow{OA} \\cdot \\overrightarrow{OB}.\\]Then $\\|\\overrightarrow{OA}\\| \\|\\overrightarrow{OC}\\| \\cos \\angle AOC = m \\|\\overrightarrow{OA}\\|^2 + n \\|\\overrightarrow{OA}\\| \\|\\overrightarrow{OB}\\| \\cos \\angle AOB,$ or\n\\[\\frac{1}{5} = m - \\frac{3}{5} n.\\]Taking the dot product of the equation $\\overrightarrow{OC} = m \\overrightarrow{OA} + n \\overrightarrow{OB}$ with $\\overrightarrow{OB},$ we get\n\\[\\overrightarrow{OB} \\cdot \\overrightarrow{OC} = m \\overrightarrow{OA} \\cdot \\overrightarrow{OB} + n \\overrightarrow{OB} \\cdot \\overrightarrow{OB}.\\]Then $\\|\\overrightarrow{OB}\\| \\|\\overrightarrow{OC}\\| \\cos \\angle BOC = m \\|\\overrightarrow{OA}\\| \\|\\overrightarrow{OB}\\| \\cos \\angle AOB + n \\|\\overrightarrow{OB}\\|^2,$ or\n\\[1 = -\\frac{3}{5} m + n.\\]Solving the system $\\frac{1}{5} = m - \\frac{3}{5} n$ and $1 = -\\frac{3}{5} m + n,$ we find $(m,n) = \\boxed{\\left( \\frac{5}{4}, \\frac{7}{4} \\right)}.$",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    18,
+    3,
+    12,
+    16,
+    16,
+    19,
+    23,
+    2,
+    10
+  ],
+  "peak_allocated_bytes": 15908575744,
+  "sample_id": "math_train-00206",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 24,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 119
+}

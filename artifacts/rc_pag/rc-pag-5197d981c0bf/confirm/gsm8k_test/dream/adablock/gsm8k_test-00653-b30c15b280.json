@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    32,
+    7,
+    3,
+    32,
+    32,
+    22,
+    2,
+    32,
+    32,
+    30
+  ],
+  "created_at": "2026-08-01T08:02:08.263681+00:00",
+  "elapsed_sec": 3.962037544697523,
+  "generated_text": "1. **Identify the total amount added to Sally's bank account:**\n   Sally's bank account had $200 at the start of the week and now has $420. Therefore, the total amount added to her bank account is:\n   \\[\n   420 - 200 = 220\n   \\]\n   So, Sally added $220 to her bank account during the week.\n\n2. **Determine the amount withheld from Sally's wage:**\n   Sally's weekly wage should be $300. However, she only added $220 to her bank account. This means the amount withheld from her wage is:\n   \\[\n   300 - 220 = 80\n   \\]\n   Therefore, $80 was withheld from Sally's wage.\n\nFinal answer: \\boxed{80}",
+  "grade": {
+    "error": null,
+    "extracted_answer": "\\boxed{80}",
+    "gold_answer": "80",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    28,
+    18,
+    3,
+    3,
+    23,
+    28,
+    5,
+    2,
+    16,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15708577792,
+  "sample_id": "gsm8k_test-00653",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 28,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 30,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 130
+}

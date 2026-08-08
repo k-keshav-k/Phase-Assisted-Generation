@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    5,
+    1,
+    32,
+    8,
+    32,
+    32,
+    32,
+    32,
+    12,
+    1,
+    25,
+    1,
+    11
+  ],
+  "created_at": "2026-08-01T06:13:07.140198+00:00",
+  "elapsed_sec": 5.5047964453697205,
+  "generated_text": "1. Given that \\(\\angle BAC = 54^\\circ\\) and \\(\\angle ABC = 52^\\circ\\), we need to find \\(\\angle AHB\\).\n\n2. Recall that the orthocenter \\(H\\) of a triangle is the point where the altitudes intersect. The orthocenter is equidistant from the vertices of the triangle.\n\n3. The angles around the orthocenter \\(H\\) are related to the angles in the triangle. Specifically, \\(\\angle AHB\\) is related to the angles in the triangle.\n\n4. The sum of the angles in a triangle is \\(180^\\circ\\).\n\n5. We know that \\(\\angle BAC = 54^\\circ\\) and \\(\\angle ABC = 52^\\circ\\).\n\n6. Therefore, \\(\\angle ACB = 180^\\circ - \\angle BAC - \\angle ABC = 180^\\circ - 54^\\circ - 52^\\circ = 74^\\circ\\).\n\n7. In a right triangle, \\(\\angle AHB = \\angle ACB = 74^\\circ\\).\n\n\\(\\boxed{74^\\circ}\\)",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[74, '74^\\\\circ']",
+    "gold_answer": "106^\\circ",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    14,
+    5,
+    1,
+    26,
+    8,
+    29,
+    21,
+    18,
+    10,
+    1,
+    1,
+    23,
+    1,
+    2
+  ],
+  "peak_allocated_bytes": 17186860544,
+  "sample_id": "math500-00499",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 12,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 160
+}

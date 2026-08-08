@@ -1,0 +1,155 @@
+{
+  "block_history": [
+    32,
+    27,
+    3,
+    32,
+    22,
+    2,
+    32,
+    17,
+    2,
+    15,
+    2,
+    32,
+    8,
+    5,
+    2,
+    23
+  ],
+  "created_at": "2026-08-01T08:09:13.792410+00:00",
+  "elapsed_sec": 3.163742832839489,
+  "generated_text": "To find the distance between the points $(2, -6)$ and $(-4, 3)$, we use the distance formula:\n\\[\n\\text{Distance} = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}\n\\]\nSubstituting the given points $(2, -6)$ and $(-4, 3)$ into the formula, we get:\n\\[\n\\text{Distance} = \\sqrt{(-4 - 2)^2 + (3 - (-6))^2}\n\\]\nSimplifying inside the square root:\n\\[\n\\text{Distance} = \\sqrt{(-6)^2 + (9)^2}\n\\]\n\\[\n\\text{Distance} = \\sqrt{36 + 81}\n\\]\n\\[\n\\text{Distance} = \\sqrt{117}\n\\]\nSimplifying $\\sqrt{117}$:\n\\[\n\\sqrt{117} = \\sqrt{3 \\times 39} = \\sqrt{3} \\times \\sqrt{39}\n\\]\nThus, the distance between the points is:\n\\[\n\\boxed{\\sqrt{117}}\n\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[sqrt(117), '\\\\sqrt{117}']",
+    "gold_answer": "3\\sqrt{13}",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    15,
+    4,
+    2,
+    15,
+    5,
+    2,
+    12,
+    3,
+    2,
+    3,
+    2,
+    16,
+    7,
+    3,
+    2,
+    9
+  ],
+  "peak_allocated_bytes": 15653811200,
+  "sample_id": "math500-00008",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 5,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 102
+}

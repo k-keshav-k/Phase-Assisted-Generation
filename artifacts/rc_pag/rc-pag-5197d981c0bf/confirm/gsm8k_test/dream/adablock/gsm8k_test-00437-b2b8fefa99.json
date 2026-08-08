@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    7,
+    32,
+    32,
+    32,
+    32,
+    25
+  ],
+  "created_at": "2026-08-01T07:12:43.968173+00:00",
+  "elapsed_sec": 3.0327301397919655,
+  "generated_text": "1. **Calculate the total number of oranges:**\n   Sitti bought 34 oranges, and Juris bought 22 oranges.  \n   Total oranges = 34 + 22 = 56 oranges.\n\n2. **Determine the number of people sharing the oranges:**\n   Sitti, Juris, and their 6 friends are sharing the oranges.  \n   Total people = 2 (Sitti and Juris) + 6 (friends) = 8 people.\n\n3. **Calculate the number of oranges each person gets:**\n   Divide the total number of oranges by the number of people.  \n   Oranges per person = 56 oranges / 8 people = 7 oranges per person.\n\n4. **Conclusion:**\n   Everyone will get 7 oranges.\n\nFinal answer: 7",
+  "grade": {
+    "error": null,
+    "extracted_answer": "7",
+    "gold_answer": "7",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    15,
+    19,
+    2,
+    16,
+    20,
+    6,
+    2,
+    2
+  ],
+  "peak_allocated_bytes": 15667813376,
+  "sample_id": "gsm8k_test-00437",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 7,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 25,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 99
+}

@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    32,
+    2,
+    32,
+    20,
+    1,
+    11,
+    17,
+    34,
+    2,
+    1,
+    32,
+    62,
+    1,
+    9
+  ],
+  "created_at": "2026-08-01T04:01:58.897973+00:00",
+  "elapsed_sec": 3.463856402784586,
+  "generated_text": "To determine how many cups Juan must reduce his daily coffee intake, we need to follow these steps:\n\n1. **Determine Octavia's daily coffee intake:**\n   - Octavia drinks half the daily recommended cups of coffee.\n   - The daily recommended cups of coffee are 8 cups.\n   - Therefore, Octavia drinks \\( \\frac{8}{2} = 4 \\) cups of coffee.\n\n2. **Determine Juan's daily coffee intake:**\n   - Juan drinks 10 times the amount of coffee Octavia drinks.\n   - Octavia drinks 4 cups of coffee.\n   - Therefore, Juan drinks \\( 10 \\times 4 = 40 \\) cups of coffee.\n\n3. **Calculate the reduction needed:**\n   - Juan's doctor has asked him to reduce his coffee intake to the daily recommendation of 4 cups.\n   - Juan currently drinks 40 cups of coffee.\n   - The recommended intake is 4 cups.\n   - The reduction needed is \\( 40 - 4 = 36 \\) cups.\n\nTherefore, Juan must reduce his daily coffee intake by 36 cups.\n\nFinal answer: 36.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "36.",
+    "gold_answer": "16",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    17,
+    1,
+    20,
+    8,
+    1,
+    4,
+    3,
+    6,
+    1,
+    1,
+    15,
+    23,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 17257463296,
+  "sample_id": "gsm8k_test-00559",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 34,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 62,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 102
+}

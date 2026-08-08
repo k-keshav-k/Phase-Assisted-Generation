@@ -1,0 +1,120 @@
+{
+  "block_history": [
+    32,
+    14,
+    3,
+    32,
+    32,
+    32,
+    32,
+    4,
+    32,
+    32,
+    11
+  ],
+  "created_at": "2026-08-01T08:25:58.566079+00:00",
+  "elapsed_sec": 4.374178729951382,
+  "generated_text": "1. **Substitute $y=x^2-8$ into $y^2=-5x+44$:**\n   \\[\n   (x^2-8)^2 = -5x+44\n   \\]\n   \\[\n   x^4 - 16x^2 + 64 = -5x + 44\n   \\]\n   \\[\n   x^4 - 16x^2 + 20 = 0\n   \\]\n\n2. **Solve the quartic equation:**\n   \\[\n   x^4 - 16x^2 + 20 = 0\n   \\]\n   This equation can be factored or solved using numerical methods, but for simplicity, let's assume the roots are $x_1, x_2, x_3, x_4$.\n\n3. **Find the corresponding $y$-coordinates:**\n   \\[\n   y = x^2 - 8\n   \\]\n   For each root $x_i$, calculate $y_i = x_i^2 - 8$.\n\n4. **Calculate the product of the $y$-coordinates:**\n   \\[\n   y_1 y",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[y, 'y']",
+    "gold_answer": "1736",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    20,
+    8,
+    2,
+    9,
+    14,
+    17,
+    25,
+    4,
+    18,
+    18,
+    8
+  ],
+  "peak_allocated_bytes": 15666549760,
+  "sample_id": "math500-00170",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 14,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 25,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 4,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/dream",
+  "total_nfe": 143
+}

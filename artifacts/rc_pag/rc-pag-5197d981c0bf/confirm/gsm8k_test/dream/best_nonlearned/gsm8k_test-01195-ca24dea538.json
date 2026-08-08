@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T06:51:51.056624+00:00",
+  "elapsed_sec": 3.360531099140644,
+  "generated_text": ".. **Morning Entry:** 50 people entered the restaurant in the morning.\n2. **10:00 Entry:** 40 more people entered the restaurant at 10:00.\n3. **Lunch Entry:** Twice the number of people who entered at 10:00 came in and ordered lunch. So, \\(2 \\times 40 = 80\\) people entered for lunch.\n4. **Evening Entry:** additional additional 3 times as many people as the number that came in first had entered the restaurant. So, \\(3 \\times 50 = 150\\) people entered in the evening.\n\nNow, we sum up all the people who entered the restaurant throughout the day:\n\\[ 50 + 40 + 80 + 150 = 320 \\]\n\nTherefore, the total number of people that entered the restaurant on that day isboxedboxed{320}.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "320",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    22,
+    11,
+    19,
+    14,
+    23,
+    7,
+    12,
+    1
+  ],
+  "peak_allocated_bytes": 15564429312,
+  "sample_id": "gsm8k_test-01195",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "block_end": 194,
+      "block_index": 0,
+      "block_start": 162,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9333696365356445,
+      "min_top1_confidence": 0.39470988512039185,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 226,
+      "block_index": 1,
+      "block_start": 194,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9604594707489014,
+      "min_top1_confidence": 0.6204856038093567,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "block_end": 258,
+      "block_index": 2,
+      "block_start": 226,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9615510702133179,
+      "min_top1_confidence": 0.6382225155830383,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 290,
+      "block_index": 3,
+      "block_start": 258,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9504224061965942,
+      "min_top1_confidence": 0.49541613459587097,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 23,
+      "applied_block_size": 32,
+      "block_end": 322,
+      "block_index": 4,
+      "block_start": 290,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9358313083648682,
+      "min_top1_confidence": 0.36315807700157166,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 354,
+      "block_index": 5,
+      "block_start": 322,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9272856712341309,
+      "min_top1_confidence": 0.030527517199516296,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 386,
+      "block_index": 6,
+      "block_start": 354,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.09375,
+      "mean_top1_confidence": 0.9637811779975891,
+      "min_top1_confidence": 0.4397389590740204,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 418,
+      "block_index": 7,
+      "block_start": 386,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999533891677856,
+      "min_top1_confidence": 0.9996702671051025,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 109
+}

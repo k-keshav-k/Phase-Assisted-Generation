@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    9,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    23
+  ],
+  "created_at": "2026-08-01T08:01:17.105018+00:00",
+  "elapsed_sec": 3.5746191665530205,
+  "generated_text": "1. **Determine James's current age:**\n   - Dora will turn 12 in 3 years, so her current age is 12 - 3 = 9 years.\n   - James is twice as old as Dora, so James's current age is 2 * 9 = 18 years.\n\n2. **Calculate John's age when James was born:**\n   - John had James when he was 19 years old.\n\n3. **Determine John's current age:**\n   - Since James is 18 years old, John's current age is 19 + 18 = 37 years.\n\n4. **Calculate the age of John's youngest son:**\n   - John's youngest son was born when John was 32 years old.\n   - Therefore, John's youngest son's current age is 37 - 32 = 5 years.\n\n5. **Determine the age of John's youngest son in 3 years:**\n   - In 3 years, John's youngest son will be 5 + 3 = 8 years old.\n\n6. **Final answer:**\n   - Final answer: 8",
+  "grade": {
+    "error": null,
+    "extracted_answer": "8",
+    "gold_answer": "8",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    22,
+    4,
+    11,
+    19,
+    11,
+    16,
+    11,
+    9,
+    15
+  ],
+  "peak_allocated_bytes": 15694565376,
+  "sample_id": "gsm8k_test-01314",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 22,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 23,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 118
+}

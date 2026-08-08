@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-08-01T07:42:17.514948+00:00",
+  "elapsed_sec": 3.76696690171957,
+  "generated_text": "To solve the problem, we need to calculate the total value of the cards Mark got and subtract the cost of the packs he bought.\n\nStep 1: Calculate the total value of the cards Mark got.\n- Mark got 1 card worth $4000 and another card worth $1000.\n- total total value of these two cards is $4000 + $1000 = $5000.\n- He also got 30 more cards worth an average of $50 each.\n- The total value of these 30 cards is 30 * $50 = $1500.\n- The total value of all the cards is $5000 + $1500 = $6500.\n\nStep 2: Calculate the cost of the packs Mark bought.\n- Mark bought 3 packs for $1800 each.\n- The total cost is 3 * $1800 = $5400.\n\nStep 3: Calculate the profit.\n- The profit is the total value of the cards minus the cost of the packs.\n- The final profit is $6500 - $5400 = $1100.",
+  "grade": {
+    "error": "missing Final answer marker",
+    "extracted_answer": null,
+    "gold_answer": "1100",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": false,
+  "method": "best_nonlearned",
+  "mock": false,
+  "nfe_history": [
+    29,
+    24,
+    17,
+    10,
+    11,
+    8,
+    7,
+    18
+  ],
+  "peak_allocated_bytes": 15533033472,
+  "sample_id": "gsm8k_test-00745",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 29,
+      "applied_block_size": 32,
+      "block_end": 151,
+      "block_index": 0,
+      "block_start": 119,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0625,
+      "mean_top1_confidence": 0.9047417640686035,
+      "min_top1_confidence": 0.3411479890346527,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 183,
+      "block_index": 1,
+      "block_start": 151,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.3125,
+      "mean_top1_confidence": 0.9037275910377502,
+      "min_top1_confidence": 0.10051598399877548,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "block_end": 215,
+      "block_index": 2,
+      "block_start": 183,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.4375,
+      "mean_top1_confidence": 0.9273597002029419,
+      "min_top1_confidence": 0.3147435486316681,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "block_end": 247,
+      "block_index": 3,
+      "block_start": 215,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.34375,
+      "mean_top1_confidence": 0.9870083332061768,
+      "min_top1_confidence": 0.7458042502403259,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "block_end": 279,
+      "block_index": 4,
+      "block_start": 247,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.5,
+      "mean_top1_confidence": 0.9949429035186768,
+      "min_top1_confidence": 0.9129738211631775,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "block_end": 311,
+      "block_index": 5,
+      "block_start": 279,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0625,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9382628202438354,
+      "min_top1_confidence": 0.05791562795639038,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "block_end": 343,
+      "block_index": 6,
+      "block_start": 311,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9901485443115234,
+      "min_top1_confidence": 0.7748342752456665,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "block_end": 375,
+      "block_index": 7,
+      "block_start": 343,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.03125,
+      "digit_fraction": 0.375,
+      "mean_top1_confidence": 0.9613305330276489,
+      "min_top1_confidence": 0.5295145511627197,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 124
+}

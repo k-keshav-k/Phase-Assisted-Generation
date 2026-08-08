@@ -1,0 +1,134 @@
+{
+  "block_history": [
+    32,
+    6,
+    15,
+    15,
+    17,
+    1,
+    32,
+    16,
+    32,
+    29,
+    1,
+    49,
+    11
+  ],
+  "created_at": "2026-08-01T04:09:28.393914+00:00",
+  "elapsed_sec": 3.390577729791403,
+  "generated_text": "To determine the total amount of money Elise earned in the second year, we need to follow these steps:\n\n1. Calculate the total number of books sold in the first year.\n2. Determine the number of books sold in the second year.\n3. Calculate the total amount of money earned in the second year.\n\nFirst, we know that Elise sold 45 books in the current year.\n\nNext, she sold twice as many books in the first year as she did in the current year:\n\\[ \\text{Books sold in the first year} = 2 \\times 45 = 90 \\]\n\nThe total number of books over the three years is 250. Therefore, the number of books sold in the second year is:\n\\[ \\text{Books sold in the second year} = 250 - 90 - 50 = 115 \\]\n\nNow, we calculate the total amount of money she earned in the second year:\n\\[ \\text{Total money earned in the second year} = 115 \\times 20 = 2300 \\]\n\nFinal answer: 2300.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "2300.",
+    "gold_answer": "1300",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    10,
+    6,
+    9,
+    6,
+    13,
+    1,
+    16,
+    1,
+    11,
+    9,
+    1,
+    15,
+    2
+  ],
+  "peak_allocated_bytes": 17297611264,
+  "sample_id": "gsm8k_test-00303",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 6,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 15,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 16,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 9,
+      "applied_block_size": 29,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 49,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 100
+}

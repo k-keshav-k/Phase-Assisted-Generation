@@ -1,0 +1,141 @@
+{
+  "block_history": [
+    19,
+    1,
+    32,
+    10,
+    22,
+    1,
+    10,
+    11,
+    32,
+    17,
+    32,
+    17,
+    43,
+    9
+  ],
+  "created_at": "2026-08-01T04:42:19.292615+00:00",
+  "elapsed_sec": 2.862374968826771,
+  "generated_text": "To determine how many plant pots April has left over, we need to follow these steps:\n\n1. Calculate the number of plant pots needed for the daisies.\n2. Calculate the number of plant pots needed for the roses.\n3. Determine the total number of plant pots needed.\n4. Subtract the total number of plant pots needed from the number of plant pots April initially bought.\n\n1. The number of plant pots needed for the daisies is given as 30.\n2. The number of plant pots needed for the roses is twice the number needed for the daisies. Therefore, the number of plant pots needed for the roses is \\(2 \\times 30 = 60\\).\n3. The total number of plant pots needed is the sum of the plant pots needed for the daisies and the roses. So, the total number of plant pots needed is \\(30 + 60 = 90\\).\n4. April initially bought 100 plant pots. After using 90 pots, the number of plant pots left over is \\(100 - 90 = 10\\).\n\nFinal answer: 10.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "10.",
+    "gold_answer": "10",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    6,
+    1,
+    14,
+    7,
+    7,
+    1,
+    5,
+    3,
+    13,
+    4,
+    8,
+    1,
+    13,
+    1
+  ],
+  "peak_allocated_bytes": 17249544704,
+  "sample_id": "gsm8k_test-00351",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 6,
+      "applied_block_size": 19,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 22,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 5,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 11,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 8,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 17,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 43,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 9,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/llada",
+  "total_nfe": 84
+}

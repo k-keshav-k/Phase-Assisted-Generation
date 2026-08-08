@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    32,
+    1,
+    32,
+    32,
+    32,
+    32,
+    32,
+    31
+  ],
+  "created_at": "2026-07-31T23:17:36.575491+00:00",
+  "elapsed_sec": 2.54154384508729,
+  "generated_text": "To solve the equation $\\frac{r+9}{r-3} = \\frac{r-2}{r+5}$, we can start by cross-multiplying to eliminate the fractions. This gives us:\n\n$(r+9)(r+5) = (r-2)(r-3)$\n\nExpanding both sides, we get:\n\n$r^2 + 14r + 45 = r^2 - 5r + 6$\n\nSubtracting $r^2$ from both sides and adding $5r$ to both sides, we get:\n\n$19r + 39 = 6$\n\nSubtracting $39$ from both sides, we get:\n\n$19r = -33$\n\nDividing both sides by $19$, we get:\n\n$r = \\frac{-33}{19}$\n\nTherefore, the solution to the equation is $r = \\boxed{\\frac{-33}{19}}$.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[-33/19, '\\\\frac{-33}{19}']",
+    "gold_answer": "Cross-multiplying (which is the same as multiplying both sides by $r-3$ and by $r+5$) gives \\[(r+9)(r+5) = (r-2)(r-3).\\]Expanding the products on both sides gives  \\[r^2 + 9r + 5r + 45 = r^2 -2r - 3r + 6.\\]Simplifying both sides gives $r^2 + 14r + 45 = r^2 - 5r + 6$.  Simplifying this equation gives $19r = -39$, so $r = \\boxed{-\\frac{39}{19}}$.",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    11,
+    17,
+    1,
+    10,
+    13,
+    7,
+    16,
+    7,
+    2
+  ],
+  "peak_allocated_bytes": 15648705536,
+  "sample_id": "math_train-00214",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 11,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 1,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 7,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 31,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 84
+}

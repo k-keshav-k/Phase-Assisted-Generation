@@ -1,0 +1,106 @@
+{
+  "block_history": [
+    32,
+    26,
+    32,
+    32,
+    32,
+    3,
+    64,
+    8,
+    27
+  ],
+  "created_at": "2026-08-01T05:59:20.448590+00:00",
+  "elapsed_sec": 3.228639379143715,
+  "generated_text": "1. We know that the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{b}\\) is \\(29^\\circ\\).\n2. The angle between \\(\\mathbf{b}\\) and \\(\\mathbf{a} - \\mathbf{b}\\) is \\(84^\\circ\\).\n3. We need to find the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{a} - \\mathbf{b}\\).\n\nSince the angle between \\(\\mathbf{b}\\) and \\(\\mathbf{a} - \\mathbf{b}\\) is \\(84^\\circ\\), we can use the fact that the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{a} - \\mathbf{b}\\) is supplementary to the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{b}\\).\n\nTherefore, the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{a} - \\mathbf{b}\\) is:\n\\[ 180^\\circ - 29^\\circ = 151^\\circ \\]\n\nSo, the angle between \\(\\mathbf{a}\\) and \\(\\mathbf{a} - \\mathbf{b}\\) is \\(\\boxed{151^\\circ}\\).",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[151, '151^\\\\circ']",
+    "gold_answer": "55^\\circ",
+    "is_correct": false
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": false,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    14,
+    3,
+    10,
+    18,
+    14,
+    3,
+    26,
+    3,
+    2
+  ],
+  "peak_allocated_bytes": 17274749952,
+  "sample_id": "math500-00340",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 26,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 10,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 18,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 3,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 26,
+      "applied_block_size": 64,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 3,
+      "applied_block_size": 8,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 27,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/math500/llada",
+  "total_nfe": 93
+}

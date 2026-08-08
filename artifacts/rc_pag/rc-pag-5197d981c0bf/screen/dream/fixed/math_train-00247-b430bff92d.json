@@ -1,0 +1,187 @@
+{
+  "block_history": [
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32,
+    32
+  ],
+  "created_at": "2026-07-31T23:48:48.307388+00:00",
+  "elapsed_sec": 3.0165813751518726,
+  "generated_text": " find find the positive difference between the solutions of the quadratic equation $x^2-3x+9=x+41$, we first simplify the equation by all all terms to one side:\n\\[x^2-3x+9=x+41\\]\n\\[x^2-3x+9-x-41=0\\]\n\\[x^2-4x-32=0\\]\n\nNext, we factor the quadratic equation:\n\\[x^2-4x-32=(x-8)(x+4)=0\\]\n\nSetting each factor equal to zero gives us the solutions:\n\\[x-8=0\\]\n\\[x=8\\]\n\\[x+4=0\\]\n\\[x=-4\\]\n\nThe positive difference between the solutions is:\n\\[8-(-4)=8+4=\\boxed{12}\\]",
+  "grade": {
+    "error": null,
+    "extracted_answer": "[12, '12']",
+    "gold_answer": "First we bring $x$ to the left side to get  \\[x^2-4x+9=41.\\]We notice that the left side is almost the square $(x-2)^2=x^2-4x+4$. Subtracting 5 from both sides lets us complete the square on the left-hand side, \\[x^2-4x+4=36,\\]so  \\[(x-2)^2=6^2.\\]Therefore $x=2\\pm6$.  The positive difference between these solutions is $8-(-4)=\\boxed{12}$.",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "fixed",
+  "is_correct": true,
+  "method": "fixed",
+  "mock": false,
+  "nfe_history": [
+    24,
+    21,
+    15,
+    12,
+    13,
+    14,
+    1,
+    1
+  ],
+  "peak_allocated_bytes": 15571768320,
+  "sample_id": "math_train-00247",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 24,
+      "applied_block_size": 32,
+      "block_end": 97,
+      "block_index": 0,
+      "block_start": 65,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.15625,
+      "mean_top1_confidence": 0.9008392095565796,
+      "min_top1_confidence": 0.3216349184513092,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 21,
+      "applied_block_size": 32,
+      "block_end": 129,
+      "block_index": 1,
+      "block_start": 97,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9459421038627625,
+      "min_top1_confidence": 0.03104564920067787,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 15,
+      "applied_block_size": 32,
+      "block_end": 161,
+      "block_index": 2,
+      "block_start": 129,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.25,
+      "mean_top1_confidence": 0.9389084577560425,
+      "min_top1_confidence": 0.032429181039333344,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "block_end": 193,
+      "block_index": 3,
+      "block_start": 161,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.21875,
+      "mean_top1_confidence": 0.9701946973800659,
+      "min_top1_confidence": 0.2467997819185257,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "block_end": 225,
+      "block_index": 4,
+      "block_start": 193,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9819694757461548,
+      "min_top1_confidence": 0.5619462728500366,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 14,
+      "applied_block_size": 32,
+      "block_end": 257,
+      "block_index": 5,
+      "block_start": 225,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.1875,
+      "mean_top1_confidence": 0.9911705851554871,
+      "min_top1_confidence": 0.9346242547035217,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 289,
+      "block_index": 6,
+      "block_start": 257,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999935626983643,
+      "min_top1_confidence": 0.9999324083328247,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    },
+    {
+      "actual_nfe_used": 1,
+      "applied_block_size": 32,
+      "block_end": 321,
+      "block_index": 7,
+      "block_start": 289,
+      "budgeted_refinement_steps": 64,
+      "delimiter_fraction": 0.0,
+      "digit_fraction": 0.0,
+      "mean_top1_confidence": 0.9999661445617676,
+      "min_top1_confidence": 0.9998607635498047,
+      "predicted_tuple": {
+        "block_size": 32,
+        "refinement_steps": 64
+      }
+    }
+  ],
+  "schema_version": 1,
+  "stage": "screen/dream",
+  "total_nfe": 101
+}

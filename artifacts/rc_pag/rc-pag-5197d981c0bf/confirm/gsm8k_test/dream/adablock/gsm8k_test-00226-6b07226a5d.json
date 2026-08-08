@@ -1,0 +1,113 @@
+{
+  "block_history": [
+    32,
+    10,
+    32,
+    32,
+    20,
+    32,
+    32,
+    32,
+    32,
+    2
+  ],
+  "created_at": "2026-08-01T07:44:30.789217+00:00",
+  "elapsed_sec": 3.722938407212496,
+  "generated_text": "1. Calculate the total number of cards James has initially:\n   - Fire type cards: 30\n   - Grass type cards: 20\n   - Water type cards: 40\n   - Total cards = 30 + 20 + 40 = 90 cards\n\n2. Adjust for the changes in the number of cards:\n   - James loses 8 water type cards: 40 - 8 = 32 water type cards\n   - James buys 14 grass type cards: 20 + 14 = 34 grass type cards\n   - Total cards after changes = 30 + 34 + 32 = 96 cards\n\n3. Calculate the probability of picking a water type card:\n   - Probability = (Number of water type cards / Total number of cards)\n   - Probability = 32 / 96\n\n4. Convert the probability to a percentage:\n   - Percentage chance = Probability * 100\n   - Percentage chance = (32 / 96) * 100 = 33.33%\n\nRounded to the nearest integer: 33%\n\nFinal answer: 33.",
+  "grade": {
+    "error": null,
+    "extracted_answer": "33.",
+    "gold_answer": "33",
+    "is_correct": true
+  },
+  "identity": {
+    "config_hash": "5197d981c0bffb0507f7907e1cd56faeb8bea0a294057af2415befe39449808c",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v1"
+  },
+  "implementation": "adablock",
+  "is_correct": true,
+  "method": "adablock",
+  "mock": false,
+  "nfe_history": [
+    19,
+    2,
+    17,
+    12,
+    4,
+    17,
+    16,
+    13,
+    20,
+    2
+  ],
+  "peak_allocated_bytes": 15703482368,
+  "sample_id": "gsm8k_test-00226",
+  "schedule_history": [
+    {
+      "actual_nfe_used": 19,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 10,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 12,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 4,
+      "applied_block_size": 20,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 17,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 16,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 13,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 20,
+      "applied_block_size": 32,
+      "exit_reason": "adablock"
+    },
+    {
+      "actual_nfe_used": 2,
+      "applied_block_size": 2,
+      "exit_reason": "adablock"
+    }
+  ],
+  "schema_version": 1,
+  "stage": "confirm/gsm8k_test/dream",
+  "total_nfe": 122
+}
