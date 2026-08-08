@@ -402,7 +402,11 @@ class DreamSdpaAttention(DreamAttention):
         if past_key_value is not None:
             if dual_cache:
                 past_key, past_value = past_key_value
-                replace_indices = replace_position.nonzero(as_tuple=True)[1] 
+                if replace_position.ndim != 2 or replace_position.shape[0] != bsz:
+                    raise ValueError("replace_position must have one row per batch element")
+                if bsz > 1 and not torch.all(replace_position == replace_position[:1]):
+                    raise ValueError("batched dual-cache verification requires shared positions")
+                replace_indices = replace_position[0].nonzero(as_tuple=True)[0]
                 past_key[:, replace_indices] = key_states
                 key_states = past_key
                 past_value[:, replace_indices] = value_states

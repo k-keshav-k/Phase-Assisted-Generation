@@ -38,7 +38,7 @@ from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
 from pag.experiments.statistics import paired_bootstrap
 
-_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6", "v7"}
+_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6", "v7", "v8"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -407,6 +407,8 @@ class MockRCPAGRuntime:
             "mutual_stability_gate": 69.0,
             "stability_weighted_style": 67.0,
             "token_convergence_style": 66.0,
+            "verified_fixed_d2": 60.0,
+            "verified_fixed_d4": 56.0,
             "rc_pag_selected": 58.0,
         }
         return values.get(method, 80.0)
@@ -425,7 +427,7 @@ class MockRCPAGRuntime:
         self.calls.append((stage, model, sample.sample_id, method))
         elapsed = 0.02 + (sample.index % 3) * 0.001
         if stage == "pilot":
-            return {
+            payload = {
                 "elapsed_sec": elapsed,
                 "artifact_bytes": 2048,
                 "generated_text": f"mock-{sample.sample_id}",
@@ -436,6 +438,22 @@ class MockRCPAGRuntime:
                 "is_correct": True,
                 "mock": True,
             }
+            if method == "verified_fixed_d4":
+                payload["schedule_history"] = [
+                    {
+                        "verified_sequence_safe": True,
+                        "speculation_steps": [
+                            {
+                                "accepted_draft_edges": 2,
+                                "verified_transitions": 3,
+                                "evaluated_nodes": 5,
+                                "sequence_safe": True,
+                                "nfe_saved": 2,
+                            }
+                        ],
+                    }
+                ]
+            return payload
         if stage == "collect":
             previous = _mock_observation(sample.index, step=1)
             current = _mock_observation(sample.index, step=2)
@@ -453,9 +471,12 @@ class MockRCPAGRuntime:
                 "mock": True,
             }
         if candidate is not None:
-            variant_base = 64.0 if candidate.variant == "rc_pag_local" else 61.0
-            threshold_rank = -8.0 * candidate.threshold
-            nfe = variant_base + threshold_rank + self.candidate_nfe_offset
+            if candidate.variant == "rc_pag_verified":
+                nfe = 58.0 - candidate.max_speculation_depth + self.candidate_nfe_offset
+            else:
+                variant_base = 64.0 if candidate.variant == "rc_pag_local" else 61.0
+                threshold_rank = -8.0 * candidate.threshold
+                nfe = variant_base + threshold_rank + self.candidate_nfe_offset
         else:
             nfe = self._method_nfe(method)
         payload: dict[str, Any] = {
@@ -470,8 +491,17 @@ class MockRCPAGRuntime:
             "generated_ids": [sample.index, 1, 2],
             "mock": True,
         }
-        if stage in {"rollout", "screen"} and candidate is not None:
+        if stage in {"rollout", "screen", "calibrate", "confirm"} and (
+            candidate is not None or method.startswith("verified_fixed_d")
+        ):
             observation = _mock_observation(sample.index, step=2)
+            verified_depth = (
+                candidate.max_speculation_depth
+                if candidate is not None and candidate.variant == "rc_pag_verified"
+                else int(method.rsplit("d", 1)[-1])
+                if method.startswith("verified_fixed_d")
+                else 0
+            )
             payload["schedule_history"] = [
                 {
                     "applied_block_size": observation.block_size,
@@ -498,7 +528,23 @@ class MockRCPAGRuntime:
                                 "delimiter_ids": sorted(observation.delimiter_ids),
                             },
                         }
-                    ],
+                    ]
+                    if candidate is not None
+                    else [],
+                    "speculation_steps": (
+                        [
+                            {
+                                "accepted_draft_edges": verified_depth,
+                                "verified_transitions": verified_depth + 1,
+                                "evaluated_nodes": verified_depth + 1,
+                                "sequence_safe": True,
+                                "nfe_saved": verified_depth,
+                            }
+                        ]
+                        if verified_depth
+                        else []
+                    ),
+                    "verified_sequence_safe": bool(verified_depth),
                 }
             ]
         if stage == "calibrate":
@@ -727,11 +773,12 @@ class RCPAGOrchestrator:
     def _run_pilot(self) -> None:
         self._write_manifest("pilot", "running")
         refs = self._refs("pilot")
-        pilot_methods = (
-            (("adablock", None), ("full_budget_shadow", None))
-            if self.config.protocol_version in _MODERN_PROTOCOLS
-            else (("full_budget", None), ("pilot_shadow", None))
-        )
+        if self.config.protocol_version in _MODERN_PROTOCOLS:
+            pilot_methods = (("adablock", None), ("full_budget_shadow", None))
+            if self.config.protocol_version == "v8":
+                pilot_methods += (("verified_fixed_d4", None),)
+        else:
+            pilot_methods = (("full_budget", None), ("pilot_shadow", None))
         self._run_records(
             stage="pilot",
             refs=refs,
@@ -781,6 +828,49 @@ class RCPAGOrchestrator:
                 "mismatches": mismatches,
                 "passed": not mismatches,
             }
+            if self.config.protocol_version == "v8":
+                speculation_fields = ("generated_ids", "generated_text", "block_history")
+                speculation_mismatches: list[dict[str, object]] = []
+                speculation_records = [
+                    row
+                    for model in self.config.models
+                    for row in self.store.records(f"pilot/{model}", "verified_fixed_d4")
+                ]
+                for model in self.config.models:
+                    baseline = {
+                        row["sample_id"]: row
+                        for row in self.store.records(f"pilot/{model}", "adablock")
+                    }
+                    speculative = {
+                        row["sample_id"]: row
+                        for row in self.store.records(f"pilot/{model}", "verified_fixed_d4")
+                    }
+                    if set(baseline) != set(speculative):
+                        raise RuntimeError(f"v8 speculation parity coverage differs for {model}")
+                    for sample_id in sorted(baseline):
+                        different = [
+                            field
+                            for field in speculation_fields
+                            if baseline[sample_id].get(field) != speculative[sample_id].get(field)
+                        ]
+                        schedules = speculative[sample_id].get("schedule_history", ())
+                        if not schedules or not all(
+                            bool(block.get("verified_sequence_safe", False)) for block in schedules
+                        ):
+                            different.append("verified_sequence_safe")
+                        if different:
+                            speculation_mismatches.append(
+                                {"model": model, "sample_id": sample_id, "fields": different}
+                            )
+                parity.update(
+                    {
+                        "speculation_checked_records": len(speculation_records),
+                        "speculation_fields": list(speculation_fields),
+                        "speculation_mismatches": speculation_mismatches,
+                    }
+                )
+                mismatches.extend(speculation_mismatches)
+                parity["passed"] = not mismatches
             self.store.write_named("parity_audit.json", parity)
             if mismatches:
                 self._write_manifest("pilot", "failed", parity=parity)
@@ -804,10 +894,13 @@ class RCPAGOrchestrator:
         ):
             raise RuntimeError("real pilot did not exercise a same-state shadow continuation")
         seconds = float(np.mean([float(row["elapsed_sec"]) for row in records]))
-        instrumented_seconds = float(np.mean([float(row["elapsed_sec"]) for row in shadow_records]))
+        timing_records = (
+            speculation_records if self.config.protocol_version == "v8" else shadow_records
+        )
+        instrumented_seconds = float(np.mean([float(row["elapsed_sec"]) for row in timing_records]))
         artifact_bytes = float(np.mean([float(row.get("artifact_bytes", 0)) for row in records]))
         instrumented_artifact_bytes = float(
-            np.mean([float(row.get("artifact_bytes", 0)) for row in shadow_records])
+            np.mean([float(row.get("artifact_bytes", 0)) for row in timing_records])
         )
         baseline_screen_methods = sum(
             not method.startswith("rc_pag_") for method in self.config.development_methods
@@ -828,7 +921,7 @@ class RCPAGOrchestrator:
             runs_per_model["rollout"] = 2 * self.config.stage_sizes.rollout_per_model
         collect_models = (
             0
-            if self.config.protocol_version in {"v4", "v5", "v6", "v7"}
+            if self.config.protocol_version in {"v4", "v5", "v6", "v7", "v8"}
             and self.reuse_development_from is not None
             else len(self.config.models) - int(self.reuse_development_from is not None)
         )
@@ -873,7 +966,11 @@ class RCPAGOrchestrator:
             projected_seconds = seconds * full_gpu_runs
             projected_storage = artifact_bytes * full_gpu_runs
         projection = {
-            "basis": ("paired plain/instrumented pilot wall time; rerun after the real A100 pilot"),
+            "basis": (
+                "paired AdaBlock/fixed-depth speculative pilot wall time"
+                if self.config.protocol_version == "v8"
+                else "paired plain/instrumented pilot wall time; rerun after the real A100 pilot"
+            ),
             "seconds_per_sample": seconds,
             "instrumented_seconds_per_sample": instrumented_seconds,
             "bytes_per_sample": artifact_bytes,
@@ -904,7 +1001,7 @@ class RCPAGOrchestrator:
     def _prepare_development_reuse(self) -> set[str]:
         if self.reuse_development_from is None:
             return set()
-        if self.config.protocol_version in {"v6", "v7"}:
+        if self.config.protocol_version in {"v6", "v7", "v8"}:
             return self._prepare_v6_reuse()
         if self.config.protocol_version == "v5":
             return self._prepare_v5_reuse()
@@ -1127,7 +1224,7 @@ class RCPAGOrchestrator:
         return set(reused_models)
 
     def _prepare_v6_reuse(self) -> set[str]:
-        """Reuse raw v4/v5 (and, for v7, v6) native traces while discarding their fitted heads."""
+        """Reuse compatible native traces while discarding all previously fitted heads."""
 
         protocol = self.config.protocol_version
         allowed_sources = {
@@ -1136,6 +1233,13 @@ class RCPAGOrchestrator:
         }
         if protocol == "v7":
             allowed_sources.add("risk_calibrated_pag_v6")
+        elif protocol == "v8":
+            allowed_sources.update(
+                {
+                    "risk_calibrated_pag_v6",
+                    "risk_calibrated_pag_v7",
+                }
+            )
         reused_models = self._prepare_v4_trace_reuse(
             allowed_source_protocols=allowed_sources,
             target_protocol=protocol,
@@ -1259,7 +1363,7 @@ class RCPAGOrchestrator:
         reuse_manifest_path = self.run_dir / "reuse" / "manifest.json"
         if reuse_manifest_path.is_file():
             reuse_manifest = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
-            if self.config.protocol_version in {"v4", "v5", "v6", "v7"}:
+            if self.config.protocol_version in {"v4", "v5", "v6", "v7", "v8"}:
                 reused_trace_models = set(reuse_manifest["reused_models"])
             else:
                 reused_trace_models = set()
@@ -1274,7 +1378,9 @@ class RCPAGOrchestrator:
         else:
             reused_trace_models = set()
         variants = (
-            (("rc_pag_local", False),)
+            (("rc_pag_verified", False),)
+            if self.config.protocol_version == "v8"
+            else (("rc_pag_local", False),)
             if self.config.protocol_version in _MODERN_PROTOCOLS
             else (("rc_pag_local", False), ("rc_pag_history", True))
         )
@@ -1433,7 +1539,7 @@ class RCPAGOrchestrator:
                             row,
                             history_window=self.config.history_window,
                         )
-                        if self.config.protocol_version in {"v4", "v5"}
+                        if self.config.protocol_version in {"v4", "v5", "v8"}
                         else row["training_examples"]
                         if "training_examples" in row
                         else ({"features": row["features"], "unsafe": row["unsafe"]},)
@@ -1796,11 +1902,30 @@ class RCPAGOrchestrator:
                         and not bool(by_id[sample_id].get("is_correct"))
                         for sample_id in baseline_by_id
                     )
+                    sequence_disagreements = sum(
+                        baseline_by_id[sample_id].get("generated_ids")
+                        != by_id[sample_id].get("generated_ids")
+                        for sample_id in baseline_by_id
+                    )
+                    verifier_evidence = all(
+                        row.get("schedule_history")
+                        and all(
+                            bool(block.get("verified_sequence_safe", False))
+                            for block in row["schedule_history"]
+                        )
+                        for row in rows
+                    )
                     return {
                         "mean_nfe": float(np.mean([float(row["total_nfe"]) for row in rows])),
                         "correct": sum(bool(row.get("is_correct")) for row in rows),
                         "harmful_regressions": harmful,
-                        "accuracy_eligible": harmful <= allowed_harm,
+                        "sequence_disagreements": sequence_disagreements,
+                        "verifier_evidence": verifier_evidence,
+                        "accuracy_eligible": harmful <= allowed_harm
+                        and (
+                            self.config.protocol_version != "v8"
+                            or (sequence_disagreements == 0 and verifier_evidence)
+                        ),
                     }
 
                 nonlearned_stats = {name: method_stats(name) for name in sorted(nonlearned)}
@@ -1867,7 +1992,7 @@ class RCPAGOrchestrator:
             frozen["protocol_identity"] = canonical_config_hash(frozen)
             self.store.write_named("screening_summary.json", summary)
             self.store.write_named("frozen_policy.json", frozen)
-            if self.config.protocol_version in {"v3", "v4", "v5", "v6", "v7"}:
+            if self.config.protocol_version in {"v3", "v4", "v5", "v6", "v7", "v8"}:
                 readiness_models: dict[str, dict[str, object]] = {}
                 for model, selected_name in selected_candidate.items():
                     adablock_nfe = float(
@@ -2051,6 +2176,27 @@ class RCPAGOrchestrator:
                     disagreements += int(
                         baseline.get("generated_ids") != policy.get("generated_ids")
                     )
+                    if self.config.protocol_version == "v8":
+                        if baseline.get("generated_ids") != policy.get("generated_ids"):
+                            raise ControlledStop(
+                                f"v8 exact-sequence invariant failed for {model}/{sample_id}"
+                            )
+                        schedule = list(policy.get("schedule_history", ()))
+                        if not schedule or not any(
+                            block.get("speculation_steps") for block in schedule
+                        ):
+                            raise ControlledStop(
+                                f"v8 verifier evidence is missing for {model}/{sample_id}"
+                            )
+                        unsafe_blocks = [
+                            block
+                            for block in schedule
+                            if not bool(block.get("verified_sequence_safe", False))
+                        ]
+                        if unsafe_blocks:
+                            raise ControlledStop(
+                                f"v8 verifier safety audit failed for {model}/{sample_id}"
+                            )
                 candidates.append(
                     CandidateRisk(
                         f"{model}/{candidate.name}",
@@ -2115,6 +2261,8 @@ class RCPAGOrchestrator:
                     "certificate_mode": (
                         "joint_harm_and_compute"
                         if self.config.protocol_version in {"v4", "v5"}
+                        else "exact_trajectory_with_paired_compute_evidence"
+                        if self.config.protocol_version == "v8"
                         else "harm_only_with_paired_compute_evidence"
                         if self.config.protocol_version in {"v6", "v7"}
                         else "harm_only"

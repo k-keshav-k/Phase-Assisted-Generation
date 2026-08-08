@@ -41,6 +41,27 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, object]:
     correctness = [_is_correct(row) for row in rows]
     nfe = np.asarray([float(row["total_nfe"]) for row in rows], dtype=np.float64)
     latency = np.asarray([float(row["elapsed_sec"]) for row in rows], dtype=np.float64)
+    speculation_steps = [
+        step
+        for row in rows
+        for block in row.get("schedule_history", ())
+        for step in block.get("speculation_steps", ())
+    ]
+    speculation = None
+    if speculation_steps:
+        accepted = sum(int(step["accepted_draft_edges"]) for step in speculation_steps)
+        offered = sum(max(0, int(step["evaluated_nodes"]) - 1) for step in speculation_steps)
+        speculation = {
+            "rounds": len(speculation_steps),
+            "mean_nodes_per_round": float(
+                np.mean([float(step["evaluated_nodes"]) for step in speculation_steps])
+            ),
+            "mean_verified_transitions_per_round": float(
+                np.mean([float(step["verified_transitions"]) for step in speculation_steps])
+            ),
+            "draft_edge_acceptance": accepted / offered if offered else 0.0,
+            "reported_nfe_saved": sum(int(step["nfe_saved"]) for step in speculation_steps),
+        }
     return {
         "count": len(rows),
         "correct": sum(correctness),
@@ -49,6 +70,7 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, object]:
         "median_nfe": float(np.median(nfe)),
         "mean_latency_sec": float(np.mean(latency)),
         "median_latency_sec": float(np.median(latency)),
+        "speculation": speculation,
     }
 
 
@@ -266,6 +288,29 @@ def _audit(
         "required_accuracy_lower_ci": minimum_accuracy_lower_ci,
         "history_frontier_required": require_history_frontier_ci,
     }
+    if certificate.get("certificate_mode") == "exact_trajectory_with_paired_compute_evidence":
+        disagreements = {
+            f"{model}/{dataset}": int(
+                summary[model][dataset]["comparisons"][f"{primary_method}_vs_adablock"][
+                    "sequence_disagreements"
+                ]
+            )
+            for model in _MODELS
+            for dataset in _DATASETS
+        }
+        verifier_evidence = all(
+            row.get("schedule_history")
+            and all(
+                bool(block.get("verified_sequence_safe", False))
+                for block in row["schedule_history"]
+            )
+            for model in _MODELS
+            for dataset in _DATASETS
+            for row in records[model][dataset][primary_method]
+        )
+        gates["exact_sequence_equivalence"] = not any(disagreements.values())
+        gates["verified_transition_evidence"] = verifier_evidence
+        details["sequence_disagreements"] = disagreements
     if minimum_model_nfe_reduction_lower_ci is not None:
         model_compute: dict[str, dict[str, float]] = {}
         for model_index, model in enumerate(_MODELS):

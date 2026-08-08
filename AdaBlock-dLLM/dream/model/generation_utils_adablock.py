@@ -701,8 +701,13 @@ class DreamGenerationMixin:
         schedule_history = []
         past_key_values = None
         risk_policy = getattr(self, "pag_risk_policy", None)
+        speculation_policy = getattr(self, "pag_speculation_policy", None)
+        if risk_policy is not None and speculation_policy is not None:
+            raise ValueError("risk stopping and verified speculation are mutually exclusive")
         if risk_policy is not None:
             risk_policy.reset_prompt()
+        if speculation_policy is not None:
+            speculation_policy.reset_prompt()
         # Process each block
         while generated_length < gen_length:
             nfe = 0
@@ -720,12 +725,17 @@ class DreamGenerationMixin:
             generated_length += current_block_length
             block_end = block_start + current_block_length
             risk_steps = []
+            speculation_steps = []
             if risk_policy is not None:
                 risk_policy.start_block()
+            if speculation_policy is not None:
+                speculation_policy.start_block()
 
             # mandatory decode first token
             confidence, x0 = sample_tokens(logits, temperature=temperature, top_p=top_p, top_k=top_k)
             x[:, block_start] = x0[:, block_start]
+            last_transfer_count = 1
+            verified_transition_count = 1
             final_block_logits = logits[:, block_start:block_end]
             previous_policy_logits = final_block_logits.detach() if risk_policy is not None else None
 
@@ -745,6 +755,152 @@ class DreamGenerationMixin:
                     current_attention_mask = attention_mask[:, :, :, block_start:]
                 else:
                     current_attention_mask = attention_mask
+
+                if speculation_policy is not None:
+                    from pag.experiments.rc_pag_adapter import observation_from_tensors
+                    from pag.experiments.rc_pag_speculation import (
+                        build_linear_draft,
+                        repeat_tensor_tree,
+                        serialize_speculation_plan,
+                        serialize_speculation_result,
+                        verify_draft,
+                    )
+
+                    active = x[:, block_start:block_end]
+                    observation = observation_from_tensors(
+                        logits=final_block_logits,
+                        previous_logits=previous_policy_logits,
+                        current_tokens=active,
+                        mask_token_id=mask_token_id,
+                        step_index=verified_transition_count,
+                        digit_ids=getattr(self, "pag_digit_ids", None),
+                        delimiter_ids=getattr(self, "pag_delimiter_ids", None),
+                    )
+                    plan = speculation_policy.choose(
+                        observation,
+                        last_transfer_count=last_transfer_count,
+                    )
+                    proposal_confidence, proposal = sample_tokens(
+                        final_block_logits,
+                        temperature=temperature,
+                        top_p=top_p,
+                        top_k=top_k,
+                    )
+                    proposal = torch.where(mask_index, proposal, active)
+                    ranked_positions = torch.argsort(
+                        torch.where(
+                            mask_index,
+                            proposal_confidence,
+                            torch.full_like(proposal_confidence, -torch.inf),
+                        ),
+                        dim=-1,
+                        descending=True,
+                    )[0]
+                    ranked_positions = [
+                        int(position)
+                        for position in ranked_positions.tolist()
+                        if bool(mask_index[0, position])
+                    ]
+                    nodes = build_linear_draft(
+                        active,
+                        proposed_tokens=proposal,
+                        mask_token_id=mask_token_id,
+                        ranked_positions=ranked_positions,
+                        depth=plan.depth,
+                        draft_width=plan.draft_width,
+                    )
+                    node_count = len(nodes)
+                    batched_cache = repeat_tensor_tree(past_key_values, node_count)
+                    batched_replace_position = replace_position.repeat(node_count, 1)
+                    batched_attention = (
+                        current_attention_mask.repeat(node_count, 1, 1, 1)
+                        if isinstance(current_attention_mask, torch.Tensor)
+                        else current_attention_mask
+                    )
+                    batched_tok_idx = (
+                        tok_idx[:, block_start:block_end].repeat(node_count, 1)
+                        if tok_idx is not None
+                        else None
+                    )
+                    model_output = self(
+                        torch.cat(nodes, dim=0),
+                        batched_attention,
+                        batched_tok_idx,
+                        past_key_values=batched_cache,
+                        use_cache=True,
+                        dual_cache=dual_cache,
+                        replace_position=batched_replace_position,
+                    )
+                    verified_logits = model_output.logits
+                    verified_logits = torch.cat(
+                        [verified_logits[:, :1], verified_logits[:, :-1]],
+                        dim=1,
+                    )
+                    nfe += 1
+                    root_masks = int(mask_index.sum().item())
+
+                    def verified_transition(state, state_logits):
+                        if state_logits.ndim == 2:
+                            state_logits = state_logits.unsqueeze(0)
+                        state_mask = state == mask_token_id
+                        if not bool(state_mask.any()):
+                            return state.detach().clone()
+                        confidence, predictions = sample_tokens(
+                            state_logits[state_mask],
+                            temperature=temperature,
+                            top_p=top_p,
+                            top_k=top_k,
+                        )
+                        full_confidence = torch.full_like(
+                            state,
+                            -torch.inf,
+                            dtype=state_logits.dtype,
+                        )
+                        proposed_state = torch.full_like(state, mask_token_id)
+                        full_confidence[state_mask] = confidence
+                        proposed_state[state_mask] = predictions
+                        transfer_count = int(state_mask.sum().item())
+                        selected_confidence, selected = torch.topk(
+                            full_confidence,
+                            transfer_count,
+                            dim=-1,
+                        )
+                        transfer = torch.zeros_like(state, dtype=torch.bool)
+                        transfer[0, selected[0, 0]] = True
+                        for rank in range(1, transfer_count):
+                            if selected_confidence[0, rank] >= threshold:
+                                transfer[0, selected[0, rank]] = True
+                        successor = state.detach().clone()
+                        successor[transfer] = proposed_state[transfer]
+                        return successor
+
+                    result = verify_draft(
+                        nodes,
+                        verified_logits,
+                        verified_transition,
+                        mask_token_id=mask_token_id,
+                    )
+                    x[:, block_start:block_end] = result.tokens
+                    used_node = min(result.accepted_draft_edges, node_count - 1)
+                    previous_policy_logits = final_block_logits.detach()
+                    final_block_logits = verified_logits[used_node : used_node + 1]
+                    verified_transition_count += result.verified_transitions
+                    last_transfer_count = max(
+                        1,
+                        root_masks - int((result.tokens == mask_token_id).sum().item()),
+                    )
+                    speculation_steps.append(
+                        {
+                            "step_index": int(verified_transition_count),
+                            "remaining_masks_before": root_masks,
+                            "remaining_masks_after": int(
+                                (result.tokens == mask_token_id).sum().item()
+                            ),
+                            **serialize_speculation_plan(plan),
+                            **serialize_speculation_result(result),
+                        }
+                    )
+                    continue
 
                 model_output = self(x[:, block_start:block_end], current_attention_mask, 
                                     tok_idx[:, block_start:block_end] if tok_idx is not None else None, 
@@ -807,7 +963,7 @@ class DreamGenerationMixin:
                     raise NotImplementedError(alg)
             
             nfe_history.append(nfe)
-            if risk_policy is not None:
+            if risk_policy is not None or speculation_policy is not None:
                 from pag.experiments.rc_pag_features import RealizedBlock
 
                 block_tokens = x[:, block_start:block_end]
@@ -827,16 +983,18 @@ class DreamGenerationMixin:
                     if delimiter_ids is not None
                     else 0.0
                 )
-                risk_policy.record_realized(
-                    RealizedBlock(
-                        block_size=current_block_length,
-                        nfe=nfe,
-                        mean_confidence=token_confidence.mean().item(),
-                        min_confidence=token_confidence.min().item(),
-                        digit_fraction=digit_fraction,
-                        delimiter_fraction=delimiter_fraction,
-                    )
+                realized = RealizedBlock(
+                    block_size=current_block_length,
+                    nfe=nfe,
+                    mean_confidence=token_confidence.mean().item(),
+                    min_confidence=token_confidence.min().item(),
+                    digit_fraction=digit_fraction,
+                    delimiter_fraction=delimiter_fraction,
                 )
+                if risk_policy is not None:
+                    risk_policy.record_realized(realized)
+                if speculation_policy is not None:
+                    speculation_policy.record_realized(realized)
                 schedule_history.append(
                     {
                         "block_index": len(schedule_history),
@@ -850,6 +1008,14 @@ class DreamGenerationMixin:
                         "block_start": int(block_start),
                         "block_end": int(block_end),
                         "risk_steps": risk_steps,
+                        "speculation_steps": speculation_steps,
+                        "verified_transition_count": int(verified_transition_count),
+                        "speculative_nfe_saved": int(
+                            sum(step["nfe_saved"] for step in speculation_steps)
+                        ),
+                        "verified_sequence_safe": all(
+                            step["sequence_safe"] for step in speculation_steps
+                        ),
                         "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
                     }
                 )

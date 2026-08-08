@@ -15,6 +15,7 @@ from pag.experiments.rc_pag_runtime import (
     prompt_loss_from_schedules,
     training_examples_from_schedules,
 )
+from pag.experiments.rc_pag_speculation import RiskAdaptiveSpeculationPolicy
 
 
 def _schedule():
@@ -264,3 +265,50 @@ def test_v6_loads_calibrated_risk_benefit_and_prompt_ledger(monkeypatch) -> None
     assert policy.total_risk_budget == pytest.approx(0.05)
     assert policy.max_prompt_stops == 2
     assert policy.min_predicted_nfe_savings == 3.0
+
+
+def test_v8_routes_a_local_risk_head_to_verified_speculation(monkeypatch) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml"))
+    runtime.model_name = "llada"
+    estimator = SimpleNamespace(
+        names=feature_names(include_history=False),
+        include_history=False,
+        kind="hist_gradient_boosting",
+        predict_risk=lambda features: 0.01,
+    )
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime.RiskEstimator.load",
+        lambda path: estimator,
+    )
+
+    scheduler, stopping, speculation, enforcement, provenance = runtime._method_components(
+        "rc_pag_verified",
+        runtime.config.candidates[1],
+        {"llada_rc_pag_verified": "verified.joblib"},
+    )
+
+    assert scheduler.budget == 64
+    assert stopping is None
+    assert isinstance(speculation, RiskAdaptiveSpeculationPolicy)
+    assert speculation.scorer is estimator
+    assert speculation.max_depth == 4
+    assert enforcement == "soft_gate"
+    assert provenance == "rc_pag_verified"
+
+
+def test_v8_fixed_depth_ablation_needs_no_learned_estimator() -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml"))
+    runtime.model_name = "dream"
+
+    _, stopping, speculation, _, provenance = runtime._method_components(
+        "verified_fixed_d4",
+        None,
+        {},
+    )
+
+    assert stopping is None
+    assert speculation.max_depth == speculation.medium_depth == 4
+    assert speculation.scorer.predict_risk({}) == 0.0
+    assert provenance == "verified_fixed_d4"

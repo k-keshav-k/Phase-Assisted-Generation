@@ -37,6 +37,11 @@ class PolicyCandidateSpec:
     require_exact_agreement: bool = False
     total_risk_budget: float | None = None
     max_prompt_stops: int | None = None
+    max_speculation_depth: int = 1
+    medium_speculation_depth: int = 1
+    deep_risk_threshold: float = 0.0
+    medium_risk_threshold: float = 1.0
+    draft_width_multiplier: float = 1.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,6 +230,12 @@ _REQUIRED_V7_DEVELOPMENT_METHODS = {
     "token_convergence_style",
     "rc_pag_budgeted",
 }
+_REQUIRED_V8_DEVELOPMENT_METHODS = {
+    "adablock",
+    "verified_fixed_d2",
+    "verified_fixed_d4",
+    "rc_pag_verified",
+}
 
 
 def _bounds(value: object, *, name: str) -> tuple[int, int]:
@@ -246,8 +257,8 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if int(payload.get("seed", 0)) < 1:
         raise ValueError("seed must be positive")
     protocol_version = str(payload.get("protocol_version", "v1"))
-    if protocol_version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7"}:
-        raise ValueError("protocol_version must be v1, v2, v3, v4, v5, v6, or v7")
+    if protocol_version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"}:
+        raise ValueError("protocol_version must be v1, v2, v3, v4, v5, v6, v7, or v8")
 
     models = payload.get("models", {})
     if set(models) != _EXPECTED_MODELS:
@@ -271,7 +282,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         _EXPECTED_V5_STAGES
         if protocol_version == "v5"
         else _EXPECTED_V6_STAGES
-        if protocol_version in {"v6", "v7"}
+        if protocol_version in {"v6", "v7", "v8"}
         else _EXPECTED_STAGES
     )
     splits = payload.get("splits", {})
@@ -311,7 +322,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
             "pilot_per_model": 32,
             "traces_per_model": 600,
             "tuning_per_model": 150,
-            "calibration_per_model": 500 if protocol_version in {"v6", "v7"} else 300,
+            "calibration_per_model": 500 if protocol_version in {"v6", "v7", "v8"} else 300,
         }
     )
     if (
@@ -337,7 +348,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     policy = payload.get("policy", {})
     expected_estimators = (
         ("hist_gradient_boosting",)
-        if protocol_version in {"v4", "v5", "v6", "v7"}
+        if protocol_version in {"v4", "v5", "v6", "v7", "v8"}
         else ("hist_gradient_boosting", "logistic")
     )
     if tuple(policy.get("estimator_kinds", ())) != expected_estimators:
@@ -345,7 +356,16 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if int(policy.get("history_window", 0)) != 4:
         raise ValueError("history_window must remain 4")
     candidates = tuple(policy.get("candidates", ()))
-    expected_candidates = {"v1": 6, "v2": 3, "v3": 9, "v4": 3, "v5": 3, "v6": 3, "v7": 3}[protocol_version]
+    expected_candidates = {
+        "v1": 6,
+        "v2": 3,
+        "v3": 9,
+        "v4": 3,
+        "v5": 3,
+        "v6": 3,
+        "v7": 3,
+        "v8": 3,
+    }[protocol_version]
     if len(candidates) != expected_candidates:
         if protocol_version == "v1":
             raise ValueError("policy family must contain exactly six candidates")
@@ -361,7 +381,9 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         raise ValueError("v5 policy candidates must use the advantage estimator")
     elif protocol_version in {"v6", "v7"} and set(variants) != {"rc_pag_budgeted"}:
         raise ValueError(f"{protocol_version} policy candidates must use the budgeted estimator")
-    elif protocol_version not in {"v5", "v6", "v7"} and set(variants) != {"rc_pag_local"}:
+    elif protocol_version == "v8" and set(variants) != {"rc_pag_verified"}:
+        raise ValueError("v8 policy candidates must use verified speculation")
+    elif protocol_version not in {"v5", "v6", "v7", "v8"} and set(variants) != {"rc_pag_local"}:
         raise ValueError(f"{protocol_version} policy candidates must use the local estimator")
     for item in candidates:
         threshold_limit = 0.05 if protocol_version == "v1" else 1.0
@@ -421,7 +443,27 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
                 or max_stops is None
                 or int(max_stops) < 1
             ):
-                raise ValueError("v7 candidates require risk-threshold gating with a stop-capped ledger")
+                raise ValueError(
+                    "v7 candidates require risk-threshold gating with a stop-capped ledger"
+                )
+        elif protocol_version == "v8":
+            max_depth = int(item.get("max_speculation_depth", 0))
+            medium_depth = int(item.get("medium_speculation_depth", 0))
+            deep_risk = float(item.get("deep_risk_threshold", -1.0))
+            medium_risk = float(item.get("medium_risk_threshold", -1.0))
+            width_multiplier = float(item.get("draft_width_multiplier", 0.0))
+            if (
+                remaining != 1.0
+                or min_savings != 0.0
+                or max_temporal_js != 1.0
+                or exact_agreement
+                or float(item.get("threshold", 0.0)) != 1.0
+                or max_depth < 1
+                or not 1 <= medium_depth <= max_depth
+                or not 0.0 <= deep_risk <= medium_risk <= 1.0
+                or width_multiplier <= 0.0
+            ):
+                raise ValueError("v8 candidates require frozen risk-adaptive verified speculation")
         elif exact_agreement:
             raise ValueError("exact-agreement verification is only defined for v5 and v6")
         if protocol_version not in {"v6", "v7"} and (
@@ -478,6 +520,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "workshop_v5_fresh": _WORKSHOP_V2_CONFIRMATORY,
         "workshop_v6_fresh": _WORKSHOP_V2_CONFIRMATORY,
         "workshop_v7_fresh": _WORKSHOP_V2_CONFIRMATORY,
+        "workshop_v8_fresh": _WORKSHOP_V2_CONFIRMATORY,
     }
     if confirmation_profile not in expected_confirmatory:
         raise ValueError("unknown confirmation profile")
@@ -516,6 +559,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "v5": _REQUIRED_V5_DEVELOPMENT_METHODS,
         "v6": _REQUIRED_V6_DEVELOPMENT_METHODS,
         "v7": _REQUIRED_V7_DEVELOPMENT_METHODS,
+        "v8": _REQUIRED_V8_DEVELOPMENT_METHODS,
     }[protocol_version]
     if development != expected_development:
         raise ValueError("development method family does not match the frozen protocol")
@@ -528,6 +572,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "workshop_v5_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
         "workshop_v6_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
         "workshop_v7_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
+        "workshop_v8_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
     }
     if tuple(methods.get("confirmatory", ())) != expected_methods[confirmation_profile]:
         raise ValueError("confirmatory methods do not match the frozen protocol")
@@ -540,13 +585,13 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "minimum_accuracy_lower_ci": -0.02,
         "require_history_frontier_ci": protocol_version == "v1" and confirmation_profile == "full",
     }
-    if protocol_version in {"v6", "v7"}:
+    if protocol_version in {"v6", "v7", "v8"}:
         expected_gates["minimum_model_nfe_reduction_lower_ci"] = 0.05
     if gates != expected_gates:
         raise ValueError("claim gates do not match the frozen protocol")
 
     readiness = payload.get("readiness")
-    if protocol_version in {"v3", "v4", "v5", "v6", "v7"}:
+    if protocol_version in {"v3", "v4", "v5", "v6", "v7", "v8"}:
         expected_readiness = {
             "minimum_tuning_nfe_reduction_per_model": (
                 0.08 if protocol_version in {"v5", "v6", "v7"} else 0.05
@@ -556,7 +601,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         if readiness != expected_readiness:
             raise ValueError("v3 readiness gate does not match the frozen protocol")
     elif readiness is not None:
-        raise ValueError("readiness is only defined for the v3, v4, v5, v6, and v7 protocols")
+        raise ValueError("readiness is only defined for the v3, v4, v5, v6, v7, and v8 protocols")
 
 
 def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
@@ -657,6 +702,11 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
                 max_prompt_stops=(
                     None if item.get("max_prompt_stops") is None else int(item["max_prompt_stops"])
                 ),
+                max_speculation_depth=int(item.get("max_speculation_depth", 1)),
+                medium_speculation_depth=int(item.get("medium_speculation_depth", 1)),
+                deep_risk_threshold=float(item.get("deep_risk_threshold", 0.0)),
+                medium_risk_threshold=float(item.get("medium_risk_threshold", 1.0)),
+                draft_width_multiplier=float(item.get("draft_width_multiplier", 1.0)),
             )
             for item in policy["candidates"]
         ),

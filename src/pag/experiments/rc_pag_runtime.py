@@ -35,11 +35,21 @@ from pag.experiments.rc_pag_policy import (
     RiskEstimator,
     RiskStoppingPolicy,
 )
+from pag.experiments.rc_pag_speculation import RiskAdaptiveSpeculationPolicy
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
 DREAM_DIR = REPO_ROOT / "AdaBlock-dLLM" / "dream"
 MASK_IDS = {"llada": 126336, "dream": 151666}
+
+
+class _ConstantRiskScorer:
+    def __init__(self, risk: float) -> None:
+        self.risk = float(risk)
+
+    def predict_risk(self, features: Mapping[str, float]) -> float:
+        del features
+        return self.risk
 
 
 def _ensure_llada_config_compatibility(config: Any) -> Any:
@@ -443,7 +453,8 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7"} and examples
+                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7", "v8"}
+                and examples
                 else ""
             )
             prompt = f"Write a correct Python solution for this task:\n{description}"
@@ -617,6 +628,31 @@ class UnifiedRCPAGRuntime:
             max_prompt_stops=candidate.max_prompt_stops,
         )
 
+    def _speculation_policy(
+        self,
+        candidate: PolicyCandidateSpec,
+        estimator_paths: Mapping[str, str],
+    ) -> RiskAdaptiveSpeculationPolicy:
+        key = f"{self.model_name}_{candidate.variant}"
+        if key not in estimator_paths:
+            raise ValueError(f"missing fitted estimator for {key}")
+        estimator = RiskEstimator.load(estimator_paths[key])
+        required_features = {"local.temporal_js_mean", "local.temporal_js_max"}
+        if not required_features.issubset(estimator.names):
+            raise ValueError("v8 estimator is missing the temporal-JS feature schema")
+        if estimator.include_history or estimator.kind != "hist_gradient_boosting":
+            raise ValueError("v8 requires the frozen local histogram-boosting estimator")
+        return RiskAdaptiveSpeculationPolicy(
+            estimator,
+            max_depth=candidate.max_speculation_depth,
+            medium_depth=candidate.medium_speculation_depth,
+            deep_risk_threshold=candidate.deep_risk_threshold,
+            medium_risk_threshold=candidate.medium_risk_threshold,
+            draft_width_multiplier=candidate.draft_width_multiplier,
+            include_history=False,
+            history_window=self.config.history_window,
+        )
+
     def _method_components(
         self,
         method: str,
@@ -626,10 +662,14 @@ class UnifiedRCPAGRuntime:
         max_steps = self.config.decoding.max_refinement_steps
         scheduler = _BudgetScheduler(budget=max_steps)
         policy = None
+        speculation_policy = None
         enforcement = "soft_gate"
         provenance = method
         if candidate is not None:
-            policy = self._risk_policy(candidate, estimator_paths)
+            if candidate.variant == "rc_pag_verified":
+                speculation_policy = self._speculation_policy(candidate, estimator_paths)
+            else:
+                policy = self._risk_policy(candidate, estimator_paths)
             provenance = candidate.variant
         elif method == "full_budget" or method == "full_budget_shadow":
             policy = _TracePolicy() if method == "full_budget_shadow" else None
@@ -643,6 +683,19 @@ class UnifiedRCPAGRuntime:
             enforcement = "hard_cap"
         elif method == "oracle":
             policy = _TracePolicy()
+        elif method in {"verified_fixed_d2", "verified_fixed_d4"}:
+            depth = int(method.rsplit("d", 1)[-1])
+            speculation_policy = RiskAdaptiveSpeculationPolicy(
+                _ConstantRiskScorer(0.0),
+                max_depth=depth,
+                medium_depth=depth,
+                deep_risk_threshold=1.0,
+                medium_risk_threshold=1.0,
+                draft_width_multiplier=1.0,
+                include_history=False,
+                history_window=self.config.history_window,
+            )
+            provenance = method
         elif method == "pilot_shadow":
             policy = _PilotStopPolicy()
             provenance = "pilot_forced_stop_shadow_smoke"
@@ -666,7 +719,7 @@ class UnifiedRCPAGRuntime:
             provenance = style_name
         elif method != "adablock":
             raise ValueError(f"unsupported RC-PAG method: {method}")
-        return scheduler, policy, enforcement, provenance
+        return scheduler, policy, speculation_policy, enforcement, provenance
 
     def _generate_llada(
         self,
@@ -675,10 +728,19 @@ class UnifiedRCPAGRuntime:
         method: str,
         scheduler,
         policy,
+        speculation_policy,
         enforcement: str,
         shadow: bool,
     ):
-        modern_protocol = self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7"}
+        modern_protocol = self.config.protocol_version in {
+            "v2",
+            "v3",
+            "v4",
+            "v5",
+            "v6",
+            "v7",
+            "v8",
+        }
         if method == "adablock" or modern_protocol:
             module = importlib.import_module("generate_adablock")
             result = module.generate_adablock_dual_cache(
@@ -693,6 +755,7 @@ class UnifiedRCPAGRuntime:
                 delimiter_ids=self.delimiter_ids.tolist(),
                 delimiter_threshold=self.config.decoding.delimiter_threshold,
                 risk_policy=policy if modern_protocol else None,
+                speculation_policy=speculation_policy,
                 digit_ids_tensor=self.digit_ids,
                 delimiter_ids_tensor=self.delimiter_ids,
                 return_schedule_history=modern_protocol,
@@ -749,6 +812,7 @@ class UnifiedRCPAGRuntime:
         method: str,
         scheduler,
         policy,
+        speculation_policy,
         enforcement: str,
         shadow: bool,
     ):
@@ -762,6 +826,7 @@ class UnifiedRCPAGRuntime:
             "v5",
             "v6",
             "v7",
+            "v8",
         }
         generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(
@@ -782,6 +847,7 @@ class UnifiedRCPAGRuntime:
         )
         self.model.pag_scheduler = scheduler
         self.model.pag_risk_policy = policy
+        self.model.pag_speculation_policy = speculation_policy
         self.model.pag_digit_ids = self.digit_ids
         self.model.pag_delimiter_ids = self.delimiter_ids
         self.model.pag_shadow_callback = "auto" if shadow else None
@@ -835,7 +901,7 @@ class UnifiedRCPAGRuntime:
                 resolved_method = (
                     str(selected[self.model_name]) if isinstance(selected, dict) else str(selected)
                 )
-        scheduler, policy, enforcement, provenance = self._method_components(
+        scheduler, policy, speculation_policy, enforcement, provenance = self._method_components(
             resolved_method,
             candidate,
             estimator_paths or {},
@@ -853,6 +919,7 @@ class UnifiedRCPAGRuntime:
                 method=resolved_method,
                 scheduler=scheduler,
                 policy=policy,
+                speculation_policy=speculation_policy,
                 enforcement=enforcement,
                 shadow=shadow,
             )
@@ -862,6 +929,7 @@ class UnifiedRCPAGRuntime:
                 method=resolved_method,
                 scheduler=scheduler,
                 policy=policy,
+                speculation_policy=speculation_policy,
                 enforcement=enforcement,
                 shadow=shadow,
             )

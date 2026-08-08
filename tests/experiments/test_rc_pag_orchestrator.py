@@ -52,6 +52,16 @@ def v6_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml"))
 
 
+@pytest.fixture
+def v7_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v7.yaml"))
+
+
+@pytest.fixture
+def v8_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml"))
+
+
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
     runtime = MockRCPAGRuntime(calibration_repetitions=60)
     runner = RCPAGOrchestrator(
@@ -697,3 +707,75 @@ def test_v6_calibration_keeps_negative_raw_nfe_savings(tmp_path, v6_config) -> N
     for diagnostic in certificate["diagnostics"].values():
         assert diagnostic["negative_nfe_saving_prompts"] == 2
         assert diagnostic["raw_paired_nfe_reduction"]["estimate"] < 0.0
+
+
+def test_v8_runs_lossless_verified_speculation_end_to_end(tmp_path, v8_config) -> None:
+    runtime = MockRCPAGRuntime(calibration_repetitions=500)
+    runner = RCPAGOrchestrator(
+        v8_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("report")
+
+    parity = json.loads((tmp_path / "parity_audit.json").read_text())
+    assert parity["speculation_checked_records"] == 4
+    assert parity["speculation_mismatches"] == []
+    frozen = json.loads((tmp_path / "frozen_policy.json").read_text())
+    assert all(
+        candidate["variant"] == "rc_pag_verified"
+        for candidate in frozen["selected_by_model"].values()
+    )
+    screening = json.loads((tmp_path / "screening_summary.json").read_text())
+    for model in ("llada", "dream"):
+        for stats in screening["models"][model]["candidates"].values():
+            assert stats["sequence_disagreements"] == 0
+            assert stats["verifier_evidence"]
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["certificate_mode"] == "exact_trajectory_with_paired_compute_evidence"
+    assert all(row["sequence_disagreements"] == 0 for row in certificate["diagnostics"].values())
+    assert json.loads((tmp_path / "readiness_audit.json").read_text())["passed"]
+    audit = json.loads((tmp_path / "report" / "claim_audit.json").read_text())
+    assert audit["gates"]["exact_sequence_equivalence"]
+    assert audit["gates"]["verified_transition_evidence"]
+    summary = json.loads((tmp_path / "report" / "summary.json").read_text())
+    assert summary["llada"]["gsm8k_test"]["methods"]["rc_pag_selected"]["speculation"]
+
+
+def test_v8_reuses_v7_native_traces_but_refits_verified_router(
+    tmp_path,
+    v7_config,
+    v8_config,
+) -> None:
+    source = tmp_path / "v7"
+    source_runner = RCPAGOrchestrator(
+        v7_config,
+        source,
+        runtime_factory=lambda model: ExactTraceMockRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    source_runner.run_through("fit")
+
+    destination = tmp_path / "v8"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v8_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    runner.run_through("fit")
+
+    reuse = json.loads((destination / "reuse" / "manifest.json").read_text())
+    estimators = json.loads((destination / "estimators" / "manifest.json").read_text())
+    assert reuse["reuse_scope"] == "raw_native_exact_loop_traces_only"
+    assert not any(stage == "collect" for stage, _, _, _ in runtime.calls)
+    for model in ("llada", "dream"):
+        assert estimators["models"][model]["rc_pag_verified"]["trace_reused"]
+        assert (destination / "estimators" / f"{model}_rc_pag_verified.joblib").is_file()

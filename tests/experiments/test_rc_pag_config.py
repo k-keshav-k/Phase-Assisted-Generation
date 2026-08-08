@@ -15,6 +15,7 @@ WORKSHOP_V4_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v4.y
 WORKSHOP_V5_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v5.yaml")
 WORKSHOP_V6_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml")
 WORKSHOP_V7_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v7.yaml")
+WORKSHOP_V8_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml")
 
 
 def _valid_payload() -> dict:
@@ -195,6 +196,30 @@ def test_v7_config_rejects_exact_agreement_and_unbounded_thresholds() -> None:
 
     with pytest.raises(ValueError, match="risk-threshold gating"):
         validate_rc_pag_config(payload)
+
+
+def test_v8_config_registers_risk_adaptive_verified_speculation() -> None:
+    config = load_rc_pag_config(WORKSHOP_V8_CONFIG_PATH)
+
+    assert config.protocol_version == "v8"
+    assert [
+        (
+            candidate.max_speculation_depth,
+            candidate.medium_speculation_depth,
+            candidate.deep_risk_threshold,
+            candidate.medium_risk_threshold,
+        )
+        for candidate in config.candidates
+    ] == [(2, 1, 0.05, 0.15), (4, 2, 0.10, 0.30), (6, 3, 0.20, 0.50)]
+    assert all(candidate.variant == "rc_pag_verified" for candidate in config.candidates)
+    assert config.development_methods == (
+        "adablock",
+        "verified_fixed_d2",
+        "verified_fixed_d4",
+        "rc_pag_verified",
+    )
+    assert config.readiness.minimum_tuning_nfe_reduction_per_model == 0.05
+    assert config.claim_gates.minimum_model_nfe_reduction_lower_ci == 0.05
 
     payload = deepcopy(load_rc_pag_config(WORKSHOP_V7_CONFIG_PATH).raw)
     payload["policy"]["candidates"][0]["threshold"] = 0.7

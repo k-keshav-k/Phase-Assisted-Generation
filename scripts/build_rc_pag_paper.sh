@@ -72,16 +72,25 @@ compute_evidence = (
     and set(model_compute) == {"llada", "dream"}
     and all(row.get("lower") is not None for row in model_compute.values())
 )
+exact_evidence = (
+    audit.get("gates", {}).get("exact_sequence_equivalence") is True
+    and audit.get("gates", {}).get("verified_transition_evidence") is True
+    and all(
+        int(value) == 0
+        for value in audit.get("details", {}).get("sequence_disagreements", {}).values()
+    )
+)
 if (
     certificate.get("loss") != "adablock_correct_candidate_wrong"
-    or certificate.get("certificate_mode") != "harm_only_with_paired_compute_evidence"
+    or certificate.get("certificate_mode") != "exact_trajectory_with_paired_compute_evidence"
     or certificate.get("minimum_nfe_reduction") is not None
     or models != {"llada", "dream"}
     or len(names) != 2
     or not harm_rows
     or not compute_evidence
+    or not exact_evidence
 ):
-    raise SystemExit("v6 evidence must cover harm and paired compute for two model policies")
+    raise SystemExit("v8 evidence must cover exact trajectories and paired compute for both models")
 
 tables = run_dir / "report" / "tables"
 figures = run_dir / "report" / "figures"

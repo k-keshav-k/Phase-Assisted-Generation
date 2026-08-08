@@ -30,8 +30,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--reuse-development-from",
         type=Path,
         help=(
-            "Reuse compatible development artifacts. v6/v7 accept native exact-loop v4/v5 "
-            "full-budget traces, discard old policy heads, and refit the budgeted estimators."
+            "Reuse compatible development artifacts. v8 accepts native exact-loop v4-v7 "
+            "full-budget traces, discards old policy heads, and refits its local risk head."
         ),
     )
     return parser

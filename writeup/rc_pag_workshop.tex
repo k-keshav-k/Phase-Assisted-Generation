@@ -12,7 +12,7 @@
 \usepackage{xcolor}
 \usepackage{xspace}
 
-\newcommand{\method}{\textsc{RC-PAG}\xspace}
+\newcommand{\method}{\textsc{RAVS}\xspace}
 \newcommand{\risk}{\mathcal{R}}
 \newcommand{\data}{\mathcal{D}}
 \newcommand{\family}{\Lambda}
@@ -21,7 +21,7 @@
 \newcommand{\pending}[1]{\fcolorbox{orange!70!black}{orange!8}{\parbox{0.92\linewidth}{#1}}}
 \newtheorem{proposition}{Proposition}
 
-\title{Risk-Budgeted Verified Stopping for Diffusion Language Models}
+\title{Lossless Risk-Adaptive Macro-Speculation for Diffusion Language Models}
 \author{Anonymous Authors}
 \date{}
 
@@ -29,20 +29,21 @@
 \maketitle
 
 \begin{abstract}
-Diffusion language models can reduce neural function evaluations (NFEs) by ending block
-refinement early, but repeated locally plausible stops can accumulate into a large accuracy
-loss. We introduce Risk-Calibrated Phase-Adaptive Generation (\method), a native-loop
-controller that combines (i) a prompt-disjoint isotonic calibration of local trajectory-
-disagreement risk, (ii) a persistent prompt-level risk ledger and stop cap, (iii) a learned
-remaining-NFE gate, and (iv) exact next-step proposal verification before any forced commit.
-Only three ledger policies are tuned. One policy per model is frozen before an untouched
-500-prompt calibration set certifies the end-to-end harmful-regression probability---AdaBlock
-is correct but \method is wrong---at $\alpha=0.02$, with Bonferroni familywise control across
-LLaDA and Dream. Compute is deliberately not forced into a bounded-loss certificate: paired
-NFE changes may be negative, so confirmation instead requires a preregistered paired-bootstrap
-NFE-reduction lower bound above 5\% for each model. The hook is embedded in the exact native
-AdaBlock loops and must reproduce AdaBlock bit-for-bit when it never stops. This draft inserts
-numbers only from complete non-mock artifacts that pass the frozen coverage and claim gates.
+Aggressive early stopping reduced neural function evaluations (NFEs) in our diffusion language
+model decoders, but changed answers catastrophically on Dream; conservative stopping preserved
+answers but saved little. We replace stopping with \emph{Risk-Adaptive Verified Speculation}
+(\method). The model cheaply drafts several future AdaBlock refinement states, evaluates the root
+and all drafts as one batch, and traverses a draft edge only when the verified native AdaBlock
+transition equals its complete child state. A mismatch returns the verified successor, never the
+draft. Consequently, under deterministic batch-invariant inference, \method reproduces the entire
+AdaBlock state trajectory and output exactly, regardless of router error. A learned local-risk
+score controls only speculative depth---hence wasted batch work---and has no authority over token
+acceptance. Unlike prior lossless self-speculation for one-token stepwise decoding, our verifier
+speculates over AdaBlock's threshold-parallel, delimiter-adaptive macro-transition. We freeze three
+depth routers and evaluate LLaDA-8B-Instruct and Dream-7B-Instruct on reasoning and code with exact
+sequence audits, physical NFE, verifier-node work, and wall-clock latency. A positive claim requires
+zero sequence disagreements and a paired-bootstrap NFE-reduction lower bound above 5\% for each
+model. Numerical claims are inserted only from complete non-mock artifacts that pass these gates.
 \end{abstract}
 
 \section{Introduction}
@@ -54,29 +55,26 @@ steps uniformly; recent adaptive methods vary the block length, token transfer, 
 time using confidence and stability signals
 \citep{lu2026adablock,wu2025fastdllm,israel2025apd,mohamed2025sched}.
 
-The central difficulty is that confidence is not itself a safety guarantee. A scheduler
-chosen because it looks efficient on a tuning set can silently over-commit on new prompts,
-and searching many thresholds amplifies this selection bias. We therefore ask:
-\emph{Can an adaptive dLM decoder minimize refinement compute while controlling the
-probability of changing a full-refinement block?}
+The central difficulty is that confidence is useful but not safe. In our development runs, a local
+risk estimator achieved AUROC above $0.98$ on both model families, yet using its score as permission
+to terminate refinement produced a 16--32 point accuracy loss on Dream. Making the gate strict
+removed the loss but also reduced savings to roughly 1\%. This is a structural conflict: a fallible
+predictor cannot simultaneously provide a strong accuracy guarantee and aggressively change the
+trajectory.
 
-Our answer, \method, separates local prediction, prompt-level resource allocation, verification,
-and end-to-end certification. A compact calibrated estimator predicts whether the current
-proposal disagrees with the block's native full-trajectory endpoint. Rather than applying one
-threshold independently at every block, the decoder spends predicted risk from a persistent
-prompt ledger, limits the number of forced commits, and acts only when a remaining-NFE regressor
-predicts worthwhile compute. A proposed stop remains revocable for one step and commits only if
-every still-masked token keeps the same top-one proposal. Three predeclared ledger policies form
-the entire family. Tuning freezes one per model before paired end-to-end calibration with AdaBlock.
+Our answer changes what prediction is allowed to control. \method uses the risk score only to
+allocate parallel verification capacity. It drafts a chain of plausible future AdaBlock states,
+batches them through the same model, and accepts only states proven to lie on the reference
+trajectory. Router error can waste parallel work, but cannot change a token. The problem therefore
+becomes maximizing exact draft acceptance subject to a hardware budget, rather than predicting
+when it is safe to abandon the reference decoder.
 
-Our contributions are:
-(i) an exact AdaBlock-compatible stopping hook with a mandatory no-stop parity gate;
-(ii) prompt-disjoint calibration of a high-signal local trajectory-disagreement model;
-(iii) a persistent risk ledger, stop cap, benefit gate, and revocable exact-agreement commit;
-(iv) finite-sample familywise control of end-to-end harmful-regression risk, with honest raw
-paired-bootstrap compute evidence that permits negative prompt-level savings; and
-(v) an auditable evaluation over LLaDA and Dream with paired accuracy, NFE, runtime,
-regression risk, out-of-domain transfer, and explicit positive-claim gates.
+Our contributions are: (i) a lossless speculative verifier for AdaBlock's threshold-parallel,
+delimiter-adaptive state transition; (ii) a formal trajectory-equivalence result that makes output
+safety independent of risk-model calibration; (iii) a risk-adaptive capacity rule that trades
+verification width for acceptance without granting commitment authority; and (iv) an auditable
+two-model evaluation that reports physical calls, batched node work, latency, exact output parity,
+and frozen compute gates.
 
 \section{Related work}
 
@@ -97,145 +95,100 @@ spatial and temporal consistency, and Just-on-Time studies independent token con
 \citep{wu2026swd,chen2026stdec,kohut2026jit}. Prophet commits early from answer-region confidence,
 while the concurrent LATCH framework verifies sustained stability over a parsed candidate span
 \citep{li2025prophet,lee2026latch}. We therefore use temporal JS only as an input feature and do
-not claim stability itself as our contribution. These approaches motivate transparent controls,
-but their main contribution is the efficiency rule rather than a joint accuracy--compute
-certificate. Concurrent theory analyzes efficiency
-conditions for confidence decoding \citep{cai2026confidence}; our guarantee instead treats
-the decoder as a black box and controls an observed operational loss. A contemporaneous
+not claim stability itself as our contribution. Concurrent theory analyzes efficiency
+conditions for confidence decoding \citep{cai2026confidence}; our guarantee instead follows from
+exact transition verification. A contemporaneous
 re-evaluation also finds that confidence-based remasking gains can depend strongly on the
 decoding setting \citep{frkovic2026reevaluating}, reinforcing the need for paired,
 protocol-specific evidence.
 
-\paragraph{Statistical risk control.}
-Learn-then-Test (LTT) converts a fixed collection of predictors into risk-controlling choices
-using valid hypothesis tests \citep{angelopoulos2021ltt}; conformal risk control extends this
-perspective to general bounded losses \citep{angelopoulos2022crc}. We apply the LTT principle
-to adaptive inference. Unlike ordinary post-hoc confidence intervals, simultaneous testing
-remains valid after selecting the lowest-compute certified policy. RC-Jot concurrently applies
-conformal risk control to dLM early exit in an automated technical report
-\citep{fars2026rcjot}. In contrast, our calibration unit is a frozen native-AdaBlock policy and
-our certificate controls the exact end-to-end harmful-regression event for a policy selected
-before calibration; compute remains a separate preregistered paired estimand because realized
-NFE changes are not bounded to $[0,1]$ prompt-wise.
+\paragraph{Self-speculative decoding.}
+SSD first showed lossless dLM self-speculation by constructing a linear hierarchical verification
+tree for one-token stepwise decoding \citep{gao2025ssd}. S2D2 instead routes between diffusion
+drafting and an autoregressive mode of the same block-diffusion model \citep{han2026s2d2}.
+Our work builds directly on SSD's lossless verification principle, but changes both the reference
+operator and the capacity rule. A verified edge in \method is a complete AdaBlock macro-step that
+may reveal several threshold-qualified tokens, while block boundaries remain delimiter-adaptive;
+a learned trajectory-risk score chooses depth but never acceptance. Thus the relevant comparison
+is fixed-depth SSD versus risk-adaptive speculation over an already adaptive parallel decoder.
 
-\section{Risk-calibrated adaptive stopping}
+\section{Risk-adaptive verified macro-speculation}
 
-\subsection{Problem and end-to-end harm loss}
+\subsection{The native AdaBlock transition}
 
-Let $X\sim\data$ be a prompt. A block diffusion decoder creates blocks $b=1,\ldots,B(X)$.
-Within block $b$, $S_{b,t}$ is the complete decoder state after refinement step $t$, and a
-policy $\pi_\lambda$ chooses a stopping time
-$\tau_b^\lambda\in\{1,\ldots,T_b\}$. Its compute is
+Fix one active block and let $s\in(\mathcal V\cup\{\mathtt{M}\})^L$ contain committed tokens and
+masks. The cached dLM produces logits $\ell_\theta(s)$. AdaBlock takes top-one proposals, commits
+every masked position whose probability exceeds $\eta=0.9$, and always commits the most confident
+remaining position. Denote this deterministic complete-state transition by
 \begin{equation}
- C_\lambda(X)=\sum_{b=1}^{B(X)}\tau_b^\lambda,
- \qquad \nfe(\pi_\lambda)=\mathbb{E}_{X\sim\data}[C_\lambda(X)].
- \label{eq:compute}
+ F(s)=\operatorname{Transfer}_{\eta}\!\left(s,\ell_\theta(s)\right).
+ \label{eq:transition}
 \end{equation}
-Let $G_0(X)$ denote the complete AdaBlock generation and $G_\lambda(X)$ the generation under
-the hooked stopping policy. If $A(Y,X)\in\{0,1\}$ is the task grader, define
-\begin{equation}
- L_\lambda(X)=\indicator\!\left\{A(G_0(X),X)=1,\ A(G_\lambda(X),X)=0\right\},\qquad
- \risk(\lambda)=\Pr_{X\sim\data}[L_\lambda(X)=1],
- \label{eq:loss}
-\end{equation}
-This asymmetric loss counts only regressions on prompts that AdaBlock solves. It directly
-matches the operational failure the acceleration must avoid while allowing benign sequence
-changes and recoveries; we report both separately. Define the paired NFE reduction
-\begin{equation}
- \Delta_\lambda(X)=C_\lambda(X)-C_0(X),\qquad
- \rho_\lambda=-\frac{\mathbb E[\Delta_\lambda(X)]}{\mathbb E[C_0(X)]}.
- \label{eq:saving}
-\end{equation}
-Unlike a clipped ``advantage'' label, $\Delta_\lambda$ preserves prompts on which instrumentation
-or a changed trajectory uses more NFEs. Our feasibility objective is
-\begin{equation}
- \min_{\lambda\in\family}\ \nfe(\pi_\lambda)
- \quad\text{subject to}\quad \risk(\lambda)\le\alpha.
- \label{eq:objective}
-\end{equation}
-The positive empirical headline additionally requires a lower confidence bound
-$\rho_\lambda^{\rm L}>0.05$ for each model.
+$F$ is a \emph{macro-transition}: it may reveal one or many tokens. The outer decoder chooses the
+next block length from delimiter confidence and then repeatedly applies $F$ until the active block
+contains no mask. Sequential AdaBlock therefore generates the trajectory
+$s_0,s_1=F(s_0),\ldots,s_T=F^T(s_0)$.
 
-\subsection{Calibrated local risk and a prompt ledger}
+\subsection{Draft, batch, verify}
 
-The decoder compresses each logits tensor on device and transfers only scalar summaries:
-masked fraction; block step and size; entropy, top-one probability, and top-one/top-two
-margin quantiles; token churn; changes in these quantities; delimiter and special-token
-rates; and temporal-instability summaries. No logits or hidden states are retained on CPU.
-For masked position $j$, let $p_{t,j}=\mathrm{softmax}(\ell_{t,j})$. We measure normalized
-temporal instability between consecutive native AdaBlock steps as
+After a verified transition, the already-computed logits provide top-one proposals and a confidence
+ranking for the remaining masks. Starting at verified root $d_0=s_t$, we construct a cheap draft
+chain $d_1,\ldots,d_D$ by revealing the next $w$ ranked proposals per level. No model call is used
+for drafting. We then evaluate every node in one physical call,
 \begin{equation}
- d_{t,j}=\frac{\operatorname{JS}(p_{t,j}\,\|\,p_{t-1,j})}{\log 2}\in[0,1],\qquad
- \bar D_t=\frac{\sum_{j:\,m_{t,j}=1}d_{t,j}}{\lVert m_t\rVert_1},\quad
- D_t=\max_{j:\,m_{t,j}=1}d_{t,j}.
- \label{eq:temporal-js}
+ (\ell_0,\ldots,\ell_D)=
+ f_\theta\!\left([d_0;\ldots;d_D],\operatorname{Repeat}(\mathrm{KV},D+1)\right).
+ \label{eq:batch-verify}
 \end{equation}
-For a native full-budget trajectory, let $z_{b,t}$ be the proposal at state $S_{b,t}$ and
-$z_b^\star$ the block tokens after native refinement finishes. We label every observed state by
-\begin{equation}
- Y_{b,t}=\indicator\{z_{b,t}\ne z_b^\star\},\qquad
- R_{b,t}=\max\{0,T_b-t\}.
- \label{eq:local-labels}
-\end{equation}
-Prompt groups, not states, are partitioned: 480 prompts fit a histogram-gradient-boosting
-classifier and 120 held-out prompts fit an isotonic map. This yields calibrated local score
-$p_{b,t}=\widehat q(S_{b,t})\in[0,1]$. A separate regressor fit on all 600 prompts predicts
-$\widehat R(S_{b,t})$, the remaining native block NFEs. The label is local on purpose: earlier
-experiments found it highly predictable on both models, whereas direct prompt-harm heads suffered
-severe on-policy label shift. End-to-end safety is established later on untouched prompts.
+Verification begins at $j=0$. It computes the \emph{actual} AdaBlock successor
+$u=\operatorname{Transfer}_\eta(d_j,\ell_j)$. If $u=d_{j+1}$ exactly as a complete token tensor,
+the edge is accepted and verification continues at $j+1$. On the first mismatch, \method returns
+$u$, not $d_{j+1}$. If all draft edges match, the verified leaf logits supply one additional native
+transition. Thus one batched call realizes between one and $D+1$ sequential AdaBlock transitions.
 
-For policy $\lambda=(B,K,g)$, let $Q$ be risk already spent on verified commits in the current
-prompt and $k$ their count. A state is eligible when
-\begin{equation}
- t\ge2,\qquad Q+p_{b,t}\le B,\qquad k<K,\qquad \widehat R(S_{b,t})\ge g.
- \label{eq:stopping-rule}
-\end{equation}
-The first eligible state stores its proposed top-one tokens but does not commit. The next
-eligible state commits only if every position that remains masked has the same proposal;
-otherwise the pending proposal is replaced and verification restarts. Pending state is reset
-at each block, while $(Q,k)$ persists across blocks and resets only between prompts. On a verified
-commit, and only then, $Q\leftarrow Q+p_{b,t}$ and $k\leftarrow k+1$. We tune only
-\begin{equation}
- (B,K,g)\in\{(0.02,1,4),(0.05,2,3),(0.10,3,2)\}.
- \label{eq:ledger-family}
-\end{equation}
-For each model, the accuracy-eligible candidate
-with the lowest tuning NFE is frozen. Calibration therefore evaluates two already-selected
-model--policy pairs and performs no threshold search.
-
-\subsection{Finite-sample calibration}
-
-Let $X_1,\ldots,X_n$ be an untouched calibration sample and
-$K_\lambda=\sum_i L_\lambda(X_i)$. There is one frozen policy for each model, hence $J=2$
-simultaneous harm hypotheses. The null $H_\lambda:\risk(\lambda)\ge\alpha$ uses
-\begin{equation}
- p_\lambda=\Pr_{Z\sim\mathrm{Binomial}(n,\alpha)}[Z\le K_\lambda].
- \label{eq:harm-pvalue}
-\end{equation}
-Candidate $\lambda$ is certified iff $p_\lambda\le\delta/J$. Both model-specific policies must
-certify before confirmation begins. We report simultaneous Clopper--Pearson harm upper bounds.
-Calibration also reports raw paired $\Delta_\lambda$, including negative savings, but does not
-mislabel a bootstrap interval as a finite-sample risk certificate.
-
-\begin{proposition}[Selection-safe end-to-end harm control]
-Assume the calibration prompts are exchangeable draws from the deployment distribution,
-the model and decoding protocol are fixed, and $\family$ is independent of calibration
-outcomes. With probability at least $1-\delta$ over calibration, every policy certified by
-Equation~\ref{eq:harm-pvalue} satisfies $\risk(\lambda)\le\alpha$.
+\begin{proposition}[Trajectory equivalence]
+Assume temperature zero and batch-invariant model outputs: evaluating a state alone or as a row of
+Equation~\ref{eq:batch-verify} induces the same $F$. If a \method round starts at $s_t$, it returns
+$s_{t+m}=F^m(s_t)$ for some $m\ge1$. Consequently, \method and sequential AdaBlock have identical
+states, block boundaries, and generated tokens.
 \end{proposition}
 
 \noindent\textit{Proof sketch.}
-For any unsafe candidate with $\risk(\lambda)>\alpha$, the lower tail of its binomial count is
-stochastically no larger than the boundary distribution, so its test rejects with probability
-at most $\delta/J$. A union bound over the two frozen model policies completes the claim.
-Appendix~\ref{app:proof} gives details.
+The verified root equals $s_t$. An accepted edge is admitted only when its complete child equals
+$F$ of the current verified state, so induction gives $d_j=F^j(s_t)$ along the accepted prefix. A
+rejection returns the directly evaluated successor of the last verified node; a fully accepted chain
+uses the directly evaluated leaf successor. In both cases the returned state is an iterate of $F$.
+Applying the argument round-by-round and block-by-block proves the claim. Importantly, no assumption
+about the draft-quality predictor appears in the proof.
 
-\paragraph{Calibration cost and deployment cost.}
-Local surrogate labels are amortized from one full trajectory per training prompt.
-Calibration executes paired AdaBlock and candidate generations because the certified loss
-requires complete graded answers. At deployment, feature extraction is
-$O(V)$ for the already-materialized vocabulary logits and $O(d)$ retained scalars, while the
-CPU estimator cost is negligible relative to a model forward pass.
+\subsection{Risk controls capacity, never acceptance}
+
+We reuse the compact local trajectory features that were predictive in failed early-stopping runs:
+mask fraction, entropy and confidence quantiles, top-one margin, token churn, digit/delimiter rates,
+and normalized temporal Jensen--Shannon change. A histogram-gradient-boosting model predicts whether
+the current top-one block proposal differs from the native block endpoint. For risk score
+$p_t=\widehat q(s_t)$, the router chooses
+\begin{equation}
+ D(p_t)=
+ \begin{cases}
+ D_{\max}, & p_t\le q_{\rm deep},\\
+ D_{\rm med}, & q_{\rm deep}<p_t\le q_{\rm med},\\
+ 0, & p_t>q_{\rm med},
+ \end{cases}
+ \qquad
+ w_t=\max\{1,\operatorname{round}(\gamma a_{t-1})\},
+ \label{eq:router}
+\end{equation}
+where $a_{t-1}$ is the number of tokens revealed by the last verified transition. We predeclare
+three routers $(D_{\max},D_{\rm med},q_{\rm deep},q_{\rm med},\gamma)$:
+$(2,1,.05,.15,.75)$, $(4,2,.10,.30,1)$, and $(6,3,.20,.50,1)$. Prediction error only changes
+batch size and acceptance opportunity. Exact token acceptance is always determined by
+Equation~\ref{eq:transition}.
+
+Physical NFE counts batched model invocations. We separately record the number of evaluated tree
+nodes, accepted edges, verified native transitions, rejection depth, memory, and latency. This
+prevents an NFE reduction obtained by a larger batch from being mistaken for a free reduction in
+total FLOPs.
 
 \section{Experimental protocol}
 
@@ -252,13 +205,12 @@ frozen YAML, dataset revisions, seeds, prior-sample exclusions, and protocol has
 the code.
 
 \paragraph{Comparators and ablations.}
-The confirmatory comparison includes AdaBlock, the per-model best accuracy-eligible
-nonlearned rule chosen on tuning data, and the frozen certified \method policy. The two
-development controls are clearly labeled style reproductions of distribution-stability and
-token-convergence stopping rules; they are not claimed as official implementations of prior
-methods. Every control uses the same AdaBlock hook. The calibrated local-risk model is evaluated
-with Brier score/AUROC on its prompt-grouped calibration fold; the remaining-NFE regressor is
-evaluated with mean absolute and root-mean-square error on the same held-out prompt groups.
+The confirmatory comparison includes AdaBlock, the better fixed-depth verified speculator
+($D=2$ or $D=4$) chosen on tuning data, and the frozen \method router. This directly tests whether
+risk adaptation improves over the closest SSD-style nonlearned alternative while holding the
+AdaBlock macro-verifier fixed. The local-risk router is evaluated with Brier score/AUROC on a
+prompt-grouped holdout, while draft acceptance and rejection depth measure whether its compute
+allocation is useful.
 
 \paragraph{Metrics and inference.}
 Primary metrics are mean NFE, exact task accuracy, elapsed time, harmful regressions, and
@@ -266,25 +218,22 @@ sequence disagreements.
 Every method receives the same prompt order and decode settings. We report paired bootstrap
 95\% intervals for NFE and accuracy differences (10,000 resamples), normalized cross-model
 NFE, simultaneous calibration bounds, and a failure taxonomy. The positive headline is
-allowed only if: (1) both non-mock model policies certify harm; (2) \method lowers NFE
-versus AdaBlock on both models and versus the best nonlearned rule overall; (3) each
-in-domain accuracy-difference lower bound versus AdaBlock is at least $-0.02$; and (4) the
-pooled in-domain paired-bootstrap NFE-reduction lower bound exceeds 5\% for each model.
+allowed only if: (1) every paired generated token sequence equals AdaBlock and every record has
+verified-transition evidence; (2) \method lowers physical NFE versus AdaBlock on both models and
+versus the best nonlearned rule overall; and (3) the pooled in-domain paired-bootstrap NFE-reduction
+lower bound exceeds 5\% for each model. We additionally report latency intervals and verifier-node
+work; NFE alone is not presented as wall-clock speedup.
 
 \paragraph{Compute-aware funnel.}
 We first run 32 prompts/model and require exact generated-token, NFE-history, and block-history
-parity between native AdaBlock and a never-stop instrumented hook. Only if this gate passes do
-we collect 600 training traces/model, fit the prompt-disjoint calibrated-risk model and
-remaining-NFE regressor, and tune on a fresh 150 prompts/model. Calibration on 500
-prompts/model is launched only when an accuracy-eligible policy saves at least 8\% NFE and
-beats the best eligible nonlearned control on \emph{each} model. Native-loop v4/v5 full-budget
-traces with complete temporal evidence may be reused, but all old heads, rollout labels, policy
-selections, certificates, and confirmation results are discarded. This matters because development
-diagnostics exposed two distinct failures: v4 accumulated safe-looking local stops on Dream, while
-v5's direct prompt-harm head had held-out AUROC 0.456 on Dream and 0.372 on LLaDA. Confirmation
-cannot start without an explicit flag and both harm certificates. All records are atomic and
-resumable; models are loaded
-one at a time on one A100.
+parity between native AdaBlock and the instrumented loop. We reuse 600 native full-budget
+traces/model from v4--v7 when available, but refit the v8 router and discard every earlier policy,
+selection, certificate, and confirmation result. Three routers are screened on a fresh 150
+prompts/model. Calibration on 500 prompts/model begins only when the selected router saves at
+least 5\% physical NFE and beats the best eligible nonlearned control on \emph{each} model.
+Calibration hard-fails on one sequence disagreement or one missing verifier audit. Confirmation
+cannot start without this paired audit and an explicit flag. All records are atomic and resumable;
+models are loaded one at a time on one A100.
 
 \section{Results}
 
@@ -324,44 +273,38 @@ positive headline is emitted.}
 \toprule
 Decision & Frozen rule \\
 \midrule
-Certified target & end-to-end harm $\alpha=0.02$ \\
-Multiplicity & familywise $\delta=0.05$ over 2 frozen model policies \\
-Accuracy noninferiority & paired 95\% lower bound $\ge-0.02$ \\
+Output safety & zero token-sequence disagreements with AdaBlock \\
+Verification & every transition accepted only by exact state equality \\
 Compute & model-wise paired-bootstrap reduction LCB $>5\%$ \\
-Adaptive method & calibrated risk ledger; stop cap; benefit gate; exact verification \\
-Fallback & AdaBlock if either harm certificate fails \\
+Adaptive method & local risk chooses depth; native transition chooses tokens \\
+Fallback & AdaBlock if exactness or compute gate fails \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Regardless of outcome, the final report includes all candidates and all datasets. A failed
-certificate is itself a valid result and triggers the conservative fallback; a compute win
-with a failed accuracy gate is reported as a trade-off, not as an improvement.
+Regardless of outcome, the final report includes all candidates and all datasets. Any exactness or
+compute-gate failure triggers the conservative fallback; an NFE win without a latency win is
+reported as reduced sequential depth, not as wall-clock acceleration.
 
 \section{Limitations and broader impact}
 
-The certificate is distribution- and protocol-specific. Dataset shift, a different model
-revision, stochastic temperature, altered block size, quantization, or a modified prompt
-template requires new calibration. The asymmetric harm loss protects only answers AdaBlock
-gets right; it does not guarantee correctness, factuality, fairness, harmlessness, or output
-identity. The calibration distribution is a held-out training-task mixture, so the finite-
-sample certificate applies to that mixture; benchmark-wise confirmation remains empirical.
-Paired calibration increases experimental compute. Bonferroni correction is
-simple and robust but conservative, especially for correlated policies. The evaluation uses
-two open dLM families and reasoning/code tasks; it should not be generalized to all models,
-languages, or domains. Faster generation can lower energy per response but may also increase
-aggregate use. We release exact compute and failure records to make both effects measurable.
+The equivalence result assumes deterministic, batch-invariant transitions. Different batching
+kernels can rarely perturb tied or nearly tied logits; we therefore audit exact tokens on every
+calibration and confirmation prompt and treat any mismatch as a method failure. Losslessness is
+relative to AdaBlock, not to a ground-truth answer, and provides no guarantee of correctness,
+factuality, fairness, or harmlessness. Batched verification reduces sequential calls but evaluates
+more states per call, so a physical-NFE win need not imply a latency or energy win; both are reported.
+The current linear draft chain may underuse capacity when the number of threshold-qualified tokens
+changes abruptly. Finally, two 7--8B model families and four benchmarks cannot establish universal
+speedup. Faster generation can lower energy per response but may also increase aggregate use.
 
 \section{Conclusion}
 
-\method reframes adaptive diffusion decoding as risk-constrained prompt-level resource allocation.
-It combines a calibrated high-signal local model, a persistent risk ledger, a learned benefit
-gate, revocable exact-agreement verification, and a selection-safe finite-sample test for
-end-to-end harm. Compute improvement is evaluated separately with paired raw NFEs and a frozen
-bootstrap gate. The result is a decoder that either deploys a pre-frozen harm-certified policy
-or falls back transparently. The frozen
-evaluation is designed so the strength of the paper follows the evidence rather than the
-other way around.
+\method resolves the accuracy--compute conflict by removing acceptance authority from the learned
+router. Risk allocates speculative capacity; the exact native AdaBlock transition remains the sole
+token authority. This makes aggressive proposals compatible with trajectory equivalence and turns
+prediction errors into efficiency errors. The frozen evaluation separately tests whether the
+resulting reduction in sequential calls is large and fast enough to matter.
 
 \typeout{RC-PAG-MAIN-PAGES:\arabic{page}}
 
@@ -373,23 +316,23 @@ other way around.
 \section{Proof details}
 \label{app:proof}
 
-Fix an unsafe candidate $\lambda$ with $r=\risk(\lambda)>\alpha$. Under the assumptions,
-$K_\lambda\sim\mathrm{Binomial}(n,r)$. The binomial lower tail is nonincreasing in $r$, so
-the rejection region defined by $p_\lambda^H\le\delta/J$ has probability at most $\delta/J$.
-A union bound over the two frozen model policies yields familywise error at most $\delta$.
-If either test fails, confirmation is not started and no harm-control assertion is made.
+Let $r_0=s_t$. At verifier node $d_j=r_j$, the batched output induces exactly
+$u_j=F(r_j)$. If $u_j=d_{j+1}$, the verifier sets $r_{j+1}=d_{j+1}=F(r_j)$; hence by induction
+$r_j=F^j(s_t)$ along every accepted prefix. At the first rejection it returns
+$u_j=F^{j+1}(s_t)$. If no edge rejects, applying the verified leaf output returns the same form.
+Thus each round advances a positive integer number of reference transitions. Induction over rounds
+finishes the active block at the same state. Since delimiter-based block sizing is evaluated only
+at identical block boundaries, induction over blocks gives the complete generated-sequence result.
 
 \section{Online algorithm}
 
-At each prompt, \method initializes $(Q,k)=(0,0)$. For each AdaBlock block it repeats:
-(1) execute the unchanged native denoising step; (2) summarize logits, distribution change,
-and token change on device; (3) obtain calibrated risk $p_{b,t}$ and predicted remaining NFE;
-(4) check Equation~\ref{eq:stopping-rule}; (5) store the first eligible proposal without
-committing; and (6) force-commit only when the next eligible state agrees at every still-masked
-position, then charge $p_{b,t}$ to $Q$ and increment $k$. With a never-stop hook,
-the original token transfers, cache updates, block boundaries, and model calls are unchanged.
-Calibration runs this complete candidate trajectory and a paired AdaBlock trajectory, then
-records Equation~\ref{eq:loss} from their task grades.
+For each block, \method executes the ordinary first AdaBlock transition and retains its logits and
+immutable full-sequence cache. While masks remain it: (1) extracts local features and chooses depth
+with Equation~\ref{eq:router}; (2) constructs the linear draft chain from stale top-one proposals;
+(3) repeats the immutable cache and evaluates all nodes as one batch; (4) traverses only edges whose
+complete child state equals the verified native successor; (5) returns the verified successor at a
+mismatch or the verified leaf successor; and (6) records physical NFE, nodes, accepted edges,
+rejection depth, and a sequence-safe flag. A depth-zero decision is exactly one native transition.
 
 \section{Full confirmatory results}
 \label{app:results}

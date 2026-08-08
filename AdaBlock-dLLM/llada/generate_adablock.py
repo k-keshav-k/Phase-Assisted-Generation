@@ -241,7 +241,8 @@ def generate_adablock_prefix_cache(model, prompt, steps=128, gen_length=128, ini
 @torch.no_grad()
 def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_block_length=128, temperature=0.,
             remasking='low_confidence', mask_id=126336, threshold=None, delimiter_ids=[198], delimiter_threshold=float('inf'),
-            risk_policy=None, digit_ids_tensor=None, delimiter_ids_tensor=None, return_schedule_history=False):
+            risk_policy=None, speculation_policy=None, digit_ids_tensor=None,
+            delimiter_ids_tensor=None, return_schedule_history=False):
     '''
     Args:
         model: Mask predictor.
@@ -257,6 +258,8 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         delimiter_threshold: Confidence threshold for block length prediction.
     '''
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
+    if risk_policy is not None and speculation_policy is not None:
+        raise ValueError("risk stopping and verified speculation are mutually exclusive")
     
     x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
     x[:, :prompt.shape[1]] = prompt.clone()
@@ -271,6 +274,8 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
     schedule_history = []
     if risk_policy is not None:
         risk_policy.reset_prompt()
+    if speculation_policy is not None:
+        speculation_policy.reset_prompt()
     
     while generated_length < gen_length: 
         nfe = 0
@@ -290,8 +295,11 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         block_end = block_start + block_length
         generated_length += block_length
         risk_steps = []
+        speculation_steps = []
         if risk_policy is not None:
             risk_policy.start_block()
+        if speculation_policy is not None:
+            speculation_policy.start_block()
         
         # only allow transfer tokens in current block
         mask_index = (x == mask_id)
@@ -299,6 +307,8 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         
         x0, transfer_index = get_transfer_index(logits, predicted_tokens, remasking, mask_index, x, None, threshold)
         x[transfer_index] = x0[transfer_index]
+        last_transfer_count = int(transfer_index.sum().item())
+        verified_transition_count = 1
         final_block_logits = logits[:, block_start:block_end]
         previous_policy_logits = None
 
@@ -338,6 +348,115 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
             if (x[:, block_start:block_end] == mask_id).sum() == 0:
                 break
             mask_index = (x[:, block_start:block_end] == mask_id)
+            if speculation_policy is not None:
+                from pag.experiments.rc_pag_adapter import observation_from_tensors
+                from pag.experiments.rc_pag_speculation import (
+                    build_linear_draft,
+                    repeat_tensor_tree,
+                    serialize_speculation_plan,
+                    serialize_speculation_result,
+                    verify_draft,
+                )
+
+                active = x[:, block_start:block_end]
+                observation = observation_from_tensors(
+                    logits=final_block_logits,
+                    previous_logits=previous_policy_logits,
+                    current_tokens=active,
+                    mask_token_id=mask_id,
+                    step_index=verified_transition_count,
+                    digit_ids=digit_ids_tensor,
+                    delimiter_ids=delimiter_ids_tensor,
+                )
+                plan = speculation_policy.choose(
+                    observation,
+                    last_transfer_count=last_transfer_count,
+                )
+                proposal = torch.argmax(final_block_logits, dim=-1)
+                proposal = torch.where(mask_index, proposal, active)
+                probabilities = torch.softmax(final_block_logits.float(), dim=-1)
+                proposal_confidence = probabilities.gather(-1, proposal.unsqueeze(-1)).squeeze(-1)
+                ranked_positions = torch.argsort(
+                    torch.where(
+                        mask_index,
+                        proposal_confidence,
+                        torch.full_like(proposal_confidence, -torch.inf),
+                    ),
+                    dim=-1,
+                    descending=True,
+                )[0]
+                ranked_positions = [
+                    int(position)
+                    for position in ranked_positions.tolist()
+                    if bool(mask_index[0, position])
+                ]
+                nodes = build_linear_draft(
+                    active,
+                    proposed_tokens=proposal,
+                    mask_token_id=mask_id,
+                    ranked_positions=ranked_positions,
+                    depth=plan.depth,
+                    draft_width=plan.draft_width,
+                )
+                node_count = len(nodes)
+                batched_cache = repeat_tensor_tree(full_cache, node_count)
+                batched_replace_position = replace_position.repeat(node_count, 1)
+                block_output = model(
+                    torch.cat(nodes, dim=0),
+                    past_key_values=batched_cache,
+                    use_cache=True,
+                    replace_position=batched_replace_position,
+                )
+                block_logits = block_output.logits
+                nfe += 1
+                root_masks = int(mask_index.sum().item())
+
+                def verified_transition(state, verified_logits):
+                    if verified_logits.ndim == 2:
+                        verified_logits = verified_logits.unsqueeze(0)
+                    verified_predictions = torch.argmax(
+                        add_gumbel_noise(verified_logits, temperature=temperature),
+                        dim=-1,
+                    )
+                    verified_mask = state == mask_id
+                    verified_x0, verified_transfer = get_transfer_index(
+                        verified_logits,
+                        verified_predictions,
+                        remasking,
+                        verified_mask,
+                        state,
+                        None,
+                        threshold,
+                    )
+                    successor = state.detach().clone()
+                    successor[verified_transfer] = verified_x0[verified_transfer]
+                    return successor
+
+                result = verify_draft(
+                    nodes,
+                    block_logits,
+                    verified_transition,
+                    mask_token_id=mask_id,
+                )
+                x[:, block_start:block_end] = result.tokens
+                used_node = min(result.accepted_draft_edges, node_count - 1)
+                previous_policy_logits = final_block_logits.detach()
+                final_block_logits = block_logits[used_node : used_node + 1]
+                verified_transition_count += result.verified_transitions
+                last_transfer_count = max(
+                    1,
+                    root_masks - int((result.tokens == mask_id).sum().item()),
+                )
+                speculation_steps.append(
+                    {
+                        "step_index": int(verified_transition_count),
+                        "remaining_masks_before": root_masks,
+                        "remaining_masks_after": int((result.tokens == mask_id).sum().item()),
+                        **serialize_speculation_plan(plan),
+                        **serialize_speculation_result(result),
+                    }
+                )
+                continue
             block_output = model(x[:, block_start:block_end], past_key_values=full_cache, use_cache=True, replace_position=replace_position)
             block_logits = block_output.logits
             final_block_logits = block_logits
@@ -379,7 +498,7 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                 x[:, block_start:block_end][transfer_index] = x0[transfer_index]
         nfe_history.append(nfe)
 
-        if risk_policy is not None or return_schedule_history:
+        if risk_policy is not None or speculation_policy is not None or return_schedule_history:
             from pag.experiments.rc_pag_features import RealizedBlock
 
             block_tokens = x[:, block_start:block_end]
@@ -408,6 +527,17 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                         delimiter_fraction=delimiter_fraction,
                     )
                 )
+            if speculation_policy is not None:
+                speculation_policy.record_realized(
+                    RealizedBlock(
+                        block_size=block_length,
+                        nfe=nfe,
+                        mean_confidence=token_confidence.mean().item(),
+                        min_confidence=token_confidence.min().item(),
+                        digit_fraction=digit_fraction,
+                        delimiter_fraction=delimiter_fraction,
+                    )
+                )
             schedule_history.append(
                 {
                     "block_index": len(schedule_history),
@@ -421,6 +551,14 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                     "block_start": int(block_start),
                     "block_end": int(block_end),
                     "risk_steps": risk_steps,
+                    "speculation_steps": speculation_steps,
+                    "verified_transition_count": int(verified_transition_count),
+                    "speculative_nfe_saved": int(
+                        sum(step["nfe_saved"] for step in speculation_steps)
+                    ),
+                    "verified_sequence_safe": all(
+                        step["sequence_safe"] for step in speculation_steps
+                    ),
                     "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
                 }
             )

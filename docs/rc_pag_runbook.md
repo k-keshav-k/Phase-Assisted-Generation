@@ -1,7 +1,7 @@
 # RC-PAG one-A100 runbook
 
 > **Historical v1 manual.** Do not use the commands or 12-policy claims below for the new
-> run. The authoritative v6 command is in [rc_pag_one_command.md](rc_pag_one_command.md).
+> run. The authoritative v8 command is in [rc_pag_one_command.md](rc_pag_one_command.md).
 
 This runbook executes the frozen Risk-Calibrated PAG (RC-PAG) protocol on one NYU Langone
 A100. It deliberately separates development, untouched calibration, and confirmation. Do

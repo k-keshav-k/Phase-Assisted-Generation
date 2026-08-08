@@ -8,6 +8,8 @@ from types import ModuleType, SimpleNamespace
 
 import torch
 
+from pag.experiments.rc_pag_speculation import RiskAdaptiveSpeculationPolicy
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DREAM_DIR = REPO_ROOT / "AdaBlock-dLLM" / "dream"
 if str(DREAM_DIR) not in sys.path:
@@ -155,6 +157,35 @@ class NeverStopPolicy(FakeRiskPolicy):
         )
 
 
+class StableDreamModel:
+    def __init__(self) -> None:
+        self.device = torch.device("cpu")
+        self.pag_digit_ids = torch.tensor([2, 4], dtype=torch.long)
+        self.pag_delimiter_ids = torch.tensor([3, 5], dtype=torch.long)
+        self.call_index = 0
+
+    def __call__(self, tokens, *args, **kwargs):
+        del args, kwargs
+        self.call_index += 1
+        batch, length = tokens.shape
+        logits = torch.zeros((batch, length, 10), dtype=torch.float32)
+        token_offset = 2 if length == 5 else 3
+        for position in range(length):
+            logits[:, position, position + token_offset] = 10.0 - position
+        cache = [(torch.zeros((batch, 5, 1)), torch.zeros((batch, 5, 1)))]
+        return SimpleNamespace(logits=logits, past_key_values=cache)
+
+    def _compute_block_length(self, *args, **kwargs) -> int:
+        del args, kwargs
+        return 4
+
+
+class AlwaysDeepScorer:
+    def predict_risk(self, features) -> float:
+        del features
+        return 0.0
+
+
 def _make_schedule(block_size: int, refinement_steps: int) -> SimpleNamespace:
     return SimpleNamespace(
         predicted_tuple=PhaseTuple(block_size, refinement_steps),
@@ -223,6 +254,60 @@ def test_instrumented_dream_adablock_is_exact_when_policy_never_stops() -> None:
     assert actual.nfe_history == expected.nfe_history == [2, 2]
     assert actual.block_history == expected.block_history == [2, 2]
     assert len(actual.schedule_history) == 2
+
+
+def test_dream_verified_speculation_matches_adablock_with_fewer_physical_nfes() -> None:
+    config = DreamGenerationConfig(
+        max_length=5,
+        steps=8,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+    input_ids = torch.tensor([[1]], dtype=torch.long)
+    baseline = StableDreamModel()
+    baseline._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        baseline,
+        StableDreamModel,
+    )
+    expected = baseline._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+
+    speculative = StableDreamModel()
+    speculative.pag_speculation_policy = RiskAdaptiveSpeculationPolicy(
+        AlwaysDeepScorer(),
+        max_depth=3,
+        medium_depth=1,
+        deep_risk_threshold=0.1,
+        medium_risk_threshold=0.3,
+        draft_width_multiplier=1.0,
+    )
+    speculative._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        speculative,
+        StableDreamModel,
+    )
+    actual = speculative._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+
+    assert actual.sequences.tolist() == expected.sequences.tolist()
+    assert expected.nfe_history == [4]
+    assert actual.nfe_history == [2]
+    assert speculative.call_index == 2
+    assert actual.schedule_history[0]["verified_sequence_safe"] is True
 
 
 def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> None:
