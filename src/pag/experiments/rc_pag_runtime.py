@@ -71,6 +71,15 @@ def _revision_cached_locally(repository: str, revision: str) -> bool:
         return False
 
 
+def _hub_offline() -> bool:
+    """True when huggingface_hub is configured for offline operation."""
+    return str(os.environ.get("HF_HUB_OFFLINE", "")).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
 def _ensure_llada_config_compatibility(config: Any) -> Any:
     """Bridge fields added by the bundled AdaBlock LLaDA model fork."""
     if not hasattr(config, "train_max_sequence_length"):
@@ -414,22 +423,37 @@ class UnifiedRCPAGRuntime:
             errors.append("torch.cuda.is_available() is false")
         elif torch.cuda.get_device_properties(0).total_memory < 40 * 1024**3:
             errors.append("RC-PAG requires at least 40 GiB GPU memory")
-        try:
-            from huggingface_hub import model_info
-
-            info = model_info(spec.repository, revision=spec.revision)
-            if info.sha != spec.revision:
-                errors.append("resolved model revision differs from the frozen SHA")
-        except Exception as exc:
+        if _hub_offline():
+            # Explicit offline mode: verify against the local cache only.
             if _revision_cached_locally(spec.repository, spec.revision):
                 warnings.append(
-                    f"hub lookup unavailable ({type(exc).__name__}); "
-                    "pinned revision confirmed in the local cache"
+                    "HF_HUB_OFFLINE is set; pinned revision confirmed in the local cache"
                 )
             else:
                 errors.append(
-                    f"model revision could not be resolved: {type(exc).__name__}: {exc}"
+                    "model revision could not be resolved: HF_HUB_OFFLINE is set and "
+                    "the pinned revision is not present in the local cache"
                 )
+        else:
+            # Online mode: resolve the pinned revision from the hub first; fall
+            # back to the local cache only if the hub lookup genuinely fails
+            # (e.g. a compute node without egress).
+            try:
+                from huggingface_hub import model_info
+
+                info = model_info(spec.repository, revision=spec.revision)
+                if info.sha != spec.revision:
+                    errors.append("resolved model revision differs from the frozen SHA")
+            except Exception as exc:
+                if _revision_cached_locally(spec.repository, spec.revision):
+                    warnings.append(
+                        f"hub lookup unavailable ({type(exc).__name__}); "
+                        "pinned revision confirmed in the local cache"
+                    )
+                else:
+                    errors.append(
+                        f"model revision could not be resolved: {type(exc).__name__}: {exc}"
+                    )
         return {
             "ok": not errors,
             "mock": False,

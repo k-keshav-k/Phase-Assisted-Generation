@@ -378,3 +378,53 @@ def test_preflight_fails_when_offline_and_revision_not_cached(monkeypatch) -> No
     assert result["ok"] is False
     assert any("model revision could not be resolved" in error for error in result["errors"])
     assert result["warnings"] == []
+
+
+def test_preflight_uses_online_hub_when_not_offline(monkeypatch) -> None:
+    runtime = _preflight_runtime()
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        torch.cuda,
+        "get_device_properties",
+        lambda _index: SimpleNamespace(total_memory=80 * 1024**3),
+    )
+    monkeypatch.delenv("HF_HUB_OFFLINE", raising=False)
+    resolved = SimpleNamespace(sha=runtime.config.models["llada"].revision)
+    monkeypatch.setattr("huggingface_hub.model_info", lambda repository, revision: resolved)
+
+    result = runtime.preflight(
+        model="llada",
+        spec=runtime.config.models["llada"],
+        device="cuda",
+    )
+
+    assert result["ok"] is True
+    assert result["errors"] == []
+    assert result["warnings"] == []
+
+
+def test_preflight_skips_hub_when_offline_env_set_and_uses_cache(monkeypatch) -> None:
+    runtime = _preflight_runtime()
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        torch.cuda,
+        "get_device_properties",
+        lambda _index: SimpleNamespace(total_memory=80 * 1024**3),
+    )
+    monkeypatch.setenv("HF_HUB_OFFLINE", "1")
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime._revision_cached_locally",
+        lambda repository, revision: True,
+    )
+    # model_info must never be called in explicit offline mode.
+    monkeypatch.setattr("huggingface_hub.model_info", _offline_hub_raises)
+
+    result = runtime.preflight(
+        model="llada",
+        spec=runtime.config.models["llada"],
+        device="cuda",
+    )
+
+    assert result["ok"] is True
+    assert result["errors"] == []
+    assert result["warnings"] and "HF_HUB_OFFLINE is set" in result["warnings"][0]
