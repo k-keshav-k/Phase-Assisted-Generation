@@ -52,6 +52,25 @@ class _ConstantRiskScorer:
         return self.risk
 
 
+def _revision_cached_locally(repository: str, revision: str) -> bool:
+    """True when the pinned revision already exists in the local HF cache.
+
+    Compute nodes commonly run with HF_HUB_OFFLINE=1 (or no egress), so the
+    online model_info() check in preflight cannot resolve the revision even
+    though the weights were downloaded once by the login node. In that case
+    preflight should trust the local snapshot instead of hard-failing.
+    """
+    try:
+        from huggingface_hub import snapshot_download
+    except ImportError:
+        return False
+    try:
+        snapshot_download(repository, revision=revision, local_files_only=True)
+        return True
+    except Exception:
+        return False
+
+
 def _ensure_llada_config_compatibility(config: Any) -> Any:
     """Bridge fields added by the bundled AdaBlock LLaDA model fork."""
     if not hasattr(config, "train_max_sequence_length"):
@@ -386,6 +405,7 @@ class UnifiedRCPAGRuntime:
 
     def preflight(self, *, model: str, spec, device: str) -> Mapping[str, Any]:
         errors = []
+        warnings = []
         if model != self.model_name:
             errors.append("runtime/model mismatch")
         if not device.startswith("cuda"):
@@ -401,13 +421,22 @@ class UnifiedRCPAGRuntime:
             if info.sha != spec.revision:
                 errors.append("resolved model revision differs from the frozen SHA")
         except Exception as exc:
-            errors.append(f"model revision could not be resolved: {type(exc).__name__}: {exc}")
+            if _revision_cached_locally(spec.repository, spec.revision):
+                warnings.append(
+                    f"hub lookup unavailable ({type(exc).__name__}); "
+                    "pinned revision confirmed in the local cache"
+                )
+            else:
+                errors.append(
+                    f"model revision could not be resolved: {type(exc).__name__}: {exc}"
+                )
         return {
             "ok": not errors,
             "mock": False,
             "repository": spec.repository,
             "revision": spec.revision,
             "errors": errors,
+            "warnings": warnings,
         }
 
     def _load_pool(self, name: str):
