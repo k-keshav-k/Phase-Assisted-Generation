@@ -312,3 +312,69 @@ def test_v8_fixed_depth_ablation_needs_no_learned_estimator() -> None:
     assert speculation.max_depth == speculation.medium_depth == 4
     assert speculation.scorer.predict_risk({}) == 0.0
     assert provenance == "verified_fixed_d4"
+
+
+def _offline_hub_raises(*args, **kwargs):
+    del args, kwargs
+    raise RuntimeError(
+        "OfflineModeIsEnabled: Cannot reach huggingface.co: "
+        "offline mode is enabled. To disable it, please unset the "
+        "`HF_HUB_OFFLINE` environment variable."
+    )
+
+
+def _preflight_runtime():
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml"))
+    runtime.model_name = "llada"
+    return runtime
+
+
+def test_preflight_tolerates_offline_hub_when_revision_is_cached(monkeypatch) -> None:
+    runtime = _preflight_runtime()
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        torch.cuda,
+        "get_device_properties",
+        lambda _index: SimpleNamespace(total_memory=80 * 1024**3),
+    )
+    monkeypatch.setattr("huggingface_hub.model_info", _offline_hub_raises)
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime._revision_cached_locally",
+        lambda repository, revision: True,
+    )
+
+    result = runtime.preflight(
+        model="llada",
+        spec=runtime.config.models["llada"],
+        device="cuda",
+    )
+
+    assert result["ok"] is True
+    assert result["errors"] == []
+    assert result["warnings"] and "local cache" in result["warnings"][0]
+
+
+def test_preflight_fails_when_offline_and_revision_not_cached(monkeypatch) -> None:
+    runtime = _preflight_runtime()
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        torch.cuda,
+        "get_device_properties",
+        lambda _index: SimpleNamespace(total_memory=80 * 1024**3),
+    )
+    monkeypatch.setattr("huggingface_hub.model_info", _offline_hub_raises)
+    monkeypatch.setattr(
+        "pag.experiments.rc_pag_runtime._revision_cached_locally",
+        lambda repository, revision: False,
+    )
+
+    result = runtime.preflight(
+        model="llada",
+        spec=runtime.config.models["llada"],
+        device="cuda",
+    )
+
+    assert result["ok"] is False
+    assert any("model revision could not be resolved" in error for error in result["errors"])
+    assert result["warnings"] == []
