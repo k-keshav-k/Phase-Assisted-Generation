@@ -13,6 +13,8 @@ premature block commitment with a one-A100, claim-gated evaluation. Start with t
 [mathematical workshop draft](writeup/rc_pag_workshop.tex), and the
 [literature positioning](docs/literature/2026-07-29-rc-pag-positioning.md). The earlier course
 report remains at `writeup/final_report.pdf` as historical context, not current evidence.
+The v8 launcher automatically downloads only missing pinned Hugging Face assets, verifies the
+cache, and then executes the resumable experiment offline.
 
 ---
 

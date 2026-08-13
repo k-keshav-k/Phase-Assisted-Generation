@@ -28,10 +28,32 @@ export UV_CACHE_DIR="${UV_CACHE_DIR:-${RC_PAG_SCRATCH_ROOT}/uv-cache}"
 export TMPDIR="${TMPDIR:-${RC_PAG_SCRATCH_ROOT}/tmp}"
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 export TOKENIZERS_PARALLELISM=false
-export HF_HUB_OFFLINE="${RC_PAG_HF_OFFLINE:-1}"
-export HF_DATASETS_OFFLINE="${RC_PAG_HF_OFFLINE:-1}"
-export TRANSFORMERS_OFFLINE="${RC_PAG_HF_OFFLINE:-1}"
 mkdir -p "${HF_HOME}" "${HF_DATASETS_CACHE}" "${UV_CACHE_DIR}" "${TMPDIR}"
+
+# Prefer cached artifacts, fetch only missing pinned revisions, then run offline.
+# Keep RC_PAG_HF_OFFLINE as a backwards-compatible override when the new mode
+# was not set explicitly.
+if [[ -z "${RC_PAG_HF_MODE:-}" && -n "${RC_PAG_HF_OFFLINE:-}" ]]; then
+    case "${RC_PAG_HF_OFFLINE,,}" in
+        1|true|yes) RC_PAG_HF_MODE="offline" ;;
+        0|false|no) RC_PAG_HF_MODE="online" ;;
+        *)
+            echo "RC_PAG_HF_OFFLINE must be a boolean value" >&2
+            exit 2
+            ;;
+    esac
+else
+    RC_PAG_HF_MODE="${RC_PAG_HF_MODE:-auto}"
+    RC_PAG_HF_MODE="${RC_PAG_HF_MODE,,}"
+fi
+case "${RC_PAG_HF_MODE}" in
+    auto|offline|online) ;;
+    *)
+        echo "RC_PAG_HF_MODE must be auto, offline, or online" >&2
+        exit 2
+        ;;
+esac
+export RC_PAG_HF_MODE
 
 child_pid=""
 requeue_requested=0
@@ -56,6 +78,20 @@ export PATH=/ext3/miniconda3/bin:$PATH
 conda activate "${RC_PAG_CONDA_ENV:-llmr}"
 cd "$PROJECT_DIR"
 uv sync --group phase_cpd_dream --python "${RC_PAG_PYTHON:-3.11}"
+
+uv run --group phase_cpd_dream python scripts/bootstrap_rc_pag_hf.py \
+    --config "$RC_PAG_CONFIG" \
+    --mode "$RC_PAG_HF_MODE"
+
+if [[ "$RC_PAG_HF_MODE" == "online" ]]; then
+    export HF_HUB_OFFLINE=0
+    export HF_DATASETS_OFFLINE=0
+    export TRANSFORMERS_OFFLINE=0
+else
+    export HF_HUB_OFFLINE=1
+    export HF_DATASETS_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+fi
 
 args=(
     "$RC_PAG_STAGE"

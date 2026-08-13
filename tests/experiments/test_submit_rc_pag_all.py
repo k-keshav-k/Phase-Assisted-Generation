@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 SCRIPT = Path("scripts/slurm/submit_rc_pag_all.sh")
+WORKER = Path("scripts/slurm/rc_pag_a100.sbatch")
 
 
 def _environment(tmp_path: Path) -> tuple[dict[str, str], Path]:
@@ -103,3 +104,28 @@ def test_one_command_rejects_development_limit(tmp_path):
     assert result.returncode == 2
     assert "RC_PAG_LIMIT" in result.stderr
     assert not capture.exists()
+
+
+def test_a100_worker_bootstraps_hf_assets_before_experiment() -> None:
+    worker = WORKER.read_text(encoding="utf-8")
+
+    bootstrap = "python scripts/bootstrap_rc_pag_hf.py"
+    experiment = "python scripts/run_rc_pag.py"
+    assert 'RC_PAG_HF_MODE="${RC_PAG_HF_MODE:-auto}"' in worker
+    assert "RC_PAG_HF_OFFLINE:-" in worker
+    assert bootstrap in worker
+    assert '--config "$RC_PAG_CONFIG"' in worker
+    assert '--mode "$RC_PAG_HF_MODE"' in worker
+    assert worker.index(bootstrap) < worker.index(experiment)
+
+
+def test_a100_worker_runs_auto_and_offline_modes_offline_after_bootstrap() -> None:
+    worker = WORKER.read_text(encoding="utf-8")
+
+    assert 'if [[ "$RC_PAG_HF_MODE" == "online" ]]' in worker
+    assert "export HF_HUB_OFFLINE=1" in worker
+    assert "export HF_DATASETS_OFFLINE=1" in worker
+    assert "export TRANSFORMERS_OFFLINE=1" in worker
+    assert "export HF_HUB_OFFLINE=0" in worker
+    assert "export HF_DATASETS_OFFLINE=0" in worker
+    assert "export TRANSFORMERS_OFFLINE=0" in worker
