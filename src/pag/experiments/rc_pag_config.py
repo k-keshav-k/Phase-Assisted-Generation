@@ -59,6 +59,7 @@ class StageSizes:
     rollout_per_model: int
     tuning_per_model: int
     calibration_per_model: int
+    audit_per_model: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,12 +88,28 @@ class ClaimGateSpec:
     minimum_accuracy_lower_ci: float
     require_history_frontier_ci: bool
     minimum_model_nfe_reduction_lower_ci: float | None = None
+    minimum_model_latency_reduction_lower_ci: float | None = None
+    require_evaluated_row_nonincrease: bool = False
+    require_trajectory_equivalence: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class ReadinessSpec:
     minimum_tuning_nfe_reduction_per_model: float
     require_candidate_beats_nonlearned: bool
+    minimum_tuning_latency_reduction_per_model: float = 0.0
+    require_evaluated_row_nonincrease: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class EquivalenceSpec:
+    maximum_depth: int
+    safety_inflation: float
+    minimum_bin_count: int
+    minimum_acceptance_lcb: float
+    minimum_latency_reduction: float
+    require_evaluated_row_nonincrease: bool
+    source_run: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,6 +142,7 @@ class RCPAGConfig:
     confirmatory_methods: tuple[str, ...]
     claim_gates: ClaimGateSpec
     readiness: ReadinessSpec
+    equivalence: EquivalenceSpec | None
     config_hash: str
     raw: dict[str, Any]
 
@@ -173,6 +191,12 @@ _EXPECTED_V5_STAGES = {
 _EXPECTED_V6_STAGES = {
     "pilot": 32,
     "training": 600,
+    "tuning": 150,
+    "calibration": 500,
+}
+_EXPECTED_V9_STAGES = {
+    "audit": 32,
+    "pilot": 64,
     "tuning": 150,
     "calibration": 500,
 }
@@ -236,6 +260,10 @@ _REQUIRED_V8_DEVELOPMENT_METHODS = {
     "verified_fixed_d4",
     "rc_pag_verified",
 }
+_REQUIRED_V9_DEVELOPMENT_METHODS = {
+    "adablock",
+    "ec_pag",
+}
 
 
 def _bounds(value: object, *, name: str) -> tuple[int, int]:
@@ -257,8 +285,8 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     if int(payload.get("seed", 0)) < 1:
         raise ValueError("seed must be positive")
     protocol_version = str(payload.get("protocol_version", "v1"))
-    if protocol_version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"}:
-        raise ValueError("protocol_version must be v1, v2, v3, v4, v5, v6, v7, or v8")
+    if protocol_version not in {"v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"}:
+        raise ValueError("protocol_version must be v1, v2, v3, v4, v5, v6, v7, v8, or v9")
 
     models = payload.get("models", {})
     if set(models) != _EXPECTED_MODELS:
@@ -279,7 +307,9 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         _require_sha(dataset.get("revision"), name=f"dataset {name} revision")
 
     expected_stages = (
-        _EXPECTED_V5_STAGES
+        _EXPECTED_V9_STAGES
+        if protocol_version == "v9"
+        else _EXPECTED_V5_STAGES
         if protocol_version == "v5"
         else _EXPECTED_V6_STAGES
         if protocol_version in {"v6", "v7", "v8"}
@@ -310,6 +340,15 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
 
     sizes = payload.get("stage_sizes", {})
     expected_sizes = (
+        {
+            "audit_per_model": 32,
+            "pilot_per_model": 64,
+            "traces_per_model": 0,
+            "tuning_per_model": 150,
+            "calibration_per_model": 500,
+        }
+        if protocol_version == "v9"
+        else
         {
             "pilot_per_model": 32,
             "traces_per_model": 600,
@@ -351,6 +390,8 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         if protocol_version in {"v4", "v5", "v6", "v7", "v8"}
         else ("hist_gradient_boosting", "logistic")
     )
+    if protocol_version == "v9":
+        expected_estimators = ()
     if tuple(policy.get("estimator_kinds", ())) != expected_estimators:
         raise ValueError("estimator kinds do not match the frozen protocol")
     if int(policy.get("history_window", 0)) != 4:
@@ -365,6 +406,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "v6": 3,
         "v7": 3,
         "v8": 3,
+        "v9": 1,
     }[protocol_version]
     if len(candidates) != expected_candidates:
         if protocol_version == "v1":
@@ -383,7 +425,11 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         raise ValueError(f"{protocol_version} policy candidates must use the budgeted estimator")
     elif protocol_version == "v8" and set(variants) != {"rc_pag_verified"}:
         raise ValueError("v8 policy candidates must use verified speculation")
-    elif protocol_version not in {"v5", "v6", "v7", "v8"} and set(variants) != {"rc_pag_local"}:
+    elif protocol_version == "v9" and set(variants) != {"ec_pag"}:
+        raise ValueError("v9 policy candidate must use equivalence-cost speculation")
+    elif protocol_version not in {"v5", "v6", "v7", "v8", "v9"} and set(variants) != {
+        "rc_pag_local"
+    }:
         raise ValueError(f"{protocol_version} policy candidates must use the local estimator")
     for item in candidates:
         threshold_limit = 0.05 if protocol_version == "v1" else 1.0
@@ -464,6 +510,18 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
                 or width_multiplier <= 0.0
             ):
                 raise ValueError("v8 candidates require frozen risk-adaptive verified speculation")
+        elif protocol_version == "v9":
+            if (
+                remaining != 1.0
+                or min_savings != 0.0
+                or max_temporal_js != 1.0
+                or exact_agreement
+                or float(item.get("threshold", 0.0)) != 1.0
+                or int(item.get("max_speculation_depth", 0)) != 2
+                or int(item.get("medium_speculation_depth", 0)) != 1
+                or float(item.get("draft_width_multiplier", 0.0)) != 1.0
+            ):
+                raise ValueError("v9 candidate requires frozen equivalence-cost speculation")
         elif exact_agreement:
             raise ValueError("exact-agreement verification is only defined for v5 and v6")
         if protocol_version not in {"v6", "v7"} and (
@@ -492,6 +550,8 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     expected_loss = (
         "any_shadow_token_disagreement"
         if protocol_version == "v1"
+        else "any_execution_mismatch"
+        if protocol_version == "v9"
         else "adablock_correct_candidate_wrong"
     )
     if risk.get("loss") != expected_loss:
@@ -502,6 +562,22 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
             raise ValueError(f"{protocol_version} minimum NFE reduction must remain 0.05")
     elif minimum_nfe_reduction is not None:
         raise ValueError("minimum NFE reduction is only defined for v4 and v5")
+
+    equivalence = payload.get("equivalence")
+    if protocol_version == "v9":
+        expected_equivalence = {
+            "maximum_depth": 2,
+            "safety_inflation": 1.25,
+            "minimum_bin_count": 8,
+            "minimum_acceptance_lcb": 0.8,
+            "minimum_latency_reduction": 0.05,
+            "require_evaluated_row_nonincrease": True,
+            "source_run": "artifacts/rc_pag/rc-pag-d36b982c2388",
+        }
+        if equivalence != expected_equivalence:
+            raise ValueError("v9 equivalence settings do not match the frozen protocol")
+    elif equivalence is not None:
+        raise ValueError("equivalence settings are only defined for v9")
 
     statistics = payload.get("statistics", {})
     if int(statistics.get("bootstrap_samples", 0)) != 10_000:
@@ -521,6 +597,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "workshop_v6_fresh": _WORKSHOP_V2_CONFIRMATORY,
         "workshop_v7_fresh": _WORKSHOP_V2_CONFIRMATORY,
         "workshop_v8_fresh": _WORKSHOP_V2_CONFIRMATORY,
+        "workshop_v9_fresh": _WORKSHOP_V2_CONFIRMATORY,
     }
     if confirmation_profile not in expected_confirmatory:
         raise ValueError("unknown confirmation profile")
@@ -560,6 +637,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "v6": _REQUIRED_V6_DEVELOPMENT_METHODS,
         "v7": _REQUIRED_V7_DEVELOPMENT_METHODS,
         "v8": _REQUIRED_V8_DEVELOPMENT_METHODS,
+        "v9": _REQUIRED_V9_DEVELOPMENT_METHODS,
     }[protocol_version]
     if development != expected_development:
         raise ValueError("development method family does not match the frozen protocol")
@@ -573,6 +651,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
         "workshop_v6_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
         "workshop_v7_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
         "workshop_v8_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
+        "workshop_v9_fresh": ("adablock", "best_nonlearned", "rc_pag_selected"),
     }
     if tuple(methods.get("confirmatory", ())) != expected_methods[confirmation_profile]:
         raise ValueError("confirmatory methods do not match the frozen protocol")
@@ -587,21 +666,43 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
     }
     if protocol_version in {"v6", "v7", "v8"}:
         expected_gates["minimum_model_nfe_reduction_lower_ci"] = 0.05
+    elif protocol_version == "v9":
+        expected_gates.update(
+            {
+                "beat_adablock_both_models": False,
+                "beat_best_nonlearned": False,
+                "minimum_accuracy_lower_ci": 0.0,
+                "minimum_model_latency_reduction_lower_ci": 0.05,
+                "require_evaluated_row_nonincrease": True,
+                "require_trajectory_equivalence": True,
+            }
+        )
     if gates != expected_gates:
         raise ValueError("claim gates do not match the frozen protocol")
 
     readiness = payload.get("readiness")
-    if protocol_version in {"v3", "v4", "v5", "v6", "v7", "v8"}:
-        expected_readiness = {
-            "minimum_tuning_nfe_reduction_per_model": (
-                0.08 if protocol_version in {"v5", "v6", "v7"} else 0.05
-            ),
-            "require_candidate_beats_nonlearned": True,
-        }
+    if protocol_version in {"v3", "v4", "v5", "v6", "v7", "v8", "v9"}:
+        expected_readiness = (
+            {
+                "minimum_tuning_nfe_reduction_per_model": 0.0,
+                "require_candidate_beats_nonlearned": False,
+                "minimum_tuning_latency_reduction_per_model": 0.05,
+                "require_evaluated_row_nonincrease": True,
+            }
+            if protocol_version == "v9"
+            else {
+                "minimum_tuning_nfe_reduction_per_model": (
+                    0.08 if protocol_version in {"v5", "v6", "v7"} else 0.05
+                ),
+                "require_candidate_beats_nonlearned": True,
+            }
+        )
         if readiness != expected_readiness:
             raise ValueError("v3 readiness gate does not match the frozen protocol")
     elif readiness is not None:
-        raise ValueError("readiness is only defined for the v3, v4, v5, v6, v7, and v8 protocols")
+        raise ValueError(
+            "readiness is only defined for the v3, v4, v5, v6, v7, v8, and v9 protocols"
+        )
 
 
 def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
@@ -637,6 +738,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
     statistics = payload["statistics"]
     gates = payload["claim_gates"]
     readiness = payload.get("readiness", {})
+    raw_equivalence = payload.get("equivalence")
     confirmation_profile = str(payload.get("confirmation_profile", "full"))
     raw_sampling = payload.get("confirmatory_sampling")
     if raw_sampling is None:
@@ -670,6 +772,7 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             rollout_per_model=int(stage_sizes.get("rollout_per_model", 0)),
             tuning_per_model=int(stage_sizes["tuning_per_model"]),
             calibration_per_model=int(stage_sizes["calibration_per_model"]),
+            audit_per_model=int(stage_sizes.get("audit_per_model", 0)),
         ),
         decoding=DecodingSpec(
             temperature=float(decoding["temperature"]),
@@ -737,6 +840,27 @@ def load_rc_pag_config(path: str | Path) -> RCPAGConfig:
             require_candidate_beats_nonlearned=bool(
                 readiness.get("require_candidate_beats_nonlearned", False)
             ),
+            minimum_tuning_latency_reduction_per_model=float(
+                readiness.get("minimum_tuning_latency_reduction_per_model", 0.0)
+            ),
+            require_evaluated_row_nonincrease=bool(
+                readiness.get("require_evaluated_row_nonincrease", False)
+            ),
+        ),
+        equivalence=(
+            None
+            if raw_equivalence is None
+            else EquivalenceSpec(
+                maximum_depth=int(raw_equivalence["maximum_depth"]),
+                safety_inflation=float(raw_equivalence["safety_inflation"]),
+                minimum_bin_count=int(raw_equivalence["minimum_bin_count"]),
+                minimum_acceptance_lcb=float(raw_equivalence["minimum_acceptance_lcb"]),
+                minimum_latency_reduction=float(raw_equivalence["minimum_latency_reduction"]),
+                require_evaluated_row_nonincrease=bool(
+                    raw_equivalence["require_evaluated_row_nonincrease"]
+                ),
+                source_run=str(raw_equivalence["source_run"]),
+            )
         ),
         config_hash=canonical_config_hash(payload),
         raw=payload,

@@ -16,6 +16,7 @@ WORKSHOP_V5_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v5.y
 WORKSHOP_V6_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v6.yaml")
 WORKSHOP_V7_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v7.yaml")
 WORKSHOP_V8_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml")
+WORKSHOP_V9_CONFIG_PATH = Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
 
 
 def _valid_payload() -> dict:
@@ -225,6 +226,54 @@ def test_v8_config_registers_risk_adaptive_verified_speculation() -> None:
     payload["policy"]["candidates"][0]["threshold"] = 0.7
 
     with pytest.raises(ValueError, match="risk-threshold gating"):
+        validate_rc_pag_config(payload)
+
+
+def test_v9_config_freezes_disjoint_equivalence_funnel() -> None:
+    config = load_rc_pag_config(WORKSHOP_V9_CONFIG_PATH)
+
+    assert config.protocol_version == "v9"
+    assert set(config.splits) == {"audit", "pilot", "tuning", "calibration"}
+    assert config.stage_sizes.audit_per_model == 32
+    assert config.stage_sizes.pilot_per_model == 64
+    assert config.stage_sizes.traces_per_model == 0
+    assert len(config.candidates) == 1
+    assert config.candidates[0].name == "ec_pag_v9"
+    assert config.candidates[0].variant == "ec_pag"
+    assert config.estimator_kinds == ()
+    assert config.equivalence is not None
+    assert config.equivalence.maximum_depth == 2
+    assert config.equivalence.safety_inflation == 1.25
+    assert config.equivalence.minimum_latency_reduction == 0.05
+    assert config.equivalence.require_evaluated_row_nonincrease
+    assert config.readiness.minimum_tuning_latency_reduction_per_model == 0.05
+    assert config.claim_gates.minimum_model_latency_reduction_lower_ci == 0.05
+    assert config.claim_gates.require_trajectory_equivalence
+
+    claimed: dict[str, set[int]] = {}
+    for role, pools in config.splits.items():
+        for pool, (start, end) in pools.items():
+            values = set(range(start, end + 1))
+            assert values.isdisjoint(claimed.setdefault(pool, set())), role
+            claimed[pool].update(values)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("maximum_depth", 4),
+        ("safety_inflation", 1.0),
+        ("minimum_bin_count", 2),
+        ("minimum_acceptance_lcb", 0.5),
+        ("minimum_latency_reduction", 0.01),
+        ("require_evaluated_row_nonincrease", False),
+    ],
+)
+def test_v9_config_rejects_equivalence_protocol_drift(field: str, value: object) -> None:
+    payload = deepcopy(load_rc_pag_config(WORKSHOP_V9_CONFIG_PATH).raw)
+    payload["equivalence"][field] = value
+
+    with pytest.raises(ValueError, match="v9 equivalence settings"):
         validate_rc_pag_config(payload)
 
 
