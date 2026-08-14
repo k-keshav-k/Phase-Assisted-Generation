@@ -891,6 +891,76 @@ def test_v9_reuses_only_v8_adablock_pilot_as_audit_reference(
     )
 
 
+class _V8SpeculationMismatchRuntime(MockRCPAGRuntime):
+    def run(self, **kwargs):
+        payload = super().run(**kwargs)
+        if kwargs["stage"] == "pilot" and kwargs["method"] == "verified_fixed_d4":
+            payload["generated_ids"] = [999]
+            payload["generated_text"] = "speculation-mismatch"
+        return payload
+
+
+def test_v9_reuses_exact_adablock_references_from_failed_v8_speculation_pilot(
+    tmp_path,
+    v8_config,
+    v9_config,
+) -> None:
+    source = tmp_path / "failed-v8"
+    source_runner = RCPAGOrchestrator(
+        v8_config,
+        source,
+        runtime_factory=lambda model: _V8SpeculationMismatchRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    with pytest.raises(ControlledStop, match="parity"):
+        source_runner.run_through("pilot")
+    assert json.loads((source / "manifests" / "pilot.json").read_text())["status"] == "failed"
+
+    destination = tmp_path / "v9"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v9_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    runner.run_through("pilot")
+
+    reuse = json.loads((destination / "reuse" / "v9_audit_manifest.json").read_text())
+    assert reuse["status"] == "reused"
+    assert set(reuse["reused_models"]) == {"llada", "dream"}
+    assert all(row["direct_reference_parity"] for row in reuse["evidence"].values())
+
+
+def test_v9_missing_reuse_source_regenerates_audit_references(tmp_path, v9_config) -> None:
+    source = tmp_path / "missing-source"
+    source.mkdir()
+    destination = tmp_path / "v9"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v9_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+
+    runner.run_through("pilot")
+
+    reuse = json.loads((destination / "reuse" / "v9_audit_manifest.json").read_text())
+    assert reuse["status"] == "not_reused"
+    assert "manifest" in reuse["reason"]
+    assert {
+        model
+        for stage, model, _, method in runtime.calls
+        if stage == "audit" and method == "adablock"
+    } == {"llada", "dream"}
+
+
 def test_v9_runs_strict_certificate_confirmation_and_latency_report(
     tmp_path,
     v9_config,

@@ -931,25 +931,49 @@ class RCPAGOrchestrator:
         source = self.reuse_development_from
         if source == self.run_dir.resolve():
             raise ValueError("reuse source must be a different run directory")
-        parity_path = source / "parity_audit.json"
         pilot_manifest_path = source / "manifests" / "pilot.json"
-        if not parity_path.is_file() or not pilot_manifest_path.is_file():
-            raise ValueError("v9 audit reuse requires a completed parity-audited source pilot")
-        parity = json.loads(parity_path.read_text(encoding="utf-8"))
-        pilot_manifest = json.loads(pilot_manifest_path.read_text(encoding="utf-8"))
-        if not parity.get("passed") or pilot_manifest.get("status") != "completed":
-            raise ValueError("v9 audit reuse source did not pass its pilot parity gate")
+        reuse_manifest_name = "reuse/v9_audit_manifest.json"
+
+        def reject(reason: str) -> set[str]:
+            self.store.write_named(
+                reuse_manifest_name,
+                {
+                    "schema_version": 2,
+                    "status": "not_reused",
+                    "source": str(source),
+                    "reuse_scope": "paired_adablock_reference_records_only",
+                    "reused_models": [],
+                    "evidence": {},
+                    "reason": reason,
+                    "fallback": "generate_fresh_audit_references",
+                },
+            )
+            return set()
+
+        if not pilot_manifest_path.is_file():
+            return reject("source pilot manifest is missing")
+        try:
+            pilot_manifest = json.loads(pilot_manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return reject("source pilot manifest is unreadable")
         source_identity = dict(pilot_manifest.get("identity", {}))
         current_identity = self.store.identity
         if source_identity.get("models") != current_identity["models"]:
-            raise ValueError("v9 audit reuse model revisions do not match")
+            return reject("source model revisions do not match")
         if source_identity.get("datasets") != current_identity["datasets"]:
-            raise ValueError("v9 audit reuse dataset revisions do not match")
+            return reject("source dataset revisions do not match")
         accepted_protocols = {"risk_calibrated_pag_v8", "risk_calibrated_pag_v9"}
         if source_identity.get("protocol") not in accepted_protocols:
-            raise ValueError("v9 audit reuse accepts only v8/v9 AdaBlock pilot records")
+            return reject("source protocol is not v8 or v9")
 
         expected_ids = {ref.sample_id for ref in refs}
+        parity_fields = (
+            "generated_ids",
+            "generated_text",
+            "nfe_history",
+            "block_history",
+            "total_nfe",
+        )
         metadata = {
             "schema_version",
             "identity",
@@ -961,36 +985,87 @@ class RCPAGOrchestrator:
         reused: set[str] = set()
         evidence: dict[str, Any] = {}
         for model in self.config.models:
-            source_dir = source / "pilot" / model / "adablock"
-            rows = [
-                json.loads(path.read_text(encoding="utf-8"))
-                for path in sorted(source_dir.glob("*.json"))
-            ]
+            source_stage = (
+                "pilot" if source_identity["protocol"] == "risk_calibrated_pag_v8" else "audit"
+            )
+            source_dir = source / source_stage / model / "adablock"
+            try:
+                rows = [
+                    json.loads(path.read_text(encoding="utf-8"))
+                    for path in sorted(source_dir.glob("*.json"))
+                ]
+            except (OSError, json.JSONDecodeError):
+                evidence[model] = {"reused": False, "reason": "unreadable reference records"}
+                continue
             by_id = {str(row.get("sample_id")): row for row in rows}
             if not expected_ids.issubset(by_id):
+                evidence[model] = {"reused": False, "reason": "incomplete reference coverage"}
                 continue
+            selected = [by_id[sample_id] for sample_id in sorted(expected_ids)]
+            valid_records = all(
+                row.get("identity") == source_identity and row.get("method") == "adablock"
+                for row in selected
+            )
+            if not valid_records:
+                evidence[model] = {"reused": False, "reason": "invalid reference identity"}
+                continue
+
+            direct_parity = True
+            if source_identity["protocol"] == "risk_calibrated_pag_v8":
+                shadow_dir = source / "pilot" / model / "full_budget_shadow"
+                try:
+                    shadow_rows = [
+                        json.loads(path.read_text(encoding="utf-8"))
+                        for path in sorted(shadow_dir.glob("*.json"))
+                    ]
+                except (OSError, json.JSONDecodeError):
+                    shadow_rows = []
+                shadow_by_id = {str(row.get("sample_id")): row for row in shadow_rows}
+                direct_parity = expected_ids.issubset(shadow_by_id) and all(
+                    all(
+                        by_id[sample_id].get(field) == shadow_by_id[sample_id].get(field)
+                        for field in parity_fields
+                    )
+                    for sample_id in expected_ids
+                )
+            if not direct_parity:
+                evidence[model] = {
+                    "reused": False,
+                    "reason": "AdaBlock/full-budget-shadow direct parity failed",
+                }
+                continue
+
             digest = hashlib.sha256()
             for sample_id in sorted(expected_ids):
                 row = by_id[sample_id]
-                if row.get("identity") != source_identity or row.get("method") != "adablock":
-                    raise ValueError("v9 audit reuse encountered an invalid source record")
                 payload = {key: value for key, value in row.items() if key not in metadata}
                 self.store.write(f"audit/{model}", "adablock", sample_id, payload)
                 digest.update(json.dumps(row, sort_keys=True).encode("utf-8"))
             reused.add(model)
             evidence[model] = {
+                "reused": True,
                 "records": len(expected_ids),
                 "sha256": digest.hexdigest(),
+                "direct_reference_parity": direct_parity,
+                "parity_fields": list(parity_fields),
             }
         self.store.write_named(
-            "reuse/v9_audit_manifest.json",
+            reuse_manifest_name,
             {
-                "schema_version": 1,
+                "schema_version": 2,
+                "status": (
+                    "reused"
+                    if len(reused) == len(self.config.models)
+                    else "partial"
+                    if reused
+                    else "not_reused"
+                ),
                 "source": str(source),
                 "reuse_scope": "paired_adablock_reference_records_only",
                 "reused_models": sorted(reused),
                 "evidence": evidence,
                 "excluded": "routers, selections, envelopes, cost rules, and certificates",
+                "fallback": "generate_fresh_audit_references_for_nonreused_models",
             },
         )
         return reused
