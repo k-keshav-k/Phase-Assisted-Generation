@@ -1,60 +1,44 @@
-# Run the complete v8 experiment
+# Run EC-PAG v9
 
-From the repository on the NYU cluster, run:
-
-```bash
-scripts/slurm/submit_rc_pag_all.sh
-```
-
-The default Hugging Face mode is `auto`: the job first checks the shared cache, temporarily goes
-online only to download missing pinned models or dataset splits, verifies that every asset now
-works offline, and then runs the full experiment offline. Partial downloads use the normal
-Hugging Face cache and resume when the same command is submitted again.
-
-Use a strict override only when needed:
+From the repository on the NYU cluster, run exactly:
 
 ```bash
-# Never use the network; fail early if a pinned asset is absent.
-RC_PAG_HF_MODE=offline scripts/slurm/submit_rc_pag_all.sh
-
-# Keep Hugging Face online throughout the experiment for troubleshooting.
-RC_PAG_HF_MODE=online scripts/slurm/submit_rc_pag_all.sh
+bash scripts/slurm/submit_rc_pag_all.sh
 ```
 
-The older `RC_PAG_HF_OFFLINE=1` and `RC_PAG_HF_OFFLINE=0` forms remain supported as aliases for
-`offline` and `online`, respectively. If `auto` cannot reach Hugging Face from the GPU node, it
-reports the exact missing assets; populate the same `RC_PAG_SCRATCH_ROOT` cache from a
-network-enabled node and resubmit.
+This submits one resumable 48-hour, one-A100 job and runs every CPU and GPU stage. The run is
+`artifacts/rc_pag/rc-pag-588204cfb482` for the frozen v9 config.
 
-That single command runs every CPU and GPU stage in one resumable 48-hour A100 job:
+The job automatically reuses only the 32 paired AdaBlock references/model from
+`artifacts/rc_pag/rc-pag-d36b982c2388`. It regenerates the numerical audit, held-out pilot,
+tuning, calibration, and confirmation evidence.
 
-```text
-preflight → pilot → collect/reuse → fit → screen → calibrate → confirm → report → paper
-```
+V9 continues past its 32-prompt audit and fresh 64-prompt pilot only if both models have exact
+token/state trajectories, complete numerical-guard evidence, no evaluated-row increase, and a
+paired latency-reduction lower bound above 5%. The same checks are repeated on 150 tuning and 500
+calibration prompts/model before the 5,184 confirmation generations.
 
-The launcher automatically prefers the completed v7 traces in
-`artifacts/rc_pag/rc-pag-c1eda289fb08`, then falls back to the completed v5 traces. To choose a
-source explicitly:
+The earlier real pilot averaged about 3.1 seconds per AdaBlock prompt. Budget roughly 8--15 A100
+hours for v9; the 48-hour request leaves room for cache setup and workload variation. After the
+pilot, use the run-specific estimate in:
 
 ```bash
-export RC_PAG_REUSE_FROM="/gpfs/scratch/sm12779/Phase-Assisted-Generation/artifacts/rc_pag/rc-pag-c1eda289fb08"
-scripts/slurm/submit_rc_pag_all.sh
+cat artifacts/rc_pag/rc-pag-588204cfb482/compute_projection.json
 ```
 
-Only the 600 native full-budget traces/model are reused. V8 discards every old policy decision,
-refits its router, and uses fresh tuning, calibration, and confirmation prompts.
-
-V8 speculates across AdaBlock iterations but verifies every accepted transition. It stops if any
-generated sequence differs from paired AdaBlock, if either model misses 5% tuning savings, or if
-the confirmatory NFE-reduction lower bound is not above 5%.
-
-Before the long stages, a 32-prompt/model pilot also runs fixed-depth batched speculation. It aborts
-on any AdaBlock token mismatch and writes an A100-hour estimate to `compute_projection.json`.
-
-Monitor or resume with:
+Monitor and resume with the same command:
 
 ```bash
 squeue -u "$USER"
-ls -lt logs/rc_pag
-scripts/slurm/submit_rc_pag_all.sh
+tail -f logs/rc_pag/*_rc_pag.out
+bash scripts/slurm/submit_rc_pag_all.sh
 ```
+
+Hugging Face mode defaults to `auto`: missing pinned assets are downloaded once, verified, then
+the experiment runs offline. Use `RC_PAG_HF_MODE=offline` only when the shared cache is already
+complete.
+
+Final evidence is in `equivalence_audit.json`, `equivalence_pilot.json`,
+`readiness_audit.json`, `risk_certificate.json`, and `report/claim_audit.json`. A controlled stop
+is intentional: it prevents expensive later stages or paper rendering when a preregistered gate
+fails.

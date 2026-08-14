@@ -7,6 +7,12 @@ from pathlib import Path
 SCRIPT = Path("scripts/run_rc_pag.py")
 
 
+def test_cli_defaults_to_frozen_v9_workshop_config() -> None:
+    source = SCRIPT.read_text(encoding="utf-8")
+
+    assert 'DEFAULT_CONFIG = Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")' in source
+
+
 def test_cli_mock_preflight(tmp_path):
     result = subprocess.run(
         [

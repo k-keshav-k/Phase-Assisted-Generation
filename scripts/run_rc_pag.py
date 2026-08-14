@@ -10,7 +10,7 @@ from pag.experiments.orchestrator import ControlledStop
 from pag.experiments.rc_pag_config import RCPAGConfig, load_rc_pag_config
 from pag.experiments.rc_pag_orchestrator import MockRCPAGRuntime, RCPAGOrchestrator
 
-DEFAULT_CONFIG = Path("configs/experiments/rc_pag_neurips.yaml")
+DEFAULT_CONFIG = Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,8 +30,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--reuse-development-from",
         type=Path,
         help=(
-            "Reuse compatible development artifacts. v8 accepts native exact-loop v4-v7 "
-            "full-budget traces, discards old policy heads, and refits its local risk head."
+            "Reuse compatible development artifacts. v9 imports only paired AdaBlock audit "
+            "references from a parity-validated v8/v9 pilot; all numerical audits, policy "
+            "rules, tuning, calibration, and confirmation remain fresh."
         ),
     )
     return parser
@@ -143,7 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     if projection_path.is_file():
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
         print(f"Projected A100-hours: {projection['projected_a100_hours']:.3f}")
-        print(f"Projected storage bytes: {projection['projected_storage_bytes']}")
+        if "projected_storage_bytes" in projection:
+            print(f"Projected storage bytes: {projection['projected_storage_bytes']}")
     print(completed)
     print(f"Resume command: {_resume_command(args, run_id=run_id)}")
     return 0

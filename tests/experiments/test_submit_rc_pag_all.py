@@ -6,6 +6,7 @@ from pathlib import Path
 
 SCRIPT = Path("scripts/slurm/submit_rc_pag_all.sh")
 WORKER = Path("scripts/slurm/rc_pag_a100.sbatch")
+RUNBOOK = Path("docs/rc_pag_one_command.md")
 
 
 def _environment(tmp_path: Path) -> tuple[dict[str, str], Path]:
@@ -64,9 +65,12 @@ def test_one_command_submits_all_stages_with_confirmation(tmp_path):
     assert "stage=all" in submitted
     assert "confirm=1" in submitted
     assert "config=" in submitted
-    assert "rc_pag_neurips_workshop_v8.yaml" in submitted
+    assert "rc_pag_neurips_workshop_v9.yaml" in submitted
     assert "--time=48:00:00" in submitted
     assert "rc_pag_a100.sbatch" in submitted
+    assert "32-prompt/model numerical audit" in result.stdout
+    assert "64-prompt/model gate" in result.stdout
+    assert ">5% paired-bootstrap latency-reduction" in result.stdout
     assert "rollout" not in result.stdout
     assert "refit" not in result.stdout
 
@@ -129,3 +133,11 @@ def test_a100_worker_runs_auto_and_offline_modes_offline_after_bootstrap() -> No
     assert "export HF_HUB_OFFLINE=0" in worker
     assert "export HF_DATASETS_OFFLINE=0" in worker
     assert "export TRANSFORMERS_OFFLINE=0" in worker
+
+
+def test_one_command_runbook_starts_with_the_single_submission_command() -> None:
+    runbook = RUNBOOK.read_text(encoding="utf-8")
+
+    assert "bash scripts/slurm/submit_rc_pag_all.sh" in runbook.split("```bash", 1)[1]
+    assert "rc-pag-588204cfb482" in runbook
+    assert "8--15 A100" in runbook
