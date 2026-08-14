@@ -8,7 +8,15 @@ from types import ModuleType, SimpleNamespace
 
 import torch
 
-from pag.experiments.rc_pag_speculation import RiskAdaptiveSpeculationPolicy
+from pag.experiments.rc_pag_equivalence import (
+    EquivalenceCostArtifact,
+    EquivalenceCostPolicy,
+    EquivalenceEnvelope,
+)
+from pag.experiments.rc_pag_speculation import (
+    RiskAdaptiveSpeculationPolicy,
+    SpeculationPlan,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DREAM_DIR = REPO_ROOT / "AdaBlock-dLLM" / "dream"
@@ -180,6 +188,13 @@ class StableDreamModel:
         return 4
 
 
+class BatchSensitiveDreamModel(StableDreamModel):
+    def __call__(self, tokens, *args, **kwargs):
+        result = super().__call__(tokens, *args, **kwargs)
+        if tokens.shape[0] > 1:
+            result.logits.zero_()
+        return result
+
 class AlwaysDeepScorer:
     def predict_risk(self, features) -> float:
         del features
@@ -308,6 +323,119 @@ def test_dream_verified_speculation_matches_adablock_with_fewer_physical_nfes() 
     assert actual.nfe_history == [2]
     assert speculative.call_index == 2
     assert actual.schedule_history[0]["verified_sequence_safe"] is True
+
+
+def test_dream_ec_pag_audit_uses_canonical_root_and_records_work() -> None:
+    config = DreamGenerationConfig(
+        max_length=5,
+        steps=8,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+    input_ids = torch.tensor([[1]], dtype=torch.long)
+    baseline = StableDreamModel()
+    baseline._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        baseline,
+        StableDreamModel,
+    )
+    expected = baseline._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+    audited = StableDreamModel()
+    audited.pag_speculation_policy = EquivalenceCostPolicy.audit(depth=1, threshold=1.0)
+    audited._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        audited,
+        StableDreamModel,
+    )
+    actual = audited._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+
+    assert actual.sequences.tolist() == expected.sequences.tolist()
+    assert expected.nfe_history == [4]
+    assert actual.nfe_history == [7]
+    steps = actual.schedule_history[0]["speculation_steps"]
+    assert len(steps) == 3
+    assert all(step["reference_checked"] for step in steps)
+    assert all(step["evaluated_rows"] == 3 for step in steps)
+    assert len(actual.schedule_history[0]["state_digests"]) == 4
+
+
+def test_dream_ec_pag_unsafe_root_falls_back_to_canonical_adablock() -> None:
+    config = DreamGenerationConfig(
+        max_length=5,
+        steps=8,
+        alg="confidence_threshold",
+        temperature=0.0,
+        return_dict_in_generate=True,
+        output_history=False,
+        mask_token_id=0,
+    )
+    input_ids = torch.tensor([[1]], dtype=torch.long)
+    baseline = StableDreamModel()
+    baseline._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        baseline,
+        StableDreamModel,
+    )
+    expected = baseline._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+    artifact = EquivalenceCostArtifact(
+        schema_version=1,
+        fingerprint={"gpu": "test"},
+        envelopes={2: EquivalenceEnvelope(0.01, 0.001)},
+        cost_rules=(),
+        safety_inflation=1.25,
+        minimum_bin_count=8,
+        minimum_acceptance_lcb=0.8,
+        artifact_hash="test",
+    )
+    policy = EquivalenceCostPolicy.production(artifact, threshold=1.0)
+    policy.choose = lambda observation, last_transfer_count: SpeculationPlan(  # type: ignore[method-assign]
+        risk_score=0.0,
+        depth=1,
+        draft_width=1,
+        reason="test_depth_1",
+    )
+    candidate = BatchSensitiveDreamModel()
+    candidate.pag_speculation_policy = policy
+    candidate._sample = AdaBlockDreamGenerationMixin._sample_adablock_cache.__get__(
+        candidate,
+        BatchSensitiveDreamModel,
+    )
+    actual = candidate._sample(
+        input_ids,
+        attention_mask=None,
+        generation_config=config,
+        threshold=1.0,
+        block_length=4,
+        dual_cache=True,
+    )
+
+    assert actual.sequences.tolist() == expected.sequences.tolist()
+    steps = actual.schedule_history[0]["speculation_steps"]
+    assert steps
+    assert all(not step["guard_passed"] for step in steps)
+    assert all(step["reference_checked"] for step in steps)
+    assert all(step["canonical_fallback_rows"] == 1 for step in steps)
 
 
 def test_pag_decode_uses_refinement_budget_and_force_commits_final_pass() -> None:

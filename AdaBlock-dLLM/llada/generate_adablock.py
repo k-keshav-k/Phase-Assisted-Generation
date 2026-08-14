@@ -17,6 +17,8 @@
 # Modified from LLaDA repos: https://github.com/ML-GSAI/LLaDA
 # Modified by Guanxi Lu, Imperial College London
 
+import time
+
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -242,7 +244,8 @@ def generate_adablock_prefix_cache(model, prompt, steps=128, gen_length=128, ini
 def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_block_length=128, temperature=0.,
             remasking='low_confidence', mask_id=126336, threshold=None, delimiter_ids=[198], delimiter_threshold=float('inf'),
             risk_policy=None, speculation_policy=None, digit_ids_tensor=None,
-            delimiter_ids_tensor=None, return_schedule_history=False):
+            delimiter_ids_tensor=None, return_schedule_history=False,
+            record_state_digests=False):
     '''
     Args:
         model: Mask predictor.
@@ -260,6 +263,12 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
     assert prompt.shape[0] == 1, "Batch size > 1 is not supported"
     if risk_policy is not None and speculation_policy is not None:
         raise ValueError("risk stopping and verified speculation are mutually exclusive")
+    if speculation_policy is not None:
+        from pag.experiments.rc_pag_equivalence import EquivalenceCostPolicy
+
+        record_state_digests = record_state_digests or isinstance(
+            speculation_policy, EquivalenceCostPolicy
+        )
     
     x = torch.full((prompt.shape[0], prompt.shape[1] + gen_length), mask_id, dtype=torch.long).to(model.device)
     x[:, :prompt.shape[1]] = prompt.clone()
@@ -296,6 +305,7 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         generated_length += block_length
         risk_steps = []
         speculation_steps = []
+        state_digests = []
         if risk_policy is not None:
             risk_policy.start_block()
         if speculation_policy is not None:
@@ -307,6 +317,12 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
         
         x0, transfer_index = get_transfer_index(logits, predicted_tokens, remasking, mask_index, x, None, threshold)
         x[transfer_index] = x0[transfer_index]
+        if record_state_digests:
+            from pag.experiments.rc_pag_equivalence import state_digest
+
+            state_digests.append(
+                state_digest(x[:, block_start:block_end], block_start=block_start)
+            )
         last_transfer_count = int(transfer_index.sum().item())
         verified_transition_count = 1
         final_block_logits = logits[:, block_start:block_end]
@@ -350,6 +366,12 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
             mask_index = (x[:, block_start:block_end] == mask_id)
             if speculation_policy is not None:
                 from pag.experiments.rc_pag_adapter import observation_from_tensors
+                from pag.experiments.rc_pag_equivalence import (
+                    EquivalenceCostPolicy,
+                    serialize_guarded_result,
+                    state_digest,
+                    verify_guarded_draft,
+                )
                 from pag.experiments.rc_pag_speculation import (
                     build_linear_draft,
                     repeat_tensor_tree,
@@ -372,6 +394,47 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                     observation,
                     last_transfer_count=last_transfer_count,
                 )
+                is_equivalence = isinstance(speculation_policy, EquivalenceCostPolicy)
+                activation_key = (
+                    speculation_policy.activation_key(observation, last_transfer_count)
+                    if is_equivalence
+                    else None
+                )
+                if is_equivalence and plan.depth == 0:
+                    block_output = model(
+                        x[:, block_start:block_end],
+                        past_key_values=full_cache,
+                        use_cache=True,
+                        replace_position=replace_position,
+                    )
+                    block_logits = block_output.logits
+                    final_block_logits = block_logits
+                    block_predictions = torch.argmax(
+                        add_gumbel_noise(block_logits, temperature=temperature),
+                        dim=-1,
+                    )
+                    x0, transfer_index = get_transfer_index(
+                        block_logits,
+                        block_predictions,
+                        remasking,
+                        mask_index,
+                        x[:, block_start:block_end],
+                        None,
+                        threshold,
+                    )
+                    x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+                    nfe += 1
+                    verified_transition_count += 1
+                    last_transfer_count = max(1, int(transfer_index.sum().item()))
+                    previous_policy_logits = final_block_logits.detach()
+                    if record_state_digests:
+                        state_digests.append(
+                            state_digest(
+                                x[:, block_start:block_end],
+                                block_start=block_start,
+                            )
+                        )
+                    continue
                 proposal = torch.argmax(final_block_logits, dim=-1)
                 proposal = torch.where(mask_index, proposal, active)
                 probabilities = torch.softmax(final_block_logits.float(), dim=-1)
@@ -401,12 +464,18 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                 node_count = len(nodes)
                 batched_cache = repeat_tensor_tree(full_cache, node_count)
                 batched_replace_position = replace_position.repeat(node_count, 1)
+                if is_equivalence and speculation_policy.audit_reference and x.is_cuda:
+                    torch.cuda.synchronize()
+                batch_started = time.perf_counter()
                 block_output = model(
                     torch.cat(nodes, dim=0),
                     past_key_values=batched_cache,
                     use_cache=True,
                     replace_position=batched_replace_position,
                 )
+                if is_equivalence and speculation_policy.audit_reference and x.is_cuda:
+                    torch.cuda.synchronize()
+                batched_latency_ms = (time.perf_counter() - batch_started) * 1000.0
                 block_logits = block_output.logits
                 nfe += 1
                 root_masks = int(mask_index.sum().item())
@@ -432,30 +501,125 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                     successor[verified_transfer] = verified_x0[verified_transfer]
                     return successor
 
-                result = verify_draft(
-                    nodes,
-                    block_logits,
-                    verified_transition,
-                    mask_token_id=mask_id,
-                )
+                audit_event = {}
+                canonical_holder = {}
+                if is_equivalence:
+                    def canonical_root():
+                        nonlocal nfe
+                        if x.is_cuda:
+                            torch.cuda.synchronize()
+                        canonical_started = time.perf_counter()
+                        canonical_output = model(
+                            active.detach().clone(),
+                            past_key_values=full_cache,
+                            use_cache=True,
+                            replace_position=replace_position,
+                        )
+                        if x.is_cuda:
+                            torch.cuda.synchronize()
+                        canonical_logits = canonical_output.logits[0]
+                        canonical_holder["logits"] = canonical_logits
+                        canonical_holder["latency_ms"] = (
+                            time.perf_counter() - canonical_started
+                        ) * 1000.0
+                        nfe += 1
+                        return canonical_logits
+
+                    guard = lambda state, state_logits: speculation_policy.guard(
+                        state,
+                        state_logits,
+                        batch_size=node_count,
+                        mask_token_id=mask_id,
+                    )
+                    if speculation_policy.audit_reference:
+                        canonical_logits = canonical_root()
+                        result = verify_guarded_draft(
+                            nodes,
+                            block_logits,
+                            verified_transition,
+                            guard,
+                            mask_token_id=mask_id,
+                            canonical_root_output=canonical_logits,
+                        )
+                        batched_root = block_logits[0].float()
+                        canonical_root_logits = canonical_logits.float()
+                        full_acceptance = all(
+                            torch.equal(
+                                verified_transition(nodes[index], block_logits[index]),
+                                nodes[index + 1],
+                            )
+                            for index in range(node_count - 1)
+                        )
+                        audit_event = {
+                            "batch_size": node_count,
+                            "depth": plan.depth,
+                            "activation_key": activation_key,
+                            "max_logit_delta": float(
+                                torch.max(torch.abs(batched_root - canonical_root_logits)).item()
+                            ),
+                            "max_probability_delta": float(
+                                torch.max(
+                                    torch.abs(
+                                        torch.softmax(batched_root, dim=-1)
+                                        - torch.softmax(canonical_root_logits, dim=-1)
+                                    )
+                                ).item()
+                            ),
+                            "full_acceptance": bool(full_acceptance),
+                            "batched_latency_ms": batched_latency_ms,
+                            "canonical_latency_ms": canonical_holder["latency_ms"],
+                        }
+                    else:
+                        result = verify_guarded_draft(
+                            nodes,
+                            block_logits,
+                            verified_transition,
+                            guard,
+                            mask_token_id=mask_id,
+                            canonical_root=canonical_root,
+                        )
+                else:
+                    result = verify_draft(
+                        nodes,
+                        block_logits,
+                        verified_transition,
+                        mask_token_id=mask_id,
+                    )
                 x[:, block_start:block_end] = result.tokens
                 used_node = min(result.accepted_draft_edges, node_count - 1)
                 previous_policy_logits = final_block_logits.detach()
-                final_block_logits = block_logits[used_node : used_node + 1]
-                verified_transition_count += result.verified_transitions
+                if is_equivalence and canonical_holder:
+                    final_block_logits = canonical_holder["logits"].unsqueeze(0)
+                else:
+                    final_block_logits = block_logits[used_node : used_node + 1]
+                transition_count = (
+                    result.reference_equivalent_transitions
+                    if is_equivalence
+                    else result.verified_transitions
+                )
+                verified_transition_count += transition_count
                 last_transfer_count = max(
                     1,
                     root_masks - int((result.tokens == mask_id).sum().item()),
                 )
-                speculation_steps.append(
-                    {
-                        "step_index": int(verified_transition_count),
-                        "remaining_masks_before": root_masks,
-                        "remaining_masks_after": int((result.tokens == mask_id).sum().item()),
-                        **serialize_speculation_plan(plan),
-                        **serialize_speculation_result(result),
-                    }
+                if is_equivalence and record_state_digests:
+                    state_digests.extend(
+                        state_digest(state, block_start=block_start)
+                        for state in result.transition_states
+                    )
+                result_payload = (
+                    serialize_guarded_result(result)
+                    if is_equivalence
+                    else serialize_speculation_result(result)
                 )
+                speculation_steps.append({
+                    "step_index": int(verified_transition_count),
+                    "remaining_masks_before": root_masks,
+                    "remaining_masks_after": int((result.tokens == mask_id).sum().item()),
+                    **serialize_speculation_plan(plan),
+                    **result_payload,
+                    **audit_event,
+                })
                 continue
             block_output = model(x[:, block_start:block_end], past_key_values=full_cache, use_cache=True, replace_position=replace_position)
             block_logits = block_output.logits
@@ -496,6 +660,13 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                 x0, transfer_index = get_transfer_index(block_logits, block_predicted_tokens, remasking, mask_index,
                                                 x[:, block_start:block_end], None, threshold)
                 x[:, block_start:block_end][transfer_index] = x0[transfer_index]
+            verified_transition_count += 1
+            if record_state_digests:
+                from pag.experiments.rc_pag_equivalence import state_digest
+
+                state_digests.append(
+                    state_digest(x[:, block_start:block_end], block_start=block_start)
+                )
         nfe_history.append(nfe)
 
         if risk_policy is not None or speculation_policy is not None or return_schedule_history:
@@ -557,8 +728,16 @@ def generate_adablock_dual_cache(model, prompt, steps=128, gen_length=128, init_
                         sum(step["nfe_saved"] for step in speculation_steps)
                     ),
                     "verified_sequence_safe": all(
-                        step["sequence_safe"] for step in speculation_steps
+                        step.get("sequence_safe", step.get("guard_passed", False))
+                        for step in speculation_steps
                     ),
+                    "guarded_transition_evidence": all(
+                        step.get("guard_passed", False)
+                        or step.get("reference_checked", False)
+                        for step in speculation_steps
+                    ),
+                    "state_digests": state_digests,
+                    "model_time_sec": 0.0,
                     "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
                 }
             )

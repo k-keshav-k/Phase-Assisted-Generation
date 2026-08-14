@@ -22,6 +22,10 @@ import torch
 
 from pag.experiments.grading import GradeResult, grade_gsm8k, grade_math500
 from pag.experiments.rc_pag_config import PolicyCandidateSpec, RCPAGConfig
+from pag.experiments.rc_pag_equivalence import (
+    EquivalenceCostArtifact,
+    EquivalenceCostPolicy,
+)
 from pag.experiments.rc_pag_features import (
     RealizedBlock,
     StepObservation,
@@ -463,6 +467,46 @@ class UnifiedRCPAGRuntime:
             "warnings": warnings,
         }
 
+    def execution_fingerprint(self) -> dict[str, Any]:
+        try:
+            import transformers
+
+            transformers_version = transformers.__version__
+        except ImportError:  # pragma: no cover - real runtime always installs Transformers
+            transformers_version = "unavailable"
+        if torch.cuda.is_available():
+            gpu_name = torch.cuda.get_device_name(0)
+            capability = list(torch.cuda.get_device_capability(0))
+            cuda_version = torch.version.cuda
+            flash_sdp = bool(torch.backends.cuda.flash_sdp_enabled())
+        else:
+            gpu_name = "cpu"
+            capability = []
+            cuda_version = None
+            flash_sdp = False
+        try:
+            bundled_commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=REPO_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            bundled_commit = "unknown"
+        return {
+            "model": self.model_name,
+            "model_revision": self.config.models[self.model_name].revision,
+            "dtype": self.config.models[self.model_name].dtype,
+            "gpu_name": gpu_name,
+            "gpu_capability": capability,
+            "torch_version": torch.__version__,
+            "transformers_version": transformers_version,
+            "cuda_version": cuda_version,
+            "flash_sdp_enabled": flash_sdp,
+            "bundled_adablock_commit": bundled_commit,
+        }
+
     def _load_pool(self, name: str):
         if name in self._pools:
             return self._pools[name]
@@ -506,7 +550,8 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7", "v8"}
+                if self.config.protocol_version
+                in {"v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"}
                 and examples
                 else ""
             )
@@ -706,6 +751,21 @@ class UnifiedRCPAGRuntime:
             history_window=self.config.history_window,
         )
 
+    def _equivalence_policy(self) -> EquivalenceCostPolicy:
+        path = self.run_dir / "equivalence" / f"{self.model_name}.json"
+        if not path.is_file():
+            raise ValueError(f"missing fitted v9 equivalence artifact: {path}")
+        artifact = EquivalenceCostArtifact.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        fingerprint = self.execution_fingerprint()
+        if artifact.fingerprint != fingerprint:
+            raise ValueError(
+                "v9 equivalence artifact execution fingerprint differs from the current runtime"
+            )
+        return EquivalenceCostPolicy.production(
+            artifact,
+            threshold=self.config.decoding.transfer_threshold,
+        )
+
     def _method_components(
         self,
         method: str,
@@ -719,7 +779,9 @@ class UnifiedRCPAGRuntime:
         enforcement = "soft_gate"
         provenance = method
         if candidate is not None:
-            if candidate.variant == "rc_pag_verified":
+            if candidate.variant == "ec_pag":
+                speculation_policy = self._equivalence_policy()
+            elif candidate.variant == "rc_pag_verified":
                 speculation_policy = self._speculation_policy(candidate, estimator_paths)
             else:
                 policy = self._risk_policy(candidate, estimator_paths)
@@ -747,6 +809,13 @@ class UnifiedRCPAGRuntime:
                 draft_width_multiplier=1.0,
                 include_history=False,
                 history_window=self.config.history_window,
+            )
+            provenance = method
+        elif method in {"ec_pag_audit_d1", "ec_pag_audit_d2"}:
+            depth = int(method.rsplit("d", 1)[-1])
+            speculation_policy = EquivalenceCostPolicy.audit(
+                depth=depth,
+                threshold=self.config.decoding.transfer_threshold,
             )
             provenance = method
         elif method == "pilot_shadow":
@@ -793,6 +862,7 @@ class UnifiedRCPAGRuntime:
             "v6",
             "v7",
             "v8",
+            "v9",
         }
         if method == "adablock" or modern_protocol:
             module = importlib.import_module("generate_adablock")
@@ -812,6 +882,7 @@ class UnifiedRCPAGRuntime:
                 digit_ids_tensor=self.digit_ids,
                 delimiter_ids_tensor=self.delimiter_ids,
                 return_schedule_history=modern_protocol,
+                record_state_digests=self.config.protocol_version == "v9",
             )
             if modern_protocol:
                 return result
@@ -880,6 +951,7 @@ class UnifiedRCPAGRuntime:
             "v6",
             "v7",
             "v8",
+            "v9",
         }
         generation_module = adablock if method == "adablock" or use_exact_adablock_loop else pag
         self.model.diffusion_generate = types.MethodType(
@@ -901,6 +973,7 @@ class UnifiedRCPAGRuntime:
         self.model.pag_scheduler = scheduler
         self.model.pag_risk_policy = policy
         self.model.pag_speculation_policy = speculation_policy
+        self.model.pag_record_state_digests = self.config.protocol_version == "v9"
         self.model.pag_digit_ids = self.digit_ids
         self.model.pag_delimiter_ids = self.delimiter_ids
         self.model.pag_shadow_callback = "auto" if shadow else None
@@ -1013,6 +1086,39 @@ class UnifiedRCPAGRuntime:
             "implementation": provenance,
             "mock": False,
         }
+        if self.config.protocol_version == "v9":
+            speculation_steps = [
+                step
+                for block in schedules
+                for step in block.get("speculation_steps", ())
+            ]
+            total_nfe = int(payload["total_nfe"])
+            payload.update(
+                {
+                    "serial_forward_calls": total_nfe,
+                    "evaluated_rows": total_nfe
+                    + sum(
+                        max(0, int(step.get("evaluated_nodes", 1)) - 1)
+                        for step in speculation_steps
+                    ),
+                    "reference_equivalent_transitions": total_nfe
+                    + sum(
+                        int(step.get("reference_equivalent_transitions", 1))
+                        - int(step.get("serial_forward_calls", 1))
+                        for step in speculation_steps
+                    ),
+                    "state_trajectory_digest": [
+                        digest
+                        for block in schedules
+                        for digest in block.get("state_digests", ())
+                    ],
+                    "model_time_sec": float(
+                        sum(float(block.get("model_time_sec", 0.0)) for block in schedules)
+                    )
+                    or elapsed,
+                    "execution_fingerprint": self.execution_fingerprint(),
+                }
+            )
         if stage == "collect":
             payload["training_examples"] = training_examples_from_schedules(
                 schedules,

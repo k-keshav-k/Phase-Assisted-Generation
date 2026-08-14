@@ -19,6 +19,7 @@
 
 import warnings
 import copy
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple, Union
 
@@ -591,6 +592,16 @@ class DreamGenerationMixin:
                     )
                 else: 
                     raise NotImplementedError(alg)
+                verified_transition_count += 1
+                if record_state_digests:
+                    from pag.experiments.rc_pag_equivalence import state_digest
+
+                    state_digests.append(
+                        state_digest(
+                            x[:, block_start:block_end],
+                            block_start=block_start,
+                        )
+                    )
             
             nfe_history.append(nfe)
         
@@ -708,6 +719,11 @@ class DreamGenerationMixin:
             risk_policy.reset_prompt()
         if speculation_policy is not None:
             speculation_policy.reset_prompt()
+        from pag.experiments.rc_pag_equivalence import EquivalenceCostPolicy
+
+        record_state_digests = bool(getattr(self, "pag_record_state_digests", False)) or isinstance(
+            speculation_policy, EquivalenceCostPolicy
+        )
         # Process each block
         while generated_length < gen_length:
             nfe = 0
@@ -726,6 +742,7 @@ class DreamGenerationMixin:
             block_end = block_start + current_block_length
             risk_steps = []
             speculation_steps = []
+            state_digests = []
             if risk_policy is not None:
                 risk_policy.start_block()
             if speculation_policy is not None:
@@ -734,6 +751,12 @@ class DreamGenerationMixin:
             # mandatory decode first token
             confidence, x0 = sample_tokens(logits, temperature=temperature, top_p=top_p, top_k=top_k)
             x[:, block_start] = x0[:, block_start]
+            if record_state_digests:
+                from pag.experiments.rc_pag_equivalence import state_digest
+
+                state_digests.append(
+                    state_digest(x[:, block_start:block_end], block_start=block_start)
+                )
             last_transfer_count = 1
             verified_transition_count = 1
             final_block_logits = logits[:, block_start:block_end]
@@ -758,6 +781,12 @@ class DreamGenerationMixin:
 
                 if speculation_policy is not None:
                     from pag.experiments.rc_pag_adapter import observation_from_tensors
+                    from pag.experiments.rc_pag_equivalence import (
+                        EquivalenceCostPolicy,
+                        serialize_guarded_result,
+                        state_digest,
+                        verify_guarded_draft,
+                    )
                     from pag.experiments.rc_pag_speculation import (
                         build_linear_draft,
                         repeat_tensor_tree,
@@ -780,6 +809,58 @@ class DreamGenerationMixin:
                         observation,
                         last_transfer_count=last_transfer_count,
                     )
+                    is_equivalence = isinstance(speculation_policy, EquivalenceCostPolicy)
+                    root_masks = int(mask_index.sum().item())
+                    activation_key = (
+                        speculation_policy.activation_key(observation, last_transfer_count)
+                        if is_equivalence
+                        else None
+                    )
+                    if is_equivalence and plan.depth == 0:
+                        model_output = self(
+                            active,
+                            current_attention_mask,
+                            tok_idx[:, block_start:block_end] if tok_idx is not None else None,
+                            past_key_values=past_key_values,
+                            use_cache=True,
+                            dual_cache=dual_cache,
+                            replace_position=replace_position,
+                        )
+                        block_logits = model_output.logits
+                        block_logits = torch.cat(
+                            [block_logits[:, :1], block_logits[:, :-1]], dim=1
+                        )
+                        final_block_logits = block_logits
+                        x = _confidence_threshold_sample(
+                            logits=block_logits,
+                            mask_index=mask_index,
+                            x=x,
+                            block_start=block_start,
+                            block_end=block_end,
+                            mask_token_id=mask_token_id,
+                            temperature=temperature,
+                            top_p=top_p,
+                            top_k=top_k,
+                            threshold=threshold,
+                        )
+                        nfe += 1
+                        verified_transition_count += 1
+                        last_transfer_count = max(
+                            1,
+                            root_masks
+                            - int(
+                                (x[:, block_start:block_end] == mask_token_id).sum().item()
+                            ),
+                        )
+                        previous_policy_logits = final_block_logits.detach()
+                        if record_state_digests:
+                            state_digests.append(
+                                state_digest(
+                                    x[:, block_start:block_end],
+                                    block_start=block_start,
+                                )
+                            )
+                        continue
                     proposal_confidence, proposal = sample_tokens(
                         final_block_logits,
                         temperature=temperature,
@@ -822,6 +903,9 @@ class DreamGenerationMixin:
                         if tok_idx is not None
                         else None
                     )
+                    if is_equivalence and speculation_policy.audit_reference and x.is_cuda:
+                        torch.cuda.synchronize()
+                    batch_started = time.perf_counter()
                     model_output = self(
                         torch.cat(nodes, dim=0),
                         batched_attention,
@@ -831,6 +915,9 @@ class DreamGenerationMixin:
                         dual_cache=dual_cache,
                         replace_position=batched_replace_position,
                     )
+                    if is_equivalence and speculation_policy.audit_reference and x.is_cuda:
+                        torch.cuda.synchronize()
+                    batched_latency_ms = (time.perf_counter() - batch_started) * 1000.0
                     verified_logits = model_output.logits
                     verified_logits = torch.cat(
                         [verified_logits[:, :1], verified_logits[:, :-1]],
@@ -874,32 +961,140 @@ class DreamGenerationMixin:
                         successor[transfer] = proposed_state[transfer]
                         return successor
 
-                    result = verify_draft(
-                        nodes,
-                        verified_logits,
-                        verified_transition,
-                        mask_token_id=mask_token_id,
-                    )
+                    audit_event = {}
+                    canonical_holder = {}
+                    if is_equivalence:
+                        def canonical_root():
+                            nonlocal nfe
+                            if x.is_cuda:
+                                torch.cuda.synchronize()
+                            canonical_started = time.perf_counter()
+                            canonical_output = self(
+                                active.detach().clone(),
+                                current_attention_mask,
+                                tok_idx[:, block_start:block_end]
+                                if tok_idx is not None
+                                else None,
+                                past_key_values=past_key_values,
+                                use_cache=True,
+                                dual_cache=dual_cache,
+                                replace_position=replace_position,
+                            )
+                            if x.is_cuda:
+                                torch.cuda.synchronize()
+                            canonical_logits = canonical_output.logits
+                            canonical_logits = torch.cat(
+                                [canonical_logits[:, :1], canonical_logits[:, :-1]],
+                                dim=1,
+                            )[0]
+                            canonical_holder["logits"] = canonical_logits
+                            canonical_holder["latency_ms"] = (
+                                time.perf_counter() - canonical_started
+                            ) * 1000.0
+                            nfe += 1
+                            return canonical_logits
+
+                        guard = lambda state, state_logits: speculation_policy.guard(
+                            state,
+                            state_logits,
+                            batch_size=node_count,
+                            mask_token_id=mask_token_id,
+                        )
+                        if speculation_policy.audit_reference:
+                            canonical_logits = canonical_root()
+                            result = verify_guarded_draft(
+                                nodes,
+                                verified_logits,
+                                verified_transition,
+                                guard,
+                                mask_token_id=mask_token_id,
+                                canonical_root_output=canonical_logits,
+                            )
+                            batched_root = verified_logits[0].float()
+                            canonical_root_logits = canonical_logits.float()
+                            full_acceptance = all(
+                                torch.equal(
+                                    verified_transition(
+                                        nodes[index], verified_logits[index]
+                                    ),
+                                    nodes[index + 1],
+                                )
+                                for index in range(node_count - 1)
+                            )
+                            audit_event = {
+                                "batch_size": node_count,
+                                "depth": plan.depth,
+                                "activation_key": activation_key,
+                                "max_logit_delta": float(
+                                    torch.max(
+                                        torch.abs(batched_root - canonical_root_logits)
+                                    ).item()
+                                ),
+                                "max_probability_delta": float(
+                                    torch.max(
+                                        torch.abs(
+                                            torch.softmax(batched_root, dim=-1)
+                                            - torch.softmax(canonical_root_logits, dim=-1)
+                                        )
+                                    ).item()
+                                ),
+                                "full_acceptance": bool(full_acceptance),
+                                "batched_latency_ms": batched_latency_ms,
+                                "canonical_latency_ms": canonical_holder["latency_ms"],
+                            }
+                        else:
+                            result = verify_guarded_draft(
+                                nodes,
+                                verified_logits,
+                                verified_transition,
+                                guard,
+                                mask_token_id=mask_token_id,
+                                canonical_root=canonical_root,
+                            )
+                    else:
+                        result = verify_draft(
+                            nodes,
+                            verified_logits,
+                            verified_transition,
+                            mask_token_id=mask_token_id,
+                        )
                     x[:, block_start:block_end] = result.tokens
                     used_node = min(result.accepted_draft_edges, node_count - 1)
                     previous_policy_logits = final_block_logits.detach()
-                    final_block_logits = verified_logits[used_node : used_node + 1]
-                    verified_transition_count += result.verified_transitions
+                    if is_equivalence and canonical_holder:
+                        final_block_logits = canonical_holder["logits"].unsqueeze(0)
+                    else:
+                        final_block_logits = verified_logits[used_node : used_node + 1]
+                    transition_count = (
+                        result.reference_equivalent_transitions
+                        if is_equivalence
+                        else result.verified_transitions
+                    )
+                    verified_transition_count += transition_count
                     last_transfer_count = max(
                         1,
                         root_masks - int((result.tokens == mask_token_id).sum().item()),
                     )
-                    speculation_steps.append(
-                        {
-                            "step_index": int(verified_transition_count),
-                            "remaining_masks_before": root_masks,
-                            "remaining_masks_after": int(
-                                (result.tokens == mask_token_id).sum().item()
-                            ),
-                            **serialize_speculation_plan(plan),
-                            **serialize_speculation_result(result),
-                        }
+                    if is_equivalence and record_state_digests:
+                        state_digests.extend(
+                            state_digest(state, block_start=block_start)
+                            for state in result.transition_states
+                        )
+                    result_payload = (
+                        serialize_guarded_result(result)
+                        if is_equivalence
+                        else serialize_speculation_result(result)
                     )
+                    speculation_steps.append({
+                        "step_index": int(verified_transition_count),
+                        "remaining_masks_before": root_masks,
+                        "remaining_masks_after": int(
+                            (result.tokens == mask_token_id).sum().item()
+                        ),
+                        **serialize_speculation_plan(plan),
+                        **result_payload,
+                        **audit_event,
+                    })
                     continue
 
                 model_output = self(x[:, block_start:block_end], current_attention_mask, 
@@ -1014,8 +1209,16 @@ class DreamGenerationMixin:
                             sum(step["nfe_saved"] for step in speculation_steps)
                         ),
                         "verified_sequence_safe": all(
-                            step["sequence_safe"] for step in speculation_steps
+                            step.get("sequence_safe", step.get("guard_passed", False))
+                            for step in speculation_steps
                         ),
+                        "guarded_transition_evidence": all(
+                            step.get("guard_passed", False)
+                            or step.get("reference_checked", False)
+                            for step in speculation_steps
+                        ),
+                        "state_digests": state_digests,
+                        "model_time_sec": 0.0,
                         "final_tokens": block_tokens.detach().cpu().reshape(-1).tolist(),
                     }
                 )

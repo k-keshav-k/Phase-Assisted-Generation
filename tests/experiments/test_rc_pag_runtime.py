@@ -7,6 +7,10 @@ import pytest
 import torch
 
 from pag.experiments.rc_pag_config import PolicyCandidateSpec, load_rc_pag_config
+from pag.experiments.rc_pag_equivalence import (
+    EquivalenceCostPolicy,
+    fit_equivalence_artifact,
+)
 from pag.experiments.rc_pag_features import feature_names
 from pag.experiments.rc_pag_runtime import (
     UnifiedRCPAGRuntime,
@@ -312,6 +316,90 @@ def test_v8_fixed_depth_ablation_needs_no_learned_estimator() -> None:
     assert speculation.max_depth == speculation.medium_depth == 4
     assert speculation.scorer.predict_risk({}) == 0.0
     assert provenance == "verified_fixed_d4"
+
+
+def test_v9_routes_audit_and_fitted_equivalence_policies(tmp_path) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(
+        Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
+    )
+    runtime.model_name = "llada"
+    runtime.run_dir = tmp_path
+    fingerprint = {"gpu_name": "A100", "model_revision": "test"}
+    runtime.execution_fingerprint = lambda: fingerprint  # type: ignore[method-assign]
+    events = [
+        {
+            "batch_size": 2,
+            "depth": 1,
+            "activation_key": "known",
+            "max_logit_delta": 0.01,
+            "max_probability_delta": 0.001,
+            "full_acceptance": True,
+            "batched_latency_ms": 1.0,
+            "canonical_latency_ms": 1.0,
+        }
+        for _ in range(8)
+    ]
+    artifact = fit_equivalence_artifact(
+        events,
+        fingerprint=fingerprint,
+        minimum_acceptance_lcb=0.5,
+    )
+    path = tmp_path / "equivalence" / "llada.json"
+    path.parent.mkdir()
+    path.write_text(__import__("json").dumps(artifact), encoding="utf-8")
+
+    _, stopping, audit, _, provenance = runtime._method_components(
+        "ec_pag_audit_d1", None, {}
+    )
+    assert stopping is None
+    assert isinstance(audit, EquivalenceCostPolicy)
+    assert audit.audit_reference
+    assert audit.fixed_depth == 1
+    assert provenance == "ec_pag_audit_d1"
+
+    _, stopping, production, _, provenance = runtime._method_components(
+        "ec_pag_v9", runtime.config.candidates[0], {}
+    )
+    assert stopping is None
+    assert isinstance(production, EquivalenceCostPolicy)
+    assert not production.audit_reference
+    assert production.artifact is not None
+    assert production.artifact.artifact_hash == artifact["artifact_hash"]
+    assert provenance == "ec_pag"
+
+
+def test_v9_rejects_an_equivalence_artifact_from_another_execution(tmp_path) -> None:
+    runtime = object.__new__(UnifiedRCPAGRuntime)
+    runtime.config = load_rc_pag_config(
+        Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
+    )
+    runtime.model_name = "dream"
+    runtime.run_dir = tmp_path
+    runtime.execution_fingerprint = lambda: {"gpu_name": "A100"}  # type: ignore[method-assign]
+    artifact = fit_equivalence_artifact(
+        [
+            {
+                "batch_size": 2,
+                "depth": 1,
+                "activation_key": "known",
+                "max_logit_delta": 0.01,
+                "max_probability_delta": 0.001,
+                "full_acceptance": True,
+                "batched_latency_ms": 1.0,
+                "canonical_latency_ms": 1.0,
+            }
+        ],
+        fingerprint={"gpu_name": "H100"},
+        minimum_bin_count=1,
+        minimum_acceptance_lcb=0.0,
+    )
+    path = tmp_path / "equivalence" / "dream.json"
+    path.parent.mkdir()
+    path.write_text(__import__("json").dumps(artifact), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="execution fingerprint"):
+        runtime._method_components("ec_pag_v9", runtime.config.candidates[0], {})
 
 
 def _offline_hub_raises(*args, **kwargs):

@@ -7,7 +7,15 @@ from types import SimpleNamespace
 
 import torch
 
-from pag.experiments.rc_pag_speculation import RiskAdaptiveSpeculationPolicy
+from pag.experiments.rc_pag_equivalence import (
+    EquivalenceCostArtifact,
+    EquivalenceCostPolicy,
+    EquivalenceEnvelope,
+)
+from pag.experiments.rc_pag_speculation import (
+    RiskAdaptiveSpeculationPolicy,
+    SpeculationPlan,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LLADA_DIR = REPO_ROOT / "AdaBlock-dLLM" / "llada"
@@ -85,6 +93,14 @@ class StableRankingModel:
             logits[:, position, token] = 10.0 - position
         cache = ((torch.zeros((batch, 1, 1, 1)), torch.zeros((batch, 1, 1, 1))),)
         return SimpleNamespace(logits=logits, past_key_values=cache)
+
+
+class BatchSensitiveRankingModel(StableRankingModel):
+    def __call__(self, tokens, **kwargs):
+        result = super().__call__(tokens, **kwargs)
+        if tokens.shape[0] > 1:
+            result.logits.zero_()
+        return result
 
 
 class AlwaysDeepScorer:
@@ -183,3 +199,87 @@ def test_verified_speculation_matches_adablock_and_reduces_physical_nfe() -> Non
     assert speculative_model.calls == 2
     assert schedules[0]["verified_sequence_safe"] is True
     assert schedules[0]["speculative_nfe_saved"] >= 2
+
+
+def test_ec_pag_audit_uses_canonical_root_and_records_honest_work() -> None:
+    kwargs = {
+        "steps": 8,
+        "gen_length": 4,
+        "init_block_length": 4,
+        "temperature": 0.0,
+        "mask_id": 9,
+        "threshold": 1.0,
+        "delimiter_ids": [8],
+        "delimiter_threshold": float("inf"),
+    }
+    prompt = torch.tensor([[1]], dtype=torch.long)
+    baseline = StableRankingModel()
+    expected, baseline_nfe, _ = generate_adablock.generate_adablock_dual_cache(
+        baseline, prompt, **kwargs
+    )
+    audited = StableRankingModel()
+    actual, audit_nfe, _, schedules = generate_adablock.generate_adablock_dual_cache(
+        audited,
+        prompt,
+        **kwargs,
+        speculation_policy=EquivalenceCostPolicy.audit(depth=1, threshold=1.0),
+        return_schedule_history=True,
+    )
+
+    assert torch.equal(actual, expected)
+    assert baseline_nfe == [4]
+    assert audit_nfe == [7]
+    steps = schedules[0]["speculation_steps"]
+    assert len(steps) == 3
+    assert all(step["reference_checked"] for step in steps)
+    assert all(step["canonical_fallback_rows"] == 1 for step in steps)
+    assert all(step["evaluated_rows"] == 3 for step in steps)
+    assert len(schedules[0]["state_digests"]) == 4
+
+
+def test_ec_pag_unsafe_batched_root_falls_back_to_canonical_adablock() -> None:
+    kwargs = {
+        "steps": 8,
+        "gen_length": 4,
+        "init_block_length": 4,
+        "temperature": 0.0,
+        "mask_id": 9,
+        "threshold": 1.0,
+        "delimiter_ids": [8],
+        "delimiter_threshold": float("inf"),
+    }
+    prompt = torch.tensor([[1]], dtype=torch.long)
+    expected, _, _ = generate_adablock.generate_adablock_dual_cache(
+        StableRankingModel(), prompt, **kwargs
+    )
+    artifact = EquivalenceCostArtifact(
+        schema_version=1,
+        fingerprint={"gpu": "test"},
+        envelopes={2: EquivalenceEnvelope(0.01, 0.001)},
+        cost_rules=(),
+        safety_inflation=1.25,
+        minimum_bin_count=8,
+        minimum_acceptance_lcb=0.8,
+        artifact_hash="test",
+    )
+    policy = EquivalenceCostPolicy.production(artifact, threshold=1.0)
+    policy.choose = lambda observation, last_transfer_count: SpeculationPlan(  # type: ignore[method-assign]
+        risk_score=0.0,
+        depth=1,
+        draft_width=1,
+        reason="test_depth_1",
+    )
+    actual, _, _, schedules = generate_adablock.generate_adablock_dual_cache(
+        BatchSensitiveRankingModel(),
+        prompt,
+        **kwargs,
+        speculation_policy=policy,
+        return_schedule_history=True,
+    )
+
+    assert torch.equal(actual, expected)
+    steps = schedules[0]["speculation_steps"]
+    assert steps
+    assert all(not step["guard_passed"] for step in steps)
+    assert all(step["reference_checked"] for step in steps)
+    assert all(step["canonical_fallback_rows"] == 1 for step in steps)
