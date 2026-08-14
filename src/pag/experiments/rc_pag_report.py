@@ -41,6 +41,18 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, object]:
     correctness = [_is_correct(row) for row in rows]
     nfe = np.asarray([float(row["total_nfe"]) for row in rows], dtype=np.float64)
     latency = np.asarray([float(row["elapsed_sec"]) for row in rows], dtype=np.float64)
+    serial_calls = np.asarray(
+        [float(row.get("serial_forward_calls", row["total_nfe"])) for row in rows],
+        dtype=np.float64,
+    )
+    evaluated_rows = np.asarray(
+        [float(row.get("evaluated_rows", row["total_nfe"])) for row in rows],
+        dtype=np.float64,
+    )
+    model_time = np.asarray(
+        [float(row.get("model_time_sec", row["elapsed_sec"])) for row in rows],
+        dtype=np.float64,
+    )
     speculation_steps = [
         step
         for row in rows
@@ -61,6 +73,17 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, object]:
             ),
             "draft_edge_acceptance": accepted / offered if offered else 0.0,
             "reported_nfe_saved": sum(int(step["nfe_saved"]) for step in speculation_steps),
+            "guard_passes": sum(bool(step.get("guard_passed")) for step in speculation_steps),
+            "reference_checks": sum(
+                bool(step.get("reference_checked")) for step in speculation_steps
+            ),
+            "canonical_fallback_rows": sum(
+                int(step.get("canonical_fallback_rows", 0)) for step in speculation_steps
+            ),
+            "guard_evidence_complete": all(
+                bool(step.get("guard_passed")) or bool(step.get("reference_checked"))
+                for step in speculation_steps
+            ),
         }
     return {
         "count": len(rows),
@@ -70,6 +93,9 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, object]:
         "median_nfe": float(np.median(nfe)),
         "mean_latency_sec": float(np.mean(latency)),
         "median_latency_sec": float(np.median(latency)),
+        "mean_serial_forward_calls": float(np.mean(serial_calls)),
+        "mean_evaluated_rows": float(np.mean(evaluated_rows)),
+        "mean_model_time_sec": float(np.mean(model_time)),
         "speculation": speculation,
     }
 
@@ -88,6 +114,18 @@ def _pair_summary(
     baseline_accuracy = [float(_is_correct(right)) for _, right in pairs]
     candidate_latency = [float(left["elapsed_sec"]) for left, _ in pairs]
     baseline_latency = [float(right["elapsed_sec"]) for _, right in pairs]
+    candidate_model_time = [
+        float(left.get("model_time_sec", left["elapsed_sec"])) for left, _ in pairs
+    ]
+    baseline_model_time = [
+        float(right.get("model_time_sec", right["elapsed_sec"])) for _, right in pairs
+    ]
+    candidate_rows = [
+        float(left.get("evaluated_rows", left["total_nfe"])) for left, _ in pairs
+    ]
+    baseline_rows = [
+        float(right.get("evaluated_rows", right["total_nfe"])) for _, right in pairs
+    ]
     harmful_regressions = sum(
         _is_correct(reference) and not _is_correct(policy) for policy, reference in pairs
     )
@@ -99,17 +137,41 @@ def _pair_summary(
         for policy, reference in pairs
         if "generated_ids" in policy and "generated_ids" in reference
     )
+    trajectory_disagreements = sum(
+        policy.get("state_trajectory_digest") != reference.get("state_trajectory_digest")
+        for policy, reference in pairs
+        if "state_trajectory_digest" in policy and "state_trajectory_digest" in reference
+    )
     nfe = paired_bootstrap(
         candidate_nfe,
         baseline_nfe,
         samples=bootstrap_samples,
         seed=seed,
     )
+    latency_difference = paired_bootstrap(
+        candidate_latency,
+        baseline_latency,
+        samples=bootstrap_samples,
+        seed=seed + 2,
+    )
+    model_time_difference = paired_bootstrap(
+        candidate_model_time,
+        baseline_model_time,
+        samples=bootstrap_samples,
+        seed=seed + 3,
+    )
+    evaluated_row_difference = paired_bootstrap(
+        candidate_rows,
+        baseline_rows,
+        samples=bootstrap_samples,
+        seed=seed + 4,
+    )
     return {
         "count": len(pairs),
         "harmful_regressions": harmful_regressions,
         "beneficial_changes": beneficial_changes,
         "sequence_disagreements": sequence_disagreements,
+        "trajectory_disagreements": trajectory_disagreements,
         "nfe_difference": asdict(nfe),
         "nfe_reduction": -nfe.estimate / float(np.mean(baseline_nfe)),
         "accuracy_difference": asdict(
@@ -120,14 +182,17 @@ def _pair_summary(
                 seed=seed + 1,
             )
         ),
-        "latency_difference": asdict(
-            paired_bootstrap(
-                candidate_latency,
-                baseline_latency,
-                samples=bootstrap_samples,
-                seed=seed + 2,
-            )
+        "latency_difference": asdict(latency_difference),
+        "latency_reduction": (
+            -latency_difference.estimate / float(np.mean(baseline_latency))
         ),
+        "model_time_difference": asdict(model_time_difference),
+        "model_time_reduction": (
+            -model_time_difference.estimate / float(np.mean(baseline_model_time))
+        ),
+        "evaluated_row_difference": asdict(evaluated_row_difference),
+        "evaluated_row_nonincrease": float(np.sum(candidate_rows))
+        <= float(np.sum(baseline_rows)),
     }
 
 
@@ -213,6 +278,9 @@ def _audit(
     primary_method: str,
     require_history_frontier_ci: bool,
     minimum_model_nfe_reduction_lower_ci: float | None,
+    minimum_model_latency_reduction_lower_ci: float | None,
+    require_evaluated_row_nonincrease: bool,
+    require_trajectory_equivalence: bool,
 ) -> dict[str, Any]:
     risk_rows = _risk_rows(certificate)
     selected_risks: dict[tuple[str, str], Mapping[str, Any] | None]
@@ -239,6 +307,151 @@ def _audit(
     risk_ok = not bool(certificate.get("fallback", True)) and all(
         selected is not None for selected in selected_risks.values()
     )
+    if certificate.get("certificate_mode") == "hardware_scoped_execution_equivalence":
+        required_latency = minimum_model_latency_reduction_lower_ci
+        if required_latency is None:
+            raise ValueError("v9 reporting requires a model-level latency threshold")
+        sequence_disagreements = {
+            f"{model}/{dataset}": int(
+                summary[model][dataset]["comparisons"][f"{primary_method}_vs_adablock"][
+                    "sequence_disagreements"
+                ]
+            )
+            for model in _MODELS
+            for dataset in _DATASETS
+        }
+        trajectory_disagreements = {
+            f"{model}/{dataset}": int(
+                summary[model][dataset]["comparisons"][f"{primary_method}_vs_adablock"][
+                    "trajectory_disagreements"
+                ]
+            )
+            for model in _MODELS
+            for dataset in _DATASETS
+        }
+        accuracy_lowers = [
+            float(
+                summary[model][dataset]["comparisons"][f"{primary_method}_vs_adablock"][
+                    "accuracy_difference"
+                ]["lower"]
+            )
+            for model in _MODELS
+            for dataset in _DATASETS
+        ]
+        model_latency: dict[str, dict[str, float]] = {}
+        model_time: dict[str, dict[str, float]] = {}
+        evaluated_rows: dict[str, dict[str, float | bool]] = {}
+        for model_index, model in enumerate(_MODELS):
+            candidate_latency: list[float] = []
+            baseline_latency: list[float] = []
+            candidate_model_time: list[float] = []
+            baseline_model_time: list[float] = []
+            candidate_work = 0.0
+            baseline_work = 0.0
+            for dataset in _DATASETS:
+                pairs = pair_records(
+                    records[model][dataset][primary_method],
+                    records[model][dataset]["adablock"],
+                )
+                candidate_work += sum(
+                    float(left.get("evaluated_rows", left["total_nfe"])) for left, _ in pairs
+                )
+                baseline_work += sum(
+                    float(right.get("evaluated_rows", right["total_nfe"]))
+                    for _, right in pairs
+                )
+                if dataset not in _IN_DOMAIN:
+                    continue
+                candidate_latency.extend(float(left["elapsed_sec"]) for left, _ in pairs)
+                baseline_latency.extend(float(right["elapsed_sec"]) for _, right in pairs)
+                candidate_model_time.extend(
+                    float(left.get("model_time_sec", left["elapsed_sec"]))
+                    for left, _ in pairs
+                )
+                baseline_model_time.extend(
+                    float(right.get("model_time_sec", right["elapsed_sec"]))
+                    for _, right in pairs
+                )
+            latency_difference = paired_bootstrap(
+                candidate_latency,
+                baseline_latency,
+                samples=bootstrap_samples,
+                seed=seed + 501 + model_index,
+            )
+            model_difference = paired_bootstrap(
+                candidate_model_time,
+                baseline_model_time,
+                samples=bootstrap_samples,
+                seed=seed + 511 + model_index,
+            )
+            baseline_latency_mean = float(np.mean(baseline_latency))
+            baseline_model_time_mean = float(np.mean(baseline_model_time))
+            model_latency[model] = {
+                "estimate": -latency_difference.estimate / baseline_latency_mean,
+                "lower": -latency_difference.upper / baseline_latency_mean,
+                "upper": -latency_difference.lower / baseline_latency_mean,
+            }
+            model_time[model] = {
+                "estimate": -model_difference.estimate / baseline_model_time_mean,
+                "lower": -model_difference.upper / baseline_model_time_mean,
+                "upper": -model_difference.lower / baseline_model_time_mean,
+            }
+            evaluated_rows[model] = {
+                "candidate": candidate_work,
+                "adablock": baseline_work,
+                "nonincrease": candidate_work <= baseline_work,
+            }
+        speculation_steps = [
+            step
+            for model in _MODELS
+            for dataset in _DATASETS
+            for row in records[model][dataset][primary_method]
+            for block in row.get("schedule_history", ())
+            for step in block.get("speculation_steps", ())
+        ]
+        complete_guard_evidence = bool(speculation_steps) and all(
+            bool(step.get("guard_passed")) or bool(step.get("reference_checked"))
+            for step in speculation_steps
+        )
+        gates = {
+            "risk_certificate": risk_ok,
+            "exact_sequence_equivalence": not any(sequence_disagreements.values()),
+            "exact_trajectory_equivalence": (
+                not require_trajectory_equivalence
+                or not any(trajectory_disagreements.values())
+            ),
+            "accuracy_noninferiority": min(accuracy_lowers) >= minimum_accuracy_lower_ci,
+            "model_latency_reduction_lower_ci": all(
+                interval["lower"] > required_latency for interval in model_latency.values()
+            ),
+            "positive_model_time_reduction_lower_ci": all(
+                interval["lower"] > 0.0 for interval in model_time.values()
+            ),
+            "evaluated_row_nonincrease": (
+                not require_evaluated_row_nonincrease
+                or all(bool(values["nonincrease"]) for values in evaluated_rows.values())
+            ),
+            "complete_guard_diagnostics": complete_guard_evidence,
+            "non_mock_evidence": not bool(certificate.get("mock", False)),
+        }
+        failed = [name for name, passed in gates.items() if not passed]
+        return {
+            "headline_eligible": not failed,
+            "failed_gates": failed,
+            "gates": gates,
+            "details": {
+                "primary_method": primary_method,
+                "sequence_disagreements": sequence_disagreements,
+                "trajectory_disagreements": trajectory_disagreements,
+                "minimum_accuracy_lower_ci": min(accuracy_lowers),
+                "required_accuracy_lower_ci": minimum_accuracy_lower_ci,
+                "model_latency_reduction": model_latency,
+                "required_model_latency_reduction_lower_ci": required_latency,
+                "model_time_reduction": model_time,
+                "evaluated_rows": evaluated_rows,
+                "guarded_speculation_rounds": len(speculation_steps),
+            },
+        }
     beat_adablock_models = {}
     for model in _MODELS:
         candidate_values = [
@@ -670,6 +883,9 @@ def write_rc_pag_report(
     primary_method: str = "rc_pag_history",
     require_history_frontier_ci: bool = True,
     minimum_model_nfe_reduction_lower_ci: float | None = None,
+    minimum_model_latency_reduction_lower_ci: float | None = None,
+    require_evaluated_row_nonincrease: bool = False,
+    require_trajectory_equivalence: bool = False,
 ) -> dict[str, Any]:
     if bootstrap_samples < 1:
         raise ValueError("bootstrap_samples must be positive")
@@ -717,6 +933,9 @@ def write_rc_pag_report(
         primary_method=primary_method,
         require_history_frontier_ci=require_history_frontier_ci,
         minimum_model_nfe_reduction_lower_ci=minimum_model_nfe_reduction_lower_ci,
+        minimum_model_latency_reduction_lower_ci=(minimum_model_latency_reduction_lower_ci),
+        require_evaluated_row_nonincrease=require_evaluated_row_nonincrease,
+        require_trajectory_equivalence=require_trajectory_equivalence,
     )
     output = Path(run_dir) / "report"
     figures = output / "figures"

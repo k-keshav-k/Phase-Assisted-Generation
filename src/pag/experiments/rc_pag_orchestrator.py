@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import numpy as np
+from scipy.stats import beta as beta_distribution
+from scipy.stats import binom
 from sklearn.metrics import roc_auc_score
 
 from pag.experiments.config import canonical_config_hash, inclusive_range
@@ -566,6 +568,14 @@ class MockRCPAGRuntime:
             ),
             "generated_text": f"mock-{sample.sample_id}",
             "generated_ids": [sample.index, 1, 2],
+            "serial_forward_calls": int(nfe) + 1,
+            "evaluated_rows": int(nfe) + 1,
+            "reference_equivalent_transitions": int(nfe) + 1,
+            "state_trajectory_digest": [
+                hashlib.sha256(f"mock-state:{sample.sample_id}:{step}".encode()).hexdigest()
+                for step in range(2)
+            ],
+            "model_time_sec": elapsed * 0.9,
             "mock": True,
         }
         if candidate is not None and candidate.variant == "ec_pag":
@@ -644,6 +654,34 @@ class MockRCPAGRuntime:
                         else []
                     ),
                     "verified_sequence_safe": bool(verified_depth),
+                }
+            ]
+        if candidate is not None and candidate.variant == "ec_pag":
+            payload["schedule_history"] = [
+                {
+                    "applied_block_size": 4,
+                    "actual_nfe_used": 3,
+                    "final_tokens": [sample.index, 1, 2],
+                    "verified_sequence_safe": True,
+                    "speculation_steps": [
+                        {
+                            "activation_key": "r2|t2|m3|q3|b2",
+                            "batch_size": 2,
+                            "depth": 1,
+                            "accepted_draft_edges": 1,
+                            "reference_equivalent_transitions": 2,
+                            "verified_transitions": 2,
+                            "evaluated_nodes": 2,
+                            "evaluated_rows": 2,
+                            "serial_forward_calls": 1,
+                            "canonical_fallback_rows": 0,
+                            "guard_passed": True,
+                            "reference_checked": False,
+                            "successor_equal_when_checked": None,
+                            "sequence_safe": True,
+                            "nfe_saved": 1,
+                        }
+                    ],
                 }
             ]
         if stage == "calibrate":
@@ -1417,6 +1455,14 @@ class RCPAGOrchestrator:
 
     def _run_collect(self) -> None:
         self._write_manifest("collect", "running")
+        if self.config.protocol_version == "v9":
+            self._write_manifest(
+                "collect",
+                "completed",
+                mode="no_learned_risk_head",
+                records=0,
+            )
+            return
         reused_models = self._prepare_development_reuse()
         self._run_records(
             stage="collect",
@@ -1785,6 +1831,18 @@ class RCPAGOrchestrator:
 
     def _run_fit(self) -> None:
         self._write_manifest("fit", "running")
+        if self.config.protocol_version == "v9":
+            estimator_manifest = {
+                "schema_version": 1,
+                "protocol_version": "v9",
+                "mode": "deterministic_equivalence_and_cost_rules",
+                "models": {},
+                "benefit_models": {},
+                "learned_estimators": 0,
+            }
+            self.store.write_named("estimators/manifest.json", estimator_manifest)
+            self._write_manifest("fit", "completed", estimators={})
+            return
         metadata: dict[str, dict[str, object]] = {}
         benefit_metadata: dict[str, dict[str, object]] = {}
         reused_models: set[str] = set()
@@ -2283,10 +2341,218 @@ class RCPAGOrchestrator:
             core["minimum_nfe_reduction"] = self.config.risk.minimum_nfe_reduction
         return {**core, "protocol_identity": canonical_config_hash(core)}
 
+    def _v9_paired_diagnostics(
+        self,
+        *,
+        stage: str,
+        model: str,
+        candidate_name: str,
+        seed_offset: int,
+    ) -> dict[str, Any]:
+        baseline = {
+            str(row["sample_id"]): row
+            for row in self.store.records(f"{stage}/{model}", "adablock")
+        }
+        policy = {
+            str(row["sample_id"]): row
+            for row in self.store.records(f"{stage}/{model}", candidate_name)
+        }
+        if not baseline or set(baseline) != set(policy):
+            raise RuntimeError(f"incomplete paired v9 coverage for {stage}/{model}")
+        sample_ids = sorted(baseline)
+        sequence_disagreements = sum(
+            baseline[key].get("generated_ids") != policy[key].get("generated_ids")
+            for key in sample_ids
+        )
+        trajectory_disagreements = sum(
+            baseline[key].get("state_trajectory_digest")
+            != policy[key].get("state_trajectory_digest")
+            for key in sample_ids
+        )
+        accuracy_disagreements = sum(
+            bool(baseline[key].get("is_correct")) != bool(policy[key].get("is_correct"))
+            for key in sample_ids
+        )
+        policy_rows = [policy[key] for key in sample_ids]
+        steps = self._speculation_steps(policy_rows)
+        guard_evidence = bool(steps) and all(
+            bool(step.get("guard_passed")) or bool(step.get("reference_checked"))
+            for step in steps
+        )
+        latency_reduction = self._relative_reduction(
+            [float(policy[key]["elapsed_sec"]) for key in sample_ids],
+            [float(baseline[key]["elapsed_sec"]) for key in sample_ids],
+            samples=self.config.statistics.bootstrap_samples,
+            seed=self.config.seed + seed_offset,
+        )
+        model_time_reduction = self._relative_reduction(
+            [
+                float(policy[key].get("model_time_sec", policy[key]["elapsed_sec"]))
+                for key in sample_ids
+            ],
+            [
+                float(baseline[key].get("model_time_sec", baseline[key]["elapsed_sec"]))
+                for key in sample_ids
+            ],
+            samples=self.config.statistics.bootstrap_samples,
+            seed=self.config.seed + seed_offset + 100,
+        )
+        baseline_rows = sum(
+            int(baseline[key].get("evaluated_rows", baseline[key]["total_nfe"]))
+            for key in sample_ids
+        )
+        candidate_rows = sum(
+            int(policy[key].get("evaluated_rows", policy[key]["total_nfe"]))
+            for key in sample_ids
+        )
+        return {
+            "paired_prompts": len(sample_ids),
+            "sequence_disagreements": sequence_disagreements,
+            "trajectory_disagreements": trajectory_disagreements,
+            "accuracy_disagreements": accuracy_disagreements,
+            "speculation_rounds": len(steps),
+            "guard_evidence": guard_evidence,
+            "guard_passes": sum(bool(step.get("guard_passed")) for step in steps),
+            "reference_checks": sum(bool(step.get("reference_checked")) for step in steps),
+            "canonical_fallback_rows": sum(
+                int(step.get("canonical_fallback_rows", 0)) for step in steps
+            ),
+            "latency_reduction": latency_reduction,
+            "model_time_reduction": model_time_reduction,
+            "baseline_evaluated_rows": baseline_rows,
+            "candidate_evaluated_rows": candidate_rows,
+            "evaluated_rows_nonincrease": candidate_rows <= baseline_rows,
+            "baseline_serial_forward_calls": sum(
+                int(baseline[key].get("serial_forward_calls", baseline[key]["total_nfe"]))
+                for key in sample_ids
+            ),
+            "candidate_serial_forward_calls": sum(
+                int(policy[key].get("serial_forward_calls", policy[key]["total_nfe"]))
+                for key in sample_ids
+            ),
+            "mean_baseline_nfe": float(
+                np.mean([float(baseline[key]["total_nfe"]) for key in sample_ids])
+            ),
+            "mean_candidate_nfe": float(
+                np.mean([float(policy[key]["total_nfe"]) for key in sample_ids])
+            ),
+            "correct": sum(bool(policy[key].get("is_correct")) for key in sample_ids),
+        }
+
+    def _run_v9_screen(self, family: Mapping[str, Any]) -> None:
+        candidate = self.config.candidates[0]
+        self._run_records(
+            stage="screen",
+            refs=self._refs("tuning"),
+            methods=(("adablock", None), (candidate.name, candidate)),
+        )
+        models: dict[str, dict[str, Any]] = {}
+        readiness_models: dict[str, dict[str, Any]] = {}
+        for index, model in enumerate(self.config.models):
+            diagnostics = self._v9_paired_diagnostics(
+                stage="screen",
+                model=model,
+                candidate_name=candidate.name,
+                seed_offset=200 + index,
+            )
+            passed = (
+                diagnostics["sequence_disagreements"] == 0
+                and diagnostics["trajectory_disagreements"] == 0
+                and diagnostics["accuracy_disagreements"] == 0
+                and diagnostics["guard_evidence"]
+                and diagnostics["latency_reduction"]["lower"]
+                > self.config.readiness.minimum_tuning_latency_reduction_per_model
+                and diagnostics["model_time_reduction"]["lower"] > 0.0
+                and (
+                    not self.config.readiness.require_evaluated_row_nonincrease
+                    or diagnostics["evaluated_rows_nonincrease"]
+                )
+            )
+            candidate_stats = {
+                **diagnostics,
+                "mean_nfe": diagnostics["mean_candidate_nfe"],
+                "harmful_regressions": diagnostics["accuracy_disagreements"],
+                "accuracy_eligible": passed,
+            }
+            baseline_stats = {
+                "mean_nfe": diagnostics["mean_baseline_nfe"],
+                "correct": diagnostics["correct"],
+                "harmful_regressions": 0,
+                "accuracy_eligible": True,
+            }
+            models[model] = {
+                "allowed_harmful_regressions": 0,
+                "nonlearned": {"adablock": baseline_stats},
+                "candidates": {candidate.name: candidate_stats},
+            }
+            readiness_models[model] = {
+                "selected_candidate": candidate.name,
+                **diagnostics,
+                "passed": passed,
+            }
+        selected_by_model = {model: candidate.name for model in self.config.models}
+        baseline_means = {
+            model: float(models[model]["nonlearned"]["adablock"]["mean_nfe"])
+            for model in self.config.models
+        }
+        summary = {
+            "protocol_version": "v9",
+            "selection_mode": "single_pre_registered_equivalence_cost_policy",
+            "best_nonlearned": {model: "adablock" for model in self.config.models},
+            "best_nonlearned_mean_nfe": baseline_means,
+            "selected_candidate": selected_by_model,
+            "models": models,
+        }
+        artifact_hashes = {
+            model: json.loads(
+                (self.run_dir / "equivalence" / f"{model}.json").read_text(encoding="utf-8")
+            )["artifact_hash"]
+            for model in self.config.models
+        }
+        frozen = {
+            "schema_version": 2,
+            "config_hash": self.config.config_hash,
+            "risk_loss": self.config.risk.loss,
+            "family_identity": family["protocol_identity"],
+            "equivalence_artifact_hashes": artifact_hashes,
+            "selected_by_model": {
+                model: asdict(candidate) for model in self.config.models
+            },
+        }
+        frozen["protocol_identity"] = canonical_config_hash(frozen)
+        readiness = {
+            "schema_version": 2,
+            "protocol_version": "v9",
+            "minimum_tuning_latency_reduction_per_model": (
+                self.config.readiness.minimum_tuning_latency_reduction_per_model
+            ),
+            "require_evaluated_row_nonincrease": (
+                self.config.readiness.require_evaluated_row_nonincrease
+            ),
+            "models": readiness_models,
+            "passed": all(bool(row["passed"]) for row in readiness_models.values()),
+        }
+        self.store.write_named("screening_summary.json", summary)
+        self.store.write_named("frozen_policy.json", frozen)
+        self.store.write_named("readiness_audit.json", readiness)
+        if not readiness["passed"]:
+            self._write_manifest(
+                "screen",
+                "failed",
+                summary=summary,
+                frozen_policy=frozen,
+                readiness=readiness,
+            )
+            raise ControlledStop("v9 workshop-readiness gate failed before calibration")
+        self._write_manifest("screen", "completed", summary=summary, frozen_policy=frozen)
+
     def _run_screen(self) -> None:
         self._write_manifest("screen", "running")
         family = self._policy_family_payload()
         self.store.write_named("policy_family.json", family)
+        if self.config.protocol_version == "v9":
+            self._run_v9_screen(family)
+            return
         baseline_methods = tuple(
             (method, None)
             for method in self.config.development_methods
@@ -2530,8 +2796,149 @@ class RCPAGOrchestrator:
         self.store.write_named("screening_summary.json", summary)
         self._write_manifest("screen", "completed", summary=summary)
 
+    def _run_v9_calibrate(self) -> None:
+        frozen = json.loads((self.run_dir / "frozen_policy.json").read_text(encoding="utf-8"))
+        selected = {
+            model: PolicyCandidateSpec(**payload)
+            for model, payload in frozen["selected_by_model"].items()
+        }
+        family = {
+            "schema_version": 3,
+            "config_hash": self.config.config_hash,
+            "alpha": self.config.risk.alpha,
+            "delta": self.config.risk.delta,
+            "loss": self.config.risk.loss,
+            "multiplicity_unit": "frozen_hardware_scoped_model_policy_pair",
+            "selected_by_model": {
+                model: asdict(candidate) for model, candidate in selected.items()
+            },
+            "selection_source": "strict_v9_development_screen_only",
+            "equivalence_artifact_hashes": frozen["equivalence_artifact_hashes"],
+        }
+        family["protocol_identity"] = canonical_config_hash(family)
+        self.store.write_named("calibration_family.json", family)
+        refs = self._refs("calibration")
+        for model, candidate in selected.items():
+            self._run_records(
+                stage="calibrate",
+                refs=refs,
+                methods=(("adablock", None), (candidate.name, candidate)),
+                models=(model,),
+            )
+
+        cutoff = self.config.risk.delta / len(selected)
+        candidates: list[dict[str, Any]] = []
+        diagnostics: dict[str, dict[str, Any]] = {}
+        for model_index, (model, candidate) in enumerate(selected.items()):
+            paired = self._v9_paired_diagnostics(
+                stage="calibrate",
+                model=model,
+                candidate_name=candidate.name,
+                seed_offset=400 + model_index,
+            )
+            baseline = {
+                str(row["sample_id"]): row
+                for row in self.store.records(f"calibrate/{model}", "adablock")
+            }
+            policy = {
+                str(row["sample_id"]): row
+                for row in self.store.records(f"calibrate/{model}", candidate.name)
+            }
+            failures = 0
+            count = 0
+            for sample_id in sorted(baseline):
+                mismatch = int(
+                    baseline[sample_id].get("generated_ids")
+                    != policy[sample_id].get("generated_ids")
+                    or baseline[sample_id].get("state_trajectory_digest")
+                    != policy[sample_id].get("state_trajectory_digest")
+                )
+                repetitions = int(policy[sample_id].get("synthetic_repetitions", 1))
+                failures += mismatch * repetitions
+                count += repetitions
+            if count < 1:
+                raise ValueError("v9 calibration requires at least one paired prompt")
+            upper = (
+                1.0
+                if failures == count
+                else float(beta_distribution.ppf(1.0 - cutoff, failures + 1, count - failures))
+            )
+            pvalue = float(binom.cdf(failures, count, self.config.risk.alpha))
+            exact = failures == 0
+            latency_ok = (
+                paired["latency_reduction"]["lower"]
+                > self.config.equivalence.minimum_latency_reduction
+            )
+            model_time_ok = paired["model_time_reduction"]["lower"] > 0.0
+            rows_ok = bool(paired["evaluated_rows_nonincrease"])
+            certified = (
+                exact
+                and upper <= self.config.risk.alpha
+                and pvalue <= cutoff
+                and paired["guard_evidence"]
+                and latency_ok
+                and model_time_ok
+                and (
+                    not self.config.equivalence.require_evaluated_row_nonincrease or rows_ok
+                )
+            )
+            candidates.append(
+                {
+                    "name": f"{model}/{candidate.name}",
+                    "failures": failures,
+                    "count": count,
+                    "empirical_risk": failures / count,
+                    "upper_risk_bound": upper,
+                    "pvalue": pvalue,
+                    "corrected_cutoff": cutoff,
+                    "certified": certified,
+                    "mean_nfe": paired["mean_candidate_nfe"],
+                    "latency_reduction": paired["latency_reduction"],
+                    "model_time_reduction": paired["model_time_reduction"],
+                    "evaluated_rows_nonincrease": rows_ok,
+                }
+            )
+            diagnostics[model] = {
+                "candidate": candidate.name,
+                **paired,
+                "effective_calibration_count": count,
+                "execution_mismatches": failures,
+                "mismatch_upper_bound": upper,
+                "artifact_hash": frozen["equivalence_artifact_hashes"][model],
+                "certified": certified,
+            }
+        all_certified = all(bool(row["certified"]) for row in candidates)
+        certificate = {
+            "schema_version": 3,
+            "certificate_mode": "hardware_scoped_execution_equivalence",
+            "alpha": self.config.risk.alpha,
+            "familywise_delta": self.config.risk.delta,
+            "selected": "per_model_frozen_policy" if all_certified else "adablock",
+            "fallback": not all_certified,
+            "selected_by_model": {
+                model: candidate.name for model, candidate in selected.items()
+            },
+            "protocol_identity": family["protocol_identity"],
+            "loss": self.config.risk.loss,
+            "candidates": candidates,
+            "diagnostics": diagnostics,
+            "mock": (
+                self.mock_mode
+                if self.mock_mode is not None
+                else all(self._runtime(model).is_mock for model in self.config.models)
+            ),
+        }
+        self.store.write_named("risk_certificate.json", certificate)
+        if not all_certified:
+            self._write_manifest("calibrate", "failed", certificate=certificate)
+            raise ControlledStop("v9 calibration equivalence/cost certificate failed")
+        self._write_manifest("calibrate", "completed", certificate=certificate)
+
     def _run_calibrate(self) -> None:
         self._write_manifest("calibrate", "running")
+        if self.config.protocol_version == "v9":
+            self._run_v9_calibrate()
+            return
         if self.config.protocol_version in _MODERN_PROTOCOLS:
             frozen = json.loads((self.run_dir / "frozen_policy.json").read_text(encoding="utf-8"))
             selected = {
@@ -2780,13 +3187,15 @@ class RCPAGOrchestrator:
                 certificate_name = (
                     "joint harm/compute certificate"
                     if self.config.protocol_version in {"v4", "v5"}
+                    else "hardware-scoped execution-equivalence certificate"
+                    if self.config.protocol_version == "v9"
                     else "end-to-end harm certificate"
                 )
                 raise ControlledStop(f"not every frozen model policy has a {certificate_name}")
             screening = json.loads(
                 (self.run_dir / "screening_summary.json").read_text(encoding="utf-8")
             )
-            if self.config.protocol_version not in {"v4", "v5"}:
+            if self.config.protocol_version not in {"v4", "v5", "v9"}:
                 calibrated_nfe = {
                     str(item["name"]): float(item["mean_nfe"]) for item in certificate["candidates"]
                 }
@@ -2984,11 +3393,27 @@ class RCPAGOrchestrator:
             minimum_model_nfe_reduction_lower_ci=(
                 self.config.claim_gates.minimum_model_nfe_reduction_lower_ci
             ),
+            minimum_model_latency_reduction_lower_ci=(
+                self.config.claim_gates.minimum_model_latency_reduction_lower_ci
+            ),
+            require_evaluated_row_nonincrease=(
+                self.config.claim_gates.require_evaluated_row_nonincrease
+            ),
+            require_trajectory_equivalence=(
+                self.config.claim_gates.require_trajectory_equivalence
+            ),
         )
         self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 
     def _run_paper(self) -> None:
         self._write_manifest("paper", "running")
+        if self.config.protocol_version == "v9":
+            claim_audit = json.loads(
+                (self.run_dir / "report" / "claim_audit.json").read_text(encoding="utf-8")
+            )
+            if not claim_audit.get("headline_eligible"):
+                self._write_manifest("paper", "failed", claim_audit=claim_audit)
+                raise ControlledStop("v9 paper gate failed; headline evidence is incomplete")
         self.store.write_named(
             "paper_manifest.json",
             {

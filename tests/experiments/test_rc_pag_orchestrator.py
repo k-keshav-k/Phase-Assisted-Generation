@@ -890,3 +890,64 @@ def test_v9_reuses_only_v8_adablock_pilot_as_audit_reference(
         stage == "audit" and method == "adablock"
         for stage, _, _, method in runtime.calls
     )
+
+
+def test_v9_runs_strict_certificate_confirmation_and_latency_report(
+    tmp_path,
+    v9_config,
+) -> None:
+    runtime = MockRCPAGRuntime(calibration_repetitions=500)
+    runner = RCPAGOrchestrator(
+        v9_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("report")
+
+    assert not any(stage == "collect" for stage, _, _, _ in runtime.calls)
+    estimator_manifest = json.loads((tmp_path / "estimators" / "manifest.json").read_text())
+    assert estimator_manifest["learned_estimators"] == 0
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["certificate_mode"] == "hardware_scoped_execution_equivalence"
+    assert not certificate["fallback"]
+    assert all(row["failures"] == 0 for row in certificate["candidates"])
+    audit = json.loads((tmp_path / "report" / "claim_audit.json").read_text())
+    assert audit["gates"]["exact_trajectory_equivalence"]
+    assert audit["gates"]["model_latency_reduction_lower_ci"]
+    assert audit["gates"]["evaluated_row_nonincrease"]
+    assert "model_nfe_reduction_lower_ci" not in audit["gates"]
+    assert not audit["headline_eligible"]
+    assert audit["failed_gates"] == ["non_mock_evidence"]
+
+
+class _V9CalibrationMismatchRuntime(MockRCPAGRuntime):
+    def run(self, **kwargs):
+        payload = super().run(**kwargs)
+        candidate = kwargs.get("candidate")
+        if kwargs["stage"] == "calibrate" and candidate is not None:
+            payload["generated_ids"] = [999]
+            payload["state_trajectory_digest"] = ["mismatch"]
+        return payload
+
+
+def test_v9_calibration_stops_on_any_execution_mismatch(tmp_path, v9_config) -> None:
+    runtime = _V9CalibrationMismatchRuntime(calibration_repetitions=500)
+    runner = RCPAGOrchestrator(
+        v9_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    with pytest.raises(ControlledStop, match="v9 calibration"):
+        runner.run_through("calibrate")
+
+    certificate = json.loads((tmp_path / "risk_certificate.json").read_text())
+    assert certificate["fallback"]
+    assert all(row["failures"] > 0 for row in certificate["candidates"])
+    manifest = json.loads((tmp_path / "manifests" / "calibrate.json").read_text())
+    assert manifest["status"] == "failed"

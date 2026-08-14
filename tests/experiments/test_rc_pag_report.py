@@ -127,6 +127,59 @@ def _v2_records() -> dict:
     return records
 
 
+def _v9_certificate() -> dict:
+    payload = _v2_certificate()
+    payload.update(
+        {
+            "certificate_mode": "hardware_scoped_execution_equivalence",
+            "mock": False,
+        }
+    )
+    return payload
+
+
+def _v9_records() -> dict:
+    records = _v2_records()
+    for model in records.values():
+        for dataset in model.values():
+            for index, baseline in enumerate(dataset["adablock"]):
+                baseline.update(
+                    {
+                        "state_trajectory_digest": [f"state-{index}"],
+                        "evaluated_rows": 80,
+                        "serial_forward_calls": 80,
+                        "model_time_sec": 4.0,
+                    }
+                )
+            for index, candidate in enumerate(dataset["rc_pag_selected"]):
+                candidate.update(
+                    {
+                        "elapsed_sec": dataset["adablock"][index]["elapsed_sec"] * 0.8,
+                        "state_trajectory_digest": [f"state-{index}"],
+                        "evaluated_rows": 70,
+                        "serial_forward_calls": 60,
+                        "model_time_sec": 3.2,
+                        "schedule_history": [
+                            {
+                                "verified_sequence_safe": True,
+                                "speculation_steps": [
+                                    {
+                                        "accepted_draft_edges": 1,
+                                        "verified_transitions": 2,
+                                        "evaluated_nodes": 2,
+                                        "nfe_saved": 1,
+                                        "guard_passed": True,
+                                        "reference_checked": False,
+                                        "canonical_fallback_rows": 0,
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                )
+    return records
+
+
 def test_failed_risk_certificate_blocks_headline(tmp_path):
     audit = write_rc_pag_report(
         tmp_path,
@@ -284,3 +337,31 @@ def test_v6_compute_gate_rejects_a_small_nfe_improvement(tmp_path):
 
     assert not audit["headline_eligible"]
     assert "model_nfe_reduction_lower_ci" in audit["failed_gates"]
+
+
+def test_v9_report_certifies_equivalence_latency_and_honest_work(tmp_path):
+    audit = write_rc_pag_report(
+        tmp_path,
+        records=_v9_records(),
+        certificate=_v9_certificate(),
+        bootstrap_samples=200,
+        seed=7,
+        methods=("adablock", "best_nonlearned", "rc_pag_selected"),
+        primary_method="rc_pag_selected",
+        require_history_frontier_ci=False,
+        minimum_model_latency_reduction_lower_ci=0.05,
+        require_evaluated_row_nonincrease=True,
+        require_trajectory_equivalence=True,
+    )
+
+    assert audit["headline_eligible"]
+    assert audit["gates"]["exact_sequence_equivalence"]
+    assert audit["gates"]["exact_trajectory_equivalence"]
+    assert audit["gates"]["model_latency_reduction_lower_ci"]
+    assert audit["gates"]["evaluated_row_nonincrease"]
+    assert "model_nfe_reduction_lower_ci" not in audit["gates"]
+    summary = json.loads((tmp_path / "report" / "summary.json").read_text())
+    values = summary["llada"]["gsm8k_test"]["methods"]["rc_pag_selected"]
+    assert values["mean_serial_forward_calls"] == 60.0
+    assert values["mean_evaluated_rows"] == 70.0
+    assert values["speculation"]["guard_evidence_complete"]
