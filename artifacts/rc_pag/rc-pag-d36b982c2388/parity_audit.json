@@ -1,0 +1,411 @@
+{
+  "checked_records": 64,
+  "fields": [
+    "generated_ids",
+    "generated_text",
+    "nfe_history",
+    "block_history",
+    "total_nfe"
+  ],
+  "mismatches": [
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00451"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00461"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00465"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00351"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00353"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00355"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00356"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "mbpp_train-00251"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00450"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00451"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00453"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00455"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00457"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00458"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00459"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00463"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00465"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00352"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00353"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00354"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00357"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "dream",
+      "sample_id": "mbpp_train-00251"
+    }
+  ],
+  "passed": false,
+  "speculation_checked_records": 64,
+  "speculation_fields": [
+    "generated_ids",
+    "generated_text",
+    "block_history"
+  ],
+  "speculation_mismatches": [
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00451"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00461"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "llada",
+      "sample_id": "gsm8k_train-00465"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00351"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00353"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00355"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "math_train-00356"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "llada",
+      "sample_id": "mbpp_train-00251"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00450"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00451"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00453"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00455"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00457"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00458"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00459"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00463"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "gsm8k_train-00465"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00352"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00353"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00354"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text",
+        "block_history"
+      ],
+      "model": "dream",
+      "sample_id": "math_train-00357"
+    },
+    {
+      "fields": [
+        "generated_ids",
+        "generated_text"
+      ],
+      "model": "dream",
+      "sample_id": "mbpp_train-00251"
+    }
+  ]
+}

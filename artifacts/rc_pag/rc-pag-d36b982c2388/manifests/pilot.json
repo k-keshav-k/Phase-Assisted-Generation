@@ -1,0 +1,434 @@
+{
+  "config_hash": "d36b982c23885b6f41cec51e026efaf45c4354d4242b5bd60682b95615ae8ba0",
+  "identity": {
+    "config_hash": "d36b982c23885b6f41cec51e026efaf45c4354d4242b5bd60682b95615ae8ba0",
+    "datasets": {
+      "gsm8k_test": "740312add88f781978c0658806c59bc2815b9866",
+      "gsm8k_train": "740312add88f781978c0658806c59bc2815b9866",
+      "humaneval": "7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544",
+      "math500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "math_train": "21a5633873b6a120296cce3e2df9d5550074f4a3",
+      "mbpp_sanitized": "4bb6404fdc6cacfda99d4ac4205087b89d32030c",
+      "mbpp_train": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "models": {
+      "dream": "05334cb9faaf763692dcf9d8737c642be2b2a6ae",
+      "llada": "08b83a6feb34df1a6011b80c3c00c7563e963b07"
+    },
+    "protocol": "risk_calibrated_pag_v8"
+  },
+  "parity": {
+    "checked_records": 64,
+    "fields": [
+      "generated_ids",
+      "generated_text",
+      "nfe_history",
+      "block_history",
+      "total_nfe"
+    ],
+    "mismatches": [
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00451"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00461"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00465"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00351"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00353"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00355"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00356"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "mbpp_train-00251"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00450"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00451"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00453"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00455"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00457"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00458"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00459"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00463"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00465"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00352"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00353"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00354"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00357"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "dream",
+        "sample_id": "mbpp_train-00251"
+      }
+    ],
+    "passed": false,
+    "speculation_checked_records": 64,
+    "speculation_fields": [
+      "generated_ids",
+      "generated_text",
+      "block_history"
+    ],
+    "speculation_mismatches": [
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00451"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00461"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "llada",
+        "sample_id": "gsm8k_train-00465"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00351"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00353"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00355"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "math_train-00356"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "llada",
+        "sample_id": "mbpp_train-00251"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00450"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00451"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00453"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00455"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00457"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00458"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00459"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00463"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "gsm8k_train-00465"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00352"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00353"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00354"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text",
+          "block_history"
+        ],
+        "model": "dream",
+        "sample_id": "math_train-00357"
+      },
+      {
+        "fields": [
+          "generated_ids",
+          "generated_text"
+        ],
+        "model": "dream",
+        "sample_id": "mbpp_train-00251"
+      }
+    ]
+  },
+  "schema_version": 1,
+  "stage": "pilot",
+  "status": "failed"
+}
