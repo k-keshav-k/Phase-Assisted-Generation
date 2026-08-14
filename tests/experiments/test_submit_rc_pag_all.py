@@ -113,6 +113,7 @@ def test_one_command_rejects_development_limit(tmp_path):
 def test_a100_worker_bootstraps_hf_assets_before_experiment() -> None:
     worker = WORKER.read_text(encoding="utf-8")
 
+    cuda_check = "python scripts/check_rc_pag_cuda.py"
     bootstrap = "python scripts/bootstrap_rc_pag_hf.py"
     experiment = "python scripts/run_rc_pag.py"
     assert 'RC_PAG_HF_MODE="${RC_PAG_HF_MODE:-auto}"' in worker
@@ -120,7 +121,20 @@ def test_a100_worker_bootstraps_hf_assets_before_experiment() -> None:
     assert bootstrap in worker
     assert '--config "$RC_PAG_CONFIG"' in worker
     assert '--mode "$RC_PAG_HF_MODE"' in worker
+    assert cuda_check in worker
+    assert worker.index(cuda_check) < worker.index(bootstrap)
     assert worker.index(bootstrap) < worker.index(experiment)
+
+
+def test_a100_worker_requeues_retryable_cuda_allocations_with_a_cap() -> None:
+    worker = WORKER.read_text(encoding="utf-8")
+
+    assert 'RC_PAG_MAX_CUDA_REQUEUES="${RC_PAG_MAX_CUDA_REQUEUES:-2}"' in worker
+    assert "SLURM_RESTART_COUNT:-0" in worker
+    assert 'if [[ "${status}" -eq 75 ]]' in worker
+    assert 'scontrol requeue "${SLURM_JOB_ID}"' in worker
+    assert "CUDA allocation smoke check failed" in worker
+    assert "automatic CUDA requeue limit" in worker
 
 
 def test_a100_worker_runs_auto_and_offline_modes_offline_after_bootstrap() -> None:

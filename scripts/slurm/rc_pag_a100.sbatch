@@ -19,6 +19,12 @@ set -uo pipefail
 : "${RC_PAG_CONFIG:?RC_PAG_CONFIG must be set}"
 : "${RC_PAG_OUTPUT_ROOT:?RC_PAG_OUTPUT_ROOT must be set}"
 
+RC_PAG_MAX_CUDA_REQUEUES="${RC_PAG_MAX_CUDA_REQUEUES:-2}"
+if [[ ! "${RC_PAG_MAX_CUDA_REQUEUES}" =~ ^[0-9]+$ ]]; then
+    echo "RC_PAG_MAX_CUDA_REQUEUES must be a non-negative integer" >&2
+    exit 2
+fi
+
 RC_PAG_SCRATCH_ROOT="${RC_PAG_SCRATCH_ROOT:-/scratch/${USER}/rc_pag}"
 mkdir -p "${PROJECT_DIR}/logs/rc_pag" "${RC_PAG_SCRATCH_ROOT}"
 
@@ -79,6 +85,8 @@ conda activate "${RC_PAG_CONDA_ENV:-llmr}"
 cd "$PROJECT_DIR"
 uv sync --group phase_cpd_dream --python "${RC_PAG_PYTHON:-3.11}"
 
+uv run --group phase_cpd_dream python scripts/check_rc_pag_cuda.py
+
 uv run --group phase_cpd_dream python scripts/bootstrap_rc_pag_hf.py \
     --config "$RC_PAG_CONFIG" \
     --mode "$RC_PAG_HF_MODE"
@@ -121,6 +129,22 @@ if [[ "${requeue_requested}" == "1" ]]; then
     echo "Preemption signal received; completed records are atomic. Requeuing ${SLURM_JOB_ID}."
     scontrol requeue "${SLURM_JOB_ID}"
     exit 0
+fi
+
+if [[ "${status}" -eq 75 ]]; then
+    restart_count="${SLURM_RESTART_COUNT:-0}"
+    if (( restart_count < RC_PAG_MAX_CUDA_REQUEUES )); then
+        echo "CUDA allocation smoke check failed on ${SLURMD_NODENAME:-unknown node}." >&2
+        echo "Requeuing resumable job ${SLURM_JOB_ID} (${restart_count}/${RC_PAG_MAX_CUDA_REQUEUES})." >&2
+        scontrol requeue "${SLURM_JOB_ID}"
+        exit 0
+    fi
+    echo "CUDA allocation smoke check failed after the automatic CUDA requeue limit " \
+        "(${RC_PAG_MAX_CUDA_REQUEUES})." >&2
+    echo "Job=${SLURM_JOB_ID:-unknown} node=${SLURMD_NODENAME:-unknown} " \
+        "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}" >&2
+    echo "Resubmit once; if the failure repeats, send this node/job information to NYU support." >&2
+    exit 75
 fi
 
 exit "${status}"
