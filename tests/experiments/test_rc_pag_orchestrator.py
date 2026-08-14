@@ -62,6 +62,11 @@ def v8_config():
     return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v8.yaml"))
 
 
+@pytest.fixture
+def v9_config():
+    return load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml"))
+
+
 def test_mock_all_stages_resume_without_duplicate_runs(tmp_path, config):
     runtime = MockRCPAGRuntime(calibration_repetitions=60)
     runner = RCPAGOrchestrator(
@@ -779,3 +784,109 @@ def test_v8_reuses_v7_native_traces_but_refits_verified_router(
     for model in ("llada", "dream"):
         assert estimators["models"][model]["rc_pag_verified"]["trace_reused"]
         assert (destination / "estimators" / f"{model}_rc_pag_verified.joblib").is_file()
+
+
+def test_v9_fits_equivalence_audit_and_passes_heldout_pilot(tmp_path, v9_config) -> None:
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v9_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    runner.run_through("pilot")
+
+    audit = json.loads((tmp_path / "equivalence_audit.json").read_text())
+    pilot = json.loads((tmp_path / "equivalence_pilot.json").read_text())
+    assert audit["passed"]
+    assert pilot["passed"]
+    assert set(audit["models"]) == {"llada", "dream"}
+    for model in ("llada", "dream"):
+        assert (tmp_path / "equivalence" / f"{model}.json").is_file()
+        model_gate = pilot["models"][model]
+        assert model_gate["sequence_disagreements"] == 0
+        assert model_gate["trajectory_disagreements"] == 0
+        assert model_gate["latency_reduction"]["lower"] > 0.05
+        assert model_gate["evaluated_rows_nonincrease"]
+
+
+class _FailingV9PilotRuntime(MockRCPAGRuntime):
+    def __init__(self, failure: str) -> None:
+        super().__init__()
+        self.failure = failure
+
+    def run(self, **kwargs):
+        payload = super().run(**kwargs)
+        candidate = kwargs.get("candidate")
+        if kwargs["stage"] == "pilot" and candidate is not None:
+            if self.failure == "trajectory":
+                payload["state_trajectory_digest"] = ["wrong"]
+            elif self.failure == "latency":
+                payload["elapsed_sec"] /= 0.8
+                payload["model_time_sec"] /= 0.8
+            elif self.failure == "rows":
+                payload["evaluated_rows"] += 1
+        if kwargs["stage"] == "audit" and kwargs["method"] == "ec_pag_audit_d2":
+            if self.failure == "fingerprint":
+                payload["execution_fingerprint"] = {"different": True}
+        return payload
+
+
+@pytest.mark.parametrize("failure", ["trajectory", "latency", "rows", "fingerprint"])
+def test_v9_pilot_stops_on_strict_equivalence_or_cost_failure(
+    tmp_path,
+    v9_config,
+    failure,
+) -> None:
+    runtime = _FailingV9PilotRuntime(failure)
+    runner = RCPAGOrchestrator(
+        v9_config,
+        tmp_path,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+    )
+
+    with pytest.raises(ControlledStop, match="v9"):
+        runner.run_through("pilot")
+
+    manifest = json.loads((tmp_path / "manifests" / "pilot.json").read_text())
+    assert manifest["status"] == "failed"
+
+
+def test_v9_reuses_only_v8_adablock_pilot_as_audit_reference(
+    tmp_path,
+    v8_config,
+    v9_config,
+) -> None:
+    source = tmp_path / "v8"
+    source_runner = RCPAGOrchestrator(
+        v8_config,
+        source,
+        runtime_factory=lambda model: MockRCPAGRuntime(),
+        development_limit=2,
+        mock_mode=True,
+    )
+    source_runner.run_through("pilot")
+
+    destination = tmp_path / "v9"
+    runtime = MockRCPAGRuntime()
+    runner = RCPAGOrchestrator(
+        v9_config,
+        destination,
+        runtime_factory=lambda model: runtime,
+        development_limit=2,
+        mock_mode=True,
+        reuse_development_from=source,
+    )
+    runner.run_through("pilot")
+
+    reuse = json.loads((destination / "reuse" / "v9_audit_manifest.json").read_text())
+    assert reuse["reuse_scope"] == "paired_adablock_reference_records_only"
+    assert set(reuse["reused_models"]) == {"llada", "dream"}
+    assert not any(
+        stage == "audit" and method == "adablock"
+        for stage, _, _, method in runtime.calls
+    )

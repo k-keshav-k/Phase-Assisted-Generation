@@ -20,6 +20,7 @@ from pag.experiments.rc_pag_config import (
     PolicyCandidateSpec,
     RCPAGConfig,
 )
+from pag.experiments.rc_pag_equivalence import fit_equivalence_artifact
 from pag.experiments.rc_pag_features import (
     RealizedBlock,
     StepObservation,
@@ -38,7 +39,7 @@ from pag.experiments.records import RecordStore
 from pag.experiments.risk_control import CandidateRisk, certify_candidates
 from pag.experiments.statistics import paired_bootstrap
 
-_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6", "v7", "v8"}
+_MODERN_PROTOCOLS = {"v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -410,6 +411,7 @@ class MockRCPAGRuntime:
             "verified_fixed_d2": 60.0,
             "verified_fixed_d4": 56.0,
             "rc_pag_selected": 58.0,
+            "ec_pag_v9": 56.0,
         }
         return values.get(method, 80.0)
 
@@ -426,7 +428,11 @@ class MockRCPAGRuntime:
         del estimator_paths
         self.calls.append((stage, model, sample.sample_id, method))
         elapsed = 0.02 + (sample.index % 3) * 0.001
-        if stage == "pilot":
+        if stage in {"audit", "pilot"}:
+            is_v9_audit = method in {"ec_pag_audit_d1", "ec_pag_audit_d2"}
+            is_v9_candidate = candidate is not None and candidate.variant == "ec_pag"
+            if is_v9_candidate:
+                elapsed *= 0.8
             payload = {
                 "elapsed_sec": elapsed,
                 "artifact_bytes": 2048,
@@ -435,6 +441,20 @@ class MockRCPAGRuntime:
                 "nfe_history": [4, 3],
                 "block_history": [2, 2],
                 "total_nfe": 7,
+                "serial_forward_calls": 6 if is_v9_candidate else 7,
+                "evaluated_rows": 7,
+                "reference_equivalent_transitions": 7,
+                "state_trajectory_digest": [
+                    hashlib.sha256(f"mock-state:{sample.sample_id}:{step}".encode()).hexdigest()
+                    for step in range(2)
+                ],
+                "model_time_sec": elapsed * 0.9,
+                "execution_fingerprint": {
+                    "model": model,
+                    "backend": "mock",
+                    "precision": "mock-fp32",
+                    "device": "mock-a100",
+                },
                 "is_correct": True,
                 "mock": True,
             }
@@ -449,6 +469,63 @@ class MockRCPAGRuntime:
                                 "evaluated_nodes": 5,
                                 "sequence_safe": True,
                                 "nfe_saved": 2,
+                            }
+                        ],
+                    }
+                ]
+            if is_v9_audit:
+                depth = int(method[-1])
+                payload["schedule_history"] = [
+                    {
+                        "verified_sequence_safe": True,
+                        "speculation_steps": [
+                            {
+                                "activation_key": "r2|t2|m3|q3|b2",
+                                "batch_size": depth + 1,
+                                "depth": depth,
+                                "max_logit_delta": 1e-5 * depth,
+                                "max_probability_delta": 1e-6 * depth,
+                                "full_acceptance": True,
+                                "accepted_draft_edges": depth,
+                                "reference_equivalent_transitions": depth + 1,
+                                "verified_transitions": depth + 1,
+                                "evaluated_nodes": depth + 1,
+                                "evaluated_rows": depth + 2,
+                                "serial_forward_calls": 2,
+                                "canonical_fallback_rows": 1,
+                                "guard_passed": False,
+                                "reference_checked": True,
+                                "successor_equal_when_checked": True,
+                                "sequence_safe": True,
+                                "nfe_saved": max(0, depth - 1),
+                                "batched_latency_ms": 0.5 * (depth + 1),
+                                "canonical_latency_ms": 1.0,
+                            }
+                            for _ in range(24)
+                        ],
+                    }
+                ]
+            elif is_v9_candidate:
+                payload["schedule_history"] = [
+                    {
+                        "verified_sequence_safe": True,
+                        "speculation_steps": [
+                            {
+                                "activation_key": "r2|t2|m3|q3|b2",
+                                "batch_size": 2,
+                                "depth": 1,
+                                "accepted_draft_edges": 1,
+                                "reference_equivalent_transitions": 2,
+                                "verified_transitions": 2,
+                                "evaluated_nodes": 2,
+                                "evaluated_rows": 2,
+                                "serial_forward_calls": 1,
+                                "canonical_fallback_rows": 0,
+                                "guard_passed": True,
+                                "reference_checked": False,
+                                "successor_equal_when_checked": None,
+                                "sequence_safe": True,
+                                "nfe_saved": 1,
                             }
                         ],
                     }
@@ -491,6 +568,28 @@ class MockRCPAGRuntime:
             "generated_ids": [sample.index, 1, 2],
             "mock": True,
         }
+        if candidate is not None and candidate.variant == "ec_pag":
+            payload.update(
+                {
+                    "elapsed_sec": elapsed * 0.8,
+                    "model_time_sec": elapsed * 0.72,
+                    "serial_forward_calls": max(1, int(nfe) - 1),
+                    "evaluated_rows": int(nfe) + 1,
+                    "reference_equivalent_transitions": int(nfe) + 1,
+                    "state_trajectory_digest": [
+                        hashlib.sha256(
+                            f"mock-state:{sample.sample_id}:{step}".encode()
+                        ).hexdigest()
+                        for step in range(2)
+                    ],
+                    "execution_fingerprint": {
+                        "model": model,
+                        "backend": "mock",
+                        "precision": "mock-fp32",
+                        "device": "mock-a100",
+                    },
+                }
+            )
         if stage in {"rollout", "screen", "calibrate", "confirm"} and (
             candidate is not None or method.startswith("verified_fixed_d")
         ):
@@ -770,7 +869,336 @@ class RCPAGOrchestrator:
                     close()
                 self._runtimes.pop(model, None)
 
+    @staticmethod
+    def _relative_reduction(
+        candidate: Sequence[float],
+        baseline: Sequence[float],
+        *,
+        samples: int,
+        seed: int,
+    ) -> dict[str, float]:
+        if len(candidate) != len(baseline) or not candidate:
+            raise ValueError("paired reduction requires equal non-empty samples")
+        baseline_mean = float(np.mean(baseline))
+        if baseline_mean <= 0.0:
+            raise ValueError("paired reduction baseline must be positive")
+        difference = paired_bootstrap(candidate, baseline, samples=samples, seed=seed)
+        return {
+            "estimate": -difference.estimate / baseline_mean,
+            "lower": -difference.upper / baseline_mean,
+            "upper": -difference.lower / baseline_mean,
+        }
+
+    def _reuse_v9_audit_baselines(self, refs: Sequence[SampleRef]) -> set[str]:
+        if self.reuse_development_from is None:
+            return set()
+        source = self.reuse_development_from
+        if source == self.run_dir.resolve():
+            raise ValueError("reuse source must be a different run directory")
+        parity_path = source / "parity_audit.json"
+        pilot_manifest_path = source / "manifests" / "pilot.json"
+        if not parity_path.is_file() or not pilot_manifest_path.is_file():
+            raise ValueError("v9 audit reuse requires a completed parity-audited source pilot")
+        parity = json.loads(parity_path.read_text(encoding="utf-8"))
+        pilot_manifest = json.loads(pilot_manifest_path.read_text(encoding="utf-8"))
+        if not parity.get("passed") or pilot_manifest.get("status") != "completed":
+            raise ValueError("v9 audit reuse source did not pass its pilot parity gate")
+        source_identity = dict(pilot_manifest.get("identity", {}))
+        current_identity = self.store.identity
+        if source_identity.get("models") != current_identity["models"]:
+            raise ValueError("v9 audit reuse model revisions do not match")
+        if source_identity.get("datasets") != current_identity["datasets"]:
+            raise ValueError("v9 audit reuse dataset revisions do not match")
+        accepted_protocols = {"risk_calibrated_pag_v8", "risk_calibrated_pag_v9"}
+        if source_identity.get("protocol") not in accepted_protocols:
+            raise ValueError("v9 audit reuse accepts only v8/v9 AdaBlock pilot records")
+
+        expected_ids = {ref.sample_id for ref in refs}
+        metadata = {
+            "schema_version",
+            "identity",
+            "stage",
+            "method",
+            "sample_id",
+            "created_at",
+        }
+        reused: set[str] = set()
+        evidence: dict[str, Any] = {}
+        for model in self.config.models:
+            source_dir = source / "pilot" / model / "adablock"
+            rows = [
+                json.loads(path.read_text(encoding="utf-8"))
+                for path in sorted(source_dir.glob("*.json"))
+            ]
+            by_id = {str(row.get("sample_id")): row for row in rows}
+            if not expected_ids.issubset(by_id):
+                continue
+            digest = hashlib.sha256()
+            for sample_id in sorted(expected_ids):
+                row = by_id[sample_id]
+                if row.get("identity") != source_identity or row.get("method") != "adablock":
+                    raise ValueError("v9 audit reuse encountered an invalid source record")
+                payload = {key: value for key, value in row.items() if key not in metadata}
+                self.store.write(f"audit/{model}", "adablock", sample_id, payload)
+                digest.update(json.dumps(row, sort_keys=True).encode("utf-8"))
+            reused.add(model)
+            evidence[model] = {
+                "records": len(expected_ids),
+                "sha256": digest.hexdigest(),
+            }
+        self.store.write_named(
+            "reuse/v9_audit_manifest.json",
+            {
+                "schema_version": 1,
+                "source": str(source),
+                "reuse_scope": "paired_adablock_reference_records_only",
+                "reused_models": sorted(reused),
+                "evidence": evidence,
+                "excluded": "routers, selections, envelopes, cost rules, and certificates",
+            },
+        )
+        return reused
+
+    @staticmethod
+    def _speculation_steps(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            dict(step)
+            for row in rows
+            for block in row.get("schedule_history", ())
+            for step in block.get("speculation_steps", ())
+        ]
+
+    def _fail_v9_pilot(self, message: str, **artifacts: object) -> None:
+        self._write_manifest("pilot", "failed", **artifacts)
+        raise ControlledStop(f"v9 {message}")
+
+    def _run_v9_pilot(self) -> None:
+        self._write_manifest("pilot", "running")
+        if self.config.equivalence is None:
+            self._fail_v9_pilot("configuration is missing equivalence settings")
+        equivalence = self.config.equivalence
+        audit_refs = self._refs("audit")
+        reused_models = self._reuse_v9_audit_baselines(audit_refs)
+        self._run_records(
+            stage="audit",
+            refs=audit_refs,
+            methods=(("ec_pag_audit_d1", None), ("ec_pag_audit_d2", None)),
+        )
+        remaining = tuple(model for model in self.config.models if model not in reused_models)
+        if remaining:
+            self._run_records(
+                stage="audit",
+                refs=audit_refs,
+                methods=(("adablock", None),),
+                models=remaining,
+            )
+
+        audit_models: dict[str, dict[str, Any]] = {}
+        audit_passed = True
+        for model in self.config.models:
+            method_rows = {
+                method: self.store.records(f"audit/{model}", method)
+                for method in ("ec_pag_audit_d1", "ec_pag_audit_d2")
+            }
+            fingerprints = {
+                json.dumps(row.get("execution_fingerprint"), sort_keys=True)
+                for rows in method_rows.values()
+                for row in rows
+            }
+            fingerprint_ok = len(fingerprints) == 1 and "null" not in fingerprints
+            events = self._speculation_steps(
+                [row for rows in method_rows.values() for row in rows]
+            )
+            try:
+                if not fingerprint_ok:
+                    raise ValueError("audit execution fingerprints differ")
+                artifact = fit_equivalence_artifact(
+                    events,
+                    fingerprint=json.loads(next(iter(fingerprints))),
+                    safety_inflation=equivalence.safety_inflation,
+                    minimum_bin_count=equivalence.minimum_bin_count,
+                    minimum_acceptance_lcb=equivalence.minimum_acceptance_lcb,
+                )
+                enabled_rules = [rule for rule in artifact["cost_rules"] if rule["enabled"]]
+                model_passed = bool(enabled_rules) and set(artifact["envelopes"]) == {"2", "3"}
+                self.store.write_named(f"equivalence/{model}.json", artifact)
+                audit_models[model] = {
+                    "records": sum(len(rows) for rows in method_rows.values()),
+                    "events": len(events),
+                    "fingerprint_match": fingerprint_ok,
+                    "enabled_cost_rules": len(enabled_rules),
+                    "artifact_hash": artifact["artifact_hash"],
+                    "passed": model_passed,
+                }
+            except (KeyError, TypeError, ValueError) as error:
+                model_passed = False
+                audit_models[model] = {
+                    "records": sum(len(rows) for rows in method_rows.values()),
+                    "events": len(events),
+                    "fingerprint_match": fingerprint_ok,
+                    "error": f"{type(error).__name__}: {error}",
+                    "passed": False,
+                }
+            audit_passed &= model_passed
+        audit = {
+            "schema_version": 1,
+            "protocol_version": "v9",
+            "models": audit_models,
+            "reused_adablock_models": sorted(reused_models),
+            "passed": audit_passed,
+        }
+        self.store.write_named("equivalence_audit.json", audit)
+        if not audit_passed:
+            self._fail_v9_pilot("equivalence audit failed", audit=audit)
+
+        refs = self._refs("pilot")
+        candidate = self.config.candidates[0]
+        self._run_records(
+            stage="pilot",
+            refs=refs,
+            methods=(("adablock", None), (candidate.name, candidate)),
+        )
+        pilot_models: dict[str, dict[str, Any]] = {}
+        for model_index, model in enumerate(self.config.models):
+            baseline = {
+                str(row["sample_id"]): row
+                for row in self.store.records(f"pilot/{model}", "adablock")
+            }
+            policy = {
+                str(row["sample_id"]): row
+                for row in self.store.records(f"pilot/{model}", candidate.name)
+            }
+            if set(baseline) != set(policy) or len(baseline) != len(refs):
+                self._fail_v9_pilot("held-out coverage mismatch", audit=audit)
+            sample_ids = sorted(baseline)
+            sequence_disagreements = sum(
+                baseline[sample_id].get("generated_ids")
+                != policy[sample_id].get("generated_ids")
+                for sample_id in sample_ids
+            )
+            trajectory_disagreements = sum(
+                baseline[sample_id].get("state_trajectory_digest")
+                != policy[sample_id].get("state_trajectory_digest")
+                for sample_id in sample_ids
+            )
+            accuracy_disagreements = sum(
+                bool(baseline[sample_id].get("is_correct"))
+                != bool(policy[sample_id].get("is_correct"))
+                for sample_id in sample_ids
+            )
+            policy_rows = [policy[sample_id] for sample_id in sample_ids]
+            steps = self._speculation_steps(policy_rows)
+            guard_evidence = all(
+                bool(step.get("guard_passed")) or bool(step.get("reference_checked"))
+                for step in steps
+            )
+            baseline_latency = [float(baseline[key]["elapsed_sec"]) for key in sample_ids]
+            policy_latency = [float(policy[key]["elapsed_sec"]) for key in sample_ids]
+            baseline_model_time = [
+                float(baseline[key].get("model_time_sec", baseline[key]["elapsed_sec"]))
+                for key in sample_ids
+            ]
+            policy_model_time = [
+                float(policy[key].get("model_time_sec", policy[key]["elapsed_sec"]))
+                for key in sample_ids
+            ]
+            latency_reduction = self._relative_reduction(
+                policy_latency,
+                baseline_latency,
+                samples=self.config.statistics.bootstrap_samples,
+                seed=self.config.seed + model_index,
+            )
+            model_time_reduction = self._relative_reduction(
+                policy_model_time,
+                baseline_model_time,
+                samples=self.config.statistics.bootstrap_samples,
+                seed=self.config.seed + 10 + model_index,
+            )
+            baseline_evaluated_rows = sum(
+                int(baseline[key].get("evaluated_rows", baseline[key]["total_nfe"]))
+                for key in sample_ids
+            )
+            policy_evaluated_rows = sum(
+                int(policy[key].get("evaluated_rows", policy[key]["total_nfe"]))
+                for key in sample_ids
+            )
+            rows_ok = policy_evaluated_rows <= baseline_evaluated_rows
+            model_passed = (
+                sequence_disagreements == 0
+                and trajectory_disagreements == 0
+                and accuracy_disagreements == 0
+                and guard_evidence
+                and latency_reduction["lower"] > equivalence.minimum_latency_reduction
+                and model_time_reduction["lower"] > 0.0
+                and (not equivalence.require_evaluated_row_nonincrease or rows_ok)
+            )
+            pilot_models[model] = {
+                "records": len(sample_ids),
+                "sequence_disagreements": sequence_disagreements,
+                "trajectory_disagreements": trajectory_disagreements,
+                "accuracy_disagreements": accuracy_disagreements,
+                "speculation_rounds": len(steps),
+                "guard_evidence": guard_evidence,
+                "latency_reduction": latency_reduction,
+                "model_time_reduction": model_time_reduction,
+                "baseline_evaluated_rows": baseline_evaluated_rows,
+                "candidate_evaluated_rows": policy_evaluated_rows,
+                "evaluated_rows_nonincrease": rows_ok,
+                "passed": model_passed,
+            }
+        pilot = {
+            "schema_version": 1,
+            "protocol_version": "v9",
+            "candidate": candidate.name,
+            "minimum_latency_reduction": equivalence.minimum_latency_reduction,
+            "models": pilot_models,
+            "passed": all(bool(row["passed"]) for row in pilot_models.values()),
+        }
+        self.store.write_named("equivalence_pilot.json", pilot)
+        if not pilot["passed"]:
+            self._fail_v9_pilot("held-out equivalence/cost gate failed", audit=audit, pilot=pilot)
+
+        mean_baseline = float(
+            np.mean(
+                [
+                    float(row["elapsed_sec"])
+                    for model in self.config.models
+                    for row in self.store.records(f"pilot/{model}", "adablock")
+                ]
+            )
+        )
+        mean_candidate = float(
+            np.mean(
+                [
+                    float(row["elapsed_sec"])
+                    for model in self.config.models
+                    for row in self.store.records(f"pilot/{model}", candidate.name)
+                ]
+            )
+        )
+        confirm_prompts = sum(self.config.confirmatory_counts.values())
+        projected_runs = len(self.config.models) * (
+            2 * self.config.stage_sizes.audit_per_model
+            + 2 * self.config.stage_sizes.pilot_per_model
+            + 2 * self.config.stage_sizes.tuning_per_model
+            + 2 * self.config.stage_sizes.calibration_per_model
+            + 3 * confirm_prompts
+        )
+        projection = {
+            "basis": "fresh v9 paired AdaBlock/EC-PAG held-out pilot wall time",
+            "seconds_per_adablock_sample": mean_baseline,
+            "seconds_per_ec_pag_sample": mean_candidate,
+            "projected_gpu_runs": projected_runs,
+            "projected_a100_hours": projected_runs * (mean_baseline + mean_candidate) / 7200,
+            "mock": all(self._runtime(model).is_mock for model in self.config.models),
+        }
+        self.store.write_named("compute_projection.json", projection)
+        self._write_manifest("pilot", "completed", audit=audit, pilot=pilot, projection=projection)
+
     def _run_pilot(self) -> None:
+        if self.config.protocol_version == "v9":
+            self._run_v9_pilot()
+            return
         self._write_manifest("pilot", "running")
         refs = self._refs("pilot")
         if self.config.protocol_version in _MODERN_PROTOCOLS:
