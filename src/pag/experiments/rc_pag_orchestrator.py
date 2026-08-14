@@ -587,9 +587,7 @@ class MockRCPAGRuntime:
                     "evaluated_rows": int(nfe) + 1,
                     "reference_equivalent_transitions": int(nfe) + 1,
                     "state_trajectory_digest": [
-                        hashlib.sha256(
-                            f"mock-state:{sample.sample_id}:{step}".encode()
-                        ).hexdigest()
+                        hashlib.sha256(f"mock-state:{sample.sample_id}:{step}".encode()).hexdigest()
                         for step in range(2)
                     ],
                     "execution_fingerprint": {
@@ -1044,9 +1042,7 @@ class RCPAGOrchestrator:
                 for row in rows
             }
             fingerprint_ok = len(fingerprints) == 1 and "null" not in fingerprints
-            events = self._speculation_steps(
-                [row for rows in method_rows.values() for row in rows]
-            )
+            events = self._speculation_steps([row for rows in method_rows.values() for row in rows])
             try:
                 if not fingerprint_ok:
                     raise ValueError("audit execution fingerprints differ")
@@ -1110,8 +1106,7 @@ class RCPAGOrchestrator:
                 self._fail_v9_pilot("held-out coverage mismatch", audit=audit)
             sample_ids = sorted(baseline)
             sequence_disagreements = sum(
-                baseline[sample_id].get("generated_ids")
-                != policy[sample_id].get("generated_ids")
+                baseline[sample_id].get("generated_ids") != policy[sample_id].get("generated_ids")
                 for sample_id in sample_ids
             )
             trajectory_disagreements = sum(
@@ -2350,8 +2345,7 @@ class RCPAGOrchestrator:
         seed_offset: int,
     ) -> dict[str, Any]:
         baseline = {
-            str(row["sample_id"]): row
-            for row in self.store.records(f"{stage}/{model}", "adablock")
+            str(row["sample_id"]): row for row in self.store.records(f"{stage}/{model}", "adablock")
         }
         policy = {
             str(row["sample_id"]): row
@@ -2376,8 +2370,7 @@ class RCPAGOrchestrator:
         policy_rows = [policy[key] for key in sample_ids]
         steps = self._speculation_steps(policy_rows)
         guard_evidence = bool(steps) and all(
-            bool(step.get("guard_passed")) or bool(step.get("reference_checked"))
-            for step in steps
+            bool(step.get("guard_passed")) or bool(step.get("reference_checked")) for step in steps
         )
         latency_reduction = self._relative_reduction(
             [float(policy[key]["elapsed_sec"]) for key in sample_ids],
@@ -2402,8 +2395,7 @@ class RCPAGOrchestrator:
             for key in sample_ids
         )
         candidate_rows = sum(
-            int(policy[key].get("evaluated_rows", policy[key]["total_nfe"]))
-            for key in sample_ids
+            int(policy[key].get("evaluated_rows", policy[key]["total_nfe"])) for key in sample_ids
         )
         return {
             "paired_prompts": len(sample_ids),
@@ -2515,9 +2507,7 @@ class RCPAGOrchestrator:
             "risk_loss": self.config.risk.loss,
             "family_identity": family["protocol_identity"],
             "equivalence_artifact_hashes": artifact_hashes,
-            "selected_by_model": {
-                model: asdict(candidate) for model in self.config.models
-            },
+            "selected_by_model": {model: asdict(candidate) for model in self.config.models},
         }
         frozen["protocol_identity"] = canonical_config_hash(frozen)
         readiness = {
@@ -2878,9 +2868,7 @@ class RCPAGOrchestrator:
                 and paired["guard_evidence"]
                 and latency_ok
                 and model_time_ok
-                and (
-                    not self.config.equivalence.require_evaluated_row_nonincrease or rows_ok
-                )
+                and (not self.config.equivalence.require_evaluated_row_nonincrease or rows_ok)
             )
             candidates.append(
                 {
@@ -2915,9 +2903,7 @@ class RCPAGOrchestrator:
             "familywise_delta": self.config.risk.delta,
             "selected": "per_model_frozen_policy" if all_certified else "adablock",
             "fallback": not all_certified,
-            "selected_by_model": {
-                model: candidate.name for model, candidate in selected.items()
-            },
+            "selected_by_model": {model: candidate.name for model, candidate in selected.items()},
             "protocol_identity": family["protocol_identity"],
             "loss": self.config.risk.loss,
             "candidates": candidates,
@@ -3399,9 +3385,7 @@ class RCPAGOrchestrator:
             require_evaluated_row_nonincrease=(
                 self.config.claim_gates.require_evaluated_row_nonincrease
             ),
-            require_trajectory_equivalence=(
-                self.config.claim_gates.require_trajectory_equivalence
-            ),
+            require_trajectory_equivalence=(self.config.claim_gates.require_trajectory_equivalence),
         )
         self._write_manifest("report", "completed", inputs=payload, claim_audit=audit)
 

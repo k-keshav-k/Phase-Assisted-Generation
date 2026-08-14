@@ -887,8 +887,7 @@ def test_v9_reuses_only_v8_adablock_pilot_as_audit_reference(
     assert reuse["reuse_scope"] == "paired_adablock_reference_records_only"
     assert set(reuse["reused_models"]) == {"llada", "dream"}
     assert not any(
-        stage == "audit" and method == "adablock"
-        for stage, _, _, method in runtime.calls
+        stage == "audit" and method == "adablock" for stage, _, _, method in runtime.calls
     )
 
 

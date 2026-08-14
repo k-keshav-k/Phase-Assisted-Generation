@@ -320,9 +320,7 @@ def test_v8_fixed_depth_ablation_needs_no_learned_estimator() -> None:
 
 def test_v9_routes_audit_and_fitted_equivalence_policies(tmp_path) -> None:
     runtime = object.__new__(UnifiedRCPAGRuntime)
-    runtime.config = load_rc_pag_config(
-        Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
-    )
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml"))
     runtime.model_name = "llada"
     runtime.run_dir = tmp_path
     fingerprint = {"gpu_name": "A100", "model_revision": "test"}
@@ -349,9 +347,7 @@ def test_v9_routes_audit_and_fitted_equivalence_policies(tmp_path) -> None:
     path.parent.mkdir()
     path.write_text(__import__("json").dumps(artifact), encoding="utf-8")
 
-    _, stopping, audit, _, provenance = runtime._method_components(
-        "ec_pag_audit_d1", None, {}
-    )
+    _, stopping, audit, _, provenance = runtime._method_components("ec_pag_audit_d1", None, {})
     assert stopping is None
     assert isinstance(audit, EquivalenceCostPolicy)
     assert audit.audit_reference
@@ -371,9 +367,7 @@ def test_v9_routes_audit_and_fitted_equivalence_policies(tmp_path) -> None:
 
 def test_v9_rejects_an_equivalence_artifact_from_another_execution(tmp_path) -> None:
     runtime = object.__new__(UnifiedRCPAGRuntime)
-    runtime.config = load_rc_pag_config(
-        Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml")
-    )
+    runtime.config = load_rc_pag_config(Path("configs/experiments/rc_pag_neurips_workshop_v9.yaml"))
     runtime.model_name = "dream"
     runtime.run_dir = tmp_path
     runtime.execution_fingerprint = lambda: {"gpu_name": "A100"}  # type: ignore[method-assign]

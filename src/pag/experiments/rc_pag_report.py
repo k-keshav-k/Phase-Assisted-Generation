@@ -120,12 +120,8 @@ def _pair_summary(
     baseline_model_time = [
         float(right.get("model_time_sec", right["elapsed_sec"])) for _, right in pairs
     ]
-    candidate_rows = [
-        float(left.get("evaluated_rows", left["total_nfe"])) for left, _ in pairs
-    ]
-    baseline_rows = [
-        float(right.get("evaluated_rows", right["total_nfe"])) for _, right in pairs
-    ]
+    candidate_rows = [float(left.get("evaluated_rows", left["total_nfe"])) for left, _ in pairs]
+    baseline_rows = [float(right.get("evaluated_rows", right["total_nfe"])) for _, right in pairs]
     harmful_regressions = sum(
         _is_correct(reference) and not _is_correct(policy) for policy, reference in pairs
     )
@@ -183,16 +179,13 @@ def _pair_summary(
             )
         ),
         "latency_difference": asdict(latency_difference),
-        "latency_reduction": (
-            -latency_difference.estimate / float(np.mean(baseline_latency))
-        ),
+        "latency_reduction": (-latency_difference.estimate / float(np.mean(baseline_latency))),
         "model_time_difference": asdict(model_time_difference),
         "model_time_reduction": (
             -model_time_difference.estimate / float(np.mean(baseline_model_time))
         ),
         "evaluated_row_difference": asdict(evaluated_row_difference),
-        "evaluated_row_nonincrease": float(np.sum(candidate_rows))
-        <= float(np.sum(baseline_rows)),
+        "evaluated_row_nonincrease": float(np.sum(candidate_rows)) <= float(np.sum(baseline_rows)),
     }
 
 
@@ -357,20 +350,17 @@ def _audit(
                     float(left.get("evaluated_rows", left["total_nfe"])) for left, _ in pairs
                 )
                 baseline_work += sum(
-                    float(right.get("evaluated_rows", right["total_nfe"]))
-                    for _, right in pairs
+                    float(right.get("evaluated_rows", right["total_nfe"])) for _, right in pairs
                 )
                 if dataset not in _IN_DOMAIN:
                     continue
                 candidate_latency.extend(float(left["elapsed_sec"]) for left, _ in pairs)
                 baseline_latency.extend(float(right["elapsed_sec"]) for _, right in pairs)
                 candidate_model_time.extend(
-                    float(left.get("model_time_sec", left["elapsed_sec"]))
-                    for left, _ in pairs
+                    float(left.get("model_time_sec", left["elapsed_sec"])) for left, _ in pairs
                 )
                 baseline_model_time.extend(
-                    float(right.get("model_time_sec", right["elapsed_sec"]))
-                    for _, right in pairs
+                    float(right.get("model_time_sec", right["elapsed_sec"])) for _, right in pairs
                 )
             latency_difference = paired_bootstrap(
                 candidate_latency,
@@ -417,8 +407,7 @@ def _audit(
             "risk_certificate": risk_ok,
             "exact_sequence_equivalence": not any(sequence_disagreements.values()),
             "exact_trajectory_equivalence": (
-                not require_trajectory_equivalence
-                or not any(trajectory_disagreements.values())
+                not require_trajectory_equivalence or not any(trajectory_disagreements.values())
             ),
             "accuracy_noninferiority": min(accuracy_lowers) >= minimum_accuracy_lower_ci,
             "model_latency_reduction_lower_ci": all(

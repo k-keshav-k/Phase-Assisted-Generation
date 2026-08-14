@@ -195,6 +195,7 @@ class BatchSensitiveDreamModel(StableDreamModel):
             result.logits.zero_()
         return result
 
+
 class AlwaysDeepScorer:
     def predict_risk(self, features) -> float:
         del features

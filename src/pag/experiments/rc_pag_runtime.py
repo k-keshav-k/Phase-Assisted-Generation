@@ -550,8 +550,7 @@ class UnifiedRCPAGRuntime:
             examples = "\n".join(str(value) for value in row.get("test_list", ()))
             examples_prompt = (
                 f"\nThe function must satisfy these examples:\n{examples}"
-                if self.config.protocol_version
-                in {"v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"}
+                if self.config.protocol_version in {"v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9"}
                 and examples
                 else ""
             )
@@ -1088,9 +1087,7 @@ class UnifiedRCPAGRuntime:
         }
         if self.config.protocol_version == "v9":
             speculation_steps = [
-                step
-                for block in schedules
-                for step in block.get("speculation_steps", ())
+                step for block in schedules for step in block.get("speculation_steps", ())
             ]
             total_nfe = int(payload["total_nfe"])
             payload.update(
@@ -1108,9 +1105,7 @@ class UnifiedRCPAGRuntime:
                         for step in speculation_steps
                     ),
                     "state_trajectory_digest": [
-                        digest
-                        for block in schedules
-                        for digest in block.get("state_digests", ())
+                        digest for block in schedules for digest in block.get("state_digests", ())
                     ],
                     "model_time_sec": float(
                         sum(float(block.get("model_time_sec", 0.0)) for block in schedules)

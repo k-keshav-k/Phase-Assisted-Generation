@@ -247,9 +247,7 @@ def verify_guarded_draft(
         root_guard = guard(frozen[0], batched_outputs[0])
         return GuardedSpeculationResult(
             tokens=canonical_successor.detach().clone(),
-            accepted_draft_edges=int(
-                len(frozen) > 1 and torch.equal(batched_successor, frozen[1])
-            ),
+            accepted_draft_edges=int(len(frozen) > 1 and torch.equal(batched_successor, frozen[1])),
             reference_equivalent_transitions=1,
             evaluated_nodes=len(frozen),
             canonical_fallback_rows=1,
@@ -419,11 +417,8 @@ def fit_equivalence_artifact(
     for batch_size in sorted({int(row["batch_size"]) for row in normalized}):
         selected = [row for row in normalized if int(row["batch_size"]) == batch_size]
         envelopes[batch_size] = EquivalenceEnvelope(
-            logit_epsilon=max(float(row["max_logit_delta"]) for row in selected)
-            * safety_inflation,
-            probability_epsilon=max(
-                float(row["max_probability_delta"]) for row in selected
-            )
+            logit_epsilon=max(float(row["max_logit_delta"]) for row in selected) * safety_inflation,
+            probability_epsilon=max(float(row["max_probability_delta"]) for row in selected)
             * safety_inflation,
             safety_inflation=safety_inflation,
         )
@@ -438,8 +433,7 @@ def fit_equivalence_artifact(
         acceptance_lcb = _binomial_lower(successes, count)
         latency_reductions = [
             1.0
-            - float(row["batched_latency_ms"])
-            / (float(row["canonical_latency_ms"]) * (depth + 1))
+            - float(row["batched_latency_ms"]) / (float(row["canonical_latency_ms"]) * (depth + 1))
             for row in rows
         ]
         latency_lcb = _lower_empirical(latency_reductions)
@@ -542,17 +536,12 @@ class EquivalenceCostPolicy:
         observation: StepObservation,
         last_transfer_count: int,
     ) -> str:
-        masked = [
-            index for index, is_masked in enumerate(observation.masked) if bool(is_masked)
-        ]
+        masked = [index for index, is_masked in enumerate(observation.masked) if bool(is_masked)]
         remaining_fraction = len(masked) / observation.block_size
         remaining_bucket = min(4, max(1, math.ceil(4 * remaining_fraction)))
         transfer_bucket = 1 if last_transfer_count == 1 else 2 if last_transfer_count <= 3 else 3
         probability_margin = min(
-            (
-                observation.top1_probs[index] - observation.top2_probs[index]
-                for index in masked
-            ),
+            (observation.top1_probs[index] - observation.top2_probs[index] for index in masked),
             default=1.0,
         )
         threshold_margin = min(
@@ -560,9 +549,7 @@ class EquivalenceCostPolicy:
             default=1.0,
         )
         margin_bucket = 1 if probability_margin < 0.05 else 2 if probability_margin < 0.2 else 3
-        threshold_bucket = (
-            1 if threshold_margin < 0.01 else 2 if threshold_margin < 0.05 else 3
-        )
+        threshold_bucket = 1 if threshold_margin < 0.01 else 2 if threshold_margin < 0.05 else 3
         block_bucket = (
             1 if observation.block_size <= 16 else 2 if observation.block_size <= 32 else 3
         )

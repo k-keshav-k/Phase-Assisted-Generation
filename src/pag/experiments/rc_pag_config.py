@@ -348,8 +348,7 @@ def validate_rc_pag_config(payload: dict[str, Any]) -> None:
             "calibration_per_model": 500,
         }
         if protocol_version == "v9"
-        else
-        {
+        else {
             "pilot_per_model": 32,
             "traces_per_model": 600,
             "rollout_per_model": 150,
