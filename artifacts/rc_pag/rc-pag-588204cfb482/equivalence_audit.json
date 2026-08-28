@@ -1,0 +1,25 @@
+{
+  "models": {
+    "dream": {
+      "error": "ValueError: audit events require matching depth-one/two batch shapes",
+      "events": 5520,
+      "fingerprint_match": true,
+      "passed": false,
+      "records": 64
+    },
+    "llada": {
+      "error": "ValueError: audit events require matching depth-one/two batch shapes",
+      "events": 4428,
+      "fingerprint_match": true,
+      "passed": false,
+      "records": 64
+    }
+  },
+  "passed": false,
+  "protocol_version": "v9",
+  "reused_adablock_models": [
+    "dream",
+    "llada"
+  ],
+  "schema_version": 1
+}

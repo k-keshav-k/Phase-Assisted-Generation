@@ -1,0 +1,40 @@
+{
+  "evidence": {
+    "dream": {
+      "direct_reference_parity": true,
+      "parity_fields": [
+        "generated_ids",
+        "generated_text",
+        "nfe_history",
+        "block_history",
+        "total_nfe"
+      ],
+      "records": 32,
+      "reused": true,
+      "sha256": "9c24317f725702888e04ae2352fa15ac60f1e092cb91b2eb1e1e22498bc0f8e7"
+    },
+    "llada": {
+      "direct_reference_parity": true,
+      "parity_fields": [
+        "generated_ids",
+        "generated_text",
+        "nfe_history",
+        "block_history",
+        "total_nfe"
+      ],
+      "records": 32,
+      "reused": true,
+      "sha256": "6f260e4b65b0c0e6e4f94300cf377f80ce623b0d7aece3b58f9a1c847de92343"
+    }
+  },
+  "excluded": "routers, selections, envelopes, cost rules, and certificates",
+  "fallback": "generate_fresh_audit_references_for_nonreused_models",
+  "reuse_scope": "paired_adablock_reference_records_only",
+  "reused_models": [
+    "dream",
+    "llada"
+  ],
+  "schema_version": 2,
+  "source": "/gpfs/scratch/sm12779/Phase-Assisted-Generation/artifacts/rc_pag/rc-pag-d36b982c2388",
+  "status": "reused"
+}
