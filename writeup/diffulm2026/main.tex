@@ -36,7 +36,7 @@
 \maketitle
 
 \begin{abstract}
-Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. Phase-Adaptive Generation (PAG) learns this refinement budget from prior block trajectories while retaining reactive delimiter boundaries. On LLaDA-8B-Instruct, the best corrected PAG result uses 6.7\% fewer model calls on MATH-500 with a 1.33-point accuracy decrease; on GSM8K it saves 4.0\% with a 1.60-point decrease, while a block-size lookup remains stronger. We develop this result through a sequence of increasingly controlled approaches: token-level phase analysis, categorical/ordinal prediction from 138{,}901 AdaBlock tuples, cross-model risk calibration, conservative budget ledgers, and verified macro-steps. The cross-model policy reaches a 9.6\% normalized call reduction but fails its accuracy gate. Output-preserving policies save at most 1.24\%, and batched verification breaks trajectory equivalence on 22 of 64 pilot prompts despite larger apparent call reductions. Together, the experiments show where learned scheduling helps and where it must yield control: histories can allocate refinement capacity, but token commitment requires current-state boundaries and an audited, batch-invariant reference transition.
+Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. Phase-Adaptive Generation (PAG) learns this refinement budget from prior block trajectories while retaining reactive delimiter boundaries. On LLaDA-8B-Instruct, the best corrected PAG result uses 6.7\% fewer model calls on MATH-500 with a 1.33-point accuracy decrease; on GSM8K it saves 4.0\% with a 1.60-point decrease, while a block-size lookup remains stronger. We reach this result in stages. We measure when tokens stop changing, train on 138{,}901 blocks produced by AdaBlock, test the same rule on LLaDA and Dream, add limits to preserve answers, and check several proposed steps at once. The rule tested on both models uses 9.6\% fewer calls overall, but loses too much accuracy to meet our preset requirement. Requiring identical outputs cuts the saving to at most 1.24\%. Checking several steps in one batch appears to save more, but it does not match the standard decoder on 22 of 64 prompts. The takeaway is simple: earlier blocks can suggest how much computation to spend next, but the model's current predictions should decide where each block ends, and the standard decoder should approve the final tokens.
 \end{abstract}
 
 \section{Introduction}
@@ -93,8 +93,7 @@ Learn-then-Test and conformal risk control provide finite-sample tools for selec
     \draw[arr] (boundary) -- (refine);
     \draw[arr] (budget) -- (refine);
     \draw[arr] (refine) -- (history);
-    \draw[arr, dashed] (history.east)
-      .. controls ++(22mm,0) and ++(12mm,0) .. (predictor.east);
+    \draw[arr, dashed] (history.east) to[out=0,in=-90] (budget.south);
     \node[font=\small, below=2mm of history] {online per-block loop};
   \end{tikzpicture}
   \caption{\pag{} separates two control signals. Current logits determine the next semantic boundary; history predicts a refinement budget. The realized tuple closes the loop only after the block is decoded.}
@@ -198,6 +197,7 @@ Figure~\ref{fig:approach-progression} gives the experimental logic. We begin wit
 
 \begin{figure*}[t]
   \centering
+  \resizebox{0.94\linewidth}{!}{%
   \begin{tikzpicture}[
       stage/.style={rounded corners, align=left, text width=.155\textwidth,
                     minimum height=18mm, inner sep=3pt, font=\scriptsize},
@@ -215,6 +215,7 @@ Figure~\ref{fig:approach-progression} gives the experimental logic. We begin wit
     \draw[arr] (risk) -- (safe);
     \draw[arr] (safe) -- (verify);
   \end{tikzpicture}
+  }
   \caption{Approach progression. Each stage addresses the limitation exposed immediately before it; reported savings are relative to AdaBlock. The strongest corrected task result is PAG's 6.7\% \nfe{} reduction on MATH-500 with a 1.33-point accuracy decrease. Larger apparent reductions fail either task-quality or exact-equivalence gates; output-preserving screens save at most 1.24\%.}
   \label{fig:approach-progression}
 \end{figure*}
