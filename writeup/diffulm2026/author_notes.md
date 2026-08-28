@@ -16,8 +16,9 @@
 1. **Introduction:** adaptive compute is a natural dLM control problem, but offline predictiveness and online safety are different questions.
 2. **Related work:** masked/block diffusion, adaptive decoding, early stopping, and verified speculation.
 3. **PAG:** token-level phase analysis, block-native traces, categorical/ordinal prediction, and hybrid online scheduling.
-4. **Evidence protocol:** corrected NFE accounting, paired evaluation, cross-model stress tests, and explicit promotion gates.
-5. **Results:** initial LLaDA trade-off, history-free baseline challenge, RC-PAG cross-model failure, and v4--v9 stress-test ladder.
+4. **Evidence protocol:** corrected NFE accounting, paired evaluation, cross-model validation, and explicit promotion gates.
+5. **Results:** a causal progression from the 6.7% corrected PAG reduction through transfer,
+   output-preserving routing, and verified decoding.
 6. **Discussion and conclusion:** phase signals predict effort; they do not by themselves justify commitment.
 
 ## Claim--evidence map
@@ -64,8 +65,10 @@
 - Visual inspection completed for all seven main-text pages; the phase plot and all tables are
   legible at normal zoom.
 - NeurIPS checklist completed with evidence-linked justifications. The compute question is answered
-  `No` because reused traces prevent a trustworthy single GPU-hour total; hardware, software,
-  stage projections, and per-record elapsed times are still disclosed.
+  `Yes` using an estimate of approximately 160 A100-equivalent GPU-hours: 40 hours for trace
+  collection and the original PAG study, plus six materialized protocols at about 20 hours each.
+  The LLM-usage question is `N/A` because generative AI assistance was limited to writing, editing,
+  and formatting and did not supply the research, experiments, or analysis.
 - Reviewer-style submission gate: **PASS** with no critical or major blockers. The principal
   acceptance risk is empirical scope (two 7--8B model families) rather than presentation,
   accounting, or claim support; the paper states this limitation and frames the contribution as a

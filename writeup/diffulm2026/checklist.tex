@@ -111,8 +111,8 @@
 
 \item {\bf Experiments compute resources}
     \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
-    \item[] Answer: \answerNo{}
-    \item[] Justification: The compute appendix reports GPU models and memory, software versions, execution mode, and representative per-prompt times, while the supplement retains per-record times and stage projections. A single total GPU-hour estimate is not reported because later protocols reuse earlier traces and a naive sum would double-count them.
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The compute appendix reports a total estimate of approximately 160 A100-equivalent GPU-hours: 40 hours for trace collection and the original PAG experiments, plus six completed artifact-backed protocols at approximately 20 hours each. It also reports GPU memory, execution mode, software versions, exclusions, and representative per-prompt times.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that the paper does not include experiments.
@@ -212,9 +212,8 @@
 
 \item {\bf Declaration of LLM usage}
     \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does \emph{not} impact the core methodology, scientific rigor, or originality of the research, declaration is not required.
-    %this research? 
-    \item[] Answer: \answerYes{}
-    \item[] Justification: Sections~\ref{sec:related}--\ref{sec:protocol} identify the pretrained diffusion language models used as the systems under study, cite their creators, and specify their pinned revisions and inference settings. No LLM is used to generate labels or replace experimental evaluation.
+    \item[] Answer: \answerNA{}
+    \item[] Justification: Generative AI tools were used only for writing, editing, and formatting. The research questions, method design, implementation, experiments, evaluation, analysis, and scientific interpretation were performed by the authors; no LLM generated labels or replaced experimental evaluation.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.

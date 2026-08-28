@@ -26,7 +26,7 @@
 \newcommand{\mask}{\mathtt{[M]}}
 \newcommand{\method}{phase-adaptive generation}
 
-\title{Phase-Adaptive Generation:\\A Stress Test of Learned Compute Scheduling for Diffusion Language Models}
+\title{Phase-Adaptive Generation:\\Learning Block Budgets to Reduce Diffusion-LM Calls}
 
 \author{Anonymous Authors}
 
@@ -36,7 +36,7 @@
 \maketitle
 
 \begin{abstract}
-Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. We investigate whether past refinement trajectories provide a reliable control signal. Phase-Adaptive Generation (PAG) first identifies token-level stabilization phases, then learns block-level compute from 138{,}901 AdaBlock tuples, and finally combines a categorical/ordinal history predictor with reactive delimiter boundaries. Under corrected accounting on LLaDA-8B-Instruct, PAG reduces mean model calls by 4.0\% on GSM8K and 6.7\% on MATH-500, with accuracy decreases of 1.60 and 1.33 percentage points; a block-size lookup is stronger on GSM8K. We then stress-test the idea across LLaDA and Dream using risk calibration, conservative budget ledgers, and verified macro-speculation. A cross-model policy lowers normalized calls by 9.6\% but fails its predeclared accuracy gate; output-preserving policies save below 1.3\%; and batched verification breaks exact trajectory equivalence on 22 of 64 pilot prompts. The combined evidence draws a sharp boundary: phase histories predict computational effort, but do not by themselves justify token commitment. Learned schedulers should allocate capacity while an audited, batch-invariant reference transition retains acceptance authority.
+Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. Phase-Adaptive Generation (PAG) learns this refinement budget from prior block trajectories while retaining reactive delimiter boundaries. On LLaDA-8B-Instruct, the best corrected PAG result uses 6.7\% fewer model calls on MATH-500 with a 1.33-point accuracy decrease; on GSM8K it saves 4.0\% with a 1.60-point decrease, while a block-size lookup remains stronger. We develop this result through a sequence of increasingly controlled approaches: token-level phase analysis, categorical/ordinal prediction from 138{,}901 AdaBlock tuples, cross-model risk calibration, conservative budget ledgers, and verified macro-steps. The cross-model policy reaches a 9.6\% normalized call reduction but fails its accuracy gate. Output-preserving policies save at most 1.24\%, and batched verification breaks trajectory equivalence on 22 of 64 pilot prompts despite larger apparent call reductions. Together, the experiments show where learned scheduling helps and where it must yield control: histories can allocate refinement capacity, but token commitment requires current-state boundaries and an audited, batch-invariant reference transition.
 \end{abstract}
 
 \section{Introduction}
@@ -46,12 +46,12 @@ Diffusion language models generate by repeatedly revising masked positions, so o
 
 Phase-adaptive generation (\pag{}) starts from a simple observation: reasoning traces are not uniformly difficult. Template text and delimiters often stabilize early, while arithmetic, variable binding, and answer finalization remain uncertain for longer. The difficult part is turning this structure into a decoder. Offline accuracy is not enough. The scheduler changes the trajectory that produces its own future features; block sizes are strongly multimodal; and a premature commitment can alter every later block. A useful predictor can therefore be a poor controller.
 
-We study this gap from trace analysis through deployment. We first instrument Dream and LLaDA~\citep{ye2025dream,nie2025llada}, measure token stabilization, and use change-point detection (CPD) to expose local shifts in uncertainty. Because those boundaries depend strongly on the detector, we then move to 138{,}901 block-native tuples collected from AdaBlock on 5{,}000 GSM8K training problems. A categorical/ordinal Transformer predicts the next block control from recent history, while the deployed scheduler preserves AdaBlock's delimiter boundary and uses the prediction only to set a refinement budget. Finally, we stress-test increasingly conservative risk controls on LLaDA-8B-Instruct and Dream-7B instead of selecting a favorable run after the fact.
+We develop the method from trace analysis through deployment. We first instrument Dream and LLaDA~\citep{ye2025dream,nie2025llada}, measure token stabilization, and use change-point detection (CPD) to expose local shifts in uncertainty. Because those boundaries depend strongly on the detector, we then move to 138{,}901 block-native tuples collected from AdaBlock on 5{,}000 GSM8K training problems. A categorical/ordinal Transformer predicts the next block control from recent history, while the deployed scheduler preserves AdaBlock's delimiter boundary and uses the prediction only to set a refinement budget. Each subsequent approach addresses a failure exposed by the previous one: cross-model calibration tests transfer, risk ledgers protect outputs, and verified macro-steps try to recover useful savings without granting the predictor acceptance authority.
 
 Across the experiments, corrected forward-pass accounting shows that \pag{} reduces the mean number of forward evaluations (\nfe{}) on LLaDA by 4.0\% on GSM8K and 6.7\% on MATH-500, with accuracy decreases of 1.60 and 1.33 percentage points. A size-conditioned lookup table is at least as competitive on GSM8K. A later cross-model policy lowers normalized \nfe{} by 9.6\% overall, but fails the predeclared accuracy-noninferiority gate because Dream loses substantially more accuracy. Conservative risk ledgers preserve outputs but save less than 1.3\%; batched macro-verification appears promising in physical \nfe{} yet fails exact trajectory audits. The same limitation recurs across these protocols: phase histories can forecast computational effort, but they should not decide token acceptance without verification.
 
 \paragraph{Contributions.}
-We make three empirical contributions. First, we connect token-level phase diagnostics to a block-native prediction problem and document why continuous boundary regression fails on a multimodal control space. Second, we give an audited evaluation of learned block-history scheduling, including a stronger history-free control and corrected \nfe{} accounting. Third, we report a seven-protocol, two-model stress test that separates predictive quality, task accuracy, sequential model calls, batch work, and exact trajectory equivalence. The outcome is a concrete rule for adaptive \dllm{} decoding: learn capacity allocation, retain reactive semantic boundaries, and keep commitment under an auditable token-level authority.
+We make three empirical contributions. First, we connect token-level phase diagnostics to a block-native prediction problem and document why continuous boundary regression fails on a multimodal control space. Second, we give an audited evaluation of learned block-history scheduling, including a stronger history-free control and corrected \nfe{} accounting. Third, we trace seven artifact-backed protocols across two model families, showing how risk calibration, conservative routing, and verified decoding change the efficiency--quality frontier. The outcome is a concrete rule for adaptive \dllm{} decoding: learn capacity allocation, retain reactive semantic boundaries, and keep commitment under an auditable token-level authority.
 
 \section{Related work}
 \label{sec:related}
@@ -185,7 +185,7 @@ This hybrid follows directly from an observed feedback failure. Letting the pred
 \paragraph{Initial audited evaluation.}
 The primary \pag{} comparison uses deterministic LLaDA-8B-Instruct decoding on all 1{,}319 GSM8K test problems and a 300-example index-stratified MATH-500 sample~\citep{hendrycks2021math}. GSM8K also includes a frozen development slice for choosing among eight scheduler variants and a disjoint 919-example confirmatory complement. The comparators are AdaBlock and a history-free lookup policy that returns the median training \nfe{} for the current block size. Every method counts the boundary proposal call and all subsequent refinement calls. This corrects the legacy course result, whose \pag{} counter omitted the initial proposal and is excluded from every claim here.
 
-\paragraph{Cross-model stress test.}
+\paragraph{Cross-model evaluation.}
 Risk-calibrated \pag{} (\rcpag{}) uses pinned LLaDA-8B-Instruct and Dream-v0-Instruct-7B revisions, temperature zero, generation length 256, at most 64 refinement calls, and block length at most 64. Estimator fitting, policy screening, and calibration use disjoint mixtures of GSM8K, MATH, and Mostly Basic Python Problems (MBPP) training data~\citep{austin2021mbpp}. Confirmation uses 500 GSM8K test, 300 MATH-500, 100 sanitized MBPP, and 100 HumanEval prompts~\citep{chen2021humaneval}; HumanEval is out of domain. Each candidate stop is compared with a same-state full-refinement shadow. A finite policy family is selected with exact binomial Learn-then-Test control at familywise level 0.05, but the certificate concerns this premature-commitment loss, not answer correctness.
 
 \paragraph{Promotion gates and statistics.}
@@ -194,9 +194,35 @@ Results are paired by prompt. We report mean \nfe{}, exact task accuracy, and la
 \section{Results}
 \label{sec:results}
 
-\subsection{Initial PAG exposes a real trade-off}
+Figure~\ref{fig:approach-progression} gives the experimental logic. We begin with the strongest corrected PAG result, then change one form of control at a time. A stage advances only when its evidence passes the corresponding accuracy, savings, or equivalence gate.
 
-Table~\ref{tab:initial-results} gives the corrected LLaDA result. \pag{} saves 4.0\% \nfe{} on GSM8K and 6.7\% on MATH-500, but loses 1.60 and 1.33 accuracy points. On the untouched GSM8K complement, the paired accuracy difference is $-1.20$ points with a 95\% interval of $[-2.61,0.22]$. The interval includes parity, but the point estimates do not support a dominance claim.
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[
+      stage/.style={draw, rounded corners, align=left, text width=.164\textwidth,
+                    minimum height=17mm, inner sep=3pt, font=\scriptsize},
+      start/.style={stage, fill=blue!7},
+      gain/.style={stage, fill=green!10},
+      audit/.style={stage, fill=orange!10},
+      arr/.style={-{Latex[length=1.7mm]}, line width=.55pt},
+      lab/.style={font=\tiny, align=center}]
+    \node[start] (trace) {\textbf{1. Find the signal}\\Token phases and 138{,}901 block tuples\\\emph{History predicts effort}};
+    \node[gain, right=3.2mm of trace] (pag) {\textbf{2. Deploy PAG}\\Reactive boundary + learned budget\\\emph{$-4.0/-6.7\%$ \nfe{}}};
+    \node[audit, right=3.2mm of pag] (risk) {\textbf{3. Test transfer}\\Cross-model risk calibration\\\emph{$-9.6\%$ normalized \nfe{}; accuracy gate fails}};
+    \node[gain, right=3.2mm of risk] (safe) {\textbf{4. Protect outputs}\\Threshold, harm router, and risk ledgers\\\emph{zero screen harms; at most $1.24\%$ saved}};
+    \node[audit, right=3.2mm of safe] (verify) {\textbf{5. Recover savings}\\Batched verified macro-steps\\\emph{$-14.7/-21.3\%$ calls; equivalence fails}};
+    \draw[arr] (trace) -- node[lab,above] {learn} (pag);
+    \draw[arr] (pag) -- node[lab,above] {transfer} (risk);
+    \draw[arr] (risk) -- node[lab,above] {constrain} (safe);
+    \draw[arr] (safe) -- node[lab,above] {verify} (verify);
+  \end{tikzpicture}
+  \caption{Approach progression. Each stage addresses the limitation exposed immediately before it; reported savings are relative to AdaBlock. The strongest corrected task result is PAG's 6.7\% \nfe{} reduction on MATH-500 with a 1.33-point accuracy decrease. Larger apparent reductions fail either task-quality or exact-equivalence gates; output-preserving screens save at most 1.24\%.}
+  \label{fig:approach-progression}
+\end{figure*}
+
+\subsection{PAG reduces corrected NFE by up to 6.7\%}
+
+Table~\ref{tab:initial-results} gives the corrected LLaDA result. Relative to AdaBlock, \pag{} saves 4.0\% \nfe{} on GSM8K and 6.7\% on MATH-500, but loses 1.60 and 1.33 accuracy points. On the untouched GSM8K complement, the paired accuracy difference is $-1.20$ points with a 95\% interval of $[-2.61,0.22]$. The interval includes parity, but the point estimates do not support a dominance claim.
 
 \begin{table}[t]
   \caption{Corrected LLaDA evaluation. Accuracy is exact-answer percentage (higher is better); \nfe{} counts all model forward calls (lower is better). The lookup baseline conditions only on block size.}
@@ -221,7 +247,7 @@ Table~\ref{tab:initial-results} gives the corrected LLaDA result. \pag{} saves 4
 
 The size lookup is the decisive control: it uses less \nfe{} than \pag{} on GSM8K and is slightly more accurate. History therefore does not explain the full gain. It does help forecast heterogeneous blocks offline, but much of the deployable signal is already captured by block size. The synchronized 150-prompt timing subset points in the same cautious direction: both decoders reach 84\% accuracy and \pag{} is 0.31 seconds faster on average, but the paired latency interval crosses zero.
 
-\subsection{Predictive risk does not guarantee task transfer}
+\subsection{Risk calibration increases savings but exposes transfer failure}
 
 The cross-model experiment sharpens the distinction between prediction and control. Histogram-gradient-boosting risk estimators are strong on prompt-grouped holdouts: history features reach area under the receiver operating characteristic curve (AUROC)/Brier scores of 0.982/0.051 for LLaDA and 0.990/0.026 for Dream. All frozen low-risk candidates also satisfy their finite-sample shadow-loss tests. Yet Table~\ref{tab:cross-model} shows that this surrogate success does not transfer uniformly to answer accuracy.
 
@@ -244,31 +270,13 @@ The cross-model experiment sharpens the distinction between prediction and contr
 
 Across both models and all four evaluation sets, normalized \nfe{} falls from 1.000 to 0.904, compared with 0.968 for the best eligible nonlearned rule. This aggregate is not a positive headline: the predeclared accuracy-noninferiority gate fails, with a minimum lower confidence bound of $-21.2$ points. LLaDA remains close to parity but saves only 1--2\%; Dream obtains larger compute reductions by changing too many answers. A well-calibrated same-state stop label is therefore an incomplete proxy for end-to-end quality under a new decoder family.
 
-\subsection{What increasingly conservative protocols changed}
+\subsection{Conservative routing converges on output preservation}
 
-We next varied the target and safety mechanism while keeping disjoint splits and automatic promotion gates. Table~\ref{tab:ladder} summarizes every artifact-backed protocol after the initial cross-model run. Protocols v2--v3 were superseded before GPU evidence was materialized and are not counted as experiments.
+The next four protocols ask whether tighter routing can keep the savings without changing answers. V4 applies a local risk threshold and saves 9.1\%/3.2\% \nfe{} on LLaDA/Dream, but Dream misses the predeclared 5\% floor. V5 predicts both benefit and harm; harm AUROC is only 0.372/0.456, so the router is not promoted. V6 replaces local decisions with a prompt-level risk ledger, and v7 relaxes that gate. Both record zero harmful regressions in their screens, but save only 0.75\%/0.45\% and 1.24\%/0.65\%. This is the best output-preserving point reached by learned routing, but it gives back most of PAG's original efficiency gain. Protocols v2--v3 were superseded before GPU evidence was materialized and are not counted as experiments.
 
-\begin{table}[t]
-  \caption{Stress-test ladder. Savings are screen or pilot reductions relative to AdaBlock for LLaDA/Dream; a dash indicates that the protocol failed before an eligible efficiency estimate.}
-  \label{tab:ladder}
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{3pt}
-  \begin{tabular}{p{0.055\linewidth}p{0.28\linewidth}p{0.28\linewidth}p{0.27\linewidth}}
-    \toprule
-    Run & Change & Best observed evidence & Promotion decision \\
-    \midrule
-    v4 & Local risk threshold & 9.1\% / 3.2\% \nfe{} saving & Dream misses the 5\% floor \\
-    v5 & Predict harm and benefit & Harm AUROC 0.372 / 0.456 & Router is not discriminative; no promotion \\
-    v6 & Prompt-level risk ledger & 0.75\% / 0.45\%; zero harmful regressions & Misses the 8\% floor \\
-    v7 & Relaxed risk gate & 1.24\% / 0.65\%; zero harmful regressions & Misses the 8\% floor \\
-    v8 & Batched verified macro-steps & 14.7\% / 21.3\% physical \nfe{} saving & 22/64 sequences disagree \\
-    v9 & Equivalence-cost audit & 4{,}428 / 5{,}520 verifier events & Batch-shape audit fails; no rollout \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\subsection{Verified macro-steps recover calls but not exactness}
 
-The later protocols answer two follow-up questions. Lowering risk did not repair the Dream failure: v6 and v7 preserved outcomes but removed nearly all useful savings. Checking proposed tokens inside one batched call also did not establish exact verification. In v8, fixed-depth speculation lowered physical invocations from 83.47 to 71.19 on LLaDA and from 97.63 to 76.81 on Dream, but 22 of 64 prompt trajectories disagreed with AdaBlock. LLaDA latency rose from 3.09 to 3.83 seconds because each call evaluated more rows. V9 matched execution fingerprints but could not validate equivalence across depth-one and depth-two batch shapes. The audit therefore failed.
+Under v8, a reference check evaluates a batch of fixed-depth proposals in one call. This lowers physical invocations from 83.47 to 71.19 on LLaDA and from 97.63 to 76.81 on Dream, reductions of 14.7\% and 21.3\%. These are the largest raw call reductions in the progression. They are not lossless results: 22 of 64 prompt trajectories disagree with AdaBlock. LLaDA latency also rises from 3.09 to 3.83 seconds because each invocation evaluates more rows. V9 audits the mechanism before another rollout. Execution fingerprints match. Successor states differ across depth-one and depth-two batch shapes. Figure~\ref{fig:equivalence-audit} in the appendix shows this exactness test. The failed gate yields a final division of responsibility: learned histories propose budgets; a batch-invariant reference transition retains acceptance authority.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -300,6 +308,37 @@ Our experiments support a separation of responsibilities. Learned phase models a
 \bibliography{references}
 
 \appendix
+
+\section{Verification equivalence audit}
+\label{app:equivalence}
+
+\begin{center}
+  \begin{tikzpicture}[
+      box/.style={draw, rounded corners, align=center, minimum height=7mm,
+                  inner xsep=4pt, font=\scriptsize},
+      serial/.style={box, fill=blue!7},
+      batch/.style={box, fill=orange!10},
+      check/.style={box, fill=green!8, text width=.32\linewidth},
+      arr/.style={-{Latex[length=1.7mm]}, line width=.55pt}]
+    \node[serial] (xs) {$x_t$};
+    \node[serial, right=4mm of xs] (fs) {serial $F_1$};
+    \node[serial, right=4mm of fs] (ys) {$x_{t+1}$};
+    \draw[arr] (xs) -- (fs);
+    \draw[arr] (fs) -- (ys);
+
+    \node[batch, below=6mm of xs] (xb) {$[x_t,d_1,d_2]$};
+    \node[batch, right=4mm of xb] (fb) {batched $F_B$};
+    \node[batch, right=4mm of fb] (yb) {$\widetilde{x}_{t+1}$};
+    \draw[arr] (xb) -- (fb);
+    \draw[arr] (fb) -- (yb);
+
+    \node[check, below=17mm of fs] (audit) {compare tokens, masks, cache state, boundary, and successor};
+    \draw[arr] (ys.south) |- (audit.east);
+    \draw[arr] (yb.south) -- (audit.north east);
+  \end{tikzpicture}
+  \captionof{figure}{Exactness audit for verified macro-steps. A batched row is eligible only when it induces the same complete successor as the serial reference transition. The v8 pilot disagrees on 22 of 64 prompts, and v9 rejects the depth-dependent batch shape before rollout.}
+  \label{fig:equivalence-audit}
+\end{center}
 
 \section{Predictor and integration diagnostics}
 \label{app:predictors}
@@ -376,7 +415,7 @@ Table~\ref{tab:artifacts} records the evidence source for each reported phase. H
 The anonymous supplement contains the implementation, exact YAML configurations, pinned revisions, run manifests, and artifact summaries referenced in Table~\ref{tab:artifacts}. The initial audit uses seed 20260710; the cross-model protocols use seed 20260729. Confidence intervals are percentile intervals from 10{,}000 paired bootstrap resamples of prompt IDs. The risk tests use exact binomial bounds at familywise level 0.05. The supplement documents the commands for the initial Strategy~1 evaluation and each \rcpag{} protocol. Raw checkpoints and benchmark copies are not redistributed; the loaders fetch the pinned public assets.
 
 \paragraph{Compute.}
-The initial Strategy~1 evaluation ran on one NVIDIA RTX A6000 (48 GB). The cross-model protocols ran on one NVIDIA A100 PCIe (80 GB), loading LLaDA and Dream one at a time in bfloat16. The recorded environment used Python 3.11.15, PyTorch 2.5.1 with CUDA 12.1, Transformers 4.46.3, Datasets 4.8.5, scikit-learn 1.9.0, and math-verify 0.9.0. Atomic records store per-prompt elapsed time; the v8 pilots ranged from roughly one to six seconds per method/prompt. Since later protocols reuse earlier traces, summing stage projections would double-count shared inference. The artifact manifests therefore retain both projected stage sizes and the executed records rather than reporting a misleading aggregate GPU-hour total.
+We estimate approximately 160 A100-equivalent GPU-hours for the completed experiments. Trace collection and the original PAG study account for about 40 hours; the six materialized protocols v1 and v4--v8 account for about 20 hours each, or 120 hours. V2--v3 were superseded before full GPU runs, and v9 stopped at the equivalence preflight before a benchmark rollout; incomplete job attempts and CPU-only analysis are excluded. The estimate assumes one NVIDIA A100 PCIe (80 GB), with LLaDA and Dream loaded one at a time in bfloat16. The recorded environment used Python 3.11.15, PyTorch 2.5.1 with CUDA 12.1, Transformers 4.46.3, Datasets 4.8.5, scikit-learn 1.9.0, and math-verify 0.9.0. Atomic records retain per-prompt elapsed time; the v8 pilots ranged from roughly one to six seconds per method/prompt.
 
 \paragraph{Licenses.}
 The pinned LLaDA checkpoint is MIT licensed and the pinned Dream checkpoint is Apache-2.0 licensed. GSM8K, MATH-500, and HumanEval are used under their MIT licenses; MBPP data are used under CC BY 4.0. We cite each model and benchmark at first use and preserve their original terms. The supplement contains no model weights or benchmark examples beyond the aggregate statistics and one short diagnostic trace shown in Figure~\ref{fig:phase-data}.

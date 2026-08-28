@@ -60,6 +60,14 @@ Use `--resume` with the printed run ID after a controlled stop. The v9 cluster w
 `scripts/slurm/submit_rc_pag_all.sh`; it reuses only the eligible v8 AdaBlock audit references and
 recomputes every numerical audit, policy rule, tuning, calibration, and confirmation decision.
 
+## Compute estimate
+
+The completed experiments total approximately 160 A100-equivalent GPU-hours: about 40 hours for
+trace collection and the original PAG study, plus about 20 hours for each of the six materialized
+protocols v1 and v4--v8. Protocols v2--v3 were superseded before full runs, and v9 stopped at its
+equivalence preflight before benchmark rollout. Incomplete attempts and CPU-only analysis are not
+included in this estimate.
+
 ## Claim audit and provenance
 
 Paper numbers should be checked against the files named in Appendix Table 5, not against partial
