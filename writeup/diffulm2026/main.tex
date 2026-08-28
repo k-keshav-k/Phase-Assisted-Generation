@@ -16,7 +16,7 @@
 \usepackage{multirow}
 \usepackage{nicefrac}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,fit}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
 \hypersetup{hidelinks}
 
 \newcommand{\pag}{PAG}
@@ -74,12 +74,12 @@ Learn-then-Test and conformal risk control provide finite-sample tools for selec
   \centering
   \begin{tikzpicture}[
       node distance=4mm and 5mm,
-      box/.style={draw, rounded corners, align=center, minimum height=7mm,
+      box/.style={rounded corners, align=center, minimum height=7mm,
                   inner xsep=4pt, font=\small},
-      data/.style={box, fill=blue!7},
-      model/.style={box, fill=orange!10},
-      online/.style={box, fill=green!8},
-      arr/.style={-{Latex[length=1.8mm]}, line width=.55pt}]
+      data/.style={box, fill=blue!12},
+      model/.style={box, fill=orange!15},
+      online/.style={box, fill=green!12},
+      arr/.style={-{Latex[length=1.8mm]}, line width=.55pt, draw=gray!75}]
     \node[data] (traces) {AdaBlock traces};
     \node[data, right=of traces] (tuples) {block tuples\\+ windows};
     \node[model, right=of tuples] (predictor) {categorical/ordinal\\Transformer};
@@ -93,9 +93,9 @@ Learn-then-Test and conformal risk control provide finite-sample tools for selec
     \draw[arr] (boundary) -- (refine);
     \draw[arr] (budget) -- (refine);
     \draw[arr] (refine) -- (history);
-    \draw[arr, dashed] (history.east) -| (predictor.south);
-    \node[draw, dashed, rounded corners, fit=(boundary)(refine)(budget)(history),
-          inner sep=3pt, label={[font=\small]below:online per-block loop}] {};
+    \draw[arr, dashed] (history.east)
+      .. controls ++(22mm,0) and ++(12mm,0) .. (predictor.east);
+    \node[font=\small, below=2mm of history] {online per-block loop};
   \end{tikzpicture}
   \caption{\pag{} separates two control signals. Current logits determine the next semantic boundary; history predicts a refinement budget. The realized tuple closes the loop only after the block is decoded.}
   \label{fig:pipeline}
@@ -199,22 +199,21 @@ Figure~\ref{fig:approach-progression} gives the experimental logic. We begin wit
 \begin{figure*}[t]
   \centering
   \begin{tikzpicture}[
-      stage/.style={draw, rounded corners, align=left, text width=.164\textwidth,
-                    minimum height=17mm, inner sep=3pt, font=\scriptsize},
-      start/.style={stage, fill=blue!7},
-      gain/.style={stage, fill=green!10},
-      audit/.style={stage, fill=orange!10},
-      arr/.style={-{Latex[length=1.7mm]}, line width=.55pt},
-      lab/.style={font=\tiny, align=center}]
-    \node[start] (trace) {\textbf{1. Find the signal}\\Token phases and 138{,}901 block tuples\\\emph{History predicts effort}};
-    \node[gain, right=3.2mm of trace] (pag) {\textbf{2. Deploy PAG}\\Reactive boundary + learned budget\\\emph{$-4.0/-6.7\%$ \nfe{}}};
-    \node[audit, right=3.2mm of pag] (risk) {\textbf{3. Test transfer}\\Cross-model risk calibration\\\emph{$-9.6\%$ normalized \nfe{}; accuracy gate fails}};
-    \node[gain, right=3.2mm of risk] (safe) {\textbf{4. Protect outputs}\\Threshold, harm router, and risk ledgers\\\emph{zero screen harms; at most $1.24\%$ saved}};
-    \node[audit, right=3.2mm of safe] (verify) {\textbf{5. Recover savings}\\Batched verified macro-steps\\\emph{$-14.7/-21.3\%$ calls; equivalence fails}};
-    \draw[arr] (trace) -- node[lab,above] {learn} (pag);
-    \draw[arr] (pag) -- node[lab,above] {transfer} (risk);
-    \draw[arr] (risk) -- node[lab,above] {constrain} (safe);
-    \draw[arr] (safe) -- node[lab,above] {verify} (verify);
+      stage/.style={rounded corners, align=left, text width=.155\textwidth,
+                    minimum height=18mm, inner sep=3pt, font=\scriptsize},
+      start/.style={stage, fill=blue!12},
+      gain/.style={stage, fill=green!13},
+      audit/.style={stage, fill=orange!15},
+      arr/.style={-{Latex[length=1.7mm]}, line width=.55pt, draw=gray!75}]
+    \node[start] (trace) {\textbf{1. Find the signal}\\Token phases and 138{,}901 block tuples\\\emph{predicts effort}};
+    \node[gain, right=5mm of trace] (pag) {\textbf{2. Deploy PAG}\\Reactive boundary + learned budget\\\emph{$-4.0/-6.7\%$ \nfe{}}};
+    \node[audit, right=5mm of pag] (risk) {\textbf{3. Test transfer}\\Cross-model risk calibration\\\emph{$-9.6\%$ normalized \nfe{}; accuracy gate fails}};
+    \node[gain, right=5mm of risk] (safe) {\textbf{4. Protect outputs}\\Threshold, harm router, and risk ledgers\\\emph{zero screen harms; at most $1.24\%$ saved}};
+    \node[audit, right=5mm of safe] (verify) {\textbf{5. Recover savings}\\Batched verified macro-steps\\\emph{$-14.7/-21.3\%$ calls; equivalence fails}};
+    \draw[arr] (trace) -- (pag);
+    \draw[arr] (pag) -- (risk);
+    \draw[arr] (risk) -- (safe);
+    \draw[arr] (safe) -- (verify);
   \end{tikzpicture}
   \caption{Approach progression. Each stage addresses the limitation exposed immediately before it; reported savings are relative to AdaBlock. The strongest corrected task result is PAG's 6.7\% \nfe{} reduction on MATH-500 with a 1.33-point accuracy decrease. Larger apparent reductions fail either task-quality or exact-equivalence gates; output-preserving screens save at most 1.24\%.}
   \label{fig:approach-progression}
@@ -314,27 +313,20 @@ Our experiments support a separation of responsibilities. Learned phase models a
 
 \begin{center}
   \begin{tikzpicture}[
-      box/.style={draw, rounded corners, align=center, minimum height=7mm,
-                  inner xsep=4pt, font=\scriptsize},
-      serial/.style={box, fill=blue!7},
-      batch/.style={box, fill=orange!10},
-      check/.style={box, fill=green!8, text width=.32\linewidth},
+      box/.style={draw, rounded corners, align=center, minimum height=12mm,
+                  inner xsep=3pt, font=\scriptsize},
+      serial/.style={box, fill=blue!7, text width=.34\linewidth},
+      batch/.style={box, fill=orange!10, text width=.34\linewidth},
+      check/.style={box, fill=green!8, text width=.54\linewidth},
       arr/.style={-{Latex[length=1.7mm]}, line width=.55pt}]
-    \node[serial] (xs) {$x_t$};
-    \node[serial, right=4mm of xs] (fs) {serial $F_1$};
-    \node[serial, right=4mm of fs] (ys) {$x_{t+1}$};
-    \draw[arr] (xs) -- (fs);
-    \draw[arr] (fs) -- (ys);
-
-    \node[batch, below=6mm of xs] (xb) {$[x_t,d_1,d_2]$};
-    \node[batch, right=4mm of xb] (fb) {batched $F_B$};
-    \node[batch, right=4mm of fb] (yb) {$\widetilde{x}_{t+1}$};
-    \draw[arr] (xb) -- (fb);
-    \draw[arr] (fb) -- (yb);
-
-    \node[check, below=17mm of fs] (audit) {compare tokens, masks, cache state, boundary, and successor};
-    \draw[arr] (ys.south) |- (audit.east);
-    \draw[arr] (yb.south) -- (audit.north east);
+    \node[serial] (serialbox) {\textbf{Serial reference}\\[1mm]
+      $x_t \xrightarrow{F_1} x_{t+1}$};
+    \node[batch, right=6mm of serialbox] (batchbox) {\textbf{Batched candidate}\\[1mm]
+      $[x_t,d_1,d_2] \xrightarrow{F_B} \widetilde{x}_{t+1}$};
+    \node[check, below=8mm of $(serialbox.south)!0.5!(batchbox.south)$] (audit)
+      {\textbf{Equivalence gate}\\tokens, masks, cache state, boundary, and complete successor};
+    \draw[arr] (serialbox.south) -- ([xshift=-10mm]audit.north);
+    \draw[arr] (batchbox.south) -- ([xshift=10mm]audit.north);
   \end{tikzpicture}
   \captionof{figure}{Exactness audit for verified macro-steps. A batched row is eligible only when it induces the same complete successor as the serial reference transition. The v8 pilot disagrees on 22 of 64 prompts, and v9 rejects the depth-dependent batch shape before rollout.}
   \label{fig:equivalence-audit}
