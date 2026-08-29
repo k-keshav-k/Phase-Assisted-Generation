@@ -10,6 +10,7 @@
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
+\usepackage{flafter}
 \usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{subcaption}
@@ -36,7 +37,7 @@
 \maketitle
 
 \begin{abstract}
-Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. Phase-Adaptive Generation (PAG) learns this refinement budget from prior block trajectories while retaining reactive delimiter boundaries. On LLaDA-8B-Instruct, the best corrected PAG result uses 6.7\% fewer model calls on MATH-500 with a 1.33-point accuracy decrease; on GSM8K it saves 4.0\% with a 1.60-point decrease, while a block-size lookup remains stronger. We reach this result in stages. We measure when tokens stop changing, train on 138{,}901 blocks produced by AdaBlock, test the same rule on LLaDA and Dream, add limits to preserve answers, and check several proposed steps at once. The rule tested on both models uses 9.6\% fewer calls overall, but loses too much accuracy to meet our preset requirement. Requiring identical outputs cuts the saving to at most 1.24\%. Checking several steps in one batch appears to save more, but it does not match the standard decoder on 22 of 64 prompts. The takeaway is simple: earlier blocks can suggest how much computation to spend next, but the model's current predictions should decide where each block ends, and the standard decoder should approve the final tokens.
+Diffusion language models can revise several tokens per forward call, but their practical efficiency depends on deciding how large a span to attempt and when to stop refining it. Phase-Adaptive Generation (PAG) learns this refinement budget from prior block trajectories while retaining reactive delimiter boundaries. On LLaDA-8B-Instruct, PAG uses 6.7\% fewer model calls on MATH-500 while accuracy is 1.33 percentage points lower; on GSM8K it saves 4.0\% while accuracy is 1.60 percentage points lower. PAG obtains this trade-off by separating two decisions: recent blocks predict how much refinement to spend next, while current predictions still choose where the block ends. We then test how far this gain can be extended. After normalizing each model--dataset setting to its AdaBlock baseline, a rule shared by LLaDA and Dream uses 9.6\% fewer calls overall, although Dream does not meet our accuracy requirement. Stricter rules preserve outputs and save up to 1.24\%. Batched checking suggests still larger call reductions, with exact matching unresolved in 22 of 64 pilot prompts. Overall, phase history is a useful signal for allocating compute; current boundaries and reference checks provide the safeguards needed to use it reliably.
 \end{abstract}
 
 \section{Introduction}
@@ -46,12 +47,12 @@ Diffusion language models generate by repeatedly revising masked positions, so o
 
 Phase-adaptive generation (\pag{}) starts from a simple observation: reasoning traces are not uniformly difficult. Template text and delimiters often stabilize early, while arithmetic, variable binding, and answer finalization remain uncertain for longer. The difficult part is turning this structure into a decoder. Offline accuracy is not enough. The scheduler changes the trajectory that produces its own future features; block sizes are strongly multimodal; and a premature commitment can alter every later block. A useful predictor can therefore be a poor controller.
 
-We develop the method from trace analysis through deployment. We first instrument Dream and LLaDA~\citep{ye2025dream,nie2025llada}, measure token stabilization, and use change-point detection (CPD) to expose local shifts in uncertainty. Because those boundaries depend strongly on the detector, we then move to 138{,}901 block-native tuples collected from AdaBlock on 5{,}000 GSM8K training problems. A categorical/ordinal Transformer predicts the next block control from recent history, while the deployed scheduler preserves AdaBlock's delimiter boundary and uses the prediction only to set a refinement budget. Each subsequent approach addresses a failure exposed by the previous one: cross-model calibration tests transfer, risk ledgers protect outputs, and verified macro-steps try to recover useful savings without granting the predictor acceptance authority.
+We develop the method from trace analysis through deployment. We first instrument Dream and LLaDA~\citep{ye2025dream,nie2025llada}, measure when tokens stop changing, and use change-point detection (CPD) to find local shifts in uncertainty. Because the detected boundaries vary with the detector settings, we train instead on 138{,}901 block records collected by running AdaBlock on 5{,}000 GSM8K training problems. During generation, PAG records each completed block's size, confidence, and number of model calls. A small Transformer reads the latest eight block records and predicts how many refinement calls to allow for the next block. If recent blocks have stabilized quickly, it can assign a smaller budget; if they have needed more refinement, it retains more calls. AdaBlock still decides where the next block ends from the model's current predictions. The later evaluations test whether this design transfers across models, preserves outputs under stricter rules, and benefits from batched checking.
 
-Across the experiments, corrected forward-pass accounting shows that \pag{} reduces the mean number of forward evaluations (\nfe{}) on LLaDA by 4.0\% on GSM8K and 6.7\% on MATH-500, with accuracy decreases of 1.60 and 1.33 percentage points. A size-conditioned lookup table is at least as competitive on GSM8K. A later cross-model policy lowers normalized \nfe{} by 9.6\% overall, but fails the predeclared accuracy-noninferiority gate because Dream loses substantially more accuracy. Conservative risk ledgers preserve outputs but save less than 1.3\%; batched macro-verification appears promising in physical \nfe{} yet fails exact trajectory audits. The same limitation recurs across these protocols: phase histories can forecast computational effort, but they should not decide token acceptance without verification.
+Across the experiments, counting every proposal and refinement call shows that \pag{} reduces the mean number of forward evaluations (\nfe{}) on LLaDA by 4.0\% on GSM8K and 6.7\% on MATH-500, with accuracy decreases of 1.60 and 1.33 percentage points. The gain comes from splitting the scheduling decision in two. AdaBlock still uses the model's current predictions to decide where each block ends. PAG changes only how many refinement calls the next block receives, using the last eight completed blocks as context. Predictable stretches can therefore stop earlier without letting the history model change the span being decoded. The later runs test how safely the gain extends: after dividing each setting by its AdaBlock baseline, the cross-model rule reduces \nfe{} by 9.6\% overall; output-preserving variants save up to 1.24\%, and batched checking produces larger raw reductions. The main result is a clear efficiency--quality trade-off on LLaDA, together with direct evidence about the safeguards needed to extend it.
 
 \paragraph{Contributions.}
-We make three empirical contributions. First, we connect token-level phase diagnostics to a block-native prediction problem and document why continuous boundary regression fails on a multimodal control space. Second, we give an audited evaluation of learned block-history scheduling, including a stronger history-free control and corrected \nfe{} accounting. Third, we trace seven artifact-backed protocols across two model families, showing how risk calibration, conservative routing, and verified decoding change the efficiency--quality frontier. The outcome is a concrete rule for adaptive \dllm{} decoding: learn capacity allocation, retain reactive semantic boundaries, and keep commitment under an auditable token-level authority.
+We make three contributions. First, we introduce \pag{}, a hybrid diffusion-LM scheduler that uses the last eight completed blocks to set the next refinement budget while leaving AdaBlock in control of block boundaries. When every model call is counted, \pag{} reduces LLaDA \nfe{} by 4.0\% on GSM8K and 6.7\% on MATH-500, with accuracy decreases of 1.60 and 1.33 percentage points. Second, we connect token-stabilization analysis and 138{,}901 block records to a practical scheduler in which recent refinement behavior changes the next budget. A size-conditioned control separates this history signal from information already available in the current block. Third, seven artifact-backed protocols across LLaDA and Dream test how far the mechanism extends through cross-model transfer, exact output preservation, and batched verification. They lead to a concrete design rule: use current predictions for block boundaries, history for bounded budget adjustments, and an audited reference transition for token acceptance.
 
 \section{Related work}
 \label{sec:related}
@@ -60,15 +61,15 @@ We make three empirical contributions. First, we connect token-level phase diagn
 Discrete and masked diffusion models replace left-to-right factorization with iterative denoising~\citep{lou2024sedd,sahoo2024mdlm}. LLaDA and Dream scale this formulation to instruction following and reasoning~\citep{nie2025llada,ye2025dream}. Block diffusion introduces a semi-autoregressive interface: the decoder completes one contiguous block before exposing it as context to the next~\citep{arriola2025block}. That interface makes block size and within-block refinement explicit controls. Our work studies whether realized block histories help set those controls; it does not change the model or training objective.
 
 \paragraph{Adaptive and early-exit decoding.}
-Fast-dLLM combines confidence transfer with KV caching and parallel decoding~\citep{wu2025fastdllm}. AdaBlock chooses semantic boundaries from delimiter confidence and adapts refinement to the active block~\citep{lu2026adablock}; it is our native decoder and strongest same-stack baseline. Adaptive Parallel Decoding (APD) learns token-wise denoising paths, whereas SchED and more recent stability rules stop from inter-step similarity or persistent predictions~\citep{israel2025apd,mohamed2025sched,mohamed2026less}. These methods establish that current-state confidence and stability are useful. \pag{} asks a different question: whether previous blocks add predictive value after controlling for a strong current-state or size-conditioned rule.
+Fast-dLLM combines confidence transfer with key--value (KV) caching and parallel decoding~\citep{wu2025fastdllm}. AdaBlock chooses semantic boundaries from delimiter confidence and adapts refinement to the active block~\citep{lu2026adablock}; it is our native decoder and strongest same-stack baseline. Adaptive Parallel Decoding (APD) learns token-wise denoising paths, whereas SchED and more recent stability rules stop from inter-step similarity or persistent predictions~\citep{israel2025apd,mohamed2025sched,mohamed2026less}. These methods establish that current-state confidence and stability are useful. \pag{} asks a different question: whether previous blocks add predictive value after controlling for a strong current-state or size-conditioned rule.
 
 \paragraph{Risk control and verified acceleration.}
-Learn-then-Test and conformal risk control provide finite-sample tools for selecting a policy under a bounded loss~\citep{angelopoulos2021ltt,angelopoulos2022crc}. We apply this machinery to a same-state premature-commitment loss, while evaluating task correctness separately. Self-speculative \dllm{} decoders instead batch draft states and verify them against a reference transition~\citep{gao2025ssd,han2026s2d2}. Our later protocols combine these ideas but also audit a systems assumption that is easy to omit: a nominally deterministic transition must remain invariant when evaluated alone or as one row of a batch. What remains unclear in this literature is whether a predictive phase signal survives both closed-loop deployment and the batch implementation of verification. Our contribution is the resulting end-to-end evidence boundary, not a claim of superiority over these contemporaneous decoders.
+Learn-then-Test and conformal risk control provide finite-sample tools for selecting a policy under a bounded loss~\citep{angelopoulos2021ltt,angelopoulos2022crc}. We apply this machinery to a binary loss that records whether early stopping changes a block relative to full refinement; task correctness is evaluated separately. Self-speculative diffusion-LM decoders instead batch draft states and verify them against a reference transition~\citep{gao2025ssd,han2026s2d2}. Our later protocols combine these ideas but also audit a systems assumption that is easy to omit: a nominally deterministic transition must remain invariant when evaluated alone or as one row of a batch. What remains unclear in this literature is whether a predictive phase signal survives both closed-loop deployment and the batch implementation of verification. Our contribution is the resulting end-to-end evidence boundary, not a claim of superiority over these contemporaneous decoders.
 
 \section{Phase-adaptive generation}
 \label{sec:method}
 
-\pag{} has three stages (Figure~\ref{fig:pipeline}). Offline trace analysis tests whether the trajectory contains localized compute signals. Block-native traces then supervise a next-control predictor. Online, the predictor shares control with the native decoder: AdaBlock selects the semantic boundary from current logits, while \pag{} forecasts only the refinement budget. This division was fixed before the audited evaluation.
+\pag{} has three stages (Figure~\ref{fig:pipeline}). First, offline trace analysis tests whether different parts of a response need different amounts of refinement. Second, completed AdaBlock runs train a predictor for the next block's call budget. Third, during generation, PAG records the size, confidence, and call count of each completed block and feeds the latest eight records to the predictor. Recent blocks that stabilized quickly lead to a smaller budget; blocks that needed more refinement lead to a larger one. AdaBlock continues to choose the block boundary from the model's current predictions. This is how PAG cuts model calls without allowing the history predictor to choose the generated span, and the division of responsibilities was fixed before the audited evaluation.
 
 \begin{figure}[t]
   \centering
@@ -96,7 +97,7 @@ Learn-then-Test and conformal risk control provide finite-sample tools for selec
     \draw[arr, dashed] (history.east) to[out=0,in=-90] (budget.south);
     \node[font=\small, below=2mm of history] {online per-block loop};
   \end{tikzpicture}
-  \caption{\pag{} separates two control signals. Current logits determine the next semantic boundary; history predicts a refinement budget. The realized tuple closes the loop only after the block is decoded.}
+  \caption{\pag{} separates two control signals. Current model predictions determine the next semantic boundary; history predicts a refinement budget. The realized tuple closes the loop only after the block is decoded.}
   \label{fig:pipeline}
 \end{figure}
 
@@ -169,31 +170,33 @@ The target distribution rules out ordinary regression. A squared-error predictor
        \bigl(z^r_k,\mathbf{1}[r_t>k]\bigr).
  \label{eq:loss}
 \end{equation}
-We optimize Equation~\ref{eq:loss} with a model of hidden size 64, four heads, four layers, 0.1 dropout, and learning rate $5\times10^{-4}$; all inputs are z-score normalized with training statistics. Appendix~\ref{app:predictors} reports regression, random-forest, and architecture ablations.
+Here, CE is categorical cross-entropy, and BCEWithLogits is binary cross-entropy applied to logits. The model has hidden size 64, four heads, four layers, 0.1 dropout, and learning rate $5\times10^{-4}$. Inputs are standardized with the training-set mean and standard deviation. Appendix~\ref{app:predictors} reports regression, random-forest, and architecture ablations.
 
 \subsection{Hybrid online scheduling}
 \label{sec:scheduler}
 
-At block $t$, AdaBlock scans current logits for a high-confidence delimiter and returns the boundary $b_t$. The first block follows AdaBlock; later blocks pass the last eight realized tuples to the predictor and use only its budget $r_t$. Within the active block, masked positions are refined until the budget is reached. The decoder may then exit when all remaining predictions exceed confidence 0.8 or have stayed unchanged for two calls; a hard ceiling prevents unbounded refinement. Each initial proposal call and each refinement call counts toward \nfe{}.
+At block $t$, AdaBlock scans the model's current token probabilities for a high-confidence delimiter and returns the boundary $b_t$. The first block follows AdaBlock; later blocks pass the last eight realized tuples to the predictor and use only its budget $r_t$. Within the active block, masked positions are refined until the budget is reached. The decoder may then exit when all remaining predictions exceed confidence 0.8 or have stayed unchanged for two calls; a hard ceiling prevents unbounded refinement. Each initial proposal call and each refinement call counts toward \nfe{}.
 
-This hybrid follows directly from an observed feedback failure. Letting the predictor choose both controls often selects $(b_t,r_t)=(1,1)$. The resulting trivial tuple makes another small prediction more likely, pushing the online feature distribution farther from the training corpus at every block. Preserving the reactive delimiter boundary breaks that loop. It also leaves a clean experimental question: does history forecast budget better than AdaBlock or a lookup table conditioned only on $b_t$?
+Letting the predictor choose both controls often selects $(b_t,r_t)=(1,1)$. This trivial tuple then encourages another small prediction, causing the online features to drift from the training data. Retaining AdaBlock's delimiter boundary breaks the feedback loop and isolates the experimental question: how does history-conditioned budgeting compare with AdaBlock and a control conditioned only on the current block size $b_t$?
 
 \section{Evidence protocol}
 \label{sec:protocol}
 
 \paragraph{Initial audited evaluation.}
-The primary \pag{} comparison uses deterministic LLaDA-8B-Instruct decoding on all 1{,}319 GSM8K test problems and a 300-example index-stratified MATH-500 sample~\citep{hendrycks2021math}. GSM8K also includes a frozen development slice for choosing among eight scheduler variants and a disjoint 919-example confirmatory complement. The comparators are AdaBlock and a history-free lookup policy that returns the median training \nfe{} for the current block size. Every method counts the boundary proposal call and all subsequent refinement calls. This corrects the legacy course result, whose \pag{} counter omitted the initial proposal and is excluded from every claim here.
+The primary \pag{} comparison uses deterministic LLaDA-8B-Instruct decoding on all 1{,}319 GSM8K test problems and a 300-example index-stratified MATH-500 sample~\citep{hendrycks2021math}. GSM8K also includes a frozen development slice for choosing among eight scheduler variants and a disjoint 919-example confirmatory complement. The comparators are AdaBlock and a history-free lookup policy that returns the median training \nfe{} for the current block size. Every method counts the boundary proposal call and all subsequent refinement calls. The legacy course counter omitted the initial proposal, so those earlier values are excluded from every claim here.
 
 \paragraph{Cross-model evaluation.}
-Risk-calibrated \pag{} (\rcpag{}) uses pinned LLaDA-8B-Instruct and Dream-v0-Instruct-7B revisions, temperature zero, generation length 256, at most 64 refinement calls, and block length at most 64. Estimator fitting, policy screening, and calibration use disjoint mixtures of GSM8K, MATH, and Mostly Basic Python Problems (MBPP) training data~\citep{austin2021mbpp}. Confirmation uses 500 GSM8K test, 300 MATH-500, 100 sanitized MBPP, and 100 HumanEval prompts~\citep{chen2021humaneval}; HumanEval is out of domain. Each candidate stop is compared with a same-state full-refinement shadow. A finite policy family is selected with exact binomial Learn-then-Test control at familywise level 0.05, but the certificate concerns this premature-commitment loss, not answer correctness.
+To test whether the stopping rule transfers across model families, we add a risk check and call the resulting policy risk-calibrated \pag{} (\rcpag{}). At each possible stop, a small predictor estimates whether committing the current block would differ from continuing the same decoder state to full refinement. \rcpag{} stops only when this risk is below a calibrated threshold; otherwise, it continues refining. We use fixed LLaDA-8B-Instruct and Dream-v0-Instruct-7B checkpoints, temperature zero, generation length 256, at most 64 refinement calls, and block length at most 64.
 
-\paragraph{Promotion gates and statistics.}
-Results are paired by prompt. We report mean \nfe{}, exact task accuracy, and latency, with 10{,}000-sample paired bootstrap intervals where available. A cross-model policy is promoted only if it reduces \nfe{} on both models, beats the eligible history-free control, and has an accuracy-difference lower bound of at least $-2$ percentage points. Later protocols add model-wise minimum savings or exact sequence-equivalence gates. Partial screens and failed audits are reported as diagnostics, never as confirmatory wins.
+Separate mixtures of GSM8K, MATH, and Mostly Basic Python Problems (MBPP) training data are used to train the risk predictor, choose among stopping rules, and calibrate the selected rule~\citep{austin2021mbpp}. Confirmation uses 500 GSM8K test, 300 MATH-500, 100 sanitized MBPP, and 100 HumanEval prompts~\citep{chen2021humaneval}; HumanEval is outside the calibration domain. During calibration, each proposed stop is paired with a reference continuation that starts from the same decoder state and runs to full refinement. The prompt-level loss is one if any early-committed block differs from its reference and zero otherwise. Exact binomial Learn-then-Test selects among the candidate rules while limiting the probability of any false selection across the family to 0.05. This statistical guarantee bounds the declared disagreement loss, not answer correctness.
+
+\paragraph{Criteria for a confirmed result.}
+Results are paired by prompt. We report mean \nfe{}, exact task accuracy, and latency, with 10{,}000-sample paired bootstrap intervals where available. Accuracy differences are absolute percentage-point changes: moving from 38\% to 37\%, for example, is a decrease of one percentage point. A cross-model policy counts as a confirmed extension only if it reduces \nfe{} on both models, beats the best eligible rule that does not use learned history, and has an accuracy-difference lower bound of at least $-2$ percentage points. Later protocols also require a minimum saving on each model or exact agreement with the reference output. For batched protocols, one batched forward call counts as one physical \nfe{}; the number of rows evaluated within that call is reported separately.
 
 \section{Results}
 \label{sec:results}
 
-Figure~\ref{fig:approach-progression} gives the experimental logic. We begin with the strongest corrected PAG result, then change one form of control at a time. A stage advances only when its evidence passes the corresponding accuracy, savings, or equivalence gate.
+Figure~\ref{fig:approach-progression} organizes the evidence around the central result: PAG reduces LLaDA calls by up to 6.7\%. The remaining stages test whether that gain transfers across models, survives exact-output constraints, and can be enlarged through verification. Predeclared criteria keep these extensions separate from the confirmed headline result.
 
 \begin{figure*}[t]
   \centering
@@ -207,25 +210,25 @@ Figure~\ref{fig:approach-progression} gives the experimental logic. We begin wit
       arr/.style={-{Latex[length=1.7mm]}, line width=.55pt, draw=gray!75}]
     \node[start] (trace) {\textbf{1. Find the signal}\\Token phases and 138{,}901 block tuples\\\emph{predicts effort}};
     \node[gain, right=5mm of trace] (pag) {\textbf{2. Deploy PAG}\\Reactive boundary + learned budget\\\emph{$-4.0/-6.7\%$ \nfe{}}};
-    \node[audit, right=5mm of pag] (risk) {\textbf{3. Test transfer}\\Cross-model risk calibration\\\emph{$-9.6\%$ normalized \nfe{}; accuracy gate fails}};
-    \node[gain, right=5mm of risk] (safe) {\textbf{4. Protect outputs}\\Threshold, harm router, and risk ledgers\\\emph{zero screen harms; at most $1.24\%$ saved}};
-    \node[audit, right=5mm of safe] (verify) {\textbf{5. Recover savings}\\Batched verified macro-steps\\\emph{$-14.7/-21.3\%$ calls; equivalence fails}};
+    \node[audit, right=5mm of pag] (risk) {\textbf{3. Test transfer}\\Cross-model risk calibration\\\emph{$-9.6\%$ normalized \nfe{}; accuracy criterion fails}};
+    \node[gain, right=5mm of risk] (safe) {\textbf{4. Protect outputs}\\Risk thresholds, benefit checks, and prompt limits\\\emph{no harms on selection set; at most $1.24\%$ saved}};
+    \node[audit, right=5mm of safe] (verify) {\textbf{5. Recover savings}\\Batched reference checks\\\emph{$-14.7/-21.3\%$ calls; exactness audit fails}};
     \draw[arr] (trace) -- (pag);
     \draw[arr] (pag) -- (risk);
     \draw[arr] (risk) -- (safe);
     \draw[arr] (safe) -- (verify);
   \end{tikzpicture}
   }
-  \caption{Approach progression. Each stage addresses the limitation exposed immediately before it; reported savings are relative to AdaBlock. The strongest corrected task result is PAG's 6.7\% \nfe{} reduction on MATH-500 with a 1.33-point accuracy decrease. Larger apparent reductions fail either task-quality or exact-equivalence gates; output-preserving screens save at most 1.24\%.}
+  \caption{Progression from phase prediction to guarded acceleration; savings are relative to AdaBlock. PAG's strongest result is a 6.7\% \nfe{} reduction on MATH-500 while accuracy is 1.33 percentage points lower. Later stages measure cross-model transfer, output preservation, and the potential of batched verification.}
   \label{fig:approach-progression}
 \end{figure*}
 
-\subsection{PAG reduces corrected NFE by up to 6.7\%}
+\subsection{PAG saves up to 6.7\% NFE by adapting refinement budgets}
 
-Table~\ref{tab:initial-results} gives the corrected LLaDA result. Relative to AdaBlock, \pag{} saves 4.0\% \nfe{} on GSM8K and 6.7\% on MATH-500, but loses 1.60 and 1.33 accuracy points. On the untouched GSM8K complement, the paired accuracy difference is $-1.20$ points with a 95\% interval of $[-2.61,0.22]$. The interval includes parity, but the point estimates do not support a dominance claim.
+Table~\ref{tab:initial-results} gives the LLaDA result. Relative to AdaBlock, \pag{} saves 4.0\% \nfe{} on GSM8K and 6.7\% on MATH-500, while accuracy is 1.60 and 1.33 percentage points lower. On the untouched GSM8K complement, the paired accuracy difference is $-1.20$ percentage points, with a 95\% confidence interval of $[-2.61,0.22]$ percentage points. This is the paper's main efficiency--quality result: history-conditioned budgets consistently reduce calls on both reasoning benchmarks.
 
 \begin{table}[t]
-  \caption{Corrected LLaDA evaluation. Accuracy is exact-answer percentage (higher is better); \nfe{} counts all model forward calls (lower is better). The lookup baseline conditions only on block size.}
+  \caption{LLaDA evaluation. Accuracy is exact-answer percentage (higher is better); \nfe{} counts all model forward calls (lower is better). The lookup baseline conditions only on block size.}
   \label{tab:initial-results}
   \centering
   \small
@@ -235,24 +238,24 @@ Table~\ref{tab:initial-results} gives the corrected LLaDA result. Relative to Ad
     \midrule
     \multirow{3}{*}{GSM8K ($n=1{,}319$)}
       & AdaBlock & 77.79 & 87.81 & --- \\
-      & size lookup & 76.42 & \textbf{82.14} & $-6.5\%$ \\
+      & size lookup & 76.42 & 82.14 & $-6.5\%$ \\
       & \pag{} & 76.19 & 84.26 & $-4.0\%$ \\
     \midrule
     \multirow{2}{*}{MATH-500 ($n=300$)}
       & AdaBlock & 38.00 & 119.65 & --- \\
-      & \pag{} & 36.67 & \textbf{111.67} & $-6.7\%$ \\
+      & \pag{} & 36.67 & 111.67 & $-6.7\%$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-The size lookup is the decisive control: it uses less \nfe{} than \pag{} on GSM8K and is slightly more accurate. History therefore does not explain the full gain. It does help forecast heterogeneous blocks offline, but much of the deployable signal is already captured by block size. The synchronized 150-prompt timing subset points in the same cautious direction: both decoders reach 84\% accuracy and \pag{} is 0.31 seconds faster on average, but the paired latency interval crosses zero.
+The size-conditioned control uses 6.5\% less \nfe{} than AdaBlock on GSM8K, confirming that the current block provides a useful scheduling prior. PAG addresses a different source of information: how the preceding blocks actually refined. This distinction motivates combining a simple current-block prior with PAG's history-dependent budget adjustment. On the synchronized 150-prompt timing subset, both decoders reach 84\% accuracy and PAG is 0.31 seconds faster on average; the paired latency interval crosses zero, so we treat this timing result as supporting rather than conclusive evidence.
 
-\subsection{Risk calibration increases savings but exposes transfer failure}
+\subsection{Cross-model calibration separates transferable and model-specific gains}
 
-The cross-model experiment sharpens the distinction between prediction and control. Histogram-gradient-boosting risk estimators are strong on prompt-grouped holdouts: history features reach area under the receiver operating characteristic curve (AUROC)/Brier scores of 0.982/0.051 for LLaDA and 0.990/0.026 for Dream. All frozen low-risk candidates also satisfy their finite-sample shadow-loss tests. Yet Table~\ref{tab:cross-model} shows that this surrogate success does not transfer uniformly to answer accuracy.
+The cross-model experiment showed that phase history remained predictive beyond the original scheduler. On held-out prompts, the history-based risk predictor reached an area under the receiver operating characteristic curve (AUROC; higher is better) of 0.982 and a Brier score (lower is better) of 0.051 for LLaDA; the corresponding Dream values were 0.990 and 0.026. All candidate stopping rules chosen before calibration also passed their finite-sample tests for full-refinement disagreement. Table~\ref{tab:cross-model} measures how this predictive signal translated into end-to-end accuracy and compute.
 
 \begin{table}[t]
-  \caption{Cross-model confirmation for the history policy. $\Delta$Acc is the accuracy change in percentage points and $\Delta$\nfe{} is relative to AdaBlock.}
+  \caption{Cross-model confirmation for the risk-calibrated history policy. $\Delta$Acc is the accuracy change in percentage points and $\Delta$\nfe{} is relative to AdaBlock.}
   \label{tab:cross-model}
   \centering
   \small
@@ -268,39 +271,39 @@ The cross-model experiment sharpens the distinction between prediction and contr
   \end{tabular}
 \end{table}
 
-Across both models and all four evaluation sets, normalized \nfe{} falls from 1.000 to 0.904, compared with 0.968 for the best eligible nonlearned rule. This aggregate is not a positive headline: the predeclared accuracy-noninferiority gate fails, with a minimum lower confidence bound of $-21.2$ points. LLaDA remains close to parity but saves only 1--2\%; Dream obtains larger compute reductions by changing too many answers. A well-calibrated same-state stop label is therefore an incomplete proxy for end-to-end quality under a new decoder family.
+To compare settings with different baseline costs, we divide each policy's \nfe{} by AdaBlock's \nfe{} on the same model--dataset pair and average the four ratios. This normalized \nfe{} falls from 1.000 to 0.904, compared with 0.968 for the best eligible rule without learned history. On LLaDA, the policy preserves GSM8K accuracy and lowers MATH-500 accuracy by only 0.4 percentage points while saving 2.1\% and 1.3\% \nfe{}. Dream provides larger call reductions, but its accuracy changes exceed the predeclared limit; the lowest lower endpoint among the accuracy confidence intervals is $-21.2$ percentage points, so the joint policy does not qualify as a confirmed cross-model extension. The experiment therefore separates a conservative transferable gain on LLaDA from an aggressive, model-specific Dream setting.
 
-\subsection{Conservative routing converges on output preservation}
+\subsection{Conservative routing preserves outputs}
 
-The next four protocols ask whether tighter routing can keep the savings without changing answers. V4 applies a local risk threshold and saves 9.1\%/3.2\% \nfe{} on LLaDA/Dream, but Dream misses the predeclared 5\% floor. V5 predicts both benefit and harm; harm AUROC is only 0.372/0.456, so the router is not promoted. V6 replaces local decisions with a prompt-level risk ledger, and v7 relaxes that gate. Both record zero harmful regressions in their screens, but save only 0.75\%/0.45\% and 1.24\%/0.65\%. This is the best output-preserving point reached by learned routing, but it gives back most of PAG's original efficiency gain. Protocols v2--v3 were superseded before GPU evidence was materialized and are not counted as experiments.
+The next four protocols prioritize exact output preservation. A local risk-threshold policy stops only when the current block's predicted risk falls below a threshold; it saves 9.1\%/3.2\% \nfe{} on LLaDA/Dream, but Dream falls below the predeclared 5\% savings floor. A benefit-and-harm policy adds predictors for both the expected saving and the chance of changing the answer. Its harm AUROC is 0.372/0.456, which is too low to use this decision rule. A prompt-level policy instead limits the cumulative predicted risk and number of early stops over an entire prompt; a relaxed version allows larger limits. On the held-out sets used to choose candidates, these prompt-level policies record zero harmful regressions while saving 0.75\%/0.45\% and 1.24\%/0.65\%. These runs establish that the learned signal can preserve observed outputs, with a smaller gain than the main PAG setting.
 
-\subsection{Verified macro-steps recover calls but not exactness}
+\subsection{Batched verification points to larger call reductions}
 
-Under v8, a reference check evaluates a batch of fixed-depth proposals in one call. This lowers physical invocations from 83.47 to 71.19 on LLaDA and from 97.63 to 76.81 on Dream, reductions of 14.7\% and 21.3\%. These are the largest raw call reductions in the progression. They are not lossless results: 22 of 64 prompt trajectories disagree with AdaBlock. LLaDA latency also rises from 3.09 to 3.83 seconds because each invocation evaluates more rows. V9 audits the mechanism before another rollout. Execution fingerprints match. Successor states differ across depth-one and depth-two batch shapes. Figure~\ref{fig:equivalence-audit} in the appendix shows this exactness test. The failed gate yields a final division of responsibility: learned histories propose budgets; a batch-invariant reference transition retains acceptance authority.
+The batched-reference pilot checked several fixed numbers of future refinement steps together in one model call. This lowered physical invocations from 83.47 to 71.19 on LLaDA and from 97.63 to 76.81 on Dream, reductions of 14.7\% and 21.3\%. These were the largest raw call reductions in the progression and showed the potential of moving several checks into one invocation. The implementation was not lossless: 22 of 64 prompt trajectories disagreed with AdaBlock, and LLaDA latency rose from 3.09 to 3.83 seconds because each invocation evaluated more rows. A subsequent equivalence preflight isolated the issue: identical model and software settings still produced different next decoder states when the same reference step was evaluated alone or in batches of different depth. Figure~\ref{fig:equivalence-audit} shows this audit. The path to larger safe reductions is therefore specific: learned histories propose budgets, and a reference step that is unchanged by batching retains acceptance authority.
 
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{Phase structure is useful but not sufficient.}
-The trace analysis, tuple predictors, and risk estimators agree that refinement trajectories contain signal. The deployment results identify what that signal supports: forecasting relative effort. They do not support handing a learned score sole authority to commit a block. Current-state boundary and stability rules use contemporaneous evidence~\citep{lu2026adablock,mohamed2025sched,mohamed2026less}; the problematic transfer here occurs when history predicts a future commitment. This difference explains why high risk-model AUROC can coexist with poor Dream accuracy and why reducing the score threshold can preserve outputs while eliminating the compute benefit.
+\paragraph{Phase history is a useful budget signal.}
+Trace analysis, next-block prediction, and deployed LLaDA results give the same answer: previous refinement behavior helps estimate how much work the next block will need. PAG turns that signal into 4.0\% and 6.7\% fewer calls by changing only the budget. The cross-model experiments further show that history is most reliable as a guide to compute allocation, while final token decisions remain tied to current model evidence~\citep{lu2026adablock,mohamed2025sched,mohamed2026less}.
 
-\paragraph{History-free controls should be mandatory.}
-Block size encodes both span length and AdaBlock's semantic-boundary decision. A lookup table on that single variable beats the learned scheduler on GSM8K, so comparisons against a fixed budget or AdaBlock alone overstate the value of history. Future learned schedulers should predict a bounded residual over a strong current-state prior and show that history improves a paired frontier, rather than reporting only an absolute saving.
+\paragraph{Block size and phase history provide different signals.}
+Block size reflects both span length and AdaBlock's boundary decision, while phase history records how preceding blocks stabilized. The size-conditioned control confirms that the current block is a useful, low-cost prior. A natural next version of PAG would start from that prior and let history make a bounded adjustment, retaining PAG's ability to react to how the preceding blocks actually behaved.
 
-\paragraph{Verification is an implementation property.}
-The speculative pilots suggest that batching reference transitions could reduce sequential depth, but the failed equivalence audits prevent a lossless claim. Exactness requires more than matching a draft token with a batched logit row: the reference operator, cache state, attention mask, block boundary, and batch shape must induce the same complete successor as serial decoding. This batch-invariance audit complements token-level verification in self-speculative decoders~\citep{gao2025ssd,han2026s2d2}. Physical model calls, evaluated rows, latency, and memory are separate costs and should be reported separately.
+\paragraph{Verification provides a path to larger gains.}
+The batched pilot reduces physical calls by 14.7\% on LLaDA and 21.3\% on Dream, showing the potential of checking several proposed steps together. Realizing those gains safely requires the batched and serial transitions to produce the same tokens, cache state, attention mask, boundary, and complete next state. This batch-invariance requirement complements token-level verification in self-speculative decoders~\citep{gao2025ssd,han2026s2d2} and gives a concrete engineering target. Physical calls, evaluated rows, latency, and memory should still be reported separately.
 
 \section{Limitations}
 \label{sec:limitations}
 
-The study covers two 7--8B model families, 256-token generations, and math/code benchmarks; it does not show that phase history is unhelpful for larger models, longer contexts, or a scheduler trained jointly with the model. CPD evidence is qualitative and detector-dependent. The risk certificates apply to a declared shadow loss and calibration mixture, not semantic correctness or arbitrary deployment data. Code-task exact-match rates are sensitive to extraction and test harnesses, so they appear in the appendix rather than drive the main claim. Latency was measured at batch size one on a single-GPU workflow and is not a serving benchmark. Finally, the v8--v9 results diagnose this implementation of batched verification; they do not rule out verified acceleration with stricter batch-invariant kernels or serial verification.
+The study covers two 7--8B model families, 256-token generations, and math/code benchmarks; it does not show that phase history is unhelpful for larger models, longer contexts, or a scheduler trained jointly with the model. CPD evidence is qualitative and detector-dependent. The statistical guarantees apply to the declared full-refinement disagreement loss and calibration mixture, not semantic correctness or arbitrary deployment data. Code-task exact-match rates are sensitive to extraction and test harnesses, so they appear in the appendix rather than drive the main claim. Latency was measured at batch size one on a single-GPU workflow and is not a serving benchmark. Finally, the batched-pilot and equivalence-preflight results diagnose this implementation of batched verification; they do not rule out verified acceleration with stricter batch-invariant kernels or serial verification.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-\pag{} began with the hypothesis that reasoning phases should receive different refinement budgets. The hypothesis is partly right: token stabilization is structured, block histories predict compute, and a hybrid scheduler reduces LLaDA model calls on GSM8K and MATH-500. The stronger claim does not survive the full evidence. A block-size lookup is competitive, cross-model risk control fails task-accuracy transfer, conservative gates save little, and speculative batching fails exactness audits.
+PAG shows that recent refinement history can guide a diffusion language model's compute budget without retraining the model. AdaBlock chooses each block boundary from the current prediction, and PAG uses the last eight completed blocks only to set the next refinement budget. This simple division reduces LLaDA model calls by 4.0\% on GSM8K and 6.7\% on MATH-500, while accuracy is 1.60 and 1.33 percentage points lower. The size-controlled analysis identifies current block size as a useful prior, while the cross-model and output-preserving runs clarify when richer history remains useful.
 
-Our experiments support a separation of responsibilities. Learned phase models are well suited to proposing how much capacity to allocate. Semantic boundaries should remain tied to current model evidence, and token acceptance should remain with an audited reference transition. A next system should therefore combine a bounded history residual with batch-invariant verification and treat an unsuccessful equivalence or task-quality gate as a normal fallback, not a result to average away.
+The later protocols point to a practical next design: begin with a strong current-state or size-based budget, let history make a bounded adjustment, and place final token acceptance behind a batch-invariant reference check. Conservative prompt-level risk limits already preserve observed outputs while saving up to 1.24\%, and batched verification shows raw call reductions of 14.7\% and 21.3\% once exact transition matching is resolved. This architecture retains PAG's headline efficiency benefit and gives a concrete route to larger, reliable reductions.
 
 \typeout{PAG-DIFFULM-MAIN-END-PAGE:\arabic{page}}
 
@@ -325,11 +328,11 @@ Our experiments support a separation of responsibilities. Learned phase models a
     \node[batch, right=6mm of serialbox] (batchbox) {\textbf{Batched candidate}\\[1mm]
       $[x_t,d_1,d_2] \xrightarrow{F_B} \widetilde{x}_{t+1}$};
     \node[check, below=8mm of $(serialbox.south)!0.5!(batchbox.south)$] (audit)
-      {\textbf{Equivalence gate}\\tokens, masks, cache state, boundary, and complete successor};
+      {\textbf{Equivalence gate}\\tokens, masks, cache state, boundary, and complete next decoder state};
     \draw[arr] (serialbox.south) -- ([xshift=-10mm]audit.north);
     \draw[arr] (batchbox.south) -- ([xshift=10mm]audit.north);
   \end{tikzpicture}
-  \captionof{figure}{Exactness audit for verified macro-steps. A batched row is eligible only when it induces the same complete successor as the serial reference transition. The v8 pilot disagrees on 22 of 64 prompts, and v9 rejects the depth-dependent batch shape before rollout.}
+  \captionof{figure}{Exactness audit for batched reference checks. A batched row is eligible only when it produces the same complete next decoder state as the serial reference step. The pilot disagrees on 22 of 64 prompts, and the subsequent preflight rejects the depth-dependent batch shape before rollout.}
   \label{fig:equivalence-audit}
 \end{center}
 
@@ -337,21 +340,21 @@ Our experiments support a separation of responsibilities. Learned phase models a
 \label{app:predictors}
 
 \paragraph{Continuous regression.}
-The first Transformer predicts real-valued controls with normalized validation loss 0.096. Deployed on 30 arithmetic prompts, it reaches 73\% accuracy versus 93\% for AdaBlock and averages 8.1 blocks rather than 12.3. Inspection shows interpolated block sizes merging semantic spans and producing repeated or truncated text. This run motivated the categorical block head; it is not used as a baseline in the audited evaluation.
+The first Transformer predicts real-valued controls with validation loss 0.096 after target normalization. Deployed on 30 arithmetic prompts, it reaches 73\% accuracy versus 93\% for AdaBlock and averages 8.1 blocks rather than 12.3. Inspection shows interpolated block sizes merging semantic spans and producing repeated or truncated text. This run motivated the categorical block head; it is not used as a baseline in the audited evaluation.
 
 \paragraph{Random forest.}
 A 200-tree, depth-15 multi-output forest uses rolling statistics from a five-tuple window. On 90{,}994 training and 22{,}907 held-out examples, block-size mean absolute error (MAE) is 7.24 and stabilization-step MAE is 1.66. The last block size is the largest individual feature (importance 0.214), supporting the explicit size-lookup control.
 
 \paragraph{Transformer ablation.}
-The categorical/ordinal sweep varies context length, hidden size, attention heads, layers, dropout, and learning rate. The selected $(w,d,h,l)=(8,64,4,4)$ model reaches validation loss 2.216957. Wider models do not improve this objective: at four layers, the best losses for widths 32, 64, 128, 256, and 512 are 2.233, 2.217, 2.238, 2.289, and 2.336.
+The categorical/ordinal sweep varies context length, hidden size, attention heads, layers, dropout, and learning rate. The selected model uses an eight-block context, hidden size 64, four attention heads, and four layers; it reaches validation loss 2.216957. Wider models do not improve this objective: at four layers, the best losses for widths 32, 64, 128, 256, and 512 are 2.233, 2.217, 2.238, 2.289, and 2.336.
 
 \section{Complete cross-model confirmation}
 \label{app:complete-results}
 
-Table~\ref{tab:complete-results} reports every dataset/model pair from the v1 confirmation; the code tasks are retained for completeness but do not drive the main claim.
+Table~\ref{tab:complete-results} reports every dataset/model pair from the cross-model confirmation; the code tasks are retained for completeness but do not drive the main claim.
 
 \begin{table}[h]
-  \caption{Complete v1 confirmation. Accuracy is percentage and \nfe{} is the mean number of physical model calls. HumanEval is declared out of domain.}
+  \caption{Complete cross-model confirmation. Accuracy is percentage and \nfe{} is the mean number of physical model calls. HumanEval is declared out of domain.}
   \label{tab:complete-results}
   \centering
   \small
@@ -375,7 +378,7 @@ Table~\ref{tab:complete-results} reports every dataset/model pair from the v1 co
 \section{Artifact-backed protocol ledger}
 \label{app:artifacts}
 
-Table~\ref{tab:artifacts} records the evidence source for each reported phase. Hashes are shortened only for readability. All records are non-mock and pin model and dataset revisions in their environment manifests.
+Table~\ref{tab:artifacts} records the evidence source for each reported phase. The v1 and v4--v9 labels are internal configuration identifiers retained only to connect claims to released artifacts; they do not denote different model architectures. Configurations v2--v3 were superseded before full evaluation. Hashes are shortened only for readability. All records are non-mock and pin model and dataset revisions in their environment manifests.
 
 \begin{table}[h]
   \caption{Artifact provenance for numerical claims.}
@@ -400,15 +403,15 @@ Table~\ref{tab:artifacts} records the evidence source for each reported phase. H
 
 \section{Accounting and reporting rules}
 
-\nfe{} denotes physical invocations of the model forward function, including the initial proposal used to choose a boundary. A batched invocation counts as one physical \nfe{} and separately contributes one evaluated row per batch element. We do not translate \nfe{} reductions into FLOP, energy, or latency claims. Accuracy is paired on identical prompt IDs. A run with a failed manifest, incomplete coverage, a mock record, or a failed claim gate is ineligible for a positive aggregate.
+\nfe{} denotes physical invocations of the model forward function, including the initial proposal used to choose a boundary. A batched invocation counts as one physical \nfe{} and separately contributes one evaluated row per batch element. We do not translate \nfe{} reductions into floating-point operation (FLOP), energy, or latency claims. Accuracy is paired on identical prompt IDs. A run with a failed manifest, incomplete coverage, a mock record, or a failed claim gate is ineligible for a positive aggregate.
 
 \section{Reproducibility, compute, and assets}
 
 \paragraph{Configurations and statistics.}
-The anonymous supplement contains the implementation, exact YAML configurations, pinned revisions, run manifests, and artifact summaries referenced in Table~\ref{tab:artifacts}. The initial audit uses seed 20260710; the cross-model protocols use seed 20260729. Confidence intervals are percentile intervals from 10{,}000 paired bootstrap resamples of prompt IDs. The risk tests use exact binomial bounds at familywise level 0.05. The supplement documents the commands for the initial Strategy~1 evaluation and each \rcpag{} protocol. Raw checkpoints and benchmark copies are not redistributed; the loaders fetch the pinned public assets.
+The anonymous supplement contains the implementation, exact configuration files, fixed model and dataset revisions, run manifests, and artifact summaries referenced in Table~\ref{tab:artifacts}. The initial audit uses seed 20260710; the cross-model protocols use seed 20260729. Confidence intervals are percentile intervals from 10{,}000 paired bootstrap resamples of prompt identifiers. The risk tests use exact binomial bounds while limiting the probability of any false selection across the tested policy family to 0.05. The supplement documents the commands for the initial Strategy~1 evaluation and each \rcpag{} protocol. Raw checkpoints and benchmark copies are not redistributed; the loaders fetch the fixed public assets.
 
 \paragraph{Compute.}
-We estimate approximately 160 A100-equivalent GPU-hours for the completed experiments. Trace collection and the original PAG study account for about 40 hours; the six materialized protocols v1 and v4--v8 account for about 20 hours each, or 120 hours. V2--v3 were superseded before full GPU runs, and v9 stopped at the equivalence preflight before a benchmark rollout; incomplete job attempts and CPU-only analysis are excluded. The estimate assumes one NVIDIA A100 PCIe (80 GB), with LLaDA and Dream loaded one at a time in bfloat16. The recorded environment used Python 3.11.15, PyTorch 2.5.1 with CUDA 12.1, Transformers 4.46.3, Datasets 4.8.5, scikit-learn 1.9.0, and math-verify 0.9.0. Atomic records retain per-prompt elapsed time; the v8 pilots ranged from roughly one to six seconds per method/prompt.
+We estimate approximately 160 hours on an NVIDIA A100 graphics processing unit (GPU), equivalent to 160 A100 GPU-hours. Trace collection and the original PAG study account for about 40 hours; the six completed GPU protocols account for about 20 hours each, or 120 hours. Two intermediate configurations were superseded before full GPU runs, and the equivalence preflight stopped before a benchmark rollout; incomplete job attempts and host-only analysis are excluded. The estimate assumes one NVIDIA A100 PCIe (80 GB), with LLaDA and Dream loaded one at a time in bfloat16. The recorded environment used Python 3.11.15, PyTorch 2.5.1 with CUDA 12.1, Transformers 4.46.3, Datasets 4.8.5, scikit-learn 1.9.0, and math-verify 0.9.0. Atomic records retain per-prompt elapsed time; the batched pilots ranged from roughly one to six seconds per method/prompt.
 
 \paragraph{Licenses.}
 The pinned LLaDA checkpoint is MIT licensed and the pinned Dream checkpoint is Apache-2.0 licensed. GSM8K, MATH-500, and HumanEval are used under their MIT licenses; MBPP data are used under CC BY 4.0. We cite each model and benchmark at first use and preserve their original terms. The supplement contains no model weights or benchmark examples beyond the aggregate statistics and one short diagnostic trace shown in Figure~\ref{fig:phase-data}.
