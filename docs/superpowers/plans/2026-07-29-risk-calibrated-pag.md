@@ -26,7 +26,7 @@ datasets/transformers, pytest, Ruff, YAML, Bash/Slurm, LaTeX.
 - Create `src/pag/experiments/rc_pag_report.py`: audit, tables, and plots.
 - Create `scripts/run_rc_pag.py`: stage CLI.
 - Create `scripts/slurm/rc_pag_a100.sbatch`: A100 worker.
-- Create `scripts/slurm/submit_rc_pag.sh`: NYU submission wrapper.
+- Create `scripts/slurm/submit_rc_pag.sh`: cluster submission wrapper.
 - Modify LLaDA and Dream PAG generation files to expose shared online observations.
 - Create `writeup/rc_pag_workshop.tex`: anonymized eight-page workshop manuscript.
 - Add focused tests under `tests/experiments/`, `tests/llada/`, and `tests/dream/`.
@@ -420,7 +420,7 @@ git add src/pag/experiments/rc_pag_report.py tests/experiments/test_rc_pag_repor
 git commit -m "feat: audit RC-PAG paper claims"
 ```
 
-### Task 7: CLI and NYU A100 Slurm Workflow
+### Task 7: CLI and A100 Slurm Workflow
 
 **Files:**
 - Create: `scripts/run_rc_pag.py`
@@ -544,7 +544,7 @@ metadata.
 
 - [ ] **Step 3: Document exact workflows**
 
-Document local mock validation, NYU submission environment variables, stage commands, resume,
+Document local mock validation, cluster submission environment variables, stage commands, resume,
 artifact layout, claim audit interpretation, report compilation, and OpenReview submission checklist.
 
 - [ ] **Step 4: Compile and commit**

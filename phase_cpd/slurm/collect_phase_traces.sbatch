@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=phase_cpd_collect
-#SBATCH --account=csci_ga_3033_131-2026sp
-#SBATCH --partition=c12m85-a100-1
+#SBATCH --account=YOUR_SLURM_ACCOUNT
+#SBATCH --partition=YOUR_GPU_PARTITION
 #SBATCH --output=./logs/%j_%x.out
 #SBATCH --error=./logs/%j_%x.err
 #SBATCH --time=2:00:00
@@ -14,8 +14,8 @@ DEFAULT_PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 mkdir -p ./logs
 
 singularity exec --nv \
-    --overlay ${OVERLAY_PATH:-/scratch/kk6081/overlay-25GB-500K.ext3}:rw \
-    ${SIF_PATH:-/scratch/kk6081/ubuntu-20.04.3.sif} \
+    --overlay ${OVERLAY_PATH:-/scratch/${USER}/overlay-25GB-500K.ext3}:rw \
+    ${SIF_PATH:-/scratch/${USER}/ubuntu-20.04.3.sif} \
     /bin/bash -c "
 source /ext3/miniconda3/etc/profile.d/conda.sh
 export PATH=/ext3/miniconda3/bin:\$PATH
@@ -37,7 +37,7 @@ export DREAM_TOP_P=\${DREAM_TOP_P:-0.95}
 export DREAM_TRACE_PROFILE=\${DREAM_TRACE_PROFILE:-all}
 export DREAM_SEED=\${DREAM_SEED:-0}
 export DREAM_TORCH_DTYPE=\${DREAM_TORCH_DTYPE:-bfloat16}
-export HF_HOME=\${HF_HOME:-/scratch/kk6081/.cache/huggingface}
+export HF_HOME=\${HF_HOME:-/scratch/${USER}/.cache/huggingface}
 export DREAM_TRACE_CMD=\${DREAM_TRACE_CMD:-uv run --group phase_cpd_dream --python \"\$UV_PYTHON\" python -m phase_cpd.trace_jobs.run_dream_trace_dump --prompts \"\$PROMPTS_FILE\" --output-dir \"\$RAW_TRACE_ROOT/dream\" --model-name \"\$DREAM_MODEL_NAME\" --max-new-tokens \"\$DREAM_MAX_NEW_TOKENS\" --steps \"\$DREAM_STEPS\" --temperature \"\$DREAM_TEMPERATURE\" --top-p \"\$DREAM_TOP_P\" --trace-profile \"\$DREAM_TRACE_PROFILE\" --seed \"\$DREAM_SEED\" --torch-dtype \"\$DREAM_TORCH_DTYPE\"}
 export PYTORCH_CUDA_ALLOC_CONF=\${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 

@@ -1,6 +1,6 @@
 # Run EC-PAG v9
 
-From the repository on the NYU cluster, run exactly:
+From the repository on the HPC cluster, run exactly:
 
 ```bash
 bash scripts/slurm/submit_rc_pag_all.sh

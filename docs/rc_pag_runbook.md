@@ -3,7 +3,7 @@
 > **Historical v1 manual.** Do not use the commands or 12-policy claims below for the new
 > run. The authoritative v8 command is in [rc_pag_one_command.md](rc_pag_one_command.md).
 
-This runbook executes the frozen Risk-Calibrated PAG (RC-PAG) protocol on one NYU Langone
+This runbook executes the frozen Risk-Calibrated PAG (RC-PAG) protocol on one shared HPC
 A100. It deliberately separates development, untouched calibration, and confirmation. Do
 not change the configuration after calibration begins; a changed config creates a different
 protocol hash and requires new calibration.
@@ -37,15 +37,15 @@ builder refuses to import it.
 
 ## 2. Cluster variables
 
-Clone or synchronize the repository to a shared NYU filesystem, then set paths for your
-account. The defaults match the course allocation used by this project; override them if
-NYU changes the allocation.
+Clone or synchronize the repository to a shared cluster filesystem, then set paths for your
+account. The defaults match the allocation used by this project; override them if
+the cluster changes the allocation.
 
 ```bash
 export PROJECT_DIR=/path/to/research
 export RC_PAG_OUTPUT_ROOT=/scratch/${USER}/rc_pag/artifacts
-export RC_PAG_ACCOUNT=csci_ga_3033_131-2026sp
-export RC_PAG_PARTITION=c12m85-a100-1
+export RC_PAG_ACCOUNT=YOUR_SLURM_ACCOUNT
+export RC_PAG_PARTITION=YOUR_GPU_PARTITION
 export OVERLAY_PATH=/scratch/${USER}/overlay-25GB-500K.ext3
 export SIF_PATH=/scratch/${USER}/ubuntu-20.04.3.sif
 export RC_PAG_SCRATCH_ROOT=/scratch/${USER}/rc_pag/cache

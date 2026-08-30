@@ -2,7 +2,7 @@
 
 ## Goal
 
-Provide one command that allocates one NYU A100 and runs the complete registered RC-PAG
+Provide one command that allocates one A100 and runs the complete registered RC-PAG
 pipeline without manual stage submission:
 
 ```text

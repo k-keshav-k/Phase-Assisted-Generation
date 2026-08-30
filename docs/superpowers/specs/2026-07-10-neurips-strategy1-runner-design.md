@@ -64,14 +64,14 @@ IDs are absent from:
 - the GSM8K test split.
 
 If the trace metadata does not establish this disjointness, preflight fails instead of guessing.
-No result from the 200 GSM8K test examples used in the course report participates in method
+No result from the 200 GSM8K test examples used in the original report participates in method
 selection.
 
 ### Final GSM8K evaluation
 
 The final evaluation runs all 1,319 examples in the official GSM8K test split at dataset revision
 `740312add88f781978c0658806c59bc2815b9866`. Prior work in this
-repository used test indices 0--199 for predictor validation and indices 200--399 for the course
+repository used test indices 0--199 for predictor validation and indices 200--399 for the earlier
 report. Consequently, indices 400--1318 form the 919-example untouched confirmatory subset. The
 paper reports the 919-example confirmatory result as its primary statistical test and the complete
 1,319-example result as a transparent full-benchmark summary, with the previously used 400 examples

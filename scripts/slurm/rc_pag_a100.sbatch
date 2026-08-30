@@ -143,7 +143,7 @@ if [[ "${status}" -eq 75 ]]; then
         "(${RC_PAG_MAX_CUDA_REQUEUES})." >&2
     echo "Job=${SLURM_JOB_ID:-unknown} node=${SLURMD_NODENAME:-unknown} " \
         "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}" >&2
-    echo "Resubmit once; if the failure repeats, send this node/job information to NYU support." >&2
+    echo "Resubmit once; if the failure repeats, send this node/job information to cluster support." >&2
     exit 75
 fi
 

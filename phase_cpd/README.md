@@ -145,12 +145,12 @@ python phase_cpd/collect_traces.py \
   --output-dir phase_cpd/data/traces_real
 ```
 
-## NYU Burst / Slurm
+## HPC Burst / Slurm
 
 A starter Slurm job is included at:
 
 ```text
-phase_cpd/slurm/collect_phase_traces_nyu.sbatch
+phase_cpd/slurm/collect_phase_traces.sbatch
 ```
 
 It assumes:
@@ -172,7 +172,7 @@ The main env vars you need to set before `sbatch` are:
 Example:
 
 ```bash
-sbatch phase_cpd/slurm/collect_phase_traces_nyu.sbatch
+sbatch phase_cpd/slurm/collect_phase_traces.sbatch
 ```
 
 By default the job now does two uv-managed steps:

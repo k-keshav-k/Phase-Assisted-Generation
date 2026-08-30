@@ -173,7 +173,7 @@ The implementation extends the existing `pag.experiments` boundaries:
 - `rc_pag_report.py`: paired summaries, claim audit, publication tables, and figures.
 - `scripts/run_rc_pag.py`: one Python entry point for every stage.
 - `scripts/slurm/rc_pag_a100.sbatch`: one-A100 resumable worker.
-- `scripts/slurm/submit_rc_pag.sh`: NYU account/partition/overlay wrapper.
+- `scripts/slurm/submit_rc_pag.sh`: cluster account/partition/overlay wrapper.
 
 The existing cross-model residual runner remains reproducible. RC-PAG is additive and may reuse its
 grading, dataset, record-store, statistics, and environment helpers.

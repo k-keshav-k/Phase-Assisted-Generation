@@ -11,7 +11,7 @@ The current workshop track is **Risk-Calibrated PAG (RC-PAG)**: finite-sample co
 premature block commitment with a one-A100, claim-gated evaluation. Start with the
 [one-command v8 guide](docs/rc_pag_one_command.md), the
 [mathematical workshop draft](writeup/rc_pag_workshop.tex), and the
-[literature positioning](docs/literature/2026-07-29-rc-pag-positioning.md). The earlier course
+[literature positioning](docs/literature/2026-07-29-rc-pag-positioning.md). The earlier project
 report remains at `writeup/final_report.pdf` as historical context, not current evidence.
 The v8 launcher automatically downloads only missing pinned Hugging Face assets, verifies the
 cache, and then executes the resumable experiment offline.
@@ -268,9 +268,9 @@ under `report/`. Inspect the protocol without loading datasets or a model with:
 make run-neurips-dry
 ```
 
-Important: the course-report PAG code omitted each block's initial proposal forward pass from PAG's
+Important: the original-report PAG code omitted each block's initial proposal forward pass from PAG's
 NFE counter while AdaBlock included it. The Strategy 1 runner and regraded report correct this
-accounting mismatch; do not use the original course-report efficiency headline.
+accounting mismatch; do not use the original efficiency headline.
 
 ## Cross-model residual PAG run
 
